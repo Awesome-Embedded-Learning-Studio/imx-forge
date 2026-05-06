@@ -348,12 +348,12 @@ jobs:
         run: |
           find driver -name "*.ko" -exec file {} \; 2>/dev/null | head -5 || echo "No kernel modules found, continuing..."
 
-  # 汇总状态供分支保护使用
+  # 汇总状态供分支保护使用（仅对非 fork PR）
   status:
     name: Overall Status
     runs-on: ubuntu-latest
     needs: [detect, uboot, linux-imx, linux-mainline, busybox, drivers]
-    if: always()
+    if: always() && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     permissions:
       contents: write
       statuses: write
