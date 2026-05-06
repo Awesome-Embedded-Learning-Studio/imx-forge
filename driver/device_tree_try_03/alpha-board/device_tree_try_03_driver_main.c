@@ -14,7 +14,7 @@
  * @file chardev_led_v2_02_driver_main.c
  * @author Charliechen114514 (chengh1922@mails.jlu.edu.cn)
  * @brief LED Driver using new API
- * @version 0.1
+ * @version 0.2
  * @date 2026-04-18
  *
  * @copyright Copyright (c) 2026
