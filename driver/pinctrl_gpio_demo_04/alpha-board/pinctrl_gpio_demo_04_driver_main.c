@@ -30,7 +30,6 @@ struct IMXAesLED {
 
 static int aes_chardev_open(struct inode* inode, struct file* filp) {
     pr_info("Device: %s called open!\n", CHARDEV_NAME);
-    pr_info("TEST: pr-status-report workflow verification\n");
     // Assigned the private data
     filp->private_data = &led_handle;
     return 0;
