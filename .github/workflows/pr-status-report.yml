@@ -1,0 +1,121 @@
+name: PR Status Report
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  statuses: write
+  actions: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  report-pr-quick-checks:
+    name: Report PR Quick Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // 获取 PR Quick Checks workflow 的最新运行
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: '.github/workflows/ci-pr.yml',
+              branch: pr.head.ref,
+              per_page: 1
+            });
+
+            if (runs.data.total_count === 0) {
+              console.log('No PR Quick Checks runs found');
+              return;
+            }
+
+            const run = runs.data.workflow_runs[0];
+            let state = 'pending';
+            let description = 'Checks in progress';
+
+            if (run.status === 'completed') {
+              if (run.conclusion === 'success') {
+                state = 'success';
+                description = 'All quick checks passed';
+              } else if (run.conclusion === 'failure') {
+                state = 'failure';
+                description = 'Some quick checks failed';
+              } else if (run.conclusion === 'cancelled') {
+                state = 'error';
+                description = 'Checks were cancelled';
+              }
+            }
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: state,
+              context: 'PR Quick Checks',
+              description: description,
+              target_url: run.html_url
+            });
+
+            console.log(`Status created: ${state} - ${description}`);
+
+  report-component-build:
+    name: Report Component Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // 获取 Component Build workflow 的最新运行
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: '.github/workflows/ci-build.yml',
+              branch: pr.head.ref,
+              per_page: 1
+            });
+
+            if (runs.data.total_count === 0) {
+              console.log('No Component Build runs found');
+              return;
+            }
+
+            const run = runs.data.workflow_runs[0];
+            let state = 'pending';
+            let description = 'Build in progress';
+
+            if (run.status === 'completed') {
+              if (run.conclusion === 'success') {
+                state = 'success';
+                description = 'Component builds passed';
+              } else if (run.conclusion === 'failure') {
+                state = 'failure';
+                description = 'Some component builds failed';
+              } else if (run.conclusion === 'cancelled') {
+                state = 'error';
+                description = 'Build was cancelled';
+              }
+            }
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: pr.head.sha,
+              state: state,
+              context: 'Component Build',
+              description: description,
+              target_url: run.html_url
+            });
+
+            console.log(`Status created: ${state} - ${description}`);
