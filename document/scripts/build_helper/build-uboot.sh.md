@@ -624,4 +624,4 @@ DEFAULT_DEVICE_TREE="imx6ull-my-board"
 - U-Boot编译教程 - U-Boot 编译的详细原理
 - 板级配置基础 - U-Boot 板级配置
 - [Linux内核构建脚本](./build-linux.sh) - 对比的 Linux 内核构建脚本
-- [Logo 处理](../logo_helper/) - Logo 生成工具文档
+- [Logo 处理](../logo_helper/logo_helper.sh.md) - Logo 生成工具文档

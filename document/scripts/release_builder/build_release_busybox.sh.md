@@ -753,6 +753,6 @@ tar czf releases/busybox-v1.0.0.tar.gz \
 
 ## 相关文档
 
-- [BusyBox 构建脚本](../../build_helper/build-busybox.sh) - 实际使用的构建脚本
-- [U-Boot 发布构建脚本](../build_release_uboot.sh) - 对应的 U-Boot 发布构建文档
+- [BusyBox 构建脚本](../build_helper/build-busybox.sh) - 实际使用的构建脚本
+- [U-Boot 发布构建脚本](./build_release_uboot.sh) - 对应的 U-Boot 发布构建文档
 - BusyBox 配置教程 - BusyBox 配置的详细说明

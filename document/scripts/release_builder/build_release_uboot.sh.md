@@ -694,6 +694,6 @@ tar czf releases/uboot-v1.0.0.tar.gz \
 
 ## 相关文档
 
-- [U-Boot 构建脚本](../../build_helper/build-uboot.sh) - 实际使用的构建脚本
-- [补丁生成工具](../../patch_maker.sh) - 用于生成补丁的工具
+- [U-Boot 构建脚本](../build_helper/build-uboot.sh) - 实际使用的构建脚本
+- [补丁生成工具](../patch_maker.sh) - 用于生成补丁的工具
 - U-Boot 编译教程 - U-Boot 编译的详细原理

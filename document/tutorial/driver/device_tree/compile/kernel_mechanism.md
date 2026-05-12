@@ -389,7 +389,7 @@ Linux内核的设备树编译机制体现了几个重要设计原则：
 
 - [设备树规范（Devicetree Specification）](https://www.devicetree.org/)
 - [Linux内核设备树文档](https://www.kernel.org/doc/html/latest/devicetree/index.html)
-- [DTC工具源码](../third_party/linux_mainline/scripts/dtc/)
+- DTC工具源码：`third_party/linux_mainline/scripts/dtc/`
 
 ---
 

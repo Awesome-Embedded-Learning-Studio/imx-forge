@@ -382,7 +382,7 @@ error: implicit declaration of function 'xxx'
 
 ## 相关文档
 
-- [driver_buildlib.sh](../../lib/driver_buildlib.sh.md) - 核心构建库详解
+- [driver_buildlib.sh](../lib/driver_buildlib.sh) - 核心构建库详解
 - [deploy_driver.sh](./deploy_driver.sh.md) - 驱动部署脚本
 - [review_driver.sh](./review_driver.sh.md) - 驱动审查脚本
-- [驱动开发工作流程](../../../driver_helper/workflow.md)
+- [驱动开发工作流程](./workflow.md)

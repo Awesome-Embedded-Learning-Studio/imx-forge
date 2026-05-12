@@ -534,9 +534,9 @@ time rmmod fake_driver
 
 ## 🔗 相关文档
 
-- **[系统总览](../overview.md)** - 了解整个基建系统
-- **[工作流程](../workflow.md)** - 学习完整的开发流程
-- **[错误排查指南](../troubleshooting.md)** - 深入的问题解决方法
+- **[系统总览](../driver_helper/overview.md)** - 了解整个基建系统
+- **[工作流程](../driver_helper/workflow.md)** - 学习完整的开发流程
+- **[错误排查指南](../driver_helper/troubleshooting.md)** - 深入的问题解决方法
 - **[构建脚本详解](../driver_helper/build_driver.md)** - build_driver.sh详解
 - **[部署脚本详解](../driver_helper/deploy_driver.md)** - deploy_driver.sh详解
 
@@ -555,4 +555,4 @@ time rmmod fake_driver
 
 ---
 
-**下一步？** → [错误排查指南](../troubleshooting.md) 或 [最佳实践](../best_practices.md)
+**下一步？** → [错误排查指南](../driver_helper/troubleshooting.md) 或 [最佳实践](../driver_helper/best_practices.md)

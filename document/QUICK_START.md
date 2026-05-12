@@ -910,10 +910,10 @@ git submodule update --remote --merge
 接下来你可以：
 
 1. **深入学习** —— 阅读项目教程文档
-   - [工具链教程](../tutorial/start/01_start_from_toolchain)
-   - [U-Boot 教程](../tutorial/uboot/01_what_is_uboot)
-   - [内核教程](../tutorial/kernel)
-   - [Rootfs 教程](../tutorial/rootfs/01_rootfs_overview)
+   - [工具链教程](./tutorial/start/01_start_from_toolchain)
+   - [U-Boot 教程](./tutorial/uboot/01_what_is_uboot)
+   - [内核教程](./tutorial/kernel/)
+   - [Rootfs 教程](./tutorial/rootfs/01_rootfs_overview)
 
 2. **自定义配置** —— 根据你的需求修改系统
    - 使用 `make menuconfig` 自定义内核配置
@@ -924,7 +924,7 @@ git submodule update --remote --merge
    - 参考 kernel 网络启动教程
 
 4. **驱动开发** —— 学习编写 Linux 驱动程序
-   - 参考 [驱动开发教程](../tutorial/driver)
+   - 参考 [驱动开发教程](./tutorial/driver/)
 
 5. **QT 应用开发** —— 构建 GUI 应用
    - 使用 qt-compile-pipeline 交叉编译 QT6

@@ -1,47 +1,26 @@
-# 内核模块开发
+<PageHeader icon="🧩" title="内核模块开发" description="Linux 内核模块 (LKM) 是动态加载到内核的代码，是驱动开发的基础" />
 
-Linux 内核模块 (LKM) 是动态加载到内核的代码，是驱动开发的基础。
+## 章节目录
 
----
+<ChapterNav>
+  <ChapterLink num="00" href="00_module_overview">模块概述</ChapterLink>
+  <ChapterLink num="01" href="01_hello_world_module">Hello World 模块</ChapterLink>
+  <ChapterLink num="02" href="02_module_build_and_load">编译与加载</ChapterLink>
+  <ChapterLink num="03" href="03_module_params_and_debug">模块参数与调试</ChapterLink>
+  <ChapterLink num="04" href="04_elf_and_ko_structure">ELF 与 KO 结构</ChapterLink>
+  <ChapterLink num="05" href="05_insmod_internals_advanced">insmod 内部机制</ChapterLink>
+  <ChapterLink num="06" href="06_struct_module_deep_dive">struct module 深入</ChapterLink>
+</ChapterNav>
 
-## 📚 章节目录
+::: tip 学习目标
+理解内核模块的概念和作用，编写 Hello World 模块，掌握编译加载和参数传递机制。
+:::
 
-| 章节 | 标题 | 内容 |
-|------|------|------|
-| 00 | [模块概述](00_module_overview) | 内核模块简介 |
-| 01 | [Hello World 模块](01_hello_world_module) | 第一个内核模块 |
-| 02 | [编译与加载](02_module_build_and_load) | 模块构建方法 |
-| 03 | [模块参数与调试](03_module_params_and_debug) | 参数传递和调试 |
-| 04 | [ELF 与 KO 结构](04_elf_and_ko_structure) | 模块文件格式 |
-| 05 | [insmod 内部机制](05_insmod_internals_advanced) | 模块加载深入 |
-| 06 | [struct_module 深入](06_struct_module_deep_dive) | 模块结构体 |
+::: info 前置知识
+C 语言基础 · Linux 基本操作 · Makefile 基础
+:::
 
----
-
-## 🎯 学习目标
-
-完成本章节后，你将：
-
-- ✅ 理解内核模块的概念和作用
-- ✅ 能够编写简单的 Hello World 模块
-- ✅ 掌握模块的编译、加载和卸载
-- ✅ 理解模块参数传递机制
-- ✅ 了解 KO 文件的内部结构
-
----
-
-## 🔧 前置知识
-
-- C 语言基础
-- Linux 基本操作
-- Makefile 基础
-
----
-
-## 📖 快速开始
-
-### 最简单的内核模块
-
+::: details 快速开始：最简内核模块
 ```c
 // hello.c
 #include <linux/module.h>
@@ -66,8 +45,6 @@ module_init(hello_init);
 module_exit(hello_exit);
 ```
 
-### Makefile
-
 ```makefile
 obj-m += hello.o
 
@@ -77,16 +54,13 @@ all:
 clean:
     make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 ```
+:::
 
----
-
-## 📖 延伸阅读
-
+::: details 延伸阅读
 - [Linux 内核模块编程指南](https://sysprog21.github.io/lkmpg/)
 - [内核模块文档](https://www.kernel.org/doc/html/latest/kbuild/)
+:::
 
----
-
-## ➡️ 返回
-
-返回 **[驱动开发](../)**
+<ChapterNav variant="sub">
+  <ChapterLink href="../" variant="sub">← 返回驱动开发</ChapterLink>
+</ChapterNav>

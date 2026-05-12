@@ -81,7 +81,7 @@ make O=../../out/mainline/linux \
 ```
 
 **预防措施**：
-- ✅ 首次使用前，按照[快速开始指南](../overview.md#快速开始)配置内核
+- ✅ 首次使用前，按照[快速开始指南](./overview.md#快速开始)配置内核
 - ✅ 避免清理 `out/` 目录中的内核配置文件
 - ✅ 切换内核类型后，重新配置和编译
 
@@ -977,9 +977,9 @@ sudo journalctl -k | grep fake_driver
 ### 获取帮助的途径
 
 1. **查看文档**
-   - [系统总览](../overview.md)
-   - [example_driver验证](./examples/example_driver.md)
-   - [最佳实践](../best_practices.md)
+   - [系统总览](./overview.md)
+   - [example_driver验证](../examples/example_driver.md)
+   - [最佳实践](./best_practices.md)
 
 2. **搜索已有问题**
    - GitHub Issues
@@ -1006,6 +1006,6 @@ sudo journalctl -k | grep fake_driver
 ---
 
 **相关文档**：
-- [example_driver验证](./examples/example_driver.md) - 基础验证流程
-- [最佳实践](../best_practices.md) - 避免常见问题
-- [构建脚本详解](../driver_helper/build_driver.md) - 深入了解构建过程
+- [example_driver验证](../examples/example_driver.md) - 基础验证流程
+- [最佳实践](./best_practices.md) - 避免常见问题
+- [构建脚本详解](./build_driver.md) - 深入了解构建过程

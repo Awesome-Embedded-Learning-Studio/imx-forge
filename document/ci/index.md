@@ -1,71 +1,41 @@
-# CI/CD 文档
-
-IMX-Forge 项目采用分层 CI 策略，平衡验证速度和完整性。
+<PageHeader icon="🔄" title="CI/CD 文档" description="IMX-Forge 项目采用分层 CI 策略，平衡验证速度和完整性" />
 
 ## 工作流概览
 
-| 工作流 | 文件 | 触发条件 | 预计时间 | 用途 |
-|--------|------|----------|----------|------|
-| PR Quick Checks | `ci-pr.yml` | 所有 PR | ~5 分钟 | 快速验证基础问题 |
-| Component Build | `ci-build.yml` | 路径变化 | ~8-15 分钟 | 只构建变更的组件 |
-| Full Build | `ci-full.yml` | main / 标签 PR | ~25-30 分钟 | 完整 4 阶段构建 |
-| Release Build | `ci-release.yml` | release-* 分支 | ~25-30 分钟 | 发布准备 |
+| 工作流 | 触发条件 | 用途 |
+|--------|----------|------|
+| [PR Quick Checks](ci-pr.md) | 所有 PR <Badge type="info" text="~5min" /> | 快速验证基础问题 |
+| [Component Build](ci-build.md) | 路径变化 <Badge type="info" text="~8-15min" /> | 只构建变更组件 |
+| [Full Build](ci-full.md) | main / 标签 PR <Badge type="warning" text="~25-30min" /> | 完整 4 阶段构建 |
+| [Release Build](ci-release.md) | release-* 分支 <Badge type="tip" text="~25-30min" /> | 发布准备 |
 
 ---
 
-## 我提交 PR 后会发生什么？
+## PR 提交流程
 
-### 第一次提交 PR
+<StepFlow>
+  <StepItem icon="📝" title="打开 PR" />
+  <StepItem icon="⚡" title="快速检查" description="ci-pr" time="~5min" />
+  <StepItem icon="✅" title="通过验证" />
+</StepFlow>
 
-```
-┌─────────────────────────────────────────────────────┐
-│  你打开了一个 PR                                     │
-└─────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────┐
-│  ci-pr 自动运行 (~5 分钟)                            │
-│  ├─ 文档能否构建成功？                               │
-│  ├─ Shell 脚本语法正确吗？                           │
-│  ├─ defconfig 文件存在吗？                          │
-│  └─ Docker 镜像能构建吗？                           │
-└─────────────────────────────────────────────────────┘
-                    ↓
-              ⚠️ 快速发现问题
-```
+::: info 修改了特定文件？
 
-### 修改了特定文件
+| 修改路径 | 触发构建 |
+|----------|----------|
+| `patches/uboot/**` | U-Boot |
+| `patches/linux-imx/**` | NXP BSP 内核 |
+| `patches/linux-mainline/**` | Mainline 内核 |
+| `driver/**` | 驱动示例 |
 
-```
-┌─────────────────────────────────────────────────────┐
-│  你修改了这些文件...                                 │
-├─────────────────────────────────────────────────────┤
-│  patches/uboot/**         → 构建 U-Boot             │
-│  patches/linux-imx/**     → 构建 Linux NXP 内核      │
-│  patches/linux-mainline/** → 构建 Linux Mainline    │
-│  driver/**                → 构建驱动示例             │
-└─────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────┐
-│  ci-build 自动运行 (~8-15 分钟)                      │
-│  只构建你修改的部分，节省时间！                       │
-└─────────────────────────────────────────────────────┘
-```
+**ci-build** 只构建你修改的部分，节省时间。
+:::
 
-### 需要完整验证？
+::: warning 需要完整验证？
+给 PR 添加 `full-build` 标签即可触发 **ci-full**：
 
-```
-┌─────────────────────────────────────────────────────┐
-│  给 PR 添加 "full-build" 标签                        │
-└─────────────────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────┐
-│  ci-full 自动运行 (~25-30 分钟)                      │
-│  ├─ Stage 1: U-Boot                                 │
-│  ├─ Stage 2: 双内核并行构建                          │
-│  ├─ Stage 3: BusyBox                                │
-│  └─ Stage 4: RootFS                                 │
-└─────────────────────────────────────────────────────┘
-```
+Stage 1: U-Boot → Stage 2: 双内核并行 → Stage 3: BusyBox → Stage 4: RootFS
+:::
 
 ---
 
@@ -80,49 +50,28 @@ IMX-Forge 项目采用分层 CI 策略，平衡验证速度和完整性。
 
 ---
 
-## 开发流程建议
+## 触发决策
 
-```
-日常开发:
-  修改代码 → 打开 PR → ci-pr 检查 → 通过后合并
-
-重要变更:
-  修改代码 → 打开 PR → 添加 full-build 标签 → ci-full 验证 → 合并
-
-发布版本:
-  创建 release-* 分支 → 推送 → ci-release 构建 → 下载产物 → 发布
+```mermaid
+graph TD
+    A[PR 触发] --> B[快速检查 ✅ 每个 PR]
+    A --> C[组件构建 🔍 路径变化时]
+    A --> D[完整构建 🏷️ full-build 标签]
+    E[Push main] --> F[完整构建 ✅ 自动]
+    G[Push release-*] --> H[发布构建 ✅ 自动]
 ```
 
-## 决策树
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    CI 触发决策                               │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  PR 触发                                                    │
-│  ├─ 快速检查 ──► 每个 PR 自动运行                            │
-│  ├─ 组件构建 ──► 路径变化时自动运行                          │
-│  └─ 完整构建 ──► 添加 "full-build" 标签后运行                │
-│                                                             │
-│  Push 到 main                                               │
-│  └─ 完整构建 ──► 自动运行                                    │
-│                                                             │
-│  Push 到 release-*                                          │
-│  └─ 发布构建 ──► 自动运行                                    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 使用指南
-
-- **日常开发**：提交 PR 后自动运行快速检查和组件构建
-- **重要验证**：给 PR 添加 `full-build` 标签运行完整构建
-- **发布准备**：创建 `release-*` 分支自动构建发布包
+---
 
 ## 详细文档
 
-- [PR Quick Checks](ci-pr.md) - 快速检查详解
-- [Component Build](ci-build.md) - 组件构建详解
-- [Full Build](ci-full.md) - 完整构建详解
-- [Release Build](ci-release.md) - 发布构建详解
+<ChapterNav variant="sub">
+  <ChapterLink href="ci-pr" variant="sub">PR Quick Checks — 快速检查详解</ChapterLink>
+  <ChapterLink href="ci-build" variant="sub">Component Build — 组件构建详解</ChapterLink>
+  <ChapterLink href="ci-full" variant="sub">Full Build — 完整构建详解</ChapterLink>
+  <ChapterLink href="ci-release" variant="sub">Release Build — 发布构建详解</ChapterLink>
+</ChapterNav>
+
+<ChapterNav variant="sub">
+  <ChapterLink href="../" variant="sub">← 返回文档首页</ChapterLink>
+</ChapterNav>

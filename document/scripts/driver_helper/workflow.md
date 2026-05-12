@@ -930,7 +930,7 @@ out/driver_artifacts/<驱动>/<板卡>/
 
 - **[系统总览](./overview.md)** - 了解系统概况
 - **[架构设计](./architecture.md)** - 深入理解系统原理
-- **[脚本参考](./driver_helper/)** - 详细脚本文档
+- **[脚本参考](./overview.md)** - 详细脚本文档
 - **[错误排查指南](./troubleshooting.md)** - 常见问题解决
 
 ---

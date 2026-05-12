@@ -392,4 +392,4 @@ TFTP 主要用于 U-Boot 加载设备树，内核模块 (.ko) 需要通过 rootf
 
 - [build_driver.sh](./build_driver.sh.md) - 驱动构建脚本
 - [review_driver.sh](./review_driver.sh.md) - 驱动审查脚本
-- [驱动开发工作流程](../../../driver_helper/workflow.md)
+- [驱动开发工作流程](./workflow.md)

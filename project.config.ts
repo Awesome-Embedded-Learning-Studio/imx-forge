@@ -1,0 +1,58 @@
+import { defineProject } from './site/.vitepress/config/schema'
+
+export default defineProject({
+  name: 'imx-forge',
+  title: { 'zh-CN': 'IMX-Forge的教程文档' },
+  description: { 'zh-CN': 'IMX-Forge，专注于IMX6ULL的教程文档网站' },
+  base: '/imx-forge/',
+  copyright: 'Copyright © 2026 Charliechen - 保留所有权利',
+
+  documentsDir: 'document',
+  siteDir: 'site',
+
+  locales: [
+    { code: 'zh-CN', label: '中文', default: true },
+  ],
+
+  nav: {
+    'zh-CN': [
+      { text: '首页', link: '/' },
+      { text: '教程', link: '/tutorial/' },
+      { text: '架构', link: '/architecture/' },
+      { text: '脚本', link: '/scripts/' },
+      { text: '贡献者', link: '/team/' },
+      { text: 'GitHub', link: 'https://github.com/Awesome-Embedded-Learning-Studio/imx-forge' },
+    ],
+  },
+
+  sidebar: {
+    volumes: [
+      { name: 'all', srcDir: '.', urlPrefix: '/' },
+    ],
+  },
+
+  github: {
+    owner: 'Awesome-Embedded-Learning-Studio',
+    repo: 'imx-forge',
+    branch: 'main',
+    documentsPath: 'document',
+  },
+
+  build: {
+    concurrency: 4,
+    rootPages: ['index.md'],
+    rootAssets: [],
+  },
+
+  plugins: {
+    cppTemplateEscape: true,
+    kbd: true,
+    math: true,
+  },
+
+  favicon: '/imx-forge/Awesome-Embedded.ico',
+
+  homeBanner: {
+    'zh-CN': '教程具备时效性，嵌入式开发技术更新迅速，请自行对比时间参考。官方文档总是你的第一参考人。',
+  },
+})

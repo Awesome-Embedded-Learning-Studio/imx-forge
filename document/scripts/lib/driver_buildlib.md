@@ -509,10 +509,10 @@ DEBUG=1 ./scripts/driver_helper/build_driver.sh driver
 
 ## 相关文档
 
-- **[系统总览](../overview.md)** - 系统概况
-- **[架构设计](../architecture.md)** - 架构原理
-- **[工作流程](../workflow.md)** - 使用指南
+- **[系统总览](../driver_helper/overview.md)** - 系统概况
+- **[架构设计](../driver_helper/architecture.md)** - 架构原理
+- **[工作流程](../driver_helper/workflow.md)** - 使用指南
 
 ---
 
-**返回目录** → [README](../README.md)
+**返回目录** → [README](../driver_helper/README.md)

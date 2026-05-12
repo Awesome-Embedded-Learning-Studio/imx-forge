@@ -1,11 +1,20 @@
-# 脚本文档
+<PageHeader icon="📜" title="脚本文档" description="IMX-Forge 构建系统的脚本说明" />
 
-IMX-Forge 构建系统的脚本说明。
+## 主要脚本
 
----
+<ChapterNav>
+  <ChapterLink num="01" href="../scripts/release-all.sh">release-all.sh —— 一键构建所有组件</ChapterLink>
+  <ChapterLink num="02" href="../scripts/patch_maker.sh">patch_maker.sh —— 补丁生成工具</ChapterLink>
+</ChapterNav>
 
-## 📁 目录结构
+| 脚本 | 用途 |
+|------|------|
+| build-uboot.sh | 构建 U-Boot |
+| build-linux.sh | 构建 NXP BSP 内核 |
+| build-mainline-linux.sh | 构建主线内核 |
+| build-busybox.sh | 构建 BusyBox |
 
+::: details 目录结构
 ```
 scripts/
 ├── build_helper/          # 组件构建脚本
@@ -21,51 +30,32 @@ scripts/
 ├── server_helper/         # 服务器工具
 └── third_party_install/   # 第三方安装
 ```
+:::
 
----
-
-## 📚 主要脚本
-
-| 脚本 | 用途 |
-|------|------|
-| **[release-all.sh](../scripts/release-all.sh)** | 一键构建所有组件 |
-| **[patch_maker.sh](../scripts/patch_maker.sh)** | 补丁生成工具 |
-| **build-uboot.sh** | 构建 U-Boot |
-| **build-linux.sh** | 构建 NXP BSP 内核 |
-| **build-mainline-linux.sh** | 构建主线内核 |
-| **build-busybox.sh** | 构建 BusyBox |
-
----
-
-## 🔧 使用方法
-
-### 一键构建
-
+::: details 使用方法
 ```bash
+# 一键构建
 ./scripts/release-all.sh
 ```
 
-### 分步构建
-
 ```bash
+# 分步构建
 ./scripts/build_helper/build-uboot.sh
 ./scripts/build_helper/build-linux.sh
 ./scripts/build_helper/build-busybox.sh
 ```
 
-### 单独构建主线内核
-
 ```bash
+# 单独构建主线内核
 ./scripts/build_helper/build-mainline-linux.sh
 ```
+:::
 
----
-
-## 📖 延伸阅读
-
+::: details 延伸阅读
 - [构建系统文档](../architecture/BUILD_SYSTEM)
 - [补丁系统文档](../architecture/PATCH_SYSTEM)
+:::
 
----
-
-## ➡️ 返回 [文档首页](../)
+<ChapterNav variant="sub">
+  <ChapterLink href="../" variant="sub">← 返回文档首页</ChapterLink>
+</ChapterNav>

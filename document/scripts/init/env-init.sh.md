@@ -322,4 +322,4 @@ MISSING_PKGS=()   # 缺失的包列表
 
 - [build-linux.sh](../build_helper/build-linux.sh.md) - Linux 内核构建脚本
 - [build-uboot.sh](../build_helper/build-uboot.sh.md) - U-Boot 构建脚本
-- [环境初始化指南](../../../tutorial/environment_setup.md)
+- 环境初始化指南

@@ -409,12 +409,12 @@ out/driver_artifacts/example-driver/alpha-board/
 #### 🟢 新手路径（1-2天）
 1. **本文档** - 了解系统概况
 2. **[工作流程文档](./workflow.md)** - 学习基本操作
-3. **[example_driver验证](./examples/example_driver.md)** - 实践验证
+3. **[example_driver验证](../examples/example_driver.md)** - 实践验证
 
 #### 🟡 进阶路径（3-5天）
 1. **[架构设计文档](./architecture.md)** - 理解系统原理
-2. **[脚本参考文档](./driver_helper/)** - 深入了解各个脚本
-3. **[设备树编译机制](../tutorial/driver/device_tree_compile/)** - 理解编译原理
+2. **[脚本参考文档](./overview.md)** - 深入了解各个脚本
+3. **设备树编译机制** - 理解编译原理
 
 #### 🔴 专家路径（按需查阅）
 1. **[最佳实践](./best_practices.md)** - 优化工作流程
@@ -428,9 +428,9 @@ out/driver_artifacts/example-driver/alpha-board/
 | 构建驱动 | [workflow.md](./workflow.md#场景1从零创建新驱动) | 🟢 |
 | 编译设备树 | [architecture.md](./architecture.md#设备树编译系统) | 🟡 |
 | 部署产物 | [workflow.md](./workflow.md#部署阶段) | 🟢 |
-| 审查产物 | [review_driver.md](./driver_helper/review_driver.md) | 🟡 |
-| 查看设备树 | [show_device_tree.md](./driver_helper/show_device_tree.md) | 🟢 |
-| 配置系统 | [configuration.md](./driver_helper/configuration.md) | 🟢 |
+| 审查产物 | [review_driver.md](./review_driver.md) | 🟡 |
+| 查看设备树 | [show_device_tree.md](./show_device_tree.md) | 🟢 |
+| 配置系统 | [configuration.md](./configuration.md) | 🟢 |
 
 ---
 
@@ -449,10 +449,10 @@ out/driver_artifacts/example-driver/alpha-board/
    - 配置系统设计
    - 扩展性设计
 
-3. **[脚本参考](./driver_helper/)** - 按需查阅详细文档
-   - [build_driver.md](./driver_helper/build_driver.md) - 构建脚本详解
-   - [deploy_driver.md](./driver_helper/deploy_driver.md) - 部署脚本详解
-   - [review_driver.md](./driver_helper/review_driver.md) - 审查脚本详解
+3. **[脚本参考](./overview.md)** - 按需查阅详细文档
+   - [build_driver.md](./build_driver.md) - 构建脚本详解
+   - [deploy_driver.md](./deploy_driver.md) - 部署脚本详解
+   - [review_driver.md](./review_driver.md) - 审查脚本详解
 
 ### 常见问题
 

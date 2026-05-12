@@ -25,8 +25,11 @@ jobs:
       - name: 检查脚本 README 覆盖率
         run: ./develop/scripts_readme_check.sh
 
-      - name: 验证 MkDocs 配置
-        run: ./scripts/document/mkdocs_dev.sh build
+      - name: 验证 VitePress 文档构建
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+          pnpm build
 
   # Job 2: 脚本语法检查
   shellcheck:

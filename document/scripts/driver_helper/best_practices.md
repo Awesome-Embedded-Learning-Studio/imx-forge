@@ -909,11 +909,11 @@ make C=2 M=driver/my-driver/alpha-board/ modules
 
 ### 相关文档
 
-- **[系统总览](../overview.md)** - 了解系统架构
-- **[example_driver验证](./examples/example_driver.md)** - 学习基础流程
-- **[错误排查指南](../troubleshooting.md)** - 解决常见问题
-- **[工作流程](../workflow.md)** - 完整的开发流程
+- **[系统总览](./overview.md)** - 了解系统架构
+- **[example_driver验证](../examples/example_driver.md)** - 学习基础流程
+- **[错误排查指南](./troubleshooting.md)** - 解决常见问题
+- **[工作流程](./workflow.md)** - 完整的开发流程
 
 ---
 
-**开始开发？** → [系统总览](../overview.md) 或 [example_driver验证](./examples/example_driver.md)
+**开始开发？** → [系统总览](./overview.md) 或 [example_driver验证](../examples/example_driver.md)

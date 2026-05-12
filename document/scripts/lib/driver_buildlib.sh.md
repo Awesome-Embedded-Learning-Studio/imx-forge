@@ -370,5 +370,5 @@ KERNEL_CONFIGS[custom]="linux_custom|out/custom|custom_defconfig|自定义内核
 ## 相关文档
 
 - [build_driver.sh](../driver_helper/build_driver.sh.md) - 顶层构建脚本
-- [驱动开发工作流程](../../driver_helper/workflow.md)
-- [设备树编译机制](../../tutorial/driver/device_tree_compile/migration.md)
+- [驱动开发工作流程](../driver_helper/workflow)
+- 设备树编译机制

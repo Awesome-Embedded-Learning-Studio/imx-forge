@@ -365,5 +365,5 @@ MODULE_VERSION("1.0");
 ## 相关文档
 
 - [build_driver.sh](./build_driver.sh.md) - 驱动构建脚本
-- [driver_buildlib.sh](../../lib/driver_buildlib.sh.md) - 核心构建库
-- [驱动开发工作流程](../../../driver_helper/workflow.md)
+- [driver_buildlib.sh](../lib/driver_buildlib.sh) - 核心构建库
+- [驱动开发工作流程](./workflow.md)

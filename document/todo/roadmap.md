@@ -50,12 +50,12 @@
 - 📚 更新文档体系
 
 **如何开始**：
-根据你的需求选择任务（详见 [D1 详情](../directions/d1-environment)）：
+根据你的需求选择任务（详见 [D1 详情](./directions/d1-environment)）：
 - 新用户：D1-004 (env-init.sh) → D1-001 (Dockerfile)
 - VS Code 用户：D1-001 (Dockerfile) → D1-003 (Devcontainer)
 - 需要烧录：D1-004 (env-init.sh) → D1-005 (flash.sh)
 
-**详细规划**：参见 [D1 详情](../directions/d1-environment)
+**详细规划**：参见 [D1 详情](./directions/d1-environment)
 
 ---
 
@@ -68,12 +68,12 @@
 - 🎯 多板卡支持框架
 
 **如何开始**：
-根据你的需求选择任务（详见 [D2 详情](../directions/d2-tools)）：
+根据你的需求选择任务（详见 [D2 详情](./directions/d2-tools)）：
 - 提升效率：D2-001 (menuconfig.sh) → D2-002 (clean.sh)
 - 多板卡支持：D2-003 (select-board.sh) → D2-004 (板卡接入文档)
 - 代码质量：D2-005 (CI - Patch 校验) → D2-006 (CI - Docker 构建)
 
-**详细规划**：参见 [D2 详情](../directions/d2-tools)
+**详细规划**：参见 [D2 详情](./directions/d2-tools)
 
 ---
 
@@ -86,12 +86,12 @@
 - 🌟 展示项目价值
 
 **如何开始**：
-根据你的兴趣选择任务（详见 [D3 详情](../directions/d3-examples)）：
+根据你的兴趣选择任务（详见 [D3 详情](./directions/d3-examples)）：
 - 必须先做：D3-001 (QT6 完整应用示例)
 - IoT 方向：D3-002 (PROJ-001 环境监测站)
 - 图像处理：D3-003 (PROJ-002 图像分析仪)
 
-**详细规划**：参见 [D3 详情](../directions/d3-examples)
+**详细规划**：参见 [D3 详情](./directions/d3-examples)
 
 ---
 
@@ -104,13 +104,13 @@
 - 👥 活跃的社区
 
 **如何开始**：
-根据你的兴趣选择任务（详见 [D4 详情](../directions/d4-ecosystem)）：
+根据你的兴趣选择任务（详见 [D4 详情](./directions/d4-ecosystem)）：
 - 系统构建：D4-001 (Buildroot) → D4-002 (Debian)
 - DevOps：D4-003 (完善 CI/CD)
 - 网络技术：D4-004 (PROJ-003 协议分析仪)
 - 游戏开发：D4-005 (PROJ-004 游戏模拟器)
 
-**详细规划**：参见 [D4 详情](../directions/d4-ecosystem)
+**详细规划**：参见 [D4 详情](./directions/d4-ecosystem)
 
 ---
 
@@ -120,8 +120,8 @@
 
 | 项目 ID | 项目名称 | 技术栈 | 所属方向 |
 |---------|----------|--------|----------|
-| PROJ-001 | [便携式环境监测站 + 云端数据看板](../projects/proj-001-env-monitor) | C + Qt + MQTT + 驱动 | D3 |
-| PROJ-002 | [嵌入式图像采集与分析仪](../projects/proj-002-image-analyzer) | C++ + Qt + OpenCV + V4L2 | D3 |
+| PROJ-001 | [便携式环境监测站 + 云端数据看板](./projects/proj-001-env-monitor) | C + Qt + MQTT + 驱动 | D3 |
+| PROJ-002 | [嵌入式图像采集与分析仪](./projects/proj-002-image-analyzer) | C++ + Qt + OpenCV + V4L2 | D3 |
 
 ### 🥈 精品项目（技术深度）
 
@@ -157,7 +157,7 @@
 - ✅ WSL2 Mirrored 网络模式支持
 - ✅ 完整教程体系（30+ 篇）
 
-**详细记录**：参见 [v0.5 归档](../archive/v0.5-milestone)
+**详细记录**：参见 [v0.5 归档](./archive/v0.5-milestone)
 
 ---
 

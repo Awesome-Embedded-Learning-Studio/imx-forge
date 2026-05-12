@@ -18,7 +18,7 @@
 ### 1. Documentation - 文档验证
 
 - 检查脚本 README 覆盖率 (`develop/scripts_readme_check.sh`)
-- 验证 MkDocs 配置能否正常构建
+- 验证 VitePress 文档站点能否正常构建
 
 ### 2. Shell Scripts - 脚本语法检查
 

@@ -353,4 +353,4 @@ module_exit(driver_exit);
 
 - [build_driver.sh](./build_driver.sh.md) - 驱动构建脚本
 - [deploy_driver.sh](./deploy_driver.sh.md) - 驱动部署脚本
-- [驱动开发最佳实践](../../../driver_helper/best_practices.md)
+- [驱动开发最佳实践](./best_practices.md)

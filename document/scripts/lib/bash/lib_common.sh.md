@@ -343,4 +343,4 @@ fi
 ## 相关文档
 
 - [driver_buildlib.sh](../driver_buildlib.sh.md) - 驱动构建库
-- [logging.sh](./logging.sh) - 其他日志库（如果存在）
+- [logging.sh](../logging.sh) - 其他日志库（如果存在）

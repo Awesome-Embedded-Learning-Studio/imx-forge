@@ -691,7 +691,7 @@ QFontDatabase::addApplicationFont("/usr/share/fonts/noto/NotoSansCJK-Regular.ttc
 
 ## 相关文档
 
-- [install_fonts.sh](../install_fonts.sh) - 字体安装脚本
-- [install_qt_with_compile.sh](../install_qt_with_compile.sh) - Qt 安装和编译
+- [install_fonts.sh](../../install_fonts.sh) - 字体安装脚本
+- [install_qt_with_compile.sh](../../install_qt_with_compile.sh) - Qt 安装和编译
 - [Qt Font Documentation](https://doc.qt.io/qt-5/fonts.html) - Qt 官方字体文档
 - [Qt Internationalization](https://doc.qt.io/qt-5/internationalization.html) - Qt 国际化指南

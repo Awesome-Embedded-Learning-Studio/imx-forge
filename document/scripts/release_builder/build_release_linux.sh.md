@@ -768,7 +768,7 @@ tar czf ../releases/linux-modules-v1.0.0.tar.gz -C ../linux-modules .
 
 ## 相关文档
 
-- [Linux 构建脚本](../../build_helper/build-linux.sh) - 实际使用的构建脚本
-- [补丁生成工具](../../patch_maker.sh) - 用于生成补丁的工具
+- [Linux 构建脚本](../build_helper/build-linux.sh) - 实际使用的构建脚本
+- [补丁生成工具](../patch_maker.sh) - 用于生成补丁的工具
 - Linux 编译教程 - Linux 编译的详细原理
-- [U-Boot 发布构建](../build_release_uboot.sh) - U-Boot 发布构建脚本文档
+- [U-Boot 发布构建](./build_release_uboot.sh) - U-Boot 发布构建脚本文档

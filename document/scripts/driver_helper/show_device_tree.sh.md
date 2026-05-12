@@ -299,6 +299,6 @@ sudo apt install device-tree-compiler
 
 ## 相关文档
 
-- [设备树编译机制](../../../tutorial/driver/device_tree_compile/kernel_mechanism.md) - 内核如何处理设备树
-- [设备树编译迁移](../../../tutorial/driver/device_tree_compile/migration.md) - 设备树编译实现
+- 设备树编译机制 - 内核如何处理设备树
+- 设备树编译迁移 - 设备树编译实现
 - [deploy_driver.sh](./deploy_driver.sh.md) - 驱动部署脚本

@@ -917,7 +917,7 @@ log_info "构建耗时: ${duration}秒"
 
 - **[系统总览](./overview.md)** - 了解系统概况
 - **[工作流程](./workflow.md)** - 学习使用方法
-- **[脚本参考](./driver_helper/)** - 详细脚本文档
+- **[脚本参考](./overview.md)** - 详细脚本文档
 
 ---
 

@@ -31,8 +31,8 @@
 
 ### 相关文档
 
-- **[设备树编译机制](../tutorial/driver/device_tree_compile/kernel_mechanism.md)** - 内核如何处理设备树编译
-- **[设备树编译迁移](../tutorial/driver/device_tree_compile/migration.md)** - 我们的设备树编译实现
+- **设备树编译机制** - 内核如何处理设备树编译
+- **设备树编译迁移** - 我们的设备树编译实现
 
 ## 🎯 按角色阅读
 
@@ -48,22 +48,22 @@
 
 推荐阅读顺序：
 1. [系统总览](overview.md) - 快速了解
-2. [脚本参考](./) - 按需查阅
+2. [脚本参考](./overview.md) - 按需查阅
 3. [架构设计](architecture.md) - 深入理解
 
 ### 项目维护者
 
 推荐阅读顺序：
 1. [架构设计](architecture.md) - 理解设计原理
-2. [设备树编译机制](../../tutorial/driver/device_tree_compile/kernel_mechanism.md) - 内核机制
-3. [设备树编译迁移](../../tutorial/driver/device_tree_compile/migration.md) - 迁移实现
+2. 设备树编译机制 - 内核机制
+3. 设备树编译迁移 - 迁移实现
 4. [最佳实践](best_practices.md) - 维护建议
 
 ### 快速上手用户
 
 只需要：
 1. [快速开始](overview.md#快速开始) - 5分钟上手
-2. [脚本参考](./) - 需要时查阅
+2. [脚本参考](./overview.md) - 需要时查阅
 
 ## 📖 文档约定
 
@@ -109,8 +109,8 @@ int example_function() {
 ### 项目链接
 
 - **项目根目录**：[../../](../../)
-- **驱动脚本**：[../../scripts/driver_helper/](../../scripts/driver_helper/)
-- **示例驱动**：[../../driver/example-driver/](../../driver/example-driver/)
+- **驱动脚本**：`scripts/driver_helper/`
+- **示例驱动**：`driver/example-driver/`
 - **配置文件**：[../../scripts/driver_helper/driver_helper.conf](../../scripts/driver_helper/driver_helper.conf)
 
 ### 外部资源

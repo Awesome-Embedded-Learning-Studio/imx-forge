@@ -187,5 +187,5 @@ imx 内核： Documentation/devicetree/bindings/gpio/fsl-imx-gpio.txt
 **相关阅读**
 
 - [字符设备驱动基础](../00_chardev_base/01_introduction.md)
-- [设备树基础](../01_device_tree_base/)
+- [设备树基础](../01_device_tree_base/01_device_tree_introduction.md)
 - [内存映射 I/O](../00_chardev_base/08_memory_mapped_io.md)
