@@ -32,8 +32,8 @@
 # 检查 Stage 2 (Linux Kernel) 依赖
 ./scripts/init/env-init.sh --stage 2
 
-# 检查 Stage 4 (BusyBox) 依赖
-./scripts/init/env-init.sh --stage 4
+# 检查 Stage 3 (BusyBox) 依赖
+./scripts/init/env-init.sh --stage 3
 ```
 
 ## 依赖包列表
@@ -52,7 +52,7 @@
 - libncurses-dev
 - imagemagick
 
-### Stage 2: Linux Kernel (Mainline)
+### Stage 2: Linux Kernel (Mainline/NXP BSP)
 - build-essential
 - bc
 - bison
@@ -63,7 +63,7 @@
 - libgnutls28-dev
 - libncurses-dev
 
-### Stage 4: BusyBox
+### Stage 3: BusyBox
 - build-essential
 - libncurses-dev
 
