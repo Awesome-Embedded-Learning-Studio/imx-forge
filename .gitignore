@@ -31,3 +31,7 @@ site/.vitepress/.build-tmp/
 .tmp_versions/
 modules.builtin
 modules.builtin.modinfo
+
+.venv/
+
+pnpm-workspace.yaml

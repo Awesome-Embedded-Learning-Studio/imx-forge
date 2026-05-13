@@ -13,13 +13,14 @@ import InfoCard from './components/InfoCard.vue'
 import RoadMap from './components/RoadMap.vue'
 import RoadMapPhase from './components/RoadMapPhase.vue'
 import DocNavCards from './components/DocNavCards.vue'
+import projectConfig from '../../../project.config.ts'
 import './custom.css'
 
 export default {
   extends: DefaultTheme,
   Layout() {
     return h(DefaultTheme.Layout, null, {
-      'home-features-before': () => h(HomeTipBanner),
+      'home-features-before': () => h(HomeTipBanner, { config: projectConfig }),
       'home-features-after': () => h(HomeArchDiagram),
       'doc-after': () => h(DocNavCards)
     })

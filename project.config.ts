@@ -53,6 +53,6 @@ export default defineProject({
   favicon: '/imx-forge/Awesome-Embedded.ico',
 
   homeBanner: {
-    'zh-CN': '教程具备时效性，嵌入式开发技术更新迅速，请自行对比时间参考。官方文档总是你的第一参考人。',
+    'zh-CN': '🚀 新手必读：不知道从哪里开始？请先查看 <a href="/imx-forge/tutorial/start/00_roadmap">学习路线图</a>，了解嵌入式Linux的学习路径和项目结构。',
   },
 })

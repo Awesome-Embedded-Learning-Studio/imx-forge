@@ -35,16 +35,18 @@ const showBanner = computed(() => !!bannerText.value)
 .home-tip-banner {
   max-width: 1152px;
   margin: -16px auto 32px;
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: 16px 24px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background-color: var(--vp-tip-bg, rgba(83, 162, 83, 0.08));
-  border: 1px solid var(--vp-tip-border, rgba(83, 162, 83, 0.2));
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(83, 162, 83, 0.12) 0%, rgba(83, 162, 83, 0.06) 100%);
+  border: 2px solid var(--vp-tip-border, rgba(83, 162, 83, 0.3));
   color: var(--vp-tip-text, var(--vp-c-text-2));
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.6;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(83, 162, 83, 0.15);
 }
 
 .home-tip-icon {
@@ -54,14 +56,15 @@ const showBanner = computed(() => !!bannerText.value)
   align-items: center;
 }
 
-.home-tip-text a {
-  color: var(--vp-tip-accent, #53a253);
+.home-tip-text :deep(a) {
+  color: #3b82f6;
   text-decoration: underline;
-  text-underline-offset: 2px;
-  font-weight: 500;
+  text-underline-offset: 3px;
+  font-weight: 700;
+  transition: all 0.2s ease;
 }
 
-.home-tip-text a:hover {
-  color: var(--vp-tip-accent-hover, #3d7a3d);
+.home-tip-text :deep(a:hover) {
+  color: #2563eb;
 }
 </style>

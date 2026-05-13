@@ -3,6 +3,7 @@
 ## 章节
 
 <ChapterNav>
+  <ChapterLink num="00" href="00_roadmap">学习路线图 —— 嵌入式Linux是什么？</ChapterLink>
   <ChapterLink num="01" href="01_start_from_toolchain">工具链安装 —— ARM GNU Toolchain 15.2</ChapterLink>
   <ChapterLink num="02" href="02_env_init_guide">环境初始化指南</ChapterLink>
 </ChapterNav>
