@@ -101,7 +101,7 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
 ```
 
-> **镜像说明**: 基于 Ubuntu 24.04，预装 ARM GNU Toolchain 15.2.rel1 及所有开发依赖，大小约 1.5GB。详见 [Docker 发布文档](document/ci/docker-publish.md)
+> **镜像说明**: 基于 Ubuntu 24.04，预装 ARM GNU Toolchain 15.2.rel1 及所有开发依赖，截至文档更新时约 2GB（实际大小可能存在波动）。详见 [Docker 发布文档](document/ci/docker-publish.md)
 
 #### 方式二：本地构建
 

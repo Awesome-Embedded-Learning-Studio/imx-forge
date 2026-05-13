@@ -56,7 +56,7 @@ git push origin v1.0.0
 - **SSL/TLS** - libssl-dev, libgnutls28-dev
 - **音频库** - libpulse-dev, libasound2-dev
 
-镜像大小：约 **1.5GB**
+镜像大小：约 **2GB**（截至文档更新时，实际大小可能存在波动）
 
 ## 用户使用
 
