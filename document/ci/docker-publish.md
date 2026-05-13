@@ -139,7 +139,7 @@ gh api repos/Awesome-Embedded-Learning-Studio/imx-forge/packages | jq -r '.[].na
 
 ## 相关链接
 
-- [Docker 开发环境指南](../../docker/README.md)
+- [Docker 开发环境指南](../tutorial/docker/02_imx_forge_docker_guide.md)
 - [GitHub Actions](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/actions)
 - [GitHub Container Registry](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/pkgs/container/imx-forge)
 
