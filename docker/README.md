@@ -12,7 +12,29 @@
 
 ## 快速开始
 
-### 0. 国内用户（推荐）
+### 方式一：直接拉取预构建镜像（推荐）
+
+我们已经为你构建好了 Docker 镜像，可以直接拉取使用：
+
+```bash
+# 拉取最新版本
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:latest
+
+# 启动开发环境
+cd imx-forge
+docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studio/imx-forge:latest
+```
+
+使用特定版本：
+```bash
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
+```
+
+### 方式二：本地构建
+
+如需自定义或使用国内镜像优化版，可以本地构建：
+
+#### 0. 国内用户加速（推荐）
 
 如果你在中国大陆，建议使用国内镜像源版本：
 
@@ -233,6 +255,26 @@ docker build \
     -t imx-forge:latest \
     .
 ```
+
+### Q: 国内用户 ghcr.io 拉取镜像慢怎么办？
+
+A: 可以配置 Docker 镜像加速器。以下是国内常用的镜像加速源：
+
+```bash
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": [
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://hub-mirror.c.163.com"
+  ]
+}
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+**注意**: 大部分国内镜像加速器主要针对 Docker Hub，对 ghcr.io 的加速效果有限。如果仍然较慢，建议使用本地构建方式（Dockerfile.cn）。
 
 ### Q: 如何清理构建缓存？
 

@@ -75,12 +75,35 @@ IMX-Forge 支持 **Docker** 和 **WSL2 + Docker** 两种开发环境：
 
 跨平台支持，5 分钟配置完成，开箱即用。
 
+#### 方式一：直接拉取镜像（最简单）
+
+```bash
+git clone --recurse-submodules https://github.com/Awesome-Embedded-Learning-Studio/imx-forge.git
+cd imx-forge
+
+# 拉取预构建镜像
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:latest
+
+# 启动开发环境
+docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studio/imx-forge:latest
+```
+
+使用特定版本：
+```bash
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
+```
+
+#### 方式二：本地构建
+
+如需自定义或使用国内镜像优化版：
 ```bash
 git clone --recurse-submodules https://github.com/Awesome-Embedded-Learning-Studio/imx-forge.git
 cd imx-forge/docker && docker build -t imx-forge:latest . && cd ..
 docker run -it --rm -v $(pwd):/workspace imx-forge:latest
 ./scripts/release-all.sh
 ```
+
+> **国内用户加速**: 如果 ghcr.io 拉取较慢，可配置 Docker 镜像加速，详见 [Docker 文档](docker/README.md#国内用户加速)
 
 ### 🪟 WSL2 + Docker（Windows 用户首选）
 
