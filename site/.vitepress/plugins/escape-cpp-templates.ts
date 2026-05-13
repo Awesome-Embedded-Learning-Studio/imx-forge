@@ -48,6 +48,9 @@ function processLine(line: string): string {
   return segments.map((seg, i) => {
     if (i % 2 === 1) return seg
     return seg.replace(/<([^<>\n]+)>/g, (match, inner) => {
+      // Extract tag name (first word) for Vue component check
+      const tagName = inner.trim().split(/\s+/)[0]
+      if (VUE_COMPONENTS.has(tagName)) return match
       return looksLikeCppTemplate(inner)
         ? `&lt;${inner.trim()}&gt;`
         : match
