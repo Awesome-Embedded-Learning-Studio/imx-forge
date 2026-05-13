@@ -43,7 +43,7 @@
   <RoadMapPhase icon="⚙️" title="驱动开发" subtitle="Driver Dev" time="~15 天" :difficulty="4" :num="6">
     <ChapterLink num="01" href="driver/char_device/" variant="sub">字符设备基础</ChapterLink>
     <ChapterLink num="02" href="driver/device_tree/" variant="sub">设备树实践</ChapterLink>
-    <ChapterLink num="03" href="driver/pinctrl_gpio/" variant="sub">Pin Control & GPIO</ChapterLink>
+    <ChapterLink num="03" href="driver/02_pinctrl_gpio/01_introduction" variant="sub">Pin Control & GPIO</ChapterLink>
     <ChapterLink num="04" href="driver/modules/" variant="sub">模块开发</ChapterLink>
     <ChapterLink num="05" href="driver/firmware_apply/" variant="sub">固件应用</ChapterLink>
   </RoadMapPhase>

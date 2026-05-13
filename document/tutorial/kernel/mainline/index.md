@@ -11,7 +11,7 @@
 | 版本更新 | ⚠️ 较慢 | ✅ 快速 |
 
 <ChapterNav variant="sub">
-  <ChapterLink href="README.md" variant="sub">主线内核迁移指南</ChapterLink>
+  <ChapterLink href="01_why_mainline" variant="sub">为什么要用主线内核</ChapterLink>
 </ChapterNav>
 
 ::: details 构建命令
