@@ -18,6 +18,7 @@ export default defineProject({
     'zh-CN': [
       { text: '首页', link: '/' },
       { text: '教程', link: '/tutorial/' },
+      { text: 'CI/CD', link: '/ci/' },
       { text: '架构', link: '/architecture/' },
       { text: '脚本', link: '/scripts/' },
       { text: '贡献者', link: '/team/' },

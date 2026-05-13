@@ -77,11 +77,19 @@ IMX-Forge 支持 **Docker** 和 **WSL2 + Docker** 两种开发环境：
 
 #### 方式一：直接拉取镜像（最简单）
 
+我们提供预构建的 Docker 镜像，包含完整的开发环境：
+
+| 标签 | 说明 | 适用场景 |
+|------|------|----------|
+| `latest` | 稳定版本 | 日常开发推荐 |
+| `preview` | 预览版本 | 测试新功能 |
+| `v1.0.0` 等 | 版本号 | 锁定特定版本 |
+
 ```bash
 git clone --recurse-submodules https://github.com/Awesome-Embedded-Learning-Studio/imx-forge.git
 cd imx-forge
 
-# 拉取预构建镜像
+# 拉取稳定版镜像
 docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:latest
 
 # 启动开发环境
@@ -92,6 +100,8 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 ```bash
 docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
 ```
+
+> **镜像说明**: 基于 Ubuntu 24.04，预装 ARM GNU Toolchain 15.2.rel1 及所有开发依赖，大小约 1.5GB。详见 [Docker 发布文档](document/ci/docker-publish.md)
 
 #### 方式二：本地构建
 

@@ -2,17 +2,18 @@ name: Docker Image Publish
 
 on:
   push:
-    branches:
-      - test/auto-build-docker-image-test  # 测试分支，测试通过后改回 main
-  # TODO: 测试通过后，取消注释以下行
-  # tags:
-  #   - 'v*.*.*'
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag (default: test)'
-        required: false
-        default: 'test'
+        description: 'Image tag to build'
+        required: true
+        default: 'latest'
+        type: choice
+        options:
+          - latest
+          - preview
 
 permissions:
   contents: read
@@ -41,7 +42,6 @@ jobs:
           images: ghcr.io/awesome-embedded-learning-studio/imx-forge
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=test
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}

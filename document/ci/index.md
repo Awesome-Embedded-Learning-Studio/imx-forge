@@ -8,6 +8,7 @@
 | [Component Build](ci-build.md) | 路径变化 <Badge type="info" text="~8-15min" /> | 只构建变更组件 |
 | [Full Build](ci-full.md) | main / 标签 PR <Badge type="warning" text="~25-30min" /> | 完整 4 阶段构建 |
 | [Release Build](ci-release.md) | release-* 分支 <Badge type="tip" text="~25-30min" /> | 发布准备 |
+| [Docker Image Publish](docker-publish.md) | Tag / 手动 <Badge type="tip" text="~5-10min" /> | 构建发布 Docker 镜像 |
 
 ---
 
@@ -70,6 +71,7 @@ graph TD
   <ChapterLink href="ci-build" variant="sub">Component Build — 组件构建详解</ChapterLink>
   <ChapterLink href="ci-full" variant="sub">Full Build — 完整构建详解</ChapterLink>
   <ChapterLink href="ci-release" variant="sub">Release Build — 发布构建详解</ChapterLink>
+  <ChapterLink href="docker-publish" variant="sub">Docker Image Publish — 镜像发布详解</ChapterLink>
 </ChapterNav>
 
 <ChapterNav variant="sub">
