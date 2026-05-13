@@ -41,6 +41,7 @@ jobs:
           images: ghcr.io/awesome-embedded-learning-studio/imx-forge
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=test,enable={{branch == 'test/auto-build-docker-image-test'}}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
