@@ -1,12 +1,12 @@
 name: Docker Image Publish
 
 on:
-  # TODO: 测试通过后，取消注释以下行以启用自动触发
-  # push:
-  #   branches:
-  #     - main
-  #   tags:
-  #     - 'v*.*.*'
+  push:
+    branches:
+      - test/auto-build-docker-image-test  # 测试分支，测试通过后改回 main
+  # TODO: 测试通过后，取消注释以下行
+  # tags:
+  #   - 'v*.*.*'
   workflow_dispatch:
     inputs:
       tag:
