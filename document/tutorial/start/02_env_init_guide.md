@@ -52,7 +52,7 @@
 - libncurses-dev
 - imagemagick
 
-### Stage 2: Linux Kernel (Mainline/NXP BSP)
+### Stage 2: Linux Kernel (Mainline/NXP BSP) 默认为NXP BSP
 - build-essential
 - bc
 - bison
