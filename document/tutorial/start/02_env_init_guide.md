@@ -63,7 +63,7 @@
 - libgnutls28-dev
 - libncurses-dev
 
-### Stage 3: BusyBox
+### Stage 4: BusyBox
 - build-essential
 - libncurses-dev
 
