@@ -39,8 +39,17 @@ description: "感谢所有为本项目做出贡献的人"
   <div class="card-body">
     <span class="card-name">Heizer-Tan</span>
     <p class="card-role">文档修正 · 脚本优化 · Docker开发负责人</p>
-    <p class="card-types">📝 💡</p>
-    <p class="card-desc">README 修正、脚本优化、Docker子系统主要负责人</p>
+    <p class="card-types">📝 💡 🛠️</p>
+    <p class="card-desc">README 修正、脚本优化、Docker子系统建立和初步维护、主要负责人</p>
+  </div>
+</a>
+<a href="https://github.com/Leon19960120" target="_blank" rel="noopener noreferrer" class="contributor-card">
+  <img src="https://github.com/Leon19960120.png?size=96" alt="Leon19960120" class="card-avatar" />
+  <div class="card-body">
+    <span class="card-name">Leon19960120</span>
+    <p class="card-role">文档更新 · 脚本工具</p>
+    <p class="card-types">📝 🛠️</p>
+    <p class="card-desc">环境初始化阶段相关文档与脚本优化</p>
   </div>
 </a>
 <a class="contributor-card">

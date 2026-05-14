@@ -15,7 +15,12 @@
 ### Heizer-Tan
 
 - **GitHub**: [Heizer-Tan](https://github.com/Heizer-Tan)
-- **贡献**: README 修正、脚本优化
+- **贡献**: README 修正、脚本优化、Docker子系统建立和初步维护
+
+### Leon19960120
+
+- **GitHub**: [Leon19960120](https://github.com/Leon19960120)
+- **贡献**: 环境初始化阶段相关文档与脚本优化
 
 ### Anonymous
 - Anonymous (via email: 85.hear.blimps@icloud.com)
@@ -42,7 +47,7 @@
 
 数据来源：[GitHub Contributors API](https://api.github.com/repos/Awesome-Embedded-Learning-Studio/imx-forge/contributors)
 
-最后更新：2026-04-06
+最后更新：2026-05-14
 
 ---
 
