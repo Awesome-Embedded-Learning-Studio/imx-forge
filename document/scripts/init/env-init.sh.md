@@ -42,7 +42,7 @@ check_linux_dependencies
 
 | 选项 | 说明 |
 |------|------|
-| `--stage <1|2|3|4>` | 检查特定构建阶段的依赖包 |
+| `--stage <1|2|3>` | 检查特定构建阶段的依赖包 |
 | `-h, --help` | 显示帮助信息 |
 
 ### 阶段说明
@@ -50,9 +50,8 @@ check_linux_dependencies
 | 阶段 | 构建目标 | 说明 |
 |------|----------|------|
 | 1 | U-Boot | U-Boot 引导程序 |
-| 2 | Linux | NXP BSP 内核 |
-| 3 | Mainline Linux | 主线内核 |
-| 4 | BusyBox | BusyBox 工具集 |
+| 2 | Linux | NXP BSP & Mainline 内核 |
+| 3 | BusyBox | BusyBox 工具集 |
 
 ## 依赖包列表
 
@@ -207,14 +206,11 @@ check_python_module elftools python3-pyelftools
 # 检查 U-Boot 依赖
 ./scripts/init/env-init.sh --stage 1
 
-# 检查 Linux 依赖
+# 检查 Linux 依赖（NXP BSP & Mainline）
 ./scripts/init/env-init.sh --stage 2
 
-# 检查 Mainline Linux 依赖
-./scripts/init/env-init.sh --stage 3
-
 # 检查 BusyBox 依赖
-./scripts/init/env-init.sh --stage 4
+./scripts/init/env-init.sh --stage 3
 ```
 
 ### 作为库使用

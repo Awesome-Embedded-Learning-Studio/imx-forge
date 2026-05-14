@@ -281,11 +281,10 @@ Usage: $(basename "$0") [OPTIONS]
 检查主机依赖包并可选安装缺失的依赖。
 
 OPTIONS:
-    --stage <1|2|3|4>    检查特定构建阶段的依赖包
+    --stage <1|2|3>      检查特定构建阶段的依赖包
                          1 = U-Boot依赖
-                         2 = Linux依赖
-                         3 = Mainline Linux依赖
-                         4 = BusyBox依赖
+                         2 = Linux依赖（NXP BSP & Mainline）
+                         3 = BusyBox依赖
     -h, --help           显示此帮助信息
 
 EXAMPLES:
@@ -313,21 +312,17 @@ if [[ "$(basename "$0")" == "env-init.sh" ]]; then
                 check_linux_dependencies
                 ;;
             3)
-                log_info "检查 Stage 3 (Mainline Linux) 依赖包..."
-                check_linux_dependencies
-                ;;
-            4)
-                log_info "检查 Stage 4 (BusyBox) 依赖包..."
+                log_info "检查 Stage 3 (BusyBox) 依赖包..."
                 check_busybox_dependencies
                 ;;
             *)
-                echo "Usage: $0 [--stage 1|2|3|4]"
+                echo "Usage: $0 [--stage 1|2|3]"
                 echo "Use '$0 --help' for more information"
                 exit 1
                 ;;
         esac
     else
-        echo "Usage: $0 [--stage 1|2|3|4]"
+        echo "Usage: $0 [--stage 1|2|3]"
         echo "Use '$0 --help' for more information"
         exit 1
     fi

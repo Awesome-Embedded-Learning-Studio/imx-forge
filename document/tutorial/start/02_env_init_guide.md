@@ -52,7 +52,8 @@
 - libncurses-dev
 - imagemagick
 
-### Stage 2: Linux Kernel (Mainline/NXP BSP) 默认为NXP BSP
+### Stage 2: Linux Kernel (Mainline/NXP BSP) 
+目前，项目默认的选项为NXP BSP，不过两者使用的依赖完全一致！
 - build-essential
 - bc
 - bison
