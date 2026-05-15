@@ -28,7 +28,14 @@ export default defineProject({
 
   sidebar: {
     volumes: [
-      { name: 'all', srcDir: '.', urlPrefix: '/' },
+      { name: 'tutorial', srcDir: 'tutorial', urlPrefix: '/tutorial' },
+      { name: 'architecture', srcDir: 'architecture', urlPrefix: '/architecture' },
+      { name: 'ci', srcDir: 'ci', urlPrefix: '/ci' },
+      { name: 'scripts', srcDir: 'scripts', urlPrefix: '/scripts' },
+      { name: 'development', srcDir: 'development', urlPrefix: '/development' },
+      { name: 'modules', srcDir: 'modules', urlPrefix: '/modules' },
+      { name: 'team', srcDir: 'team', urlPrefix: '/team' },
+      { name: 'todo', srcDir: 'todo', urlPrefix: '/todo' },
     ],
   },
 
