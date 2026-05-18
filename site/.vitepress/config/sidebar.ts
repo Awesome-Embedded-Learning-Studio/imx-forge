@@ -23,15 +23,15 @@ function humanize(name: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-// 学习顺序：入门准备 → U-Boot → 内核 → 文件系统 → 驱动 → 实战 → 工具 → 进阶
+// 学习顺序：入门准备 → Docker环境 → U-Boot → 内核 → 文件系统 → 驱动 → 实战 → 进阶
 const LEARNING_ORDER = [
   'start',
+  'docker',
   'uboot',
   'kernel',
   'rootfs',
   'driver',
   'practical',
-  'docker',
   'third_party',
 ]
 
