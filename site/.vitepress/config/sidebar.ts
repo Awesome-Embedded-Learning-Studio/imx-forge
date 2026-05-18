@@ -23,12 +23,32 @@ function humanize(name: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
+// 学习顺序：入门准备 → U-Boot → 内核 → 文件系统 → 驱动 → 实战 → 工具 → 进阶
+const LEARNING_ORDER = [
+  'start',
+  'uboot',
+  'kernel',
+  'rootfs',
+  'driver',
+  'practical',
+  'docker',
+  'third_party',
+]
+
 function sortEntries(a: string, b: string): number {
   const na = a.match(/^(\d+)/)?.[1]
   const nb = b.match(/^(\d+)/)?.[1]
   if (na && nb) return parseInt(na) - parseInt(nb)
   if (na) return -1
   if (nb) return 1
+
+  // 对于没有数字前缀的目录，按学习顺序排序
+  const ia = LEARNING_ORDER.indexOf(a)
+  const ib = LEARNING_ORDER.indexOf(b)
+  if (ia !== -1 && ib !== -1) return ia - ib
+  if (ia !== -1) return -1
+  if (ib !== -1) return 1
+
   return a.localeCompare(b, 'en')
 }
 
