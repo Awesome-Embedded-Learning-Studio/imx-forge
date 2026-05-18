@@ -2,6 +2,10 @@
 
 发布构建工作流，为正式发布准备构建产物。
 
+::: info 产物定位
+当前 Release Build 打包的是 `release-all.sh` 生成的构建验证产物，主要来自 BSP 默认链路。IMX-Forge 的交付重点是可复现构建体系，而不是承诺通用可直接烧录的 binary。
+:::
+
 ## 文件
 
 `.github/workflows/ci-release.yml`
@@ -19,8 +23,8 @@
 
 | 分支名 | 提取的版本 |
 |--------|------------|
-| `release-1.0.0` | `1.0.0` |
-| `release-2.5.0-beta` | `2.5.0-beta` |
+| `release-0.1.0` | `0.1.0` |
+| `release-0.2.0-beta` | `0.2.0-beta` |
 
 ## 构建流程
 
@@ -64,8 +68,8 @@ imx-forge-{version}.tar.gz
 
 1. 创建 release 分支：
    ```bash
-   git checkout -b release-1.0.0
-   git push origin release-1.0.0
+   git checkout -b release-0.1.0
+   git push origin release-0.1.0
    `` ``
 
 2. 等待 CI 构建完成

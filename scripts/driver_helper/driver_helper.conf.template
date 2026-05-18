@@ -8,6 +8,8 @@
 DEFAULT_BOARD="alpha-board"
 
 # 默认内核类型 (mainline 或 imx)
+# 注意：这里的默认值服务于驱动教程和新内核验证链路；
+# 系统完整构建的默认轨道仍由 release-all.sh 使用 NXP BSP。
 DEFAULT_KERNEL_TYPE="mainline"
 
 # TFTP 部署目录

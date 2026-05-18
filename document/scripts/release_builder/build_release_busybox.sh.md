@@ -360,7 +360,7 @@ BUILD_INFO_FILE="${PROJECT_ROOT}/out/busybox/build_info.txt"
 ========================================
 BusyBox Release Build Information
 ========================================
-Release Version: v1.0.0
+Release Version: v0.1.0
 Build Date: Fri Jan  1 00:00:00 UTC 2021
 Source Date Epoch: 1609459200
 
@@ -480,14 +480,14 @@ export LC_ALL=C
 
 ```bash
 # 创建发布版本
-./scripts/release_builder/build_release_busybox.sh v1.0.0
+./scripts/release_builder/build_release_busybox.sh v0.1.0
 ```
 
 ### 指定时间戳
 
 ```bash
 # 使用特定时间戳
-SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_busybox.sh v1.0.0
+SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_busybox.sh v0.1.0
 ```
 
 ### 不带补丁构建
@@ -495,7 +495,7 @@ SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_busybox.sh 
 ```bash
 # 删除或重命名补丁文件，脚本将发出警告并继续
 mv patches/busybox/busybox.patch patches/busybox/busybox.patch.bak
-./scripts/release_builder/build_release_busybox.sh v1.0.0
+./scripts/release_builder/build_release_busybox.sh v0.1.0
 ```
 
 ### 输出示例
@@ -718,8 +718,8 @@ cd out/busybox
 sha256sum busybox > busybox.sha256
 
 # 例如：复制到发布目录
-mkdir -p releases/v1.0.0
-cp busybox releases/v1.0.0/
+mkdir -p releases/v0.1.0
+cp busybox releases/v0.1.0/
 ```
 
 ### 添加签名步骤
@@ -735,7 +735,7 @@ gpg --detach-sign --armor out/busybox/busybox
 ```bash
 # 创建发布归档
 log_step "Creating release archive"
-tar czf releases/busybox-v1.0.0.tar.gz \
+tar czf releases/busybox-v0.1.0.tar.gz \
     -C out/busybox \
     busybox \
     .config \

@@ -684,7 +684,9 @@ imx-forge/
 
 ## 7. 设计决策记录
 
-### 7.1 为什么选择 format-patch + series
+### 7.1 为什么选择 format-patch 与 series 规划
+
+> 当前实现说明：项目现有自动补丁脚本仍采用“按文件名排序，仅应用最新 patch”的简化策略。`series` 是推荐架构和后续增强方向，用于未来管理多补丁顺序。
 
 **背景**
 
@@ -692,7 +694,7 @@ imx-forge/
 
 **决策**
 
-采用 Git `format-patch` 生成的标准补丁格式，配合 `series` 文件管理应用顺序。
+采用 Git `format-patch` 生成的标准补丁格式；后续可配合 `series` 文件管理应用顺序。
 
 **理由**
 

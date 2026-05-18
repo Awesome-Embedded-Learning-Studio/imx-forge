@@ -30,7 +30,7 @@ features:
     link: /tutorial/kernel/
   - icon: 📚
     title: 完整学习路径
-    details: 197 篇文档覆盖工具链、U-Boot、内核、Rootfs、驱动开发全流程
+    details: 持续增长的文档覆盖工具链、U-Boot、内核、Rootfs、驱动开发全流程
     link: /tutorial/
   - icon: 🔥
     title: 系统驱动教程

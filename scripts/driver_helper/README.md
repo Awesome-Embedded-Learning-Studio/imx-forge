@@ -153,7 +153,7 @@ scripts/
 - **项目根目录**: 自动检测
 - **交叉编译工具**: `arm-none-linux-gnueabihf-`
 - **架构**: ARM
-- **默认内核**: mainline (可通过 `--kernel=imx` 切换)
+- **默认内核**: mainline (可通过 `--kernel=imx` 切换)。这是驱动教程和新内核验证链路的默认值；系统完整构建仍以 NXP BSP 作为默认轨道。
 
 ## 🎯 特性
 

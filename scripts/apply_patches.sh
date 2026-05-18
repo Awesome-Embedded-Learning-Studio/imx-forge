@@ -1,7 +1,11 @@
 #!/bin/bash
 #
 # 自动应用补丁脚本
-# 用于CI环境中自动应用 patches/ 目录下的补丁
+# 用于CI环境中自动应用 patches/ 目录下的补丁。
+#
+# 当前策略：按文件名排序，仅应用最新的 .patch 文件。
+# 说明：架构文档中提到的 series 机制是后续增强方向；本脚本暂不实现
+# series 顺序应用，以避免改变现有 CI 和构建行为。
 #
 # 用法：
 #   ./scripts/apply_patches.sh <component>

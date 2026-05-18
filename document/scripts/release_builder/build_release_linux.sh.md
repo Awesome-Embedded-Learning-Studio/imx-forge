@@ -372,7 +372,7 @@ BUILD_INFO_FILE="${PROJECT_ROOT}/out/linux/build_info.txt"
 ========================================
 Linux Release Build Information
 ========================================
-Release Version: v1.0.0
+Release Version: v0.1.0
 Build Date: Fri Jan  1 00:00:00 UTC 2021
 Source Date Epoch: 1609459200
 
@@ -492,14 +492,14 @@ export LC_ALL=C
 
 ```bash
 # 创建发布版本
-./scripts/release_builder/build_release_linux.sh v1.0.0
+./scripts/release_builder/build_release_linux.sh v0.1.0
 ```
 
 ### 指定时间戳
 
 ```bash
 # 使用特定时间戳
-SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_linux.sh v1.0.0
+SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_linux.sh v0.1.0
 ```
 
 ### 输出示例
@@ -731,8 +731,8 @@ cd out/linux
 sha256sum arch/arm/boot/zImage > zImage.sha256
 
 # 例如：复制到发布目录
-mkdir -p releases/v1.0.0
-cp arch/arm/boot/zImage releases/v1.0.0/
+mkdir -p releases/v0.1.0
+cp arch/arm/boot/zImage releases/v0.1.0/
 ```
 
 ### 添加签名步骤
@@ -748,7 +748,7 @@ gpg --detach-sign --armor out/linux/arch/arm/boot/zImage
 ```bash
 # 创建发布归档
 log_step "Creating release archive"
-tar czf releases/linux-v1.0.0.tar.gz \
+tar czf releases/linux-v0.1.0.tar.gz \
     -C out/linux \
     arch/arm/boot/zImage \
     vmlinux \
@@ -763,7 +763,7 @@ tar czf releases/linux-v1.0.0.tar.gz \
 log_step "Packaging kernel modules"
 cd out/linux
 make modules_install INSTALL_MOD_PATH=../linux-modules
-tar czf ../releases/linux-modules-v1.0.0.tar.gz -C ../linux-modules .
+tar czf ../releases/linux-modules-v0.1.0.tar.gz -C ../linux-modules .
 ```
 
 ## 相关文档

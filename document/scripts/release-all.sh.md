@@ -1221,11 +1221,11 @@ stage_2_linux() {
 
 ```bash
 # 构建特定版本
-git checkout v1.0.0
+git checkout v0.1.0
 ./scripts/release-all.sh
 
 # 归档版本
-mv out/release-latest out/release-v1.0.0
+mv out/release-latest out/release-v0.1.0
 
 # 构建开发版本
 git checkout develop

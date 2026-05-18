@@ -47,7 +47,7 @@
 
 ### 📚 完整的 0→1 学习路径
 
-> **114 篇教程，从入门到实战**
+> **持续增长的教程体系，从入门到实战**
 
 ```
 工具链 → U-Boot → 内核 → Rootfs → 驱动开发 → 实战项目
@@ -77,13 +77,13 @@ IMX-Forge 支持 **Docker** 和 **WSL2 + Docker** 两种开发环境：
 
 #### 方式一：直接拉取镜像（最简单）
 
-我们提供预构建的 Docker 镜像，包含完整的开发环境：
+我们提供预构建的 Docker 镜像，包含完整的开发环境。正式版本标签从 `v0.1.0` 开始；历史 `v0.5` 仅作为路线图里程碑编号保留。
 
 | 标签 | 说明 | 适用场景 |
 |------|------|----------|
 | `latest` | 稳定版本 | 日常开发推荐 |
 | `preview` | 预览版本 | 测试新功能 |
-| `v1.0.0` 等 | 版本号 | 锁定特定版本 |
+| `v0.1.0` 等 | 版本号 | 锁定特定版本 |
 
 ```bash
 git clone --recurse-submodules https://github.com/Awesome-Embedded-Learning-Studio/imx-forge.git
@@ -98,7 +98,7 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 
 使用特定版本：
 ```bash
-docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v0.1.0
 ```
 
 > **镜像说明**: 基于 Ubuntu 24.04，预装 ARM GNU Toolchain 15.2.rel1 及所有开发依赖，截至文档更新时约 2GB（实际大小可能存在波动）。详见 [Docker 发布文档](document/ci/docker-publish.md)

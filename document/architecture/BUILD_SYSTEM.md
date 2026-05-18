@@ -478,7 +478,7 @@ log_error "构建失败！"
 export SOURCE_DATE_EPOCH=1609459200  # 2021-01-01 00:00:00 UTC
 
 # 执行发布构建
-./scripts/release_builder/build_release_uboot.sh v1.0.0
+./scripts/release_builder/build_release_uboot.sh v0.1.0
 ```
 
 **构建信息文件**：
@@ -487,7 +487,7 @@ export SOURCE_DATE_EPOCH=1609459200  # 2021-01-01 00:00:00 UTC
 ========================================
 U-Boot Release Build Information
 ========================================
-Release Version: v1.0.0
+Release Version: v0.1.0
 Build Date: Fri Jan  1 00:00:00 UTC 2021
 Source Date Epoch: 1609459200
 

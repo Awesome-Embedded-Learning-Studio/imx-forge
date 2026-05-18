@@ -73,6 +73,10 @@
 |----------|------|--------|
 | release-images | `out/release-latest/images/` | 30 天 |
 
+::: info 双轨说明
+Full Build 同时验证 Linux NXP BSP 和 Linux Mainline。当前 `release-images` artifact 主要来自 `release-all.sh` 的 BSP 默认链路；Mainline 在同一次工作流中作为兼顾轨道进行构建验证。
+:::
+
 ## 使用场景
 
 1. **PR 完整验证**：添加 `full-build` 标签

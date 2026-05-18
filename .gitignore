@@ -12,6 +12,7 @@ host/
 node_modules/
 site/.vitepress/dist/
 site/.vitepress/cache/
+site/.vitepress/.temp/
 site/.vitepress/.build-cache/
 site/.vitepress/.build-tmp/
 *.tgz
