@@ -13,6 +13,7 @@ FROM ubuntu:24.04 AS builder
 
 ARG TOOLCHAIN_VERSION=15.2.rel1
 ARG TOOLCHAIN_URL=https://developer.arm.com/-/media/Files/downloads/gnu/${TOOLCHAIN_VERSION}/binrel/arm-gnu-toolchain-${TOOLCHAIN_VERSION}-x86_64-arm-none-linux-gnueabihf.tar.xz
+ARG VERBOSE=0
 
 WORKDIR /build
 
@@ -22,7 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q ${TOOLCHAIN_URL} -O toolchain.tar.xz \
+RUN if [ "$VERBOSE" = "1" ]; then \
+        wget -v ${TOOLCHAIN_URL} -O toolchain.tar.xz; \
+    else \
+        wget --progress=bar:force:noscroll ${TOOLCHAIN_URL} -O toolchain.tar.xz; \
+    fi \
     && tar -xf toolchain.tar.xz \
     && mv arm-gnu-toolchain-${TOOLCHAIN_VERSION}-x86_64-arm-none-linux-gnueabihf /opt/arm-gnu-toolchain \
     && rm toolchain.tar.xz \

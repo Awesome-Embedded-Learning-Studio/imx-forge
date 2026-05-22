@@ -17,6 +17,14 @@
 
 set -e
 
+# IMXFORGE_VERBOSE: 0=正常进度, 1=详细输出
+: "${IMXFORGE_VERBOSE:=0}"
+if [[ "$IMXFORGE_VERBOSE" == "1" ]]; then
+    WGET_ARGS="-v"
+else
+    WGET_ARGS="--progress=bar:force:noscroll"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -66,7 +74,7 @@ for fw_rel_path in "${FIRMWARE_FILES[@]}"; do
 
     # Download
     log_info "  Downloading: ${fw_file}"
-    if wget -q -O "$fw_dest" "$fw_url"; then
+    if wget ${WGET_ARGS} -O "$fw_dest" "$fw_url"; then
         log_info "    ✓ Installed: ${fw_file}"
     else
         log_error "    ✗ Failed to download: ${fw_file}"

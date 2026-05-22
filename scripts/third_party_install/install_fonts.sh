@@ -16,6 +16,14 @@
 
 set -euo pipefail
 
+# IMXFORGE_VERBOSE: 0=正常进度, 1=详细输出
+: "${IMXFORGE_VERBOSE:=0}"
+if [[ "$IMXFORGE_VERBOSE" == "1" ]]; then
+    UNZIP_ARGS=""
+else
+    UNZIP_ARGS="-q"
+fi
+
 # ================================================================
 # 脚本目录和项目根目录
 # ================================================================
@@ -230,7 +238,7 @@ install_noto_cjk() {
     # 解压
     log_info "  正在解压..."
     mkdir -p "${cache_dir}"
-    if ! unzip -q -o "${archive}" -d "${cache_dir}"; then
+    if ! unzip ${UNZIP_ARGS} -o "${archive}" -d "${cache_dir}"; then
         log_error "  ✗ 解压失败"
         return 1
     fi

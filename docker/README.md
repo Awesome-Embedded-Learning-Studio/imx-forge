@@ -146,6 +146,37 @@ docker build \
     .
 ```
 
+### 控制构建输出详细程度
+
+`VERBOSE` 和 Docker 的进度输出是两层不同的开关：
+
+- `--build-arg VERBOSE=1`：让 Dockerfile 里的 `wget` 使用详细输出
+- `--progress=plain`：让 BuildKit 不使用动态刷新界面，按普通日志逐行输出
+
+```bash
+# 默认模式（显示进度条）
+docker build -t imx-forge:latest .
+
+# 详细输出模式（推荐用于调试下载问题）
+docker build --progress=plain --build-arg VERBOSE=1 -t imx-forge:latest .
+
+# 如果从项目根目录构建，请显式指定 Dockerfile 路径
+docker build --progress=plain --build-arg VERBOSE=1 -f docker/Dockerfile -t imx-forge:latest .
+
+# 国内镜像源版本
+docker build --progress=plain --build-arg VERBOSE=1 -f docker/Dockerfile.cn -t imx-forge:latest .
+```
+
+**参数说明**：
+
+| 参数 | 控制对象 | 效果 |
+|------|----------|------|
+| `VERBOSE=0` 或未设置 | Dockerfile 内部命令 | 使用默认下载输出 |
+| `VERBOSE=1` | Dockerfile 内部命令 | `wget` 使用详细输出 |
+| `--progress=plain` | Docker BuildKit 输出界面 | 禁用动态刷新，按普通日志逐行输出 |
+
+**注意**：如果只设置 `--build-arg VERBOSE=1`，BuildKit 仍可能使用动态进度界面重绘终端，看起来像日志被覆盖。调试时优先使用 `--progress=plain`，通常不需要禁用 BuildKit。
+
 ### 持久化容器
 
 创建一个持久化的开发容器：

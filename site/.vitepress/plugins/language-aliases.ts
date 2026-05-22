@@ -6,6 +6,7 @@ const ALIASES: Record<string, string> = {
   'kconfig': 'ini',
   'qmake': 'makefile',
   'gitmodules': 'ini',
+  'gitignore': 'shellscript',
   'config': 'ini',
   'assembly': 'asm',
 }

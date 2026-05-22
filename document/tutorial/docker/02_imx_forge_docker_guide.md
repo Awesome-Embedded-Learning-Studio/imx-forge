@@ -332,6 +332,44 @@ docker build \
   .
 ```
 
+### 控制构建输出详细程度
+
+Docker 镜像支持通过 `VERBOSE` 构建参数控制容器内命令的输出详细程度；同时，Docker BuildKit 自己还有一层进度输出界面。调试网络或下载问题时，通常需要同时使用 `VERBOSE=1` 和 `--progress=plain`。
+
+两者的职责不同：
+
+- `--build-arg VERBOSE=1`：让 Dockerfile 里的 `wget` 使用详细输出
+- `--progress=plain`：让 BuildKit 不使用动态刷新界面，按普通日志逐行输出
+
+```bash
+# 默认模式（显示进度条）
+docker build -f docker/Dockerfile -t imx-forge:latest .
+
+# 详细输出模式（用于调试）
+docker build --progress=plain --build-arg VERBOSE=1 -f docker/Dockerfile -t imx-forge:latest .
+
+# 国内用户 + 详细输出
+docker build --progress=plain --build-arg VERBOSE=1 -f docker/Dockerfile.cn -t imx-forge:latest .
+
+# 保存完整构建日志
+docker build --progress=plain --build-arg VERBOSE=1 -f docker/Dockerfile -t imx-forge:latest . 2>&1 | tee build.log
+```
+
+**参数说明**：
+
+| 参数 | 控制对象 | 效果 |
+|------|----------|------|
+| `VERBOSE=0` 或未设置 | Dockerfile 内部命令 | 使用默认下载输出 |
+| `VERBOSE=1` | Dockerfile 内部命令 | `wget` 使用详细输出 |
+| `--progress=plain` | Docker BuildKit 输出界面 | 禁用动态刷新，按普通日志逐行输出 |
+
+**使用场景**：
+- **默认模式**：日常构建，输出简洁清晰
+- **VERBOSE=1 + --progress=plain**：当构建失败，需要查看完整下载和命令输出时
+- **重定向到 build.log**：需要保存完整日志用于复盘或提交问题时
+
+**注意**：如果只设置 `--build-arg VERBOSE=1`，BuildKit 仍可能使用动态进度界面重绘终端，看起来像日志被覆盖。调试时优先使用 `--progress=plain`，通常不需要禁用 BuildKit。
+
 ### 多用户支持
 
 如果宿主机用户 ID 不是 1000，可以自定义：
@@ -699,7 +737,35 @@ RUN sed -i 's@archive.ubuntu.com@mirrors.aliyun.com@g' /etc/apt/sources.list && 
 
 ## 故障排除
 
-### 问题 1: 构建失败
+### 问题 1: Dockerfile 找不到
+
+**错误信息**：
+```
+ERROR: failed to build: failed to solve: failed to read dockerfile: open Dockerfile: no such file or directory
+```
+
+**症状**：从项目根目录运行 `docker build` 时找不到 Dockerfile
+
+**原因**：Dockerfile 位于 `docker/` 子目录中，但当前目录下没有 Dockerfile
+
+**解决方法**：
+
+```bash
+# 方式 1：指定 Dockerfile 路径（推荐）
+docker build -f docker/Dockerfile -t imx-forge:latest .
+
+# 方式 2：先进入 docker 目录
+cd docker
+docker build -t imx-forge:latest .
+
+# 方式 3：从 docker 目录构建并使用 build context
+cd docker
+DOCKER_BUILDKIT=1 docker build -t imx-forge:latest .
+```
+
+**注意**：使用 `-f` 参数时，构建上下文（`.`）仍然是项目根目录，因此 COPY 指令的路径需要相对于项目根目录。
+
+### 问题 2: 构建失败
 
 **症状**：`docker build` 失败
 
@@ -739,7 +805,7 @@ docker --version
 sudo apt update && sudo apt install docker-ce
 ```
 
-### 问题 2: 容器启动失败
+### 问题 3: 容器启动失败
 
 **症状**：`docker run` 失败或容器立即退出
 
@@ -780,7 +846,7 @@ docker run -it --rm \
   imx-forge:latest
 ```
 
-### 问题 3: 编译错误
+### 问题 4: 编译错误
 
 **症状**：容器内编译失败
 
@@ -818,7 +884,7 @@ docker run -it --rm \
   imx-forge:latest
 ```
 
-### 问题 4: 性能问题
+### 问题 5: 性能问题
 
 **症状**：编译速度慢
 
@@ -851,7 +917,7 @@ docker run -it --rm \
   imx-forge:latest
 ```
 
-### 问题 5: 磁盘占用过大
+### 问题 6: 磁盘占用过大
 
 **症状**：Docker 占用大量磁盘空间
 

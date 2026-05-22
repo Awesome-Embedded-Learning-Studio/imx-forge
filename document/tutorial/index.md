@@ -119,6 +119,14 @@
   <ChapterLink num="04" href="practical/04-nfs-experience">NFS 体验</ChapterLink>
 </ChapterNav>
 
+### 构建进阶
+
+<ChapterNav>
+  <ChapterLink num="01" href="build/01_out_directory_structure">out/ 目录结构</ChapterLink>
+  <ChapterLink num="02" href="build/02_patch_workflow_practice">Patch 工作流</ChapterLink>
+  <ChapterLink num="03" href="build/03_rootfs_overlay_guide">RootFS Overlay</ChapterLink>
+</ChapterNav>
+
 ::: tip 遇到问题？
 提交 [GitHub Issue](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues) 或查阅项目 [快速开始](../QUICK_START)。
 :::
