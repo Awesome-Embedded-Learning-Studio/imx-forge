@@ -15,7 +15,7 @@
   - [D3: 示例展示](directions/d3-examples) - 11项 (3工具 + 8文档)
   - [D4: 生态成熟](directions/d4-ecosystem) - 18项 (7工具 + 11文档)
 - 🎯 **示例项目**：[projects/](projects/)
-- 📦 **已完成**：[archive/v0.5-milestone.md](archive/v0.5-milestone)
+- 📦 **已完成**：v0.5 里程碑（Mainline 内核迁移 + QT6 支持）
 - 🔗 **GitHub Issue #47**：[路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
 
 ---
@@ -76,7 +76,7 @@ P3 ──► 可选补充 (参考资源+更多项目)
 - [x] **WSL2 Mirrored 网络模式**：Windows 用户无缝使用
 - [x] **完整教程体系**：持续增长的教程内容覆盖完整学习路径
 
-**详细记录**：参见 [v0.5 归档](archive/v0.5-milestone)
+**详细记录**：v0.5 里程碑已完成 Mainline 内核迁移和 QT6 支持
 
 ---
 
