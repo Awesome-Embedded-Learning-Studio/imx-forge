@@ -129,7 +129,7 @@ document/todo/
 
 ## 🔗 相关链接
 
-- **快速开始**：[../../QUICK_START.md](../../QUICK_START.md)
+- **快速开始**：[../QUICK_START.md](../QUICK_START.md)
 - **教程目录**：[../tutorial/](../tutorial/)
 - **GitHub Issues**：[提交问题](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)
 
