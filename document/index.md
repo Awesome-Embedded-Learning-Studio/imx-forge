@@ -44,4 +44,8 @@ features:
     title: 实战演练
     details: 完整系统构建与调试，从零到一的嵌入式项目实战
     link: /tutorial/practical/
+  - icon: ❓
+    title: 常见问题
+    details: 收录 Issue 答疑记录，快速解决常见问题
+    link: /qa/
 ---
