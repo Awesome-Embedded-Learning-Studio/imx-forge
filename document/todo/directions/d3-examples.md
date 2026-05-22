@@ -1,5 +1,8 @@
 # 方向 D3：示例展示
 
+> **最后更新**：2026-05-21
+> **任务数量**：11项 (3工具 + 8文档)
+
 ---
 
 ## 📋 为什么重要
@@ -12,66 +15,54 @@
 - 建立项目影响力
 - 吸引用户和贡献者
 
-示例项目是项目的"门面"，决定了第一印象和传播效果。
+---
+
+## 📊 优先级概览
+
+| 优先级 | 工具任务 | 文档任务 | 总计 |
+|--------|----------|----------|------|
+| P1 | 3项 | 8项 | 11 |
+| **总计** | **3** | **8** | **11** |
 
 ---
 
-## 💡 如何开始
+## 📋 P1: 重要功能 (11项)
 
-根据你的兴趣和技能选择任务：
+> 展示项目能力，建立项目影响力
 
-**如果你对 Qt GUI 开发感兴趣：**
-1. **D3-001** (QT6 完整应用示例) - 学习 Qt 和触摸屏开发
-2. 然后选择旗舰项目继续深入
+### 工具任务 (3项)
 
-**如果你对 IoT 和传感器感兴趣：**
-1. 先做 **D3-001** (QT6 基础)
-2. 然后做 **D3-002** (PROJ-001 环境监测站) - 完整的 IoT 系统
+| 任务 | 推荐基础 | 说明 |
+|------|----------|------|
+| D3-001: QT6 完整应用示例 | - | QT6 + GT911 触摸屏 |
+| D3-002: PROJ-001 环境监测站 | D3-001 | IoT + MQTT + 云端 |
+| D3-003: PROJ-002 图像分析仪 | D3-001 | OpenCV + V4L2 |
 
-**如果你对图像处理感兴趣：**
-1. 先做 **D3-001** (QT6 基础)
-2. 然后做 **D3-003** (PROJ-002 图像分析仪) - OpenCV + V4L2
+### 文档任务 (8项)
 
-**如果你想快速展示项目效果：**
-1. **D3-002** 或 **D3-003** 选择一个旗舰项目
-2. 专注于完整性和可展示性
+#### P1-0: 应用开发与部署 (8项)
 
-**推荐的开始顺序：**
-- 必须先完成 D3-001（Qt 基础示例）
-- 然后根据兴趣选择 D3-002 或 D3-003（二选一即可）
-- 如果有时间和精力，可以完成另一个旗舰项目
-
----
-
-## 🎯 核心目标
-
-- QT6 完整应用示例
-- 至少一个旗舰级项目
-- 完整的教程和演示
-- 展示项目价值
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] C / CMake cross-compilation tutorial / C/CMake 交叉编译应用教程 | `document/tutorial/app/` |
+| [ ] Minimal Qt application deployment / Qt 最小应用部署教程 | `document/tutorial/app/` |
+| [ ] Qt touchscreen configuration / Qt 触摸屏配置说明 | `document/tutorial/app/` |
+| [ ] Qt font and input device configuration / Qt 字体与输入设备配置说明 | `document/tutorial/app/` |
+| [ ] Application deployment convention / 应用部署规范说明 | `document/tutorial/app/` |
+| [ ] Deploying applications via rootfs overlay / 通过 rootfs overlay 部署应用 | `document/tutorial/app/` |
+| [ ] Deploying applications via NFS / 通过 NFS 部署应用 | `document/tutorial/app/` |
+| [ ] Board-side application debugging guide / 板端应用调试说明 | `document/tutorial/debug/` |
 
 ---
 
-## 📝 任务清单
+## 🎯 项目详情
 
-### 任务 D3-001：QT6 + GT911 完整应用示例
+### D3-001: QT6 完整应用示例
 
 **优先级**：P1
 **推荐基础**：无
 
 **为什么重要**：这是所有旗舰项目的基础，展示了 Qt6、触摸屏、硬件控制的完整流程。
-
-**适合场景**：所有开发者都应该完成这个任务，作为其他项目的前置。
-
-**详细要求**：
-创建一个完整的 QT6 应用，展示触摸屏、GUI、硬件控制等功能。
-
-- 实现触摸屏校准
-- 实现多页面界面
-- 集成硬件控制示例（LED、传感器等）
-- 提供构建脚本
-- 编写详细教程
-- （可选）演示视频
 
 **验收标准**：
 - [ ] 代码结构清晰
@@ -81,40 +72,16 @@
 - [ ] 有完整文档
 - [ ] 可在开发板上运行
 
-**相关文件**：
-- `examples/qt/complete_demo/`
-- `document/tutorial/qt/README.md`
+**相关文件**：`examples/qt/complete_demo/`
 
 ---
 
-### 任务 D3-002：PROJ-001 - 便携式环境监测站
+### D3-002: PROJ-001 环境监测站
 
 **优先级**：P1
 **推荐基础**：D3-001
 
-**为什么重要**：完整的 IoT 系统，展示了从驱动到云端的全栈能力，非常适合展会展示。
-
-**适合场景**：对 IoT、传感器、云端通信感兴趣的开发者。
-
-**核心亮点**：
-- 驱动 + 可视化 + 云端联动
-- 完整产品闭环
-- 展会常驻运行极具说服力
-
-**技术栈**：
-- C + Qt Widgets + QCustomPlot
-- 自研驱动（IIC/SPI）
-- MQTT + 4G
-- Web 看板
-
-**详细要求**：
-完整的 IoT 系统，包含传感器驱动、Qt 界面、MQTT 云端通信。
-
-- 传感器驱动开发（温湿度、气压、陀螺仪、光照）
-- Qt 实时数据界面
-- MQTT 云端通信
-- Web 看板展示
-- 完整教程文档
+**技术栈**：C + Qt + MQTT + 驱动
 
 **验收标准**：
 - [ ] 所有传感器正常工作
@@ -122,41 +89,17 @@
 - [ ] 云端通信正常
 - [ ] Web 看板可用
 - [ ] 有完整教程
-- [ ] 适合展会展示
 
-**相关文件**：
-- `examples/project/proj-001-env-monitor/`
-- `document/todo/projects/proj-001-env-monitor.md`
+**相关文件**：`examples/project/proj-001-env-monitor/`
 
 ---
 
-### 任务 D3-003：PROJ-002 - 嵌入式图像采集与分析仪
+### D3-003: PROJ-002 图像分析仪
 
 **优先级**：P1
 **推荐基础**：D3-001
 
-**为什么重要**：展示了图像处理能力，技术含量高，适合简历展示。
-
-**适合场景**：对计算机视觉、图像处理感兴趣的开发者。
-
-**核心亮点**：
-- 摄像头静态拍照 + OpenCV 离线分析
-- 规避视频流，深挖图像处理能力
-- 现场对准物体拍照，屏幕立刻显示分析结果
-
-**技术栈**：
-- C++ + Qt Widgets + OpenCV
-- V4L2 + ZBar
-- libcurl
-
-**详细要求**：
-基于 V4L2 和 OpenCV 的图像处理系统。
-
-- V4L2 摄像头驱动集成
-- 图像处理算法实现
-- Qt 分析界面
-- 存储和网络功能
-- 完整教程
+**技术栈**：C++ + Qt + OpenCV + V4L2
 
 **验收标准**：
 - [ ] 摄像头正常工作
@@ -164,11 +107,8 @@
 - [ ] 界面友好
 - [ ] 可以保存结果
 - [ ] 有完整教程
-- [ ] 适合展会展示
 
-**相关文件**：
-- `examples/project/proj-002-image-analyzer/`
-- `document/todo/projects/proj-002-image-analyzer.md`
+**相关文件**：`examples/project/proj-002-image-analyzer/`
 
 ---
 
@@ -194,10 +134,9 @@
 ## 🔗 相关资源
 
 - **主路线图**：[roadmap.md](../roadmap.md)
-- **D1 详情**：[d1-environment.md](./d1-environment.md)
-- **D2 详情**：[d2-tools.md](./d2-tools.md)
 - **PROJ-001 详情**：[projects/proj-001-env-monitor.md](../projects/proj-001-env-monitor.md)
 - **PROJ-002 详情**：[projects/proj-002-image-analyzer.md](../projects/proj-002-image-analyzer.md)
+- **GitHub Issue #47**: [路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
 
 ---
 

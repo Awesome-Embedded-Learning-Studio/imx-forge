@@ -1,5 +1,8 @@
 # 方向 D2：工具完备
 
+> **最后更新**：2026-05-21
+> **任务数量**：23项 (6工具 + 17文档)
+
 ---
 
 ## 📋 为什么重要
@@ -12,224 +15,86 @@
 - 完善文档体系
 - 支持多板卡扩展
 
-好的工具可以大幅减少重复性工作，让开发者专注于核心功能开发。
+---
+
+## 📊 优先级概览
+
+| 优先级 | 工具任务 | 文档任务 | 总计 |
+|--------|----------|----------|------|
+| P0 | - | - | - |
+| P1 | 3项 | 17项 | 20 |
+| P2 | 3项 | - | 3 |
+| **总计** | **6** | **17** | **23** |
 
 ---
 
-## 💡 如何开始
+## 📋 P1: 重要功能 (20项)
 
-根据你的需求选择任务：
+> 提升开发效率和调试能力的关键功能
 
-**如果你想提升日常开发效率：**
-1. **D2-001** (menuconfig.sh) - 统一的配置入口
-2. **D2-002** (clean.sh) - 智能清理工具
+### 工具任务 (3项)
 
-**如果你需要支持多个板卡：**
-1. **D2-003** (select-board.sh) - 方便切换板卡
-2. **D2-004** (板卡接入文档) - 了解如何添加新板卡
+| 任务 | 推荐基础 | 说明 |
+|------|----------|------|
+| D2-003: select-board.sh | D1-006 | 板卡切换脚本 |
+| D2-004: 板卡接入文档 | D1-006 | 多板卡接入规范 |
+| D2-005: CI - Patch 校验 | - | 自动补丁格式检查 |
 
-**如果你关注代码质量：**
-1. **D2-005** (CI - Patch 校验) - 确保补丁格式正确
-2. **D2-006** (CI - Docker 构建) - 自动化测试
+### 文档任务 (17项)
 
-**推荐的开始顺序：**
-- 先做 D2-001 和 D2-002（日常使用最频繁）
-- 再做 D2-003 和 D2-004（如果需要多板卡支持）
-- 最后做 D2-005 和 D2-006（建立 CI/CD 基础）
+#### P1-1: 系统调试手册 (10项)
 
----
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] U-Boot common issues / U-Boot 常见问题排查 | `document/tutorial/debug/` |
+| [ ] Serial console no-output troubleshooting / 串口无输出排查 | `document/tutorial/debug/` |
+| [ ] Network boot troubleshooting / 网络启动问题排查 | `document/tutorial/debug/` |
+| [ ] Kernel panic common issues / Kernel panic 常见问题排查 | `document/tutorial/debug/` |
+| [ ] DTB mismatch troubleshooting / DTB 不匹配问题排查 | `document/tutorial/debug/` |
+| [ ] Rootfs and init failure troubleshooting / Rootfs 与 init 失败排查 | `document/tutorial/debug/` |
+| [ ] NFS / TFTP troubleshooting / NFS / TFTP 常见问题排查 | `document/tutorial/debug/` |
+| [ ] Kernel module loading failure troubleshooting / 模块加载失败排查 | `document/tutorial/debug/` |
+| [ ] Serial log reading guide / 串口日志阅读指南 | `document/tutorial/debug/` |
+| [ ] How to submit useful debug logs / 如何提交有效的问题日志 | `document/tutorial/debug/` |
 
-## 🎯 核心目标
+#### P1-2: 交叉调试与诊断 (7项)
 
-- 完整的辅助脚本集
-- CI/CD 基础建立
-- 板卡接入规范
-- 多板卡支持框架
-
-::: info 当前状态
-项目已经具备分层 CI、组件构建、Full Build、Release Build 和 Docker Publish 工作流。D2 后续重点是补齐日常开发工具、补丁校验细化、板卡接入规范，以及把现有 CI 与项目阶段验收绑定起来。
-:::
-
----
-
-## 📝 任务清单
-
-### 任务 D2-001：创建 menuconfig.sh
-
-**优先级**：P2
-**推荐基础**：D1-004
-
-**为什么重要**：统一的 menuconfig 入口可以简化内核配置流程，避免手动设置环境变量。
-
-**适合场景**：需要频繁修改 U-Boot、Linux 或 BusyBox 配置的开发者。
-
-**详细要求**：
-提供统一的内核配置入口，支持 U-Boot、Linux 内核、BusyBox 的 menuconfig。
-
-- 支持选择配置目标（U-Boot/Linux/BusyBox）
-- 自动设置交叉编译环境
-- 支持保存和恢复配置
-- 提供配置指导
-- 集成到构建流程
-
-**验收标准**：
-- [ ] 可以方便地启动 menuconfig
-- [ ] 自动设置环境变量
-- [ ] 支持所有组件
-- [ ] 提供使用文档
-
-**相关文件**：
-- `scripts/menuconfig.sh`
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] gdbserver deployment guide / gdbserver 板端部署说明 | `document/tutorial/debug/` |
+| [ ] VSCode + GDB cross-debugging setup / VSCode + GDB 交叉调试配置 | `document/tutorial/workflow/` |
+| [ ] Debugging shared libraries / 共享库调试说明 | `document/tutorial/debug/` |
+| [ ] `strace` basic usage / `strace` 基础使用 | `document/tutorial/tools/` |
+| [ ] Core dump debugging workflow / core dump 调试流程 | `document/tutorial/debug/` |
+| [ ] Basic logging workflow / 基础日志收集流程 | `document/tutorial/debug/` |
+| [ ] Basic performance inspection tools / 基础性能分析工具说明 | `document/tutorial/tools/` |
 
 ---
 
-### 任务 D2-002：创建 clean.sh
+## 📋 P2: 优化体验 (3项)
 
-**优先级**：P2
-**推荐基础**：无
+> 提升开发效率的高级功能
 
-**为什么重要**：智能清理脚本可以帮助开发者快速释放磁盘空间，同时保留重要的配置文件。
+### 工具任务 (3项)
 
-**适合场景**：磁盘空间有限，或需要频繁清理构建产物的开发者。
+| 任务 | 推荐基础 | 说明 |
+|------|----------|------|
+| D2-001: menuconfig.sh | D1-004 | 统一配置入口 |
+| D2-002: clean.sh | - | 智能清理工具 |
+| D2-006: CI - Docker 构建 | D1-001 | 自动镜像构建 |
 
-**详细要求**：
-编写智能清理脚本，支持选择性清理构建产物、临时文件、子模块。
+### 文档任务 (P2-0: 开发工作流与工具链) - 8项
 
-- 支持分类清理（内核/U-Boot/Rootfs/全部）
-- 保留配置文件
-- 显示清理前后的空间变化
-- 安全确认机制
-- 支持 dry-run 模式
-
-**验收标准**：
-- [ ] 可以选择性清理
-- [ ] 显示空间变化
-- [ ] 有安全确认
-- [ ] 支持 dry-run
-- [ ] 提供使用文档
-
-**相关文件**：
-- `scripts/clean.sh`
-
----
-
-### 任务 D2-003：创建 select-board.sh
-
-**优先级**：P1
-**推荐基础**：D1-006（如果完成）
-
-**为什么重要**：板卡切换脚本让多板卡开发变得简单，避免手动修改配置文件。
-
-**适合场景**：需要在不同板卡之间切换的开发者，或为项目添加新板卡支持。
-
-**详细要求**：
-创建板卡切换脚本，方便用户在不同板卡配置之间切换。
-
-- 列出所有可用板卡
-- 显示当前板卡
-- 支持交互式选择
-- 自动更新构建配置
-- 提供板卡信息查看
-
-**验收标准**：
-- [ ] 可以列出所有板卡
-- [ ] 可以切换板卡
-- [ ] 显示当前板卡
-- [ ] 自动更新配置
-- [ ] 提供使用文档
-
-**相关文件**：
-- `scripts/select-board.sh`
-
----
-
-### 任务 D2-004：编写板卡接入文档
-
-**优先级**：P1
-**推荐基础**：D1-006（如果完成）
-
-**为什么重要**：详细的板卡接入文档可以让其他开发者轻松为项目添加新板卡支持，扩大项目影响力。
-
-**适合场景**：希望为自己的板卡添加支持，或了解板卡移植流程的开发者。
-
-**详细要求**：
-创建详细的板卡接入指南，说明如何为新板卡添加支持。
-
-- 说明设备树移植流程
-- 说明驱动适配流程
-- 提供检查清单
-- 包含实际案例
-- 说明配置文件填写要求
-
-**验收标准**：
-- [ ] 文档完整清晰
-- [ ] 包含具体步骤
-- [ ] 有检查清单
-- [ ] 有实际案例
-- [ ] 有故障排除指南
-
-**相关文件**：
-- `docs/04-板卡接入规范.md`
-
----
-
-### 任务 D2-005：配置 GitHub Actions - Patch 校验
-
-**优先级**：P1
-**推荐基础**：无
-
-**为什么重要**：自动化的补丁校验可以确保 PR 的质量，减少维护者的审查负担。
-
-**适合场景**：项目接受社区 PR，或希望确保代码质量的团队。
-
-**详细要求**：
-创建 CI 工作流，自动验证补丁能够正确应用。
-
-- 创建 `.github/workflows/patch-check.yml`
-- 自动检测补丁格式
-- 尝试应用所有补丁
-- 检查补丁冲突
-- 生成检查报告
-- 支持手动触发
-
-**验收标准**：
-- [ ] PR 提交时自动运行
-- [ ] 检测补丁格式
-- [ ] 检查补丁冲突
-- [ ] 生成清晰报告
-- [ ] 支持手动触发
-
-**相关文件**：
-- `.github/workflows/patch-check.yml`
-
----
-
-### 任务 D2-006：配置 GitHub Actions - Docker 构建
-
-**优先级**：P2
-**推荐基础**：D1-001
-
-**为什么重要**：自动构建 Docker 镜像可以确保镜像始终可用，并提前发现构建问题。
-
-**适合场景**：使用 Docker 作为开发环境，或希望自动化测试的开发者。
-
-**详细要求**：
-自动构建 Docker 镜像并测试构建流程。
-
-- 创建 `.github/workflows/docker-build.yml`
-- 自动构建 Docker 镜像
-- 测试基本构建流程
-- 发布到 Docker Hub（可选）
-- 定期更新基础镜像
-
-**验收标准**：
-- [ ] 代码提交时自动构建
-- [ ] 测试构建流程
-- [ ] 生成构建报告
-- [ ] （可选）发布镜像
-
-**相关文件**：
-- `.github/workflows/docker-build.yml`
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] VSCode development workflow / VSCode 开发工作流说明 | `document/tutorial/workflow/` |
+| [ ] WSL2 development notes / WSL2 开发注意事项 | `document/tutorial/workflow/` |
+| [ ] Docker development workflow / Docker 开发环境说明 | `document/tutorial/workflow/` |
+| [ ] Remote-SSH workflow / Remote-SSH 工作流说明 | `document/tutorial/workflow/` |
+| [ ] clangd cross-compilation configuration / clangd 交叉编译配置说明 | `document/tutorial/workflow/` |
+| [ ] tasks.json command templates / tasks.json 常用任务模板 | `document/tutorial/workflow/` |
+| [ ] Host and board file synchronization workflow / 主机与板端文件同步流程 | `document/tutorial/workflow/` |
+| [ ] Git workflow for third-party source patches / 第三方源码 patch 的 Git 工作流 | `document/tutorial/workflow/` |
 
 ---
 
@@ -244,6 +109,7 @@
 
 - **主路线图**：[roadmap.md](../roadmap.md)
 - **D1 详情**：[d1-environment.md](./d1-environment.md)
+- **GitHub Issue #47**: [路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
 
 ---
 

@@ -1,5 +1,8 @@
 # 方向 D1：环境完善
 
+> **最后更新**：2026-05-21
+> **任务数量**：25项 (6工具 + 19文档)
+
 ---
 
 ## 📋 为什么重要
@@ -12,238 +15,86 @@
 - 减少环境配置问题
 - 提升开发效率
 
-当开发者能够快速搭建好环境并开始工作时，他们更容易继续深入学习和贡献。
+---
+
+## 📊 优先级概览
+
+| 优先级 | 工具任务 | 文档任务 | 总计 |
+|--------|----------|----------|------|
+| P0 | 2项 ✅ | 19项 | 21 |
+| P1 | 3项 | - | 3 |
+| P2 | 1项 | - | 1 |
+| **总计** | **6** | **19** | **25** |
 
 ---
 
-## 💡 如何开始
+## 📋 P0: 主线闭环 (21项)
 
-根据你的需求和情况选择任务：
+> 新用户能够从零到第一次成功启动的完整路径
 
-**如果你是新用户，想要快速开始：**
-1. 从 **D1-004** (env-init.sh) 开始 - 一键配置本地环境
-2. 然后尝试 **D1-001** (Dockerfile) - 容器化开发环境
+### 工具任务 (2项)
 
-**如果你是 VS Code 用户：**
-1. 优先完成 **D1-001** (Dockerfile)
-2. 然后做 **D1-003** (Devcontainer) - 获得最佳体验
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| D1-001: Dockerfile | ✅ | 容器化开发环境 |
+| D1-004: env-init.sh | ✅ | 本地环境配置脚本 |
 
-**如果你需要频繁烧录系统：**
-1. 先完成 **D1-004** (env-init.sh)
-2. 然后做 **D1-005** (flash.sh) - 安全烧录脚本
+### 文档任务 (19项)
 
-**如果你想要多板卡支持：**
-1. 可以选择 **D1-006** (板卡配置重构) - 可选任务
+#### P0-0: 系统工程主线闭环 (10项)
 
----
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] Board bring-up quick start / 板子上手与硬件速查 | `document/tutorial/start/` |
+| [ ] First boot and serial console checklist / 第一次上电与串口检查流程 | `document/tutorial/start/` |
+| [ ] Boot mode and storage selection guide / 启动介质选择说明 | `document/tutorial/start/` |
+| [ ] Safe flashing guide / 安全烧录教程 | `document/tutorial/usage/` |
+| [ ] **Full build workflow from a clean clone** / 从空仓库到完整构建的主线教程 | `document/tutorial/build/` |
+| [ ] **`out/` directory explanation** / `out/` 目录结构说明 | `document/tutorial/build/` |
+| [ ] BSP default build workflow / BSP 默认构建链路说明 | `document/tutorial/build/` |
+| [ ] Mainline build verification workflow / mainline 构建验证链路说明 | `document/tutorial/build/` |
+| [ ] Patch workflow guide / patch 工作流实战说明 | `document/tutorial/build/` |
+| [ ] Common build failure troubleshooting / 常见构建失败排查说明 | `document/tutorial/troubleshooting/` |
 
-## 🎯 核心目标
+#### P0-1: Rootfs 与用户空间 (9项)
 
-- 提供开箱即用的开发环境
-- 容器化构建系统
-- 完善辅助工具链
-- 更新文档体系
-
-::: info 当前状态
-项目已经具备 Dockerfile、国内镜像版本、`env-init.sh` 和基础文档。D1 后续重点不是从零开始，而是补齐 Devcontainer、Compose/TFTP/NFS 辅助服务、安全烧录脚本和板卡配置抽象。
-:::
-
----
-
-## 📝 任务清单
-
-### 任务 D1-001：创建 Dockerfile
-
-**优先级**：P0
-**推荐基础**：无
-
-**为什么重要**：Docker 环境可以确保所有开发者使用完全一致的工具链和依赖，避免"在我机器上能跑"的问题。
-
-**适合场景**：希望快速搭建一致的开发环境，或在 CI/CD 中使用。
-
-**详细要求**：
-创建完整的 Docker 构建环境，预装所有必需的工具和依赖。
-
-- 基于 Ubuntu 24.04 官方镜像
-- 安装 ARM 交叉编译工具链（15.2.rel1）
-- 安装所有构建依赖（build-essential, device-tree-compiler, etc.）
-- 优化镜像大小（使用多阶段构建）
-- 支持非 root 用户运行
-- 提供便捷的 ENTRYPOINT
-
-**验收标准**：
-- [ ] 镜像大小 < 2GB
-- [ ] 可以成功编译 U-Boot
-- [ ] 可以成功编译 Linux 内核
-- [ ] 可以成功编译 BusyBox
-- [ ] 提供使用文档
-
-**相关文件**：
-- `docker/Dockerfile`
-- `docker/README.md`
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] BusyBox Rootfs extension guide / BusyBox Rootfs 扩展教程 | `document/tutorial/rootfs/` |
+| [ ] init process explanation / init 流程说明 | `document/tutorial/rootfs/` |
+| [ ] mdev, fstab, network and startup scripts / mdev、fstab、网络配置与启动脚本说明 | `document/tutorial/rootfs/` |
+| [ ] rootfs overlay guide / rootfs overlay 使用教程 | `document/tutorial/rootfs/` |
+| [ ] Kernel module deployment guide / 内核模块部署教程 | `document/tutorial/rootfs/` |
+| [ ] Auto-loading kernel modules at boot / 内核模块开机加载说明 | `document/tutorial/rootfs/` |
+| [ ] Firmware and third-party library deployment / 固件与第三方库部署说明 | `document/tutorial/rootfs/` |
+| [ ] NFS-based development workflow / NFS 开发流说明 | `document/tutorial/rootfs/` |
+| [ ] Rootfs mount failure troubleshooting / Rootfs 挂载失败排查 | `document/tutorial/debug/` |
 
 ---
 
-### 任务 D1-002：创建 docker-compose.yml
+## 📋 P1: 重要功能 (3项)
 
-**优先级**：P1
-**推荐基础**：D1-001
+> 提升开发体验的关键工具
 
-**为什么重要**：Docker Compose 可以简化 Docker 使用，让开发者一键启动完整的开发环境（包括 TFTP、NFS 等辅助服务）。
+### 工具任务 (3项)
 
-**适合场景**：需要频繁使用网络启动（TFTP/NFS）的开发者。
-
-**详细要求**：
-编写 Docker Compose 配置文件，简化 Docker 使用。
-
-- 配置构建容器服务
-- 可选：配置 TFTP 服务器
-- 可选：配置 NFS 服务器
-- 支持卷挂载（源代码目录）
-- 支持环境变量配置
-- 提供一键启动脚本
-
-**验收标准**：
-- [ ] `docker-compose up` 可以启动开发环境
-- [ ] 可以在容器中执行构建
-- [ ] 可以访问 TFTP/NFS 服务（如果配置）
-- [ ] 提供使用文档
-
-**相关文件**：
-- `docker-compose.yml`
-- `docker/README.md`
+| 任务 | 优先级 | 推荐基础 | 说明 |
+|------|--------|----------|------|
+| D1-002: docker-compose.yml | P1 | D1-001 | 含 TFTP/NFS 辅助服务 |
+| D1-003: Devcontainer 配置 | P1 | D1-001 | VS Code 一键开发环境 |
+| D1-005: flash.sh | P1 | D1-004 | 安全烧录脚本 |
 
 ---
 
-### 任务 D1-003：创建 Devcontainer 配置
+## 📋 P2: 优化体验 (1项)
 
-**优先级**：P1
-**推荐基础**：D1-001
+> 可选的增强功能
 
-**为什么重要**：VS Code Devcontainer 提供最佳的开发体验，一键打开即可获得完整环境，无需手动配置。
+### 工具任务 (1项)
 
-**适合场景**：使用 VS Code 作为主要编辑器的开发者。
-
-**详细要求**：
-为 VS Code 用户提供完整的开发容器配置。
-
-- 创建 `.devcontainer/devcontainer.json`
-- 配置 VS Code 扩展推荐
-- 配置开发环境变量
-- 支持端口转发（TFTP/NFS）
-- 提供使用文档
-
-**验收标准**：
-- [ ] VS Code 可以自动识别 Devcontainer
-- [ ] 一键打开容器
-- [ ] 预装推荐的 VS Code 扩展
-- [ ] 提供使用文档
-
-**相关文件**：
-- `.devcontainer/devcontainer.json`
-- `.devcontainer/devcontainer-compose.yml`（可选）
-
----
-
-### 任务 D1-004：创建 env-init.sh
-
-**优先级**：P0
-**推荐基础**：无
-
-**为什么重要**：对于不使用 Docker 的开发者，env-init.sh 可以自动检查和配置本地环境，大幅降低环境配置的难度。
-
-**适合场景**：希望在本地（特别是 WSL2）直接开发的用户。
-
-**详细要求**：
-编写一键环境配置脚本，自动检查依赖、设置环境变量、验证工具链。
-
-- 检测操作系统版本
-- 验证所有必需的依赖包
-- 自动设置 PATH 环境变量
-- 验证交叉编译工具链
-- 生成环境配置报告
-- 支持 WSL2 特殊配置
-- 提供修复建议
-
-**验收标准**：
-- [x] 可以检测缺失的依赖
-- [x] 可以自动设置环境变量
-- [x] 可以验证工具链版本
-- [x] 输出清晰的环境报告
-- [x] 支持 WSL2
-- [x] 提供使用文档
-
-**相关文件**：
-- `scripts/init/env-init.sh` ✅ 已完成
-- `document/tutorial/start/02_env_init_guide.md` ✅ 已完成
-
-**状态**：✅ **已完成** (2026-04-07)
-
----
-
-### 任务 D1-005：创建 flash.sh
-
-**优先级**：P1
-**推荐基础**：D1-004
-
-**为什么重要**：统一的烧录脚本可以避免手动操作的错误，提供安全的确认机制，防止误删除重要数据。
-
-**适合场景**：需要频繁烧录 SD 卡或 eMMC 的开发者。
-
-**详细要求**：
-编写统一的 SD 卡/eMMC 烧录脚本，支持自动分区、格式化、文件复制。
-
-- 自动检测存储设备
-- 安全确认机制（防止误操作）
-- 自动分区和格式化
-- 复制 U-Boot、内核、DTB、Rootfs
-- 支持 eMMC 和 SD 卡
-- 提供进度显示
-- 完整的错误处理
-
-**验收标准**：
-- [ ] 可以安全烧录 SD 卡
-- [ ] 可以安全烧录 eMMC
-- [ ] 有完善的安全检查
-- [ ] 提供进度显示
-- [ ] 错误处理完善
-- [ ] 提供使用文档
-
-**相关文件**：
-- `scripts/flash.sh`
-- `document/tutorial/usage/01_flash_guide.md`（新增）
-
----
-
-### 任务 D1-006：板卡配置重构（可选）
-
-**优先级**：P2
-**推荐基础**：无
-
-**为什么重要**：统一的板卡配置结构可以简化多板卡支持，让新板卡的接入更加规范和简单。
-
-**适合场景**：需要支持多个板卡，或希望为项目添加新板卡支持的开发者。
-
-**详细要求**：
-将板卡配置迁移到新的 `boards/` 目录结构，简化多板卡支持。
-
-- 创建 `boards/` 目录
-- 创建 `boards/alpha-board/board.conf`
-- 创建 `boards/alpha-board/linux/` 和 `boards/alpha-board/uboot/`
-- 创建 `scripts/select-board.sh`
-- 更新构建脚本支持板卡配置
-
-**验收标准**：
-- [ ] 新的目录结构创建完成
-- [ ] 板卡配置文件创建完成
-- [ ] 可以切换板卡
-- [ ] 构建脚本支持新配置
-- [ ] 提供迁移文档
-
-**相关文件**：
-- `boards/alpha-board/board.conf`
-- `scripts/select-board.sh`
-- `document/todo/board_migration.md`（新增）
+| 任务 | 优先级 | 推荐基础 | 说明 |
+|------|--------|----------|------|
+| D1-006: 板卡配置重构 | P2 | - | 多板卡支持框架 |
 
 ---
 
@@ -257,7 +108,8 @@
 ## 🔗 相关资源
 
 - **主路线图**：[roadmap.md](../roadmap.md)
-- **快速开始**：QUICK_START.md
+- **快速开始**：[../../QUICK_START.md](../../QUICK_START.md)
+- **GitHub Issue #47**: [路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
 
 ---
 

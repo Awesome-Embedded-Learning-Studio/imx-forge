@@ -1,5 +1,8 @@
 # 方向 D4：生态成熟
 
+> **最后更新**：2026-05-21
+> **任务数量**：18项 (7工具 + 11文档)
+
 ---
 
 ## 📋 为什么重要
@@ -12,70 +15,83 @@
 - 展示项目的多样性
 - 建立活跃的社区
 
-一个成熟的项目生态可以吸引更多贡献者，形成良性循环。
+---
+
+## 📊 优先级概览
+
+| 优先级 | 工具任务 | 文档任务 | 总计 |
+|--------|----------|----------|------|
+| P2 | 4项 | - | 4 |
+| P3 | 3项 | 11项 | 14 |
+| **总计** | **7** | **11** | **18** |
 
 ---
 
-## 💡 如何开始
+## 📋 P2: 优化体验 (4项)
 
-根据你的兴趣和专长选择任务：
+> 高级系统功能和精品项目
 
-**如果你对系统构建感兴趣：**
-1. **D4-001** (Buildroot Rootfs) - 学习嵌入式 Linux 系统构建
-2. **D4-002** (Debian Rootfs) - 提供完整的包管理体验
+### 工具任务 (4项)
 
-**如果你关注 DevOps 和 CI/CD：**
-1. **D4-003** (完善 CI/CD) - 建立完整的质量保障体系
-
-**如果你对网络和底层技术感兴趣：**
-1. 先完成 **D3-001** (Qt 基础)
-2. 然后做 **D4-004** (PROJ-003 协议分析仪) - 硬核网络技术
-
-**如果你想做有趣的项目：**
-1. 先完成 **D3-001** (Qt 基础)
-2. 然后做 **D4-005** (PROJ-004 游戏模拟器) - 娱乐性强
-
-**如果你想做更多项目：**
-1. **D4-006** (PROJ-005/006) - 其他精品项目
-2. **D4-007** (PROJ-007~010) - 快速项目
-
-**推荐的开始顺序：**
-- 如果你想深入学习系统构建：先做 D4-001 和 D4-002
-- 如果你想提高项目质量：做 D4-003
-- 如果你想展示技术实力：选择一个旗舰项目（D4-004 或 D4-005）
-- 如果你想丰富项目示例：做快速项目（D4-007）
+| 任务 | 推荐基础 | 说明 |
+|------|----------|------|
+| D4-001: Buildroot Rootfs | - | 轻量级 Rootfs 方案 |
+| D4-003: CI/CD 完善 | D2-005, D2-006 | 自动化测试和发布 |
+| D4-004: PROJ-003 协议分析仪 | D3-001 | libpcap 网络抓包 |
+| D4-005: PROJ-004 游戏模拟器 | D3-001 | 模拟器移植 + 体感 |
 
 ---
 
-## 🎯 核心目标
+## 📋 P3: 可选补充 (14项)
 
-- 多种 Rootfs 方案
-- 完整的 CI/CD
-- 多个精品项目
-- 活跃的社区
+> 参考资源和更多项目
+
+### 工具任务 (3项)
+
+| 任务 | 推荐基础 | 说明 |
+|------|----------|------|
+| D4-002: Debian Rootfs | D4-001 | 完整包管理支持 |
+| D4-006: PROJ-005/006 | D3-001 | 其他精品项目 |
+| D4-007: PROJ-007~010 | D3-001 | 快速项目 |
+
+### 文档任务 (11项)
+
+#### P3-0: 参考资源索引 (11项)
+
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] NXP official documentation index / NXP 官方文档索引 | `document/reference/` |
+| [ ] i.MX6ULL reference manual links / i.MX6ULL 手册链接 | `document/reference/` |
+| [ ] NXP Linux BSP links / NXP Linux BSP 链接 | `document/reference/` |
+| [ ] U-Boot documentation links / U-Boot 文档索引 | `document/reference/` |
+| [ ] Linux Kernel Documentation links / Linux Kernel Documentation 索引 | `document/reference/` |
+| [ ] Device Tree documentation links / 设备树文档索引 | `document/reference/` |
+| [ ] Buildroot documentation links / Buildroot 文档索引 | `document/reference/` |
+| [ ] Yocto documentation links / Yocto 文档索引 | `document/reference/` |
+| [ ] Qt documentation links / Qt 文档索引 | `document/reference/` |
+| [ ] ARM GCC toolchain links / ARM GCC 工具链文档索引 | `document/reference/` |
+| [ ] Community and forum links / 社区与论坛索引 | `document/reference/` |
+
+#### P3-2: 版本号与发布策略 (8项)
+
+| 任务 | 相关文件 |
+|------|----------|
+| [ ] Release versioning policy / release 版本号策略 | `document/release/` |
+| [ ] Distinguish roadmap numbers from release tags / 区分路线图编号与正式 release tag | `document/release/` |
+| [ ] Docker tag policy / Docker tag 策略 | `document/release/` |
+| [ ] `preview` image policy / `preview` 镜像策略 | `document/release/` |
+| [ ] `latest` image policy / `latest` 镜像策略 | `document/release/` |
+| [ ] `vX.Y.Z` image policy / `vX.Y.Z` 镜像策略 | `document/release/` |
+| [ ] GitHub Release checklist / GitHub Release 检查清单 | `document/release/` |
+| [ ] CI artifact explanation / CI artifact 定位说明 | `document/ci/` |
 
 ---
 
-## 📝 任务清单
+## 🎯 项目详情
 
-### 任务 D4-001：Buildroot Rootfs 支持
+### D4-001: Buildroot Rootfs
 
 **优先级**：P2
-**推荐基础**：无
-
-**为什么重要**：Buildroot 是嵌入式 Linux 的标准构建系统，提供高度定制的轻量级 Rootfs。
-
-**适合场景**：需要定制化、小型化的嵌入式系统。
-
-**详细要求**：
-集成 Buildroot 构建系统，提供更完整的 Rootfs 方案。
-
-- 创建 Buildroot 配置
-- 添加 IMX6ULL defconfig
-- 集成常用包选择
-- 提供构建脚本
-- 文档说明配置方法
-- 测试基本功能
 
 **验收标准**：
 - [ ] 可以成功构建
@@ -84,62 +100,14 @@
 - [ ] 有构建脚本
 - [ ] 在开发板上运行正常
 
-**相关文件**：
-- `rootfs/buildroot/`
-- `scripts/build_helper/build-buildroot.sh`
+**相关文件**：`rootfs/buildroot/`
 
 ---
 
-### 任务 D4-002：Debian Rootfs 支持
-
-**优先级**：P3
-**推荐基础**：D4-001
-
-**为什么重要**：Debian 提供完整的包管理系统，适合需要大量软件包的场景。
-
-**适合场景**：需要丰富的软件包，或习惯 Debian/Ubuntu 的开发者。
-
-**详细要求**：
-提供基于 Debian 的 Rootfs，支持 apt 包管理。
-
-- 使用 debootstrap 创建基础系统
-- 配置 apt 源
-- 优化系统大小
-- 提供构建脚本
-- 文档说明使用方法
-- 测试包安装功能
-
-**验收标准**：
-- [ ] 可以成功构建
-- [ ] apt 包管理可用
-- [ ] 系统大小合理
-- [ ] 有配置文档
-- [ ] 有构建脚本
-- [ ] 在开发板上运行正常
-
-**相关文件**：
-- `rootfs/debian/`
-- `scripts/build_helper/build-debian.sh`
-
----
-
-### 任务 D4-003：完善 CI/CD
+### D4-003: CI/CD 完善
 
 **优先级**：P2
 **推荐基础**：D2-005, D2-006
-
-**为什么重要**：完整的 CI/CD 可以确保代码质量，自动化测试和发布流程。
-
-**适合场景**：希望提高项目质量和开发效率的团队。
-
-**详细要求**：
-完善 CI/CD 系统，实现自动化测试、构建和发布。
-
-- 扩展 Patch 校验 CI
-- 扩展 Docker 构建 CI
-- 添加集成测试
-- 添加自动发布（可选）
-- 定期更新依赖
 
 **验收标准**：
 - [ ] CI 自动运行
@@ -148,36 +116,16 @@
 - [ ] （可选）自动发布
 - [ ] 有 CI 文档
 
-**相关文件**：
-- `.github/workflows/*.yml`
+**相关文件**：`.github/workflows/*.yml`
 
 ---
 
-### 任务 D4-004：PROJ-003 - 网络协议分析仪
+### D4-004: PROJ-003 协议分析仪
 
 **优先级**：P2
 **推荐基础**：D3-001
 
-**为什么重要**：展示系统级网络编程能力，技术含量极高，适合简历亮点。
-
-**适合场景**：对网络编程、驱动开发感兴趣的开发者。
-
-**核心亮点**：
-- 纯系统级 + 网络驱动
-- 技术含量极高，适合简历硬核亮点
-
-**技术栈**：
-- C + Qt + libpcap
-- 4G/WiFi 网卡驱动
-
-**详细要求**：
-基于 libpcap 的网络抓包和分析工具。
-
-- 网络驱动适配
-- 协议解析引擎
-- Qt 分析界面
-- BPF 过滤支持
-- 完整教程
+**技术栈**：C + Qt + libpcap
 
 **验收标准**：
 - [ ] 可以抓包
@@ -186,37 +134,16 @@
 - [ ] 支持 BPF 过滤
 - [ ] 有完整教程
 
-**相关文件**：
-- `examples/project/proj-003-protocol-analyzer/`
-- `document/todo/projects/proj-003-protocol-analyzer.md`
+**相关文件**：`examples/project/proj-003-protocol-analyzer/`
 
 ---
 
-### 任务 D4-005：PROJ-004 - 复古掌机模拟器
+### D4-005: PROJ-004 游戏模拟器
 
 **优先级**：P2
 **推荐基础**：D3-001
 
-**为什么重要**：娱乐性强，展会现场让观众亲手试玩，人气爆棚。
-
-**适合场景**：对游戏开发、模拟器移植感兴趣的开发者。
-
-**核心亮点**：
-- 娱乐互动，展会现场让观众亲手试玩
-- 人气爆棚
-
-**技术栈**：
-- C + Qt + 模拟器移植
-- 陀螺仪驱动
-
-**详细要求**：
-移植游戏模拟器，支持体感控制。
-
-- 模拟器移植
-- Qt 游戏界面
-- 体感控制实现
-- 音频驱动支持
-- 完整教程
+**技术栈**：C + Qt + 模拟器移植
 
 **验收标准**：
 - [ ] 模拟器正常工作
@@ -225,49 +152,7 @@
 - [ ] 音频正常
 - [ ] 有完整教程
 
-**相关文件**：
-- `examples/project/proj-004-game-emulator/`
-- `document/todo/projects/proj-004-game-emulator.md`
-
----
-
-### 任务 D4-006：PROJ-005/006 - 其他精品项目
-
-**优先级**：P3
-**推荐基础**：D3-001
-
-**为什么重要**：丰富项目示例，展示更多应用场景。
-
-**适合场景**：想要深入学习特定技术领域的开发者。
-
-**详细要求**：
-完成其他精品项目：工业调试工具、Web 服务器等。
-
-- 参见各项目详情文档
-
-**相关文件**：
-- `examples/project/proj-005-bus-debugger/`
-- `examples/project/proj-006-web-server/`
-
----
-
-### 任务 D4-007：PROJ-007~010 - 快速项目
-
-**优先级**：P3
-**推荐基础**：D3-001
-
-**为什么重要**：快速项目可以丰富示例，展示不同技术点。
-
-**适合场景**：想要快速完成项目，或学习特定技术的开发者。
-
-**项目列表**：
-- PROJ-007：陀螺仪 3D 姿态展示仪（10 天）
-- PROJ-008：二维码名片生成器（10 天）
-- PROJ-009：触摸屏手写白板（8 天）
-- PROJ-010：系统性能监视器（8 天）
-
-**相关文件**：
-- `examples/project/proj-*/`
+**相关文件**：`examples/project/proj-004-game-emulator/`
 
 ---
 
@@ -297,6 +182,7 @@
 - **D1 详情**：[d1-environment.md](./d1-environment.md)
 - **D2 详情**：[d2-tools.md](./d2-tools.md)
 - **D3 详情**：[d3-examples.md](./d3-examples.md)
+- **GitHub Issue #47**: [路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
 
 ---
 

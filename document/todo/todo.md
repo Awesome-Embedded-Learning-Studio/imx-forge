@@ -1,50 +1,66 @@
 # IMX-Forge 待办事项
 
-> **最后更新**：2026-04-06
+> **最后更新**：2026-05-21
+> **数据来源**：GitHub Issue #47 + 本地规划
 > **当前历史里程碑**：v0.5
-> **正式 release 策略**：从 v0.1.0 开始
-> **查看详情**：[roadmap.md](roadmap.md)
 
 ---
 
 ## 📑 快速导航
 
 - 🗺️ **总体路线图**：[roadmap.md](roadmap.md)
-- 📁 **发展方向**：
-  - [D1: 环境完善](directions/d1-environment) - 开发环境搭建
-  - [D2: 工具完备](directions/d2-tools) - 提升开发效率
-  - [D3: 示例展示](directions/d3-examples) - 展示项目能力
-  - [D4: 生态成熟](directions/d4-ecosystem) - 建设完整生态
+- 📁 **按方向查看**：
+  - [D1: 环境完善](directions/d1-environment) - 25项 (6工具 + 19文档)
+  - [D2: 工具完备](directions/d2-tools) - 23项 (6工具 + 17文档)
+  - [D3: 示例展示](directions/d3-examples) - 11项 (3工具 + 8文档)
+  - [D4: 生态成熟](directions/d4-ecosystem) - 18项 (7工具 + 11文档)
 - 🎯 **示例项目**：[projects/](projects/)
 - 📦 **已完成**：[archive/v0.5-milestone.md](archive/v0.5-milestone)
+- 🔗 **GitHub Issue #47**：[路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
 
 ---
 
-## 🎯 当前重点：根据兴趣选择方向
+## 📊 优先级说明
 
-我们不再设定严格的里程碑和时间线，而是根据优先级和需求选择任务。
-
-### 如何选择方向？
-
-**新用户**：从 [D1: 环境完善](directions/d1-environment) 开始
-**追求效率**：专注于 [D2: 工具完备](directions/d2-tools)
-**展示能力**：跳到 [D3: 示例展示](directions/d3-examples)
-**深度参与**：致力于 [D4: 生态成熟](directions/d4-ecosystem)
+```
+P0 ──► 主线闭环，必须完成 (新用户第一次启动的完整路径)
+P1 ──► 重要功能，尽快完成 (应用开发+调试能力)
+P2 ──► 优化体验，逐步完善 (工作流+高级工具)
+P3 ──► 可选补充 (参考资源+更多项目)
+```
 
 ---
 
-## 📊 项目进度
+## 📊 任务统计总览
 
-```
-[✅] v0.1 - 基础框架搭建
-[✅] v0.3 - U-Boot 和内核移植
-[✅] 历史里程碑 v0.5 - Mainline 内核迁移 + QT6 支持
-[🚧] 当前重点：环境完善与工具开发
-[📋] 方向 D1：环境完善
-[📋] 方向 D2：工具完备
-[📋] 方向 D3：示例展示
-[📋] 方向 D4：生态成熟
-```
+### 按方向统计
+
+| 方向 | P0 | P1 | P2 | P3 | 总计 |
+|------|----|----|----|----| ---- |
+| D1: 环境完善 | 21 | 3 | 1 | - | 25 |
+| D2: 工具完备 | - | 20 | 3 | - | 23 |
+| D3: 示例展示 | - | 11 | - | - | 11 |
+| D4: 生态成熟 | - | - | 4 | 14 | 18 |
+| **总计** | **21** | **34** | **8** | **14** | **77** |
+
+### 按类型统计
+
+| 类型 | 数量 |
+|------|------|
+| 工具任务 | 22项 (D1:6 + D2:6 + D3:3 + D4:7) |
+| 文档任务 | 55项 (来自 Issue #47) |
+| **总计** | **77项** |
+
+---
+
+## 🎯 当前重点
+
+我们根据优先级和需求选择任务：
+
+**新用户**：从 [D1: 环境完善](directions/d1-environment) P0 开始
+**追求效率**：专注于 [D2: 工具完备](directions/d2-tools) P1
+**展示能力**：跳到 [D3: 示例展示](directions/d3-examples) P1
+**深度参与**：致力于 [D4: 生态成熟](directions/d4-ecosystem) P2/P3
 
 ---
 
@@ -99,24 +115,21 @@
 document/todo/
 ├── roadmap.md             # 总体路线图（从这里开始！）
 ├── todo.md                # 本文件：任务总览
-├── projects/              # 示例项目详情
 ├── directions/            # 发展方向
-│   ├── d1-environment.md  # D1: 环境完善
-│   ├── d2-tools.md        # D2: 工具完备
-│   ├── d3-examples.md     # D3: 示例展示
-│   └── d4-ecosystem.md    # D4: 生态成熟
+│   ├── d1-environment.md  # D1: 环境完善 (25项)
+│   ├── d2-tools.md        # D2: 工具完备 (23项)
+│   ├── d3-examples.md     # D3: 示例展示 (11项)
+│   └── d4-ecosystem.md    # D4: 生态成熟 (18项)
 ├── projects/              # 示例项目详情
-│   ├── proj-001-env-monitor.md
-│   └── proj-002-image-analyzer.md
-└── archive/               # 已完成归档
-    └── v0.5-milestone.md
+├── archive/               # 已完成归档
+│   └── v0.5-milestone.md
 ```
 
 ---
 
 ## 🔗 相关链接
 
-- **快速开始**：[../QUICK_START](../QUICK_START)
+- **快速开始**：[../../QUICK_START.md](../../QUICK_START.md)
 - **教程目录**：[../tutorial/](../tutorial/)
 - **GitHub Issues**：[提交问题](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)
 
@@ -137,5 +150,3 @@ document/todo/
 ---
 
 **让嵌入式 Linux 开发变得简单！** 🚀
-
-> 💡 **提示**：新用户建议先阅读 [roadmap.md](roadmap.md) 了解项目全貌，然后根据兴趣选择合适的发展方向。
