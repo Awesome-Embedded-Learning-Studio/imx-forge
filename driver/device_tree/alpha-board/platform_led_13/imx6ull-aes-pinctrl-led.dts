@@ -9,34 +9,39 @@
 	 * PS 下，可以看到我们在/下追加了一个新的LED等节点
      * 这里也是我们之后寻找LED的Path /imx_aes_led
 	 */
-	beep {
+	imx_aes_led {
         // PS：下面的内容可写可不写，这其实是给总线设备的。。。
-		#address-cells = <1>;
-		#size-cells = <1>;
+		#address-cells = <1>; 
+		#size-cells = <1>; 
         // 但是出于尊重之前的正点的教程，这里留下，但是要反复强调可以删除
+        // LED设备完全用不到
 
-		compatible = "imxaes,beep";
-
+        // 现在不能随便抄了，驱动和设备树建议严格对齐，内核不知道为啥搞了一套贼复杂的
+        // 兜底机制，这很容易出错的其实
+		compatible = "imxaes,led";
+        
         pinctrl-names = "default";
-        pinctrl-0 = <&pinctrl_beep>;
+        pinctrl-0 = <&pinctrl_aes_led>; 
 
 		status = "okay";
         // 这里是我们的GPIO，属性是自定义的，
         // 虽然实际上更标准的做法是gpios
-		beep-gpios = <&gpio5 1 GPIO_ACTIVE_HIGH>;
+		led-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
 	};
 };
 
 &iomuxc {
     // 使用pinctrl子系统添加的LED节点驱动
     // &iomuxc        : 引用追加语法，必须这样写
-    // pinctrl_beep: 标签(label)，供其他节点引用 pinctrl-0 = <&pinctrl_beep>
-    // beep_grp        : 节点名，命名可自由选择
+    // pinctrl_aes_led: 标签(label)，供其他节点引用 pinctrl-0 = <&pinctrl_aes_led>
+    // led_grp        : 节点名，命名可自由选择
     // fsl,pins       : NXP i.MX pinctrl绑定定义的必需属性名
     // fsl, pins等是IMX SOC系列的关键字，不是通用的，这说明的是
-    pinctrl_beep: beep_grp {
+    // 对应的GPIO节点和它的配置的值，这个值怎么来的可以看看之前的LED教程
+    // 这是根据手册的PAD每一个位的含义算出来的
+    pinctrl_aes_led: led_grp {
         fsl,pins = <
-            MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
+            MX6UL_PAD_GPIO1_IO03__GPIO1_IO03    0x10B0
         >;
     };
 };

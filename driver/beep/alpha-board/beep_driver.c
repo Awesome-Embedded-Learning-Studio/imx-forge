@@ -163,7 +163,7 @@ static void beep_remove(struct platform_device *pdev)
 
 /* 匹配设备树中的 compatible */
 static const struct of_device_id beep_of_match[] = {
-    { .compatible = "my,beep" },
+    { .compatible = "imxaes,beep" },
     { /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, beep_of_match);

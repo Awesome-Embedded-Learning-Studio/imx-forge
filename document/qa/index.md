@@ -6,6 +6,7 @@
 
 <ChapterNav>
   <ChapterLink num="31" href="qa_31">Docker 构建镜像更新相关疑问</ChapterLink>
+  <ChapterLink num="51" href="qa_51">Beep 的 compatible 字符串没有匹配上，但仍然能驱动蜂鸣器</ChapterLink>
 </ChapterNav>
 
 ::: tip 有问题？
