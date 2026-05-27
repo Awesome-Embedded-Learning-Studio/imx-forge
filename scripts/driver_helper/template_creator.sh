@@ -30,8 +30,8 @@ validate_driver_name() {
     fi
 
     # 检查字符集（只允许小写字母、数字、下划线、连字符）
-    if [[ ! "$name" =~ ^[a-z][a-z0-9_-]*$ ]]; then
-        log_error "驱动名只能包含小写字母、数字、下划线和连字符，且必须以字母开头"
+    if [[ ! "$name" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
+        log_error "驱动名只能包含小写字母、数字、下划线和连字符"
         return 1
     fi
 
@@ -137,6 +137,17 @@ prompt_driver_info() {
 
     DRIVER_NAME="$driver_name"
     BOARD_NAME="$board_name"
+
+    # 提取用于C代码的基础名称（去掉 序号_tutorial_ 前缀）
+    if [[ "$DRIVER_NAME" =~ ^[0-9]+_tutorial_(.+)$ ]]; then
+        DRIVER_BASE_NAME="${BASH_REMATCH[1]}"
+    else
+        DRIVER_BASE_NAME="$DRIVER_NAME"
+    fi
+
+    # C安全名称：将连字符转为下划线
+    DRIVER_C_NAME="${DRIVER_BASE_NAME//-/_}"
+
     return 0
 }
 
@@ -358,7 +369,7 @@ EOF
     # 添加初始化函数
     cat >> "$source_file" << INITEOF
 // 模块初始化
-static int __init ${DRIVER_NAME}_init(void)
+static int __init ${DRIVER_C_NAME}_init(void)
 {
 	pr_info("=== ${DRIVER_DESCRIPTION} ===\\n");
 INITEOF
@@ -388,14 +399,14 @@ INITEOF
 }
 
 // 模块退出
-static void __exit ${DRIVER_NAME}_exit(void)
+static void __exit ${DRIVER_C_NAME}_exit(void)
 {
-	pr_info("=== ${DRIVER_NAME}驱动卸载成功 ===\\n");
+	pr_info("=== ${DRIVER_C_NAME}驱动卸载成功 ===\\n");
 	pr_info("========================\\n");
 }
 
-module_init(${DRIVER_NAME}_init);
-module_exit(${DRIVER_NAME}_exit);
+module_init(${DRIVER_C_NAME}_init);
+module_exit(${DRIVER_C_NAME}_exit);
 
 MODULE_LICENSE("${DRIVER_LICENSE}");
 MODULE_AUTHOR("${DRIVER_AUTHOR}");

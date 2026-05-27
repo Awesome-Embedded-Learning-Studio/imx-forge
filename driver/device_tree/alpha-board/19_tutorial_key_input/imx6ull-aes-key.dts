@@ -1,0 +1,27 @@
+/dts-v1/;
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
+
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Tutorial 19 - Input Key";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+
+	imxaes_key_input: key-input {
+		compatible = "imxaes-input-key";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_key>;
+		gpios = <&gpio1 18 GPIO_ACTIVE_LOW>;
+		label = "imxaes-key";
+		linux,code = <28>;
+		linux,input-type = <1>;
+		status = "okay";
+	};
+};
+
+&iomuxc {
+	pinctrl_key: keygrp {
+		fsl,pins = <
+			MX6UL_PAD_UART1_CTS_B__GPIO1_IO18  0x1b0b0
+		>;
+	};
+};
