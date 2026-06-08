@@ -7,10 +7,13 @@
 ### 核心功能
 
 - **自动文件复制**：将编译好的内核镜像(zImage)和设备树文件(DTB)复制到TFTP目录
+- **配置文件系统**：支持 `.conf` 配置文件，灵活管理不同板子的路径配置
+- **多板子支持**：通过 `tftp-<BOARD>.conf` 支持多种开发板配置
 - **源文件验证**：复制前检查源文件是否存在，避免复制失败
 - **目录自动创建**：目标目录不存在时自动创建
 - **工具链适配**：优先使用 rsync，回退到 cp 命令
-- **灵活配置**：支持命令行参数覆盖默认路径
+- **摘要信息显示**：复制完成后显示内核版本、设备树信息和文件大小
+- **Release 集成**：默认从 `out/release-latest` 获取预编译文件
 
 ### 设计理念
 
@@ -76,17 +79,160 @@ copy_to_tftp.sh
 
 | 参数 | 说明 | 默认值 | 必需/可选 |
 |------|------|--------|-----------|
-| `--kernel=PATH` | 内核镜像文件路径 | `out/linux/arch/arm/boot/zImage` | 可选 |
-| `--dts=PATH` | 设备树文件路径 | `out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb` | 可选 |
+| `--config=PATH` | 指定配置文件路径 | 自动搜索 `tftp-*.conf` | 可选 |
+| `--kernel=PATH` | 内核镜像文件路径（覆盖配置） | 从配置文件读取 | 可选 |
+| `--dtb=PATH` | 设备树文件路径（覆盖配置） | 从配置文件读取 | 可选 |
+| `--rootfs=PATH` | 根文件系统镜像路径 | 从配置文件读取 | 可选 |
+| `--uboot=PATH` | U-Boot 镜像路径 | 从配置文件读取 | 可选 |
 | `--tftp-path=PATH` | TFTP服务器目录路径 | `~/tftp` | 可选 |
+| `--list-configs` | 列出可用的配置文件 | - | 可选 |
 | `-h, --help` | 显示帮助信息 | - | 可选 |
+
+### 环境变量
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `BOARD_NAME` | 板子名称，用于搜索配置文件 | `imx6ull-aes` |
+| `PROJECT_ROOT` | 项目根目录 | 自动检测 |
+
+## 配置文件系统
+
+### 配置文件概述
+
+`copy_to_tftp.sh` 支持通过配置文件管理路径配置，特别适合多板子开发场景。配置文件使用 Bash 变量语法，简单灵活。
+
+### 配置文件格式
+
+配置文件示例 (`tftp-imx6ull-aes.conf`)：
+
+```bash
+# 项目根目录（自动设置）
+export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+
+# Release 目录
+RELEASE_DIR="${PROJECT_ROOT}/out/release-latest"
+
+# 文件路径配置
+TFTP_KERNEL="${RELEASE_DIR}/linux/arch/arm/boot/zImage"
+TFTP_DTB="${RELEASE_DIR}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb"
+TFTP_UBOOT=""
+TFTP_ROOTFS=""
+
+# TFTP 服务器配置
+TFTP_DEST_DIR="${HOME}/tftp"
+TFTP_PRESERVE_NAMES=true
+TFTP_VERIFY_CHECKSUM=false
+TFTP_COPY_METHOD="auto"
+TFTP_POST_MESSAGE="Ready for network boot."
+```
+
+### 支持的配置变量
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `TFTP_KERNEL` | 内核镜像路径 | `${RELEASE_DIR}/linux/zImage` |
+| `TFTP_DTB` | 设备树文件路径 | `${RELEASE_DIR}/linux/imx6ull-aes.dtb` |
+| `TFTP_ROOTFS` | 根文件系统镜像（可选） | `${RELEASE_DIR}/images/rootfs.ext4` |
+| `TFTP_UBOOT` | U-Boot 镜像（可选） | `${RELEASE_DIR}/uboot/u-boot.imx` |
+| `TFTP_DEST_DIR` | TFTP 目录 | `${HOME}/tftp` |
+| `TFTP_PRESERVE_NAMES` | 是否保留原始文件名 | `true` 或 `false` |
+| `TFTP_VERIFY_CHECKSUM` | 是否验证校验和 | `true` 或 `false` |
+| `TFTP_COPY_METHOD` | 复制方法 | `auto`、`cp`、`rsync` |
+| `TFTP_POST_MESSAGE` | 复制完成后显示的消息 | 任意文本 |
+
+### 配置文件搜索顺序
+
+脚本按以下顺序搜索配置文件：
+
+1. `--config=PATH`（如果指定）
+2. `$(dirname $0)/tftp-${BOARD_NAME}.conf`（默认：`tftp-imx6ull-aes.conf`）
+3. `$(dirname $0)/tftp.conf`
+4. `$PWD/tftp-${BOARD_NAME}.conf`
+5. `$PWD/tftp.conf`
+
+**优先级**：命令行参数 > 配置文件 > 脚本默认值
+
+### 创建新板子配置
+
+为新的板子创建配置文件：
+
+```bash
+# 复制示例配置
+cp scripts/server_helper/tftp.conf.example scripts/server_helper/tftp-myboard.conf
+
+# 编辑配置文件
+vim scripts/server_helper/tftp-myboard.conf
+
+# 使用新配置
+BOARD_NAME=myboard ./scripts/server_helper/copy_to_tftp.sh
+```
+
+### 配置文件位置
+
+配置文件存放在以下位置：
+
+- **项目配置**：`scripts/server_helper/tftp-*.conf`
+- **本地配置**：`$PWD/tftp.conf`（当前目录）
+- **自定义**：通过 `--config` 指定任意路径
+
+### 列出可用配置
+
+使用 `--list-configs` 查看所有可用配置：
+
+```bash
+./scripts/server_helper/copy_to_tftp.sh --list-configs
+```
+
+输出示例：
+
+```
+Available TFTP config files:
+============================
+  - scripts/server_helper/tftp-imx6ull-aes.conf (board: imx6ull-aes)
+  - scripts/server_helper/tftp.conf (default)
+```
 
 ### 默认路径详解
 
-#### 内核默认路径
+#### 从 Release 获取文件（推荐）
+
+默认配置使用 `out/release-latest` 目录，这是通过 `release-all.sh` 生成的预编译产物：
 
 ```bash
-DEFAULT_KERNEL="out/linux/arch/arm/boot/zImage"
+# 配置文件中的路径
+RELEASE_DIR="${PROJECT_ROOT}/out/release-latest"
+TFTP_KERNEL="${RELEASE_DIR}/linux/arch/arm/boot/zImage"
+TFTP_DTB="${RELEASE_DIR}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb"
+```
+
+**Release 目录结构**：
+
+```
+out/release-latest/
+├── linux/
+│   ├── arch/arm/boot/zImage
+│   ├── arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
+│   └── include/config/kernel.release  # 内核版本信息
+├── uboot/
+│   └── u-boot-dtb.imx
+└── images/
+    └── rootfs.ext4
+```
+
+**为什么使用 Release 目录**：
+
+1. **一致性**：所有开发板使用相同的预编译版本
+2. **版本跟踪**：`release-latest` 是最新发布版本的符号链接
+3. **快速部署**：无需重新编译即可部署
+4. **版本信息**：可以从 `kernel.release` 获取准确的版本号
+
+#### 内核默认路径（开发模式）
+
+如果在开发过程中需要使用刚编译的文件：
+
+```bash
+# 命令行指定
+./scripts/server_helper/copy_to_tftp.sh --kernel=out/linux/arch/arm/boot/zImage
 ```
 
 **路径结构解析**：
@@ -98,24 +244,10 @@ out/linux/                    # 内核编译输出根目录
     └── zImage                # 压缩的内核镜像（默认使用）
 ```
 
-**为什么使用 zImage**：
-
-- `zImage` 是压缩后的内核镜像，占用空间更小
-- TFTP传输速度更快
-- U-Boot会自动解压
-
 #### 设备树默认路径
 
 ```bash
-DEFAULT_DTS="out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb"
-```
-
-**路径结构解析**：
-
-```
-out/linux/arch/arm/boot/dts/    # 设备树编译输出目录
-└── nxp/imx/                    # NXP i.MX 系列设备树
-    └── imx6ull-aes.dtb         # AES开发板的设备树（二进制）
+TFTP_DTB="${RELEASE_DIR}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb"
 ```
 
 **设备树文件命名规则**：
@@ -577,71 +709,113 @@ TcpTestSucceeded : False
 
 ## 使用示例
 
-### 基本用法
+### 基本用法（使用默认配置）
 
 ```bash
-# 使用默认路径
+# 使用默认配置（tftp-imx6ull-aes.conf）
 ./scripts/server_helper/copy_to_tftp.sh
 ```
 
 **输出示例**：
 
 ```
+Loading config: /home/charliechen/imx-forge/scripts/server_helper/tftp-imx6ull-aes.conf
+========================================
 TFTP Copy Helper
-================
-Kernel:   out/linux/arch/arm/boot/zImage
-DTB:      out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
-TFTP dir: ~/tftp
+========================================
+Project: /home/charliechen/imx-forge
 
-Success: Copied Kernel to '/home/charliechen/tftp/zImage'
-Success: Copied DTB to '/home/charliechen/tftp/imx6ull-aes.dtb'
+Source files:
+  Kernel:  /home/charliechen/imx-forge/out/release-latest/linux/arch/arm/boot/zImage
+  DTB:     /home/charliechen/imx-forge/out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
 
-All files copied successfully!
+Destination:
+  TFTP dir: /home/charliechen/tftp
+
+Copying Kernel (9.5M)...
+  ✓ Copied to: /home/charliechen/tftp/zImage
+Copying DTB (36K)...
+  ✓ Copied to: /home/charliechen/tftp/imx6ull-aes.dtb
+
+========================================
+✓ All files copied successfully!
+========================================
+
+Summary:
+--------
+Kernel:
+  Version: 6.12.49-gdf24f9428e38-dirty
+  Built: 2026-06-08 12:22:07
+  Size: 9.5M
+  Path: /home/charliechen/tftp/zImage
+
+Device Tree:
+  Model: Awesome Embedded Studio IMX6ULL (i.mx NXP)
+  Built: 2026-06-08 12:16:14
+  Size: 36K
+  Path: /home/charliechen/tftp/imx6ull-aes.dtb
+
+Ready for network boot. In U-Boot: tftp 0x80800000 zImage; tftp 0x83000000 imx6ull-aes.dtb; bootz 0x80800000 - 0x83000000
 ```
 
-### 自定义内核路径
+### 列出可用配置
 
 ```bash
-# 指定自定义内核路径
-./scripts/server_helper/copy_to_tftp.sh --kernel=out/linux/arch/arm/boot/Image
+# 列出所有可用的配置文件
+./scripts/server_helper/copy_to_tftp.sh --list-configs
+```
+
+**输出示例**：
+
+```
+Available TFTP config files:
+============================
+  - scripts/server_helper/tftp-imx6ull-aes.conf (board: imx6ull-aes)
+  - scripts/server_helper/tftp.conf (default)
+```
+
+### 使用特定板子配置
+
+```bash
+# 方法 1：通过 BOARD_NAME 环境变量
+BOARD_NAME=imx6ull-aes ./scripts/server_helper/copy_to_tftp.sh
+
+# 方法 2：通过 --config 参数
+./scripts/server_helper/copy_to_tftp.sh --config=scripts/server_helper/tftp-imx6ull-aes.conf
 ```
 
 **适用场景**：
 
-- 使用未压缩内核镜像
-- 测试不同编译配置的输出
+- 多板子开发
+- 不同板子使用不同的内核或设备树
+- 团队协作时统一配置
 
-### 自定义设备树路径
-
-```bash
-# 指定自定义设备树
-./scripts/server_helper/copy_to_tftp.sh --dts=out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-14x14-evk.dtb
-```
-
-**适用场景**：
-
-- 使用不同的开发板设备树
-- 测试修改后的设备树
-
-### 自定义TFTP目录
+### 覆盖配置文件中的路径
 
 ```bash
-# 使用非标准TFTP目录
+# 覆盖内核路径（临时使用开发版本）
+./scripts/server_helper/copy_to_tftp.sh --kernel=out/linux/arch/arm/boot/zImage
+
+# 覆盖设备树路径
+./scripts/server_helper/copy_to_tftp.sh --dtb=out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-14x14-evk.dtb
+
+# 覆盖 TFTP 目录
 ./scripts/server_helper/copy_to_tftp.sh --tftp-path=/var/lib/tftpboot
 ```
 
 **适用场景**：
 
-- 系统级TFTP服务
-- 多项目共享TFTP目录
+- 临时测试不同的内核或设备树
+- 使用系统级 TFTP 服务
+- 多项目共享 TFTP 目录
 
 ### 组合使用
 
 ```bash
-# 完整自定义
+# 完整自定义（覆盖所有路径）
 ./scripts/server_helper/copy_to_tftp.sh \
     --kernel=build/output/zImage \
-    --dts=build/output/custom.dtb \
+    --dtb=build/output/custom.dtb \
     --tftp-path=/srv/tftp
 ```
 

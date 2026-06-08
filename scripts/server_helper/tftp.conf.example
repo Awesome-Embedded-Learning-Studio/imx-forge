@@ -1,0 +1,56 @@
+# ==============================================================================
+# tftp.conf - TFTP 部署配置文件
+# ==============================================================================
+# 此文件定义 TFTP 部署时需要复制到 TFTP 服务器的文件路径
+#
+# 使用方式:
+#   1. 复制此文件为 tftp.conf 或 tftp-<BOARD_NAME>.conf
+#   2. 修改下面的路径配置
+#   3. 运行: copy_to_tftp.sh [--config=PATH]
+#
+# 多板子配置:
+#   - 对于不同板子，创建多个配置文件，如:
+#     tftp-imx6ull-aes.conf  (用于 i.MX6ULL AES 板)
+#     tftp-imx6ull-14x14.conf (用于 i.MX6ULL 14x14 板)
+#   - 使用 --config 参数指定: copy_to_tftp.sh --config=tftp-imx6ull-aes.conf
+#   - 或通过 BOARD_NAME 环境变量: BOARD_NAME=imx6ull-aes copy_to_tftp.sh
+
+# ------------------------------------------------------------------------------
+# 文件路径配置
+# ------------------------------------------------------------------------------
+# 内核镜像文件路径
+# 常用位置: out/linux/arch/arm/boot/zImage
+TFTP_KERNEL="${PROJECT_ROOT}/out/linux/arch/arm/boot/zImage"
+
+# 设备树文件路径
+# 常用位置: out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-*.dtb
+TFTP_DTB="${PROJECT_ROOT}/out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb"
+
+# 可选: 根文件系统镜像（如 initramfs 或 rootfs）
+# TFTP_ROOTFS="${PROJECT_ROOT}/out/images/rootfs.ext4"
+
+# 可选: U-Boot 镜像
+# TFTP_UBOOT="${PROJECT_ROOT}/out/uboot/u-boot-dtb.imx"
+
+# ------------------------------------------------------------------------------
+# TFTP 服务器配置
+# ------------------------------------------------------------------------------
+# TFTP 服务器根目录
+# 文件将复制到: ${TFTP_DEST_DIR}/
+TFTP_DEST_DIR="${HOME}/tftp"
+
+# 是否保留原始文件名（false 则添加板子名前缀）
+# 例如: imx6ull-aes-zImage vs zImage
+TFTP_PRESERVE_NAMES=true
+
+# ------------------------------------------------------------------------------
+# 复制选项
+# ------------------------------------------------------------------------------
+# 是否验证文件校验和（需要 md5sum 或 sha256sum）
+TFTP_VERIFY_CHECKSUM=false
+
+# 使用 rsync 还是 cp (auto/cp/rsync)
+TFTP_COPY_METHOD="auto"
+
+# 复制后显示的提示信息
+TFTP_POST_MESSAGE="Files copied to TFTP. Use 'bootz' in U-Boot to boot from network."

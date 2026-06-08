@@ -5,6 +5,7 @@
 <ChapterNav>
   <ChapterLink num="01" href="../scripts/release-all.sh">release-all.sh —— 一键构建所有组件</ChapterLink>
   <ChapterLink num="02" href="../scripts/patch_maker.sh">patch_maker.sh —— 补丁生成工具</ChapterLink>
+  <ChapterLink num="03" href="../scripts/server_helper/copy_to_tftp.sh">copy_to_tftp.sh —— TFTP文件部署</ChapterLink>
 </ChapterNav>
 
 | 脚本 | 用途 |
@@ -13,6 +14,7 @@
 | build-linux.sh | 构建 NXP BSP 内核 |
 | build-mainline-linux.sh | 构建主线内核 |
 | build-busybox.sh | 构建 BusyBox |
+| copy_to_tftp.sh | 部署内核和设备树到 TFTP 目录 |
 
 ::: details 目录结构
 ```
