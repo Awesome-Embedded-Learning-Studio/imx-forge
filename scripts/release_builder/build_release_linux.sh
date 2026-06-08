@@ -169,6 +169,7 @@ Source Date Epoch: ${SOURCE_DATE_EPOCH}
 
 Linux Information:
 -------------------
+Kernel Track: imx
 Commit: ${LINUX_COMMIT}
 Version: ${LINUX_DESCRIBE}
 Branch: ${LINUX_BRANCH}

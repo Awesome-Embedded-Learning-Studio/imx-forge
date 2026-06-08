@@ -184,14 +184,6 @@ jobs:
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
 
-      - name: 应用 Linux Mainline 补丁
-        run: |
-          if [ -f "patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260322.patch" ]; then
-            cd third_party/linux_mainline
-            git apply --3way ../../patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260322.patch || true
-            cd ../..
-          fi
-
       - name: Cache ccache for Linux Mainline
         uses: actions/cache@v4
         with:
@@ -219,13 +211,15 @@ jobs:
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
               export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/build_helper/build-mainline-linux.sh
+              ./scripts/release-all.sh --mainline --stage 2
               ccache -s
             '
 
       - name: 验证产物
         run: |
-          [ -f out/mainline/linux/arch/arm/boot/zImage ] || exit 1
+          [ -f out/release-latest/linux/arch/arm/boot/zImage ] || exit 1
+          [ -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
+          grep -q "Kernel Track: mainline" out/release-latest/linux/build_info.txt
 
   # Stage 3+4: BusyBox + RootFS (合并)
   stage3-4:

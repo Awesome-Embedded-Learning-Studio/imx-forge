@@ -32,6 +32,7 @@ ARCH=arm
 CROSS_COMPILE=arm-none-linux-gnueabihf-
 DEFCONFIG=imx_aes_mainline_defconfig
 FAST_BUILD=0
+DEVICE_TREE="${DEFAULT_DEVICE_TREE:-imx6ull-aes}"
 
 # Parse arguments
 for arg in "$@"; do
@@ -283,7 +284,7 @@ do_configure() {
 # Build Linux kernel
 do_build() {
     log_info "Building Linux kernel..."
-    local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC}"
+    local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC} zImage dtbs"
     echo -e "${YELLOW}[CMD]${NC} ${cmd}"
     ${cmd}
 }
@@ -326,14 +327,24 @@ verify_build_artifacts() {
 
     # 2. Verify zImage (compressed kernel image)
     if [ -f "${OUTPUT_DIR}/arch/arm/boot/zImage" ]; then
-        SIZE=$(stat -c%s ${OUTPUT_DIR}/arch/arm/boot/zImage 2>/dev/null || stat -f%z ${OUTPUT_DIR}/arch/arm/boot/zImage 2>/dev/null)
+        SIZE=$(stat -c%s "${OUTPUT_DIR}/arch/arm/boot/zImage" 2>/dev/null || stat -f%z "${OUTPUT_DIR}/arch/arm/boot/zImage" 2>/dev/null)
         log_info "  ✓ zImage: ${SIZE} bytes"
     else
         log_error "  ✗ zImage: not found"
         has_error=1
     fi
 
-    # 3. Verify .config file
+    # 3. Verify board DTB
+    local dtb_path="${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEVICE_TREE}.dtb"
+    if [ -f "${dtb_path}" ]; then
+        SIZE=$(stat -c%s "${dtb_path}" 2>/dev/null || stat -f%z "${dtb_path}" 2>/dev/null)
+        log_info "  ✓ ${DEVICE_TREE}.dtb: ${SIZE} bytes"
+    else
+        log_error "  ✗ ${DEVICE_TREE}.dtb: not found"
+        has_error=1
+    fi
+
+    # 4. Verify .config file
     if [ -f "${OUTPUT_DIR}/.config" ]; then
         log_info "  ✓ .config: present"
     else
@@ -341,19 +352,19 @@ verify_build_artifacts() {
         has_error=1
     fi
 
-    # 4. Check for System.map
+    # 5. Check for System.map
     if [ -f "${OUTPUT_DIR}/System.map" ]; then
         log_info "  ✓ System.map: present"
     else
         log_warn "  ! System.map: not found (optional)"
     fi
 
-    # 5. Check for modules directory
+    # 6. Check for modules directory
     if [ -d "${OUTPUT_DIR}/modules" ]; then
         log_info "  ✓ modules: directory present"
     fi
 
-    # 6. Summary
+    # 7. Summary
     if [ ${has_error} -eq 0 ]; then
         log_info "All build artifacts verified successfully"
         return 0
@@ -374,7 +385,7 @@ main() {
     # Pre-build checks
     check_host_dependencies
     check_toolchain
-    check_defconfig
+    # Note: check_defconfig is called after prepare_defconfig since the file is generated from template
 
     log_info "========================================"
     log_info "All checks passed, starting build..."
@@ -394,6 +405,7 @@ main() {
     log_info "  Architecture:  ${ARCH}"
     log_info "  Cross Compile: ${CROSS_COMPILE}"
     log_info "  Defconfig:     ${DEFCONFIG}"
+    log_info "  Device Tree:   ${DEVICE_TREE}"
     log_info "  Parallel Jobs: ${NPROC}"
     log_info "========================================"
 
@@ -413,6 +425,7 @@ main() {
     log_info "Kernel artifacts in ${OUTPUT_DIR}:"
     [ -f "${OUTPUT_DIR}/vmlinux" ] && log_info "  ✓ vmlinux (ELF kernel)"
     [ -f "${OUTPUT_DIR}/arch/arm/boot/zImage" ] && log_info "  ✓ arch/arm/boot/zImage (compressed kernel)"
+    [ -f "${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEVICE_TREE}.dtb" ] && log_info "  ✓ arch/arm/boot/dts/nxp/imx/${DEVICE_TREE}.dtb (device tree)"
     [ -f "${OUTPUT_DIR}/System.map" ] && log_info "  ✓ System.map (symbol table)"
     [ -f "${OUTPUT_DIR}/.config" ] && log_info "  ✓ .config (kernel configuration)"
 

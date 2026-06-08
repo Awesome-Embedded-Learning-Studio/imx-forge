@@ -196,9 +196,6 @@ jobs:
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
 
-      - name: 应用 Linux Mainline 补丁
-        run: cd third_party/linux_mainline && ../../scripts/apply_patches.sh linux_mainline
-
       - name: Cache ccache for Linux Mainline
         uses: actions/cache@v4
         with:
@@ -219,26 +216,31 @@ jobs:
             -e CCACHE_COMPILERCHECK=content \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
+              git config --global --add safe.directory "*"
               ccache -M 2G && ccache -z
               mkdir -p /workspace/ccache-bin
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
               export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/build_helper/build-mainline-linux.sh
+              ./scripts/release-all.sh --mainline --stage 2
               ccache -s
             '
 
       - name: 验证产物
         run: |
-          [ -f out/mainline/linux/arch/arm/boot/zImage ] || exit 1
-          file out/mainline/linux/arch/arm/boot/zImage | grep -q ARM
+          [ -f out/release-latest/linux/arch/arm/boot/zImage ] || exit 1
+          [ -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
+          file out/release-latest/linux/arch/arm/boot/zImage | grep -q ARM
+          grep -q "Kernel Track: mainline" out/release-latest/linux/build_info.txt
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: linux-mainline
-          path: out/mainline/linux/arch/arm/boot/zImage
+          path: |
+            out/release-latest/linux/arch/arm/boot/zImage
+            out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
           retention-days: 7
 
   # BusyBox 构建

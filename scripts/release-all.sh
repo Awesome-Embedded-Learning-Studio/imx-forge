@@ -7,6 +7,7 @@
 #
 # Options:
 #   --fast-build    - Pass --fast-build to linux build (skip distclean)
+#   --mainline      - Build Linux from upstream/mainline kernel track
 #   --stage N       - Run only specific stage (1-4)
 #   --help, -h      - Show this help message
 #
@@ -52,33 +53,7 @@ CROSS_COMPILE=arm-none-linux-gnueabihf-
 FAST_BUILD=0
 CONTINUE_BUILD=0
 SPECIFIC_STAGE=""
-
-# Parse arguments
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --fast-build)
-            FAST_BUILD=1
-            shift
-            ;;
-        --continue)
-            CONTINUE_BUILD=1
-            shift
-            ;;
-        --stage)
-            SPECIFIC_STAGE="$2"
-            shift 2
-            ;;
-        --help|-h)
-            show_usage
-            exit 0
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
-    esac
-done
+KERNEL_TRACK="imx"
 
 # Display usage
 show_usage() {
@@ -87,6 +62,7 @@ Usage: $0 [OPTIONS]
 
 Options:
   --fast-build      Pass --fast-build to linux build (skip distclean)
+  --mainline        Build Linux from upstream/mainline kernel track
   --continue        Continue from existing release-latest (skip completed stages)
   --stage N         Run only specific stage (1-4)
   --help, -h        Show this help message
@@ -105,6 +81,8 @@ Examples:
   $0 --stage 1                                # Build U-Boot only
   $0 --fast-build                             # Build all with fast build mode
   $0 --stage 2 --fast-build                   # Build Linux with fast build mode
+  $0 --mainline --stage 2                     # Build mainline Linux into release layout
+  $0 --mainline --stage 2 --fast-build        # Build mainline Linux with fast build mode
   $0 --continue                               # Continue from existing build (skip completed stages)
   $0 --continue --stage 4                     # Continue and run only Stage 4
   DEFAULT_DEVICE_TREE=custom-dtb $0           # Use custom device tree
@@ -112,6 +90,41 @@ Examples:
 Output directory: ${BUILD_OUTPUT_DIR}/
 EOF
 }
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --fast-build)
+            FAST_BUILD=1
+            shift
+            ;;
+        --mainline)
+            KERNEL_TRACK="mainline"
+            shift
+            ;;
+        --continue)
+            CONTINUE_BUILD=1
+            shift
+            ;;
+        --stage)
+            if [[ $# -lt 2 ]]; then
+                log_error "--stage requires a value"
+                exit 1
+            fi
+            SPECIFIC_STAGE="$2"
+            shift 2
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
 
 # Stage 1: U-Boot
 stage_1_uboot() {
@@ -138,27 +151,50 @@ stage_1_uboot() {
 # Stage 2: Linux
 stage_2_linux() {
     log_info "========================================="
-    log_info "Stage 2/4: Building Linux Kernel"
+    log_info "Stage 2/4: Building Linux Kernel (${KERNEL_TRACK})"
     log_info "========================================="
 
     export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/linux"
 
     log_info "Output directory: ${OUTPUT_DIR}"
+    log_info "Kernel track: ${KERNEL_TRACK}"
 
-    if [[ ${FAST_BUILD} -eq 1 ]]; then
-        log_info "Fast build mode enabled"
-        echo ""
-        bash "${SCRIPT_DIR}/release_builder/build_release_linux.sh" --fast-build
-    else
-        echo ""
-        bash "${SCRIPT_DIR}/release_builder/build_release_linux.sh"
+    local build_script="${SCRIPT_DIR}/release_builder/build_release_linux.sh"
+    if [[ "${KERNEL_TRACK}" == "mainline" ]]; then
+        build_script="${SCRIPT_DIR}/release_builder/build_release_mainline_linux.sh"
     fi
 
+    local build_args=()
+    if [[ ${FAST_BUILD} -eq 1 ]]; then
+        log_info "Fast build mode enabled"
+        build_args+=(--fast-build)
+    fi
+    echo ""
+    bash "${build_script}" "${build_args[@]}"
+
     # Verify key artifacts
-    if [[ -f "${OUTPUT_DIR}/arch/arm/boot/zImage" ]]; then
+    local zimage="${OUTPUT_DIR}/arch/arm/boot/zImage"
+    local dtb="${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb"
+    local build_info="${OUTPUT_DIR}/build_info.txt"
+
+    if [[ -f "${zimage}" ]]; then
         log_info "Linux build successful"
     else
         log_error "Linux build failed - zImage not found"
+        exit 1
+    fi
+
+    if [[ -f "${dtb}" ]]; then
+        log_info "DTB build successful: ${DEFAULT_DEVICE_TREE}.dtb"
+    else
+        log_error "Linux build failed - DTB not found: ${dtb}"
+        exit 1
+    fi
+
+    if [[ -f "${build_info}" ]] && grep -q "Kernel Track: ${KERNEL_TRACK}" "${build_info}"; then
+        log_info "Build info records kernel track: ${KERNEL_TRACK}"
+    elif [[ "${KERNEL_TRACK}" == "mainline" ]]; then
+        log_error "Linux build failed - build_info.txt does not record mainline kernel track"
         exit 1
     fi
 }
@@ -287,7 +323,10 @@ is_stage_completed() {
             [[ -f "${BUILD_OUTPUT_DIR}/uboot/u-boot-dtb.imx" ]]
             ;;
         2)
-            [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/zImage" ]]
+            [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/zImage" ]] &&
+            [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb" ]] &&
+            [[ -f "${BUILD_OUTPUT_DIR}/linux/build_info.txt" ]] &&
+            grep -q "Kernel Track: ${KERNEL_TRACK}" "${BUILD_OUTPUT_DIR}/linux/build_info.txt"
             ;;
         3)
             [[ -f "${BUILD_OUTPUT_DIR}/busybox/busybox" && -f "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" ]]
@@ -307,6 +346,7 @@ main() {
     log_info "Project root: ${PROJECT_ROOT}"
     log_info "Build output: ${BUILD_OUTPUT_DIR}"
     log_info "Cross compiler: ${CROSS_COMPILE}gcc"
+    log_info "Kernel track: ${KERNEL_TRACK}"
     log_info "========================================="
     log_info ""
 
