@@ -8,7 +8,8 @@
 # Options:
 #   --fast-build    - Pass --fast-build to linux build (skip distclean)
 #   --mainline      - Build Linux from upstream/mainline kernel track
-#   --stage N       - Run only specific stage (1-4)
+#   --boot-media M  - Image boot media: emmc, sd, or both
+#   --stage N       - Run only specific stage (1-5)
 #   --help, -h      - Show this help message
 #
 # Stages:
@@ -16,6 +17,7 @@
 #   2 - Linux kernel
 #   3 - BusyBox userland
 #   4 - RootFS completion (third-party dependencies)
+#   5 - SD/eMMC full image creation
 #
 # Output directory: out/release-latest/
 #
@@ -54,6 +56,7 @@ FAST_BUILD=0
 CONTINUE_BUILD=0
 SPECIFIC_STAGE=""
 KERNEL_TRACK="imx"
+BOOT_MEDIA="${DEFAULT_BOOT_MEDIA:-emmc}"
 
 # Display usage
 show_usage() {
@@ -63,22 +66,31 @@ Usage: $0 [OPTIONS]
 Options:
   --fast-build      Pass --fast-build to linux build (skip distclean)
   --mainline        Build Linux from upstream/mainline kernel track
+  --boot-media M    Image boot media for stage 5: emmc, sd, or both
+                    (default: emmc, or DEFAULT_BOOT_MEDIA)
   --continue        Continue from existing release-latest (skip completed stages)
-  --stage N         Run only specific stage (1-4)
+  --stage N         Run only specific stage (1-5)
   --help, -h        Show this help message
 
 Environment Variables:
   DEFAULT_DEVICE_TREE  Device tree name for symlinks (default: imx6ull-aes)
+  DEFAULT_BOOT_MEDIA   Image boot media for stage 5 (default: emmc)
+  DEFAULT_IMAGE_SIZE_MB Fixed image size passed to image builder (optional)
 
 Stages:
   1  U-Boot bootloader
   2  Linux kernel
   3  BusyBox userland
   4  RootFS completion with third-party dependencies
+  5  SD/eMMC full image creation
 
 Examples:
   $0                                          # Build all stages
   $0 --stage 1                                # Build U-Boot only
+  $0 --stage 5                                # Build default eMMC image only
+  $0 --continue --stage 5                     # Continue and build image from existing release-latest
+  $0 --continue --stage 5 --boot-media sd     # Continue and build SD image
+  $0 --continue --stage 5 --boot-media both   # Continue and build both eMMC and SD images
   $0 --fast-build                             # Build all with fast build mode
   $0 --stage 2 --fast-build                   # Build Linux with fast build mode
   $0 --mainline --stage 2                     # Build mainline Linux into release layout
@@ -100,6 +112,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --mainline)
             KERNEL_TRACK="mainline"
+            shift
+            ;;
+        --boot-media)
+            if [[ $# -lt 2 ]]; then
+                log_error "--boot-media requires a value"
+                exit 1
+            fi
+            BOOT_MEDIA="$2"
+            shift 2
+            ;;
+        --boot-media=*)
+            BOOT_MEDIA="${1#*=}"
             shift
             ;;
         --continue)
@@ -126,10 +150,31 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+validate_boot_media() {
+    case "${BOOT_MEDIA}" in
+        emmc|sd|both)
+            ;;
+        *)
+            log_error "Invalid boot media: ${BOOT_MEDIA} (must be emmc, sd, or both)"
+            exit 1
+            ;;
+    esac
+}
+
+image_name_for_media() {
+    local media="$1"
+
+    if [[ "${DEFAULT_DEVICE_TREE}" == imx6ull* ]]; then
+        echo "${DEFAULT_DEVICE_TREE}-${media}.img"
+    else
+        echo "imx6ull-${DEFAULT_DEVICE_TREE}-${media}.img"
+    fi
+}
+
 # Stage 1: U-Boot
 stage_1_uboot() {
     log_info "========================================="
-    log_info "Stage 1/4: Building U-Boot"
+    log_info "Stage 1/5: Building U-Boot"
     log_info "========================================="
 
     export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/uboot"
@@ -151,7 +196,7 @@ stage_1_uboot() {
 # Stage 2: Linux
 stage_2_linux() {
     log_info "========================================="
-    log_info "Stage 2/4: Building Linux Kernel (${KERNEL_TRACK})"
+    log_info "Stage 2/5: Building Linux Kernel (${KERNEL_TRACK})"
     log_info "========================================="
 
     export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/linux"
@@ -202,7 +247,7 @@ stage_2_linux() {
 # Stage 3: BusyBox
 stage_3_busybox() {
     log_info "========================================="
-    log_info "Stage 3/4: Building BusyBox"
+    log_info "Stage 3/5: Building BusyBox"
     log_info "========================================="
 
     export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/busybox"
@@ -232,7 +277,7 @@ stage_3_busybox() {
 # Stage 4: RootFS completion
 stage_4_rootfs() {
     log_info "========================================="
-    log_info "Stage 4/4: Completing RootFS"
+    log_info "Stage 4/5: Completing RootFS"
     log_info "========================================="
 
     export ROOTFS_DIR="${BUILD_OUTPUT_DIR}/rootfs"
@@ -247,6 +292,36 @@ stage_4_rootfs() {
     bash "${SCRIPT_DIR}/merge_overlay_rootfs.sh" --rootfs-dir="${ROOTFS_DIR}" --overlay-name=rootfs
 
     log_info "RootFS completion successful"
+}
+
+# Stage 5: Full image creation
+stage_5_image() {
+    log_info "========================================="
+    log_info "Stage 5/5: Creating full flash image (${BOOT_MEDIA})"
+    log_info "========================================="
+
+    local image_builder="${SCRIPT_DIR}/image_builder/build_imx6ull_image.sh"
+    if [[ ! -x "${image_builder}" ]]; then
+        log_error "Image builder not found or not executable: ${image_builder}"
+        exit 1
+    fi
+
+    local media_list=()
+    if [[ "${BOOT_MEDIA}" == "both" ]]; then
+        media_list=(emmc sd)
+    else
+        media_list=("${BOOT_MEDIA}")
+    fi
+
+    for media in "${media_list[@]}"; do
+        log_info "Building ${media} image"
+        bash "${image_builder}" \
+            --release-dir="${BUILD_OUTPUT_DIR}" \
+            --device-tree="${DEFAULT_DEVICE_TREE}" \
+            --boot-media="${media}"
+    done
+
+    log_info "Full image creation successful"
 }
 
 # Create convenience symlinks
@@ -335,6 +410,21 @@ is_stage_completed() {
             # Stage 4 completion is hard to verify, assume incomplete
             false
             ;;
+        5)
+            local images_dir="${BUILD_OUTPUT_DIR}/images"
+            case "${BOOT_MEDIA}" in
+                emmc)
+                    [[ -f "${images_dir}/$(image_name_for_media emmc)" ]]
+                    ;;
+                sd)
+                    [[ -f "${images_dir}/$(image_name_for_media sd)" ]]
+                    ;;
+                both)
+                    [[ -f "${images_dir}/$(image_name_for_media emmc)" ]] &&
+                    [[ -f "${images_dir}/$(image_name_for_media sd)" ]]
+                    ;;
+            esac
+            ;;
     esac
 }
 
@@ -347,22 +437,25 @@ main() {
     log_info "Build output: ${BUILD_OUTPUT_DIR}"
     log_info "Cross compiler: ${CROSS_COMPILE}gcc"
     log_info "Kernel track: ${KERNEL_TRACK}"
+    log_info "Boot media: ${BOOT_MEDIA}"
     log_info "========================================="
     log_info ""
+
+    validate_boot_media
 
     # Determine which stages to run
     local stages=()
     if [[ -n "${SPECIFIC_STAGE}" ]]; then
-        if [[ "${SPECIFIC_STAGE}" =~ ^[1-4]$ ]]; then
+        if [[ "${SPECIFIC_STAGE}" =~ ^[1-5]$ ]]; then
             stages=("${SPECIFIC_STAGE}")
             log_info "Running stage ${SPECIFIC_STAGE} only"
         else
-            log_error "Invalid stage number: ${SPECIFIC_STAGE} (must be 1-4)"
+            log_error "Invalid stage number: ${SPECIFIC_STAGE} (must be 1-5)"
             exit 1
         fi
     else
-        stages=(1 2 3 4)
-        log_info "Running all stages (1-4)"
+        stages=(1 2 3 4 5)
+        log_info "Running all stages (1-5)"
     fi
     log_info ""
 
@@ -372,7 +465,7 @@ main() {
     if [[ -d "${BUILD_OUTPUT_DIR}" ]]; then
         if [[ ${CONTINUE_BUILD} -eq 1 ]]; then
             log_info "Continuing from existing build: ${BUILD_OUTPUT_DIR}"
-        elif [[ "${SPECIFIC_STAGE}" != "4" ]]; then
+        elif [[ "${SPECIFIC_STAGE}" != "4" && "${SPECIFIC_STAGE}" != "5" ]]; then
             local datetime=$(date +%Y%m%d-%H%M%S)
             local archive_dir="${PROJECT_ROOT}/out/release-${datetime}"
             log_info "Archiving existing ${BUILD_OUTPUT_DIR} -> ${archive_dir}"
@@ -393,6 +486,7 @@ main() {
             2) stage_2_linux ;;
             3) stage_3_busybox ;;
             4) stage_4_rootfs ;;
+            5) stage_5_image ;;
         esac
         echo ""
     done

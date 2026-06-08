@@ -1,0 +1,9 @@
+uuu_version 1.4.72
+
+# Minimal flow:
+# 1. Boot U-Boot into RAM through USB SDP.
+# 2. U-Boot sees USB/mfgtools boot and runs bootcmd_mfg.
+# 3. The board-specific bootcmd_mfg exposes eMMC as USB Mass Storage.
+# 4. Use a raw image writer, such as Rufus, to burn the prepared .img.
+
+SDP: boot -f ../../out/release-latest/uboot/u-boot-dtb.imx

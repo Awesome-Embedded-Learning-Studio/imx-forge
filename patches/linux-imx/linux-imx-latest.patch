@@ -1,14 +1,15 @@
-From 638449c65d51b1c627eb6a447af5615fbfb6daea Mon Sep 17 00:00:00 2001
+From 77b14bdef322dd6e182b7a0021d505c3f5cec49b Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
-Date: Sat, 14 Mar 2026 10:28:28 +0800
-Subject: [PATCH 1/2] Patch OK
+Date: Mon, 8 Jun 2026 22:55:09 +0800
+Subject: [PATCH] fix: avoid SD1 pin conflict with touch reset
 
 ---
- arch/arm/boot/dts/nxp/imx/Makefile         |   1 +
- arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts  |  44 ++
- arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi | 754 +++++++++++++++++++++
- arch/arm/configs/imx_aes_defconfig         | 600 ++++++++++++++++
- 4 files changed, 1399 insertions(+)
+ arch/arm/boot/dts/nxp/imx/Makefile            |   1 +
+ .../boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi    |   2 -
+ arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts     |  44 +
+ arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi    | 772 ++++++++++++++++++
+ arch/arm/configs/imx_aes_defconfig            | 602 ++++++++++++++
+ 5 files changed, 1419 insertions(+), 2 deletions(-)
  create mode 100644 arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
  create mode 100644 arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
  create mode 100644 arch/arm/configs/imx_aes_defconfig
@@ -25,6 +26,19 @@ index 89171be84f27..b35ddc6e8ddb 100644
  	imx6ull-14x14-evk-btwifi.dtb \
  	imx6ull-14x14-evk-gpmi-weim.dtb \
  	imx6ull-9x9-evk.dtb \
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
+index 9101b205339f..2e679c087bea 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
+@@ -670,8 +670,6 @@ MX6UL_PAD_SD1_DATA1__USDHC1_DATA1 	0x17059
+ 			MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 	0x17059
+ 			MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 	0x17059
+ 			MX6UL_PAD_UART1_RTS_B__GPIO1_IO19       0x17059 /* SD1 CD */
+-			MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 /* SD1 VSELECT */
+-			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
+ 		>;
+ 	};
+ 
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
 new file mode 100644
 index 000000000000..f4511f82357c
@@ -77,19 +91,17 @@ index 000000000000..f4511f82357c
 +
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
 new file mode 100644
-index 000000000000..03e0951d31d3
+index 000000000000..21ee3947debb
 --- /dev/null
 +++ b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
-@@ -0,0 +1,754 @@
+@@ -0,0 +1,772 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
 +// Copyright (C) 2015 Freescale Semiconductor, Inc.
 +
-+/ {
-+	aliases {
-+		spi5 = &{/spi-4};
-+	};
++#include <dt-bindings/media/video-interfaces.h>
 +
++/ {
 +	chosen {
 +		stdout-path = &uart1;
 +	};
@@ -97,6 +109,32 @@ index 000000000000..03e0951d31d3
 +	memory@80000000 {
 +		device_type = "memory";
 +		reg = <0x80000000 0x20000000>;
++	};
++
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++		linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0xa000000>;
++			linux,cma-default;
++		};
++	};
++
++	backlight-display {
++		compatible = "pwm-backlight";
++		pwms = <&pwm1 0 5000000 0>;
++		brightness-levels = <0 4 8 16 32 64 128 255>;
++		default-brightness-level = <6>;
++		status = "okay";
++	};
++
++	pxp_v4l2 {
++		compatible = "fsl,imx6ul-pxp-v4l2", "fsl,imx6sx-pxp-v4l2", "fsl,imx6sl-pxp-v4l2";
++		status = "okay";
 +	};
 +
 +	reg_sd1_vmmc: regulator-sd1-vmmc {
@@ -166,9 +204,9 @@ index 000000000000..03e0951d31d3
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&pinctrl_spi4>;
 +		status = "okay";
-+		gpio-sck = <&gpio5 11 0>;
-+		gpio-mosi = <&gpio5 10 0>;
-+		// cs-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>;
++		sck-gpios = <&gpio5 11 0>;
++		mosi-gpios = <&gpio5 10 0>;
++		/* cs-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>; */
 +		num-chipselects = <1>;
 +		#address-cells = <1>;
 +		#size-cells = <0>;
@@ -181,7 +219,7 @@ index 000000000000..03e0951d31d3
 +			registers-number = <1>;
 +			registers-default = /bits/ 8 <0x57>;
 +			spi-max-frequency = <100000>;
-+			// enable-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
++			/* enable-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>; */
 +		};
 +	};
 +};
@@ -237,29 +275,22 @@ index 000000000000..03e0951d31d3
 +			};
 +		};
 +	};
-+
 +};
 +
 +&fec1 {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_enet1>;
++	pinctrl-0 = <&pinctrl_enet1 &pinctrl_enet1_reset>;
 +	phy-mode = "rmii";
 +	phy-handle = <&ethphy0>;
-+	phy-reset-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>;
-+	phy-reset-duration = <200>;
-+	phy-reset-post-delay = <200>;
 +	phy-supply = <&reg_peri_3v3>;
 +	status = "okay";
 +};
 +
 +&fec2 {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_enet2>;
++	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_reset>;
 +	phy-mode = "rmii";
 +	phy-handle = <&ethphy1>;
-+	phy-reset-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
-+	phy-reset-duration = <200>;
-+	phy-reset-post-delay = <200>;
 +	phy-supply = <&reg_peri_3v3>;
 +	status = "okay";
 +
@@ -340,6 +371,8 @@ index 000000000000..03e0951d31d3
 +};
 +
 +&lcdif {
++	assigned-clocks = <&clks IMX6UL_CLK_LCDIF_PRE_SEL>;
++	assigned-clock-parents = <&clks IMX6UL_CLK_PLL5_VIDEO_DIV>;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_lcdif_dat
 +		     &pinctrl_lcdif_ctrl>;
@@ -347,14 +380,14 @@ index 000000000000..03e0951d31d3
 +	status = "okay";
 +
 +	display0: display@0 {
-+		bits-per-pixel = <24>;
++		bits-per-pixel = <16>;
 +		bus-width = <24>;
 +
 +		display-timings {
 +			native-mode = <&timing0>;
 +
 +			timing0: timing0 {
-+    			clock-frequency = <51200000>;
++				clock-frequency = <51200000>;
 +    			hactive = <1024>;
 +    			vactive = <600>;
 +    			hfront-porch = <160>;
@@ -373,7 +406,6 @@ index 000000000000..03e0951d31d3
 +};
 +
 +&pwm1 {
-+	#pwm-cells = <2>;
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_pwm1>;
 +	status = "okay";
@@ -437,7 +469,7 @@ index 000000000000..03e0951d31d3
 +&tsc {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_tsc>;
-+	xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
++	xnur-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
 +	measure-delay-time = <0xffff>;
 +	pre-charge-time = <0xfff>;
 +	status = "okay";
@@ -457,6 +489,10 @@ index 000000000000..03e0951d31d3
 +	/* fsl,dte-mode; */
 +	/* pinctrl-0 = <&pinctrl_uart2dte>; */
 +	status = "okay";
++
++	bluetooth {
++		compatible = "nxp,88w8987-bt";
++	};
 +};
 +
 +&usbotg1 {
@@ -560,14 +596,14 @@ index 000000000000..03e0951d31d3
 +		>;
 +	};
 +
-+	pinctrl_flexcan1: flexcan1grp{
++	pinctrl_flexcan1: flexcan1grp {
 +		fsl,pins = <
 +			MX6UL_PAD_UART3_RTS_B__FLEXCAN1_RX	0x1b020
 +			MX6UL_PAD_UART3_CTS_B__FLEXCAN1_TX	0x1b020
 +		>;
 +	};
 +
-+	pinctrl_flexcan2: flexcan2grp{
++	pinctrl_flexcan2: flexcan2grp {
 +		fsl,pins = <
 +			MX6UL_PAD_UART2_RTS_B__FLEXCAN2_RX	0x1b020
 +			MX6UL_PAD_UART2_CTS_B__FLEXCAN2_TX	0x1b020
@@ -677,10 +713,8 @@ index 000000000000..03e0951d31d3
 +		fsl,pins = <
 +			MX6UL_PAD_BOOT_MODE0__GPIO5_IO10	0x70a1
 +			MX6UL_PAD_BOOT_MODE1__GPIO5_IO11	0x70a1
-+			/* disabled the corruptions pin sets
-+			MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x70a1
-+			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x80000000 
-+			*/
++			/* MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x70a1
++			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x80000000 */
 +		>;
 +	};
 +
@@ -733,12 +767,10 @@ index 000000000000..03e0951d31d3
 +			MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 	0x17059
 +			MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 	0x17059
 +			MX6UL_PAD_UART1_RTS_B__GPIO1_IO19       0x17059 /* SD1 CD */
-+			MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 /* SD1 VSELECT */
-+			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
 +		>;
 +	};
 +
-+	pinctrl_usdhc1_100mhz: usdhc1grp100mhz {
++	pinctrl_usdhc1_100mhz: usdhc1-100mhz-grp {
 +		fsl,pins = <
 +			MX6UL_PAD_SD1_CMD__USDHC1_CMD     0x170b9
 +			MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x100b9
@@ -750,7 +782,7 @@ index 000000000000..03e0951d31d3
 +		>;
 +	};
 +
-+	pinctrl_usdhc1_200mhz: usdhc1grp200mhz {
++	pinctrl_usdhc1_200mhz: usdhc1-200mhz-grp {
 +		fsl,pins = <
 +			MX6UL_PAD_SD1_CMD__USDHC1_CMD     0x170f9
 +			MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x100f9
@@ -837,10 +869,10 @@ index 000000000000..03e0951d31d3
 +};
 diff --git a/arch/arm/configs/imx_aes_defconfig b/arch/arm/configs/imx_aes_defconfig
 new file mode 100644
-index 000000000000..1680d7d78f55
+index 000000000000..37f813f659d6
 --- /dev/null
 +++ b/arch/arm/configs/imx_aes_defconfig
-@@ -0,0 +1,600 @@
+@@ -0,0 +1,602 @@
 +CONFIG_SYSVIPC=y
 +CONFIG_POSIX_MQUEUE=y
 +CONFIG_NO_HZ=y
@@ -1441,226 +1473,8 @@ index 000000000000..1680d7d78f55
 +CONFIG_CRYPTO_ARIA=m
 +CONFIG_CRYPTO_HCTR2=m
 +CONFIG_CRYPTO_SM3_GENERIC=m
--- 
-2.43.0
-
-
-From a3cd033415d3f4d0d9fbc56e403606923f3692b0 Mon Sep 17 00:00:00 2001
-From: Charliechen114514 <725610365@qq.com>
-Date: Sat, 14 Mar 2026 10:44:27 +0800
-Subject: [PATCH 2/2] fix dts's CAM Buffer not enough; migrate from linux one
-
----
- arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi | 78 ++++++++++++++--------
- 1 file changed, 49 insertions(+), 29 deletions(-)
-
-diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
-index 03e0951d31d3..0af143430e34 100644
---- a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
-+++ b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
-@@ -2,11 +2,9 @@
- //
- // Copyright (C) 2015 Freescale Semiconductor, Inc.
- 
--/ {
--	aliases {
--		spi5 = &{/spi-4};
--	};
-+#include <dt-bindings/media/video-interfaces.h>
- 
-+/ {
- 	chosen {
- 		stdout-path = &uart1;
- 	};
-@@ -16,6 +14,32 @@ memory@80000000 {
- 		reg = <0x80000000 0x20000000>;
- 	};
- 
-+	reserved-memory {
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges;
-+
-+		linux,cma {
-+			compatible = "shared-dma-pool";
-+			reusable;
-+			size = <0xa000000>;
-+			linux,cma-default;
-+		};
-+	};
-+
-+	backlight-display {
-+		compatible = "pwm-backlight";
-+		pwms = <&pwm1 0 5000000 0>;
-+		brightness-levels = <0 4 8 16 32 64 128 255>;
-+		default-brightness-level = <6>;
-+		status = "okay";
-+	};
-+
-+	pxp_v4l2 {
-+		compatible = "fsl,imx6ul-pxp-v4l2", "fsl,imx6sx-pxp-v4l2", "fsl,imx6sl-pxp-v4l2";
-+		status = "okay";
-+	};
-+
- 	reg_sd1_vmmc: regulator-sd1-vmmc {
- 		compatible = "regulator-fixed";
- 		regulator-name = "VSD_3V3";
-@@ -83,9 +107,9 @@ spi-4 {
- 		pinctrl-names = "default";
- 		pinctrl-0 = <&pinctrl_spi4>;
- 		status = "okay";
--		gpio-sck = <&gpio5 11 0>;
--		gpio-mosi = <&gpio5 10 0>;
--		// cs-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>;
-+		sck-gpios = <&gpio5 11 0>;
-+		mosi-gpios = <&gpio5 10 0>;
-+		/* cs-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>; */
- 		num-chipselects = <1>;
- 		#address-cells = <1>;
- 		#size-cells = <0>;
-@@ -98,7 +122,7 @@ gpio_spi: gpio@0 {
- 			registers-number = <1>;
- 			registers-default = /bits/ 8 <0x57>;
- 			spi-max-frequency = <100000>;
--			// enable-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
-+			/* enable-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>; */
- 		};
- 	};
- };
-@@ -154,29 +178,22 @@ ov5640_ep: endpoint {
- 			};
- 		};
- 	};
--
- };
- 
- &fec1 {
- 	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_enet1>;
-+	pinctrl-0 = <&pinctrl_enet1 &pinctrl_enet1_reset>;
- 	phy-mode = "rmii";
- 	phy-handle = <&ethphy0>;
--	phy-reset-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>;
--	phy-reset-duration = <200>;
--	phy-reset-post-delay = <200>;
- 	phy-supply = <&reg_peri_3v3>;
- 	status = "okay";
- };
- 
- &fec2 {
- 	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_enet2>;
-+	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_reset>;
- 	phy-mode = "rmii";
- 	phy-handle = <&ethphy1>;
--	phy-reset-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
--	phy-reset-duration = <200>;
--	phy-reset-post-delay = <200>;
- 	phy-supply = <&reg_peri_3v3>;
- 	status = "okay";
- 
-@@ -257,6 +274,8 @@ fxls8471@1e {
- };
- 
- &lcdif {
-+	assigned-clocks = <&clks IMX6UL_CLK_LCDIF_PRE_SEL>;
-+	assigned-clock-parents = <&clks IMX6UL_CLK_PLL5_VIDEO_DIV>;
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_lcdif_dat
- 		     &pinctrl_lcdif_ctrl>;
-@@ -264,14 +283,14 @@ &lcdif {
- 	status = "okay";
- 
- 	display0: display@0 {
--		bits-per-pixel = <24>;
-+		bits-per-pixel = <16>;
- 		bus-width = <24>;
- 
- 		display-timings {
- 			native-mode = <&timing0>;
- 
- 			timing0: timing0 {
--    			clock-frequency = <51200000>;
-+				clock-frequency = <51200000>;
-     			hactive = <1024>;
-     			vactive = <600>;
-     			hfront-porch = <160>;
-@@ -290,7 +309,6 @@ timing0: timing0 {
- };
- 
- &pwm1 {
--	#pwm-cells = <2>;
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_pwm1>;
- 	status = "okay";
-@@ -354,7 +372,7 @@ &sim2 {
- &tsc {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_tsc>;
--	xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
-+	xnur-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
- 	measure-delay-time = <0xffff>;
- 	pre-charge-time = <0xfff>;
- 	status = "okay";
-@@ -374,6 +392,10 @@ &uart2 {
- 	/* fsl,dte-mode; */
- 	/* pinctrl-0 = <&pinctrl_uart2dte>; */
- 	status = "okay";
-+
-+	bluetooth {
-+		compatible = "nxp,88w8987-bt";
-+	};
- };
- 
- &usbotg1 {
-@@ -477,14 +499,14 @@ MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2	0x4001b031
- 		>;
- 	};
- 
--	pinctrl_flexcan1: flexcan1grp{
-+	pinctrl_flexcan1: flexcan1grp {
- 		fsl,pins = <
- 			MX6UL_PAD_UART3_RTS_B__FLEXCAN1_RX	0x1b020
- 			MX6UL_PAD_UART3_CTS_B__FLEXCAN1_TX	0x1b020
- 		>;
- 	};
- 
--	pinctrl_flexcan2: flexcan2grp{
-+	pinctrl_flexcan2: flexcan2grp {
- 		fsl,pins = <
- 			MX6UL_PAD_UART2_RTS_B__FLEXCAN2_RX	0x1b020
- 			MX6UL_PAD_UART2_CTS_B__FLEXCAN2_TX	0x1b020
-@@ -594,10 +616,8 @@ pinctrl_spi4: spi4grp {
- 		fsl,pins = <
- 			MX6UL_PAD_BOOT_MODE0__GPIO5_IO10	0x70a1
- 			MX6UL_PAD_BOOT_MODE1__GPIO5_IO11	0x70a1
--			/* disabled the corruptions pin sets
--			MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x70a1
--			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x80000000 
--			*/
-+			/* MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x70a1
-+			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x80000000 */
- 		>;
- 	};
- 
-@@ -655,7 +675,7 @@ MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
- 		>;
- 	};
- 
--	pinctrl_usdhc1_100mhz: usdhc1grp100mhz {
-+	pinctrl_usdhc1_100mhz: usdhc1-100mhz-grp {
- 		fsl,pins = <
- 			MX6UL_PAD_SD1_CMD__USDHC1_CMD     0x170b9
- 			MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x100b9
-@@ -667,7 +687,7 @@ MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 0x170b9
- 		>;
- 	};
- 
--	pinctrl_usdhc1_200mhz: usdhc1grp200mhz {
-+	pinctrl_usdhc1_200mhz: usdhc1-200mhz-grp {
- 		fsl,pins = <
- 			MX6UL_PAD_SD1_CMD__USDHC1_CMD     0x170f9
- 			MX6UL_PAD_SD1_CLK__USDHC1_CLK     0x100f9
++CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
++CONFIG_EXTRA_FIRMWARE_DIR="/home/charliechen/imx-forge/driver/firmwares"
 -- 
 2.43.0
 
