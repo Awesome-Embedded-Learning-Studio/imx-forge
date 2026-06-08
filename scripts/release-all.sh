@@ -50,6 +50,7 @@ CROSS_COMPILE=arm-none-linux-gnueabihf-
 
 # Build options
 FAST_BUILD=0
+CONTINUE_BUILD=0
 SPECIFIC_STAGE=""
 
 # Parse arguments
@@ -57,6 +58,10 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --fast-build)
             FAST_BUILD=1
+            shift
+            ;;
+        --continue)
+            CONTINUE_BUILD=1
             shift
             ;;
         --stage)
@@ -82,6 +87,7 @@ Usage: $0 [OPTIONS]
 
 Options:
   --fast-build      Pass --fast-build to linux build (skip distclean)
+  --continue        Continue from existing release-latest (skip completed stages)
   --stage N         Run only specific stage (1-4)
   --help, -h        Show this help message
 
@@ -99,6 +105,8 @@ Examples:
   $0 --stage 1                                # Build U-Boot only
   $0 --fast-build                             # Build all with fast build mode
   $0 --stage 2 --fast-build                   # Build Linux with fast build mode
+  $0 --continue                               # Continue from existing build (skip completed stages)
+  $0 --continue --stage 4                     # Continue and run only Stage 4
   DEFAULT_DEVICE_TREE=custom-dtb $0           # Use custom device tree
 
 Output directory: ${BUILD_OUTPUT_DIR}/
@@ -237,14 +245,6 @@ create_symlinks() {
     fi
 
     log_info "Symlinks created in ${images_dir}/"
-
-    # Export NFS rootfs for debugging
-    log_info "Exporting NFS rootfs..."
-    local nfs_dir="${PROJECT_ROOT}/rootfs/nfs"
-    rm -rf "${nfs_dir}"
-    mkdir -p "$(dirname "${nfs_dir}")"
-    ln -sf "${BUILD_OUTPUT_DIR}/rootfs" "${nfs_dir}"
-    log_info "  + rootfs/nfs/ -> ${BUILD_OUTPUT_DIR}/rootfs/ (NFS export ready)"
 }
 
 # Show final summary
@@ -273,9 +273,30 @@ show_summary() {
     fi
     log_info ""
     log_info "To use the rootfs:"
-    log_info "  1. Export via NFS: ${BUILD_OUTPUT_DIR}/rootfs"
-    log_info "  2. Or copy to SD card"
+    log_info "  - For NFS mount: bash scripts/manual_mount_nfs.sh"
+    log_info "  - Or copy to SD card"
     log_info ""
+}
+
+# Check if a stage has already been completed
+is_stage_completed() {
+    local stage=$1
+
+    case "${stage}" in
+        1)
+            [[ -f "${BUILD_OUTPUT_DIR}/uboot/u-boot-dtb.imx" ]]
+            ;;
+        2)
+            [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/zImage" ]]
+            ;;
+        3)
+            [[ -f "${BUILD_OUTPUT_DIR}/busybox/busybox" && -f "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" ]]
+            ;;
+        4)
+            # Stage 4 completion is hard to verify, assume incomplete
+            false
+            ;;
+    esac
 }
 
 # Main build process
@@ -306,18 +327,27 @@ main() {
     log_info ""
 
     # Create build output directory
-    # If release-latest exists, rename it to release-{datetime}
+    # If release-latest exists, handle based on mode
     # Note: Stage 4 should not clear the folder, as it depends on previous stages
-    if [[ -d "${BUILD_OUTPUT_DIR}" && "${SPECIFIC_STAGE}" != "4" ]]; then
-        local datetime=$(date +%Y%m%d-%H%M%S)
-        local archive_dir="${PROJECT_ROOT}/out/release-${datetime}"
-        log_info "Archiving existing ${BUILD_OUTPUT_DIR} -> ${archive_dir}"
-        mv "${BUILD_OUTPUT_DIR}" "${archive_dir}"
+    if [[ -d "${BUILD_OUTPUT_DIR}" ]]; then
+        if [[ ${CONTINUE_BUILD} -eq 1 ]]; then
+            log_info "Continuing from existing build: ${BUILD_OUTPUT_DIR}"
+        elif [[ "${SPECIFIC_STAGE}" != "4" ]]; then
+            local datetime=$(date +%Y%m%d-%H%M%S)
+            local archive_dir="${PROJECT_ROOT}/out/release-${datetime}"
+            log_info "Archiving existing ${BUILD_OUTPUT_DIR} -> ${archive_dir}"
+            mv "${BUILD_OUTPUT_DIR}" "${archive_dir}"
+        fi
     fi
     mkdir -p "${BUILD_OUTPUT_DIR}"
 
     # Run stages
     for stage in "${stages[@]}"; do
+        if [[ ${CONTINUE_BUILD} -eq 1 ]] && is_stage_completed "${stage}"; then
+            log_info "Skipping stage ${stage} (already completed)"
+            continue
+        fi
+
         case "${stage}" in
             1) stage_1_uboot ;;
             2) stage_2_linux ;;
