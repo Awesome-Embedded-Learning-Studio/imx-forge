@@ -284,21 +284,22 @@ make -C third_party/busybox \
 
 ### 手动验证
 
-你也可以手动验证：
-
+你也可以手动验证, 如果使用release-all.sh编译的朋友，请检查如下路径：
 ```bash
 # 检查文件类型
-$ file out/busybox/busybox
-out/busybox/busybox: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), statically linked, no section header info
+$ file out/release-latest/busybox/busybox
+out/release-latest/busybox/busybox: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), statically linked, no section header info
 
 # 检查大小
-$ ls -lh out/busybox/busybox
--rwxr-xr-x 1 user user 1.0M Mar 15 10:30 out/busybox/busybox
+$ ls -lh out/release-latest/busybox/busybox
+-rwxr-xr-x 1 user user 1.0M Mar 15 10:30 out/release-latest/busybox/busybox
 
 # 检查架构
-$ readelf -h out/busybox/busybox | grep Machine
+$ readelf -h out/release-latest/busybox/busybox | grep Machine
   Machine:   ARM
 ```
+
+当然，如果是自己独立调用单独组件构建的朋友，可以自行查看打印的日志的输出位置，使用file或者是readelf指令进行查看。
 
 > [!经验] 1MB 算大吗？
 > BusyBox 的典型大小在 1-2MB 之间（静态链接）。如果你启用更多功能，可能达到 2-3MB。如果超过 5MB，可能需要检查是否不小心启用了某些大型功能（如 full vi）。
