@@ -171,6 +171,82 @@ image_name_for_media() {
     fi
 }
 
+is_submodule_initialized() {
+    local path="$1"
+
+    [[ -f "${PROJECT_ROOT}/${path}/.git" || -d "${PROJECT_ROOT}/${path}/.git" ]] &&
+        git -C "${PROJECT_ROOT}/${path}" rev-parse --verify HEAD >/dev/null 2>&1
+}
+
+require_submodule_initialized() {
+    local path="$1"
+    local name="$2"
+
+    if is_submodule_initialized "${path}"; then
+        return 0
+    fi
+
+    log_error "${name} submodule is not initialized: ${PROJECT_ROOT}/${path}"
+    log_error "Run: git submodule update --init --recursive ${path}"
+    return 1
+}
+
+ensure_submodules_initialized() {
+    local required=()
+    local stage
+
+    for stage in "${stages[@]}"; do
+        case "${stage}" in
+            1)
+                required+=("third_party/uboot-imx:U-Boot")
+                ;;
+            2)
+                if [[ "${KERNEL_TRACK}" == "mainline" ]]; then
+                    required+=("third_party/linux_mainline:Linux mainline")
+                else
+                    required+=("third_party/linux-imx:Linux i.MX")
+                fi
+                ;;
+            3)
+                required+=("third_party/busybox:BusyBox")
+                ;;
+        esac
+    done
+
+    if [[ ${#required[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    log_info "Checking required submodules..."
+
+    local item
+    local path
+    local name
+    local has_error=0
+    local checked=""
+
+    for item in "${required[@]}"; do
+        path="${item%%:*}"
+        name="${item#*:}"
+
+        if [[ " ${checked} " == *" ${path} "* ]]; then
+            continue
+        fi
+        checked="${checked} ${path}"
+
+        if require_submodule_initialized "${path}" "${name}"; then
+            log_info "  ✓ ${name}: ${path}"
+        else
+            has_error=1
+        fi
+    done
+
+    if [[ ${has_error} -ne 0 ]]; then
+        log_error "Required submodules are missing. Initialize them and rerun release-all.sh."
+        exit 1
+    fi
+}
+
 # Stage 1: U-Boot
 stage_1_uboot() {
     log_info "========================================="
@@ -457,6 +533,9 @@ main() {
         stages=(1 2 3 4 5)
         log_info "Running all stages (1-5)"
     fi
+    log_info ""
+
+    ensure_submodules_initialized
     log_info ""
 
     # Create build output directory

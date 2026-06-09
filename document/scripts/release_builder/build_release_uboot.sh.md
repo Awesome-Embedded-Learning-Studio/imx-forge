@@ -2,7 +2,7 @@
 
 ## 脚本概述
 
-`build_release_uboot.sh` 是 IMX-Forge 项目中用于创建可重现的 U-Boot 发布版本的工具。与普通构建不同，发布构建强调可重现性、隔离性和完整的构建信息记录。
+`build_release_uboot.sh` 是 IMX-Forge 项目中用于创建 U-Boot 发布版本的工具。与普通构建不同，发布构建强调隔离性、完整的构建信息记录，并保留显式时间戳下的可重现构建能力。
 
 ### 核心功能
 
@@ -11,7 +11,7 @@
 - **补丁应用**：在干净的基础上应用定制补丁
 - **发布分支创建**：为每次发布创建独立的分支
 - **构建信息记录**：生成详细的构建元数据
-- **可重现构建支持**：使用 SOURCE_DATE_EPOCH 确保二进制一致性
+- **构建时间控制**：默认使用本次构建时间，也支持通过 SOURCE_DATE_EPOCH 固定时间戳
 
 ### 设计理念
 
@@ -21,14 +21,14 @@
 |------|----------|----------|
 | 源码状态 | 可能有未提交更改 | 完全干净 |
 | 构建环境 | 可能残留旧文件 | 完全清理 |
-| 产物版本 | 时间戳变化 | 可重现 |
+| 产物版本 | 默认使用当前构建时间 | 可通过 SOURCE_DATE_EPOCH 固定 |
 | 构建信息 | 简单 | 详细记录 |
 | 分支管理 | 功能分支 | 发布分支 |
 
 **发布构建的设计原则**：
 
-1. **可重现性**：相同输入产生相同输出
-2. **可追溯性**：每步操作都有记录
+1. **可追溯性**：默认让 U-Boot banner 反映实际 release 构建时间
+2. **可审计性**：每步操作都有记录
 3. **隔离性**：不影响开发环境
 4. **验证性**：可验证构建的正确性
 
@@ -57,7 +57,7 @@ build_release_uboot.sh
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `SOURCE_DATE_EPOCH` | 构建时间戳（秒） | `1609459200` (2021-01-01) |
+| `SOURCE_DATE_EPOCH` | 构建时间戳（秒） | 当前 UTC 时间 |
 | `LC_ALL` | 区域设置 | `C` |
 
 ## 执行流程
@@ -68,7 +68,7 @@ build_release_uboot.sh
 ┌─────────────────────────────────────────────────────────────┐
 │  1. 初始化阶段                                               │
 │     - 设置目录路径                                           │
-│     - 设置环境变量（可重现构建）                             │
+│     - 设置环境变量（构建时间控制）                           │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -348,8 +348,8 @@ BUILD_INFO_FILE="${PROJECT_ROOT}/out/uboot/build_info.txt"
 U-Boot Release Build Information
 ========================================
 Release Version: v0.1.0
-Build Date: Fri Jan  1 00:00:00 UTC 2021
-Source Date Epoch: 1609459200
+Build Date: Tue Jun  9 10:30:00 UTC 2026
+Source Date Epoch: 1781001000
 
 U-Boot Information:
 -------------------
@@ -384,15 +384,26 @@ Toolchain: arm-none-linux-gnueabihf-
 [INFO] Build info saved to: /home/user/imx-forge/out/uboot/build_info.txt
 ```
 
-## 可重现构建
+## 构建时间与可重现构建
 
 ### SOURCE_DATE_EPOCH
 
-**作用**：设置构建的时间戳。
+**作用**：控制构建过程中写入产物的时间戳。U-Boot 会把该值写入启动 banner，例如：
+
+```text
+U-Boot 2025.04-g99518e6b6f20-dirty (Jun 09 2026 - 10:30:00 +0000)
+```
+
+如果脚本没有收到外部传入的 `SOURCE_DATE_EPOCH`，会自动使用当前 UTC 时间：
+
+```bash
+: "${SOURCE_DATE_EPOCH:=$(date -u +%s)}"
+export SOURCE_DATE_EPOCH
+```
 
 **为什么需要**：
 
-通常构建过程会嵌入当前时间戳：
+通常构建过程会嵌入时间戳：
 
 ```
 Built by user@host on 2025-03-15 10:30:45
@@ -404,29 +415,30 @@ Built by user@host on 2025-03-15 10:30:45
 2. 无法验证构建是否可重现
 3. 难以进行二进制比较
 
-**解决方案**：
+**默认行为**：
 
-设置固定的时间戳：
+默认使用本次构建时间，保证板子串口日志中的 U-Boot banner 能反映实际 release 构建时间。
+
+**可重现构建方案**：
+
+如果需要做 byte-for-byte 可重现构建，在运行脚本前显式设置固定时间戳：
 
 ```bash
-export SOURCE_DATE_EPOCH=1609459200  # 2021-01-01 00:00:00 UTC
+SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_uboot.sh v0.1.0
 ```
 
 **如何工作**：
 
 现代构建工具（gcc、make 等）会检查 `SOURCE_DATE_EPOCH`：
 
-1. 如果设置，使用这个时间
-2. 如果未设置，使用当前时间
+1. 如果设置，使用这个时间。
+2. 如果未设置，脚本先设置为当前 UTC 时间，再进入 U-Boot 构建。
 
 **更新时间戳**：
 
-每次发布应该更新：
+可重现发布应该为每个 release 选择一个明确时间，例如 release 日期的 UTC 零点：
 
 ```bash
-# 2021-01-01 00:00:00 UTC
-export SOURCE_DATE_EPOCH=1609459200
-
 # 2025-03-15 00:00:00 UTC
 export SOURCE_DATE_EPOCH=1740988800
 ```
@@ -525,7 +537,7 @@ Build info:
   - out/uboot/build_info.txt
 
 For reproducible builds, use:
-  SOURCE_DATE_EPOCH=1609459200
+  SOURCE_DATE_EPOCH=1781001000
 ========================================
 ```
 

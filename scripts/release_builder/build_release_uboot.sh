@@ -35,9 +35,11 @@ PATCH="${PATCH_DIR}/charlies_board.patch"
 : "${OUTPUT_DIR:=${PROJECT_ROOT}/out/uboot}"
 BUILD_INFO_FILE="${OUTPUT_DIR}/build_info.txt"
 
-# For reproducible builds - use fixed timestamp
-# Update SOURCE_DATE_EPOCH for each release
-export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-1609459200}  # 2021-01-01 00:00:00 UTC
+# Use the current build time by default so the U-Boot banner matches the
+# release artifact. Export SOURCE_DATE_EPOCH before running this script when a
+# byte-for-byte reproducible build needs a fixed timestamp.
+: "${SOURCE_DATE_EPOCH:=$(date -u +%s)}"
+export SOURCE_DATE_EPOCH
 export LC_ALL=C
 
 # ============================================
