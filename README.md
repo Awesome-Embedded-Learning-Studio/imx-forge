@@ -77,13 +77,13 @@ IMX-Forge 支持 **Docker** 和 **WSL2 + Docker** 两种开发环境：
 
 #### 方式一：直接拉取镜像（最简单）
 
-我们提供预构建的 Docker 镜像，包含完整的开发环境。正式版本标签从 `v0.1.0` 开始；历史 `v0.5` 仅作为路线图里程碑编号保留。
+我们提供预构建的 Docker 镜像，包含完整的开发环境。`v1.0.0` 是首个轻量可用版本，重点完成正点原子阿尔法 i.MX6ULL 的构建、镜像、烧录、启动闭环；历史 `v0.5` 仅作为路线图里程碑编号保留。
 
 | 标签 | 说明 | 适用场景 |
 |------|------|----------|
 | `latest` | 稳定版本 | 日常开发推荐 |
 | `preview` | 预览版本 | 测试新功能 |
-| `v0.1.0` 等 | 版本号 | 锁定特定版本 |
+| `v1.0.0` 等 | 版本号 | 锁定特定版本 |
 
 ```bash
 git clone --recurse-submodules https://github.com/Awesome-Embedded-Learning-Studio/imx-forge.git
@@ -98,7 +98,7 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 
 使用特定版本：
 ```bash
-docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v0.1.0
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
 ```
 
 > **镜像说明**: 基于 Ubuntu 24.04，预装 ARM GNU Toolchain 15.2.rel1 及所有开发依赖，截至文档更新时约 2GB（实际大小可能存在波动）。详见 [Docker 发布文档](document/ci/docker-publish.md)
@@ -112,6 +112,14 @@ cd imx-forge/docker && docker build -t imx-forge:latest . && cd ..
 docker run -it --rm -v $(pwd):/workspace imx-forge:latest
 ./scripts/release-all.sh
 ```
+
+`release-all.sh` 默认生成 eMMC 镜像；发布或回归 SD/eMMC 双介质时推荐：
+
+```bash
+./scripts/release-all.sh --boot-media both
+```
+
+v1.0.0 的 SD 卡启动与 UUU + UMS eMMC 启动流程，已由仓库主作者 CharlieChen114514 在正点原子阿尔法 i.MX6ULL 开发板上完成实验验证。
 
 > **国内用户加速**: 如果 ghcr.io 拉取较慢，可配置 Docker 镜像加速，详见 [Docker 文档](docker/README.md#国内用户加速)
 
@@ -134,7 +142,7 @@ docker run -it --rm -v $(pwd):/workspace imx-forge:latest
 | 2️⃣ | [U-Boot](document/tutorial/uboot) | U-Boot 原理、编译、移植、Logo 定制 | ✅ |
 | 3️⃣ | [内核开发](document/tutorial/kernel) | 设备树、内核配置、驱动开发、网络启动 | ✅ |
 | 4️⃣ | [Rootfs](document/tutorial/rootfs) | BusyBox、inittab、NFS 挂载、应用集成 | ✅ |
-| 5️⃣ | [驱动开发](document/tutorial/driver) | 字符设备、设备树、pinctrl/gpio 子系统 | 正在持续更新 |
+| 5️⃣ | [驱动开发](document/tutorial/driver) | 字符设备、设备树、pinctrl/gpio、platform、key/input 子系统 | ✅ 持续扩展 |
 | 6️⃣ | [实战演练](document/tutorial/practical) | 完整系统构建与调试 | ✅ |
 
 ---

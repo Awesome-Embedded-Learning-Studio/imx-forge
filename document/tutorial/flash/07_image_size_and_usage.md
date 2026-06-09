@@ -127,6 +127,10 @@ out/release-latest/images/imx6ull-aes-sd.img
 
 所以生成之后先别急着烧录，先看一眼 manifest，确认自己拿的是对的镜像。
 
+::: tip v1.0.0 验证基线
+`imx6ull-aes-sd.img` 和 `imx6ull-aes-emmc.img` 两条启动路径，已由仓库主作者 CharlieChen114514 在正点原子阿尔法 i.MX6ULL 开发板上实验通过。后续回归测试以 manifest 中的 `boot_media`、`uboot_mmc_dev` 和 `linux_root_dev` 为第一检查点。
+:::
+
 ## 用 `release-all.sh` 只跑镜像阶段
 
 如果前面的 U-Boot、Linux、BusyBox 和 rootfs 都已经构建好了，可以只跑 Stage 5：

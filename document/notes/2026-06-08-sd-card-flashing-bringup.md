@@ -143,44 +143,12 @@ Expected root device:
 
 ## Pitfall Log
 
-Use this section during bring-up.
+This v1.0.0 baseline did not keep a detailed pitfall record for SD boot. The SD card image boot flow was experimentally verified by repository author CharlieChen114514 on the ALIENTEK Alpha i.MX6ULL board.
 
-### Pitfall 1
+Future issues should be appended here using:
 
+```text
 Symptom:
-
-```text
-TBD
-```
-
 Root cause:
-
-```text
-TBD
-```
-
 Fix:
-
-```text
-TBD
-```
-
-### Pitfall 2
-
-Symptom:
-
-```text
-TBD
-```
-
-Root cause:
-
-```text
-TBD
-```
-
-Fix:
-
-```text
-TBD
 ```

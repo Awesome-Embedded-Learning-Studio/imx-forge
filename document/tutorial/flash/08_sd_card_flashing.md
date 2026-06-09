@@ -41,6 +41,10 @@ out/release-latest/images/imx6ull-aes-sd.img.sha256
 
 SD 镜像里面的启动参数就是按这个约定生成的。拿 eMMC 镜像去烧 SD 卡，有时候也能看到 U-Boot，有时候甚至能加载到内核，但内核挂 rootfs 的时候很容易掉进 `VFS: Cannot open root device`。
 
+::: tip v1.0.0 验证基线
+SD 卡镜像 `imx6ull-aes-sd.img` 已由仓库主作者 CharlieChen114514 在正点原子阿尔法 i.MX6ULL 开发板上实验启动通过。本章后续排查默认以 `mmc 0` 和 `root=/dev/mmcblk0p2` 为基线。
+:::
+
 ## 烧录前先看 manifest
 
 先别急着插卡。先确认这个镜像确实是 SD 版本：

@@ -77,6 +77,10 @@ linux_root_dev=/dev/mmcblk1p2
 
 eMMC 镜像和 SD 镜像的分区布局很像，但启动参数不是一回事。这里必须是 `mmc 1` 和 `/dev/mmcblk1p2`。
 
+::: tip v1.0.0 验证基线
+UUU + UMS 写入 `imx6ull-aes-emmc.img` 并从 eMMC 启动的流程，已由仓库主作者 CharlieChen114514 在正点原子阿尔法 i.MX6ULL 开发板上实验通过。本章后续排查默认以 `mmc 1` 和 `root=/dev/mmcblk1p2` 为基线。
+:::
+
 ## 确认临时 U-Boot 是新的
 
 UUU 加载的是：

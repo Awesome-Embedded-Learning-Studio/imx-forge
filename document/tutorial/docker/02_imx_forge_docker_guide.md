@@ -986,7 +986,7 @@ docker rmi imx-forge:old-version
 
 1. **统一 Docker 镜像版本**
    - 在项目中指定镜像版本
-   - 使用固定的镜像标签（如 `v0.1.0` 而不是 `latest`）
+   - 使用固定的镜像标签（如 `v1.0.0` 而不是 `latest`）
 
 2. **使用 Docker Compose**
    - 将配置写入 `docker-compose.yml`

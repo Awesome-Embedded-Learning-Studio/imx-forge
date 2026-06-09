@@ -3,12 +3,20 @@
 ## 章节目录
 
 <ChapterNav>
-  <ChapterLink num="01" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
-  <ChapterLink num="02" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
+  <ChapterLink num="01" href="00_chardev_base/">字符设备基础 —— 从 file_operations 到新字符设备 API</ChapterLink>
+  <ChapterLink num="02" href="01_device_tree_base/">设备树驱动基础 —— 从节点解析到完整实践</ChapterLink>
+  <ChapterLink num="03" href="02_pinctrl_gpio/01_introduction">Pin Control & GPIO —— 引脚复用与 GPIO 子系统</ChapterLink>
+  <ChapterLink num="04" href="03_platform_led_driver/">Platform LED 驱动 —— 平台总线与设备树匹配</ChapterLink>
+  <ChapterLink num="05" href="04_beep_driver/">蜂鸣器驱动 —— GPIO 输出设备实践</ChapterLink>
+  <ChapterLink num="06" href="05_gpio_key_driver/">GPIO 按键驱动 —— 输入采样与轮询</ChapterLink>
+  <ChapterLink num="07" href="06_debounced_key_driver/">按键消抖驱动 —— 中断、工作队列与同步</ChapterLink>
+  <ChapterLink num="08" href="07_input_subsystem_key/">Input 子系统按键 —— 标准输入事件上报</ChapterLink>
+  <ChapterLink num="09" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
+  <ChapterLink num="10" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
 </ChapterNav>
 
-::: warning 基础驱动教程
-从零开始写驱动的教程正在编写中，敬请期待。 <StatusTag type="planned" />
+::: tip v1.0.0 状态
+驱动教程已经覆盖字符设备、设备树、pinctrl/gpio、platform、beep、key/input、模块与固件等主线章节。后续章节会继续扩展，但基础学习链路已经可以按目录顺序推进。
 :::
 
 ::: tip 学习目标

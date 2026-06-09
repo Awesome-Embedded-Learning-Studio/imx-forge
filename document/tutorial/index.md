@@ -42,7 +42,7 @@
   </RoadMapPhase>
 
   <RoadMapPhase icon="⚙️" title="驱动开发" subtitle="Driver Dev" time="~15 天" :difficulty="4" :num="6">
-    <ChapterLink num="01" href="driver/char_device/" variant="sub">字符设备基础</ChapterLink>
+    <ChapterLink num="01" href="driver/00_chardev_base/" variant="sub">字符设备基础</ChapterLink>
     <ChapterLink num="02" href="driver/device_tree/" variant="sub">设备树实践</ChapterLink>
     <ChapterLink num="03" href="driver/02_pinctrl_gpio/01_introduction" variant="sub">Pin Control & GPIO</ChapterLink>
     <ChapterLink num="04" href="driver/modules/" variant="sub">模块开发</ChapterLink>
@@ -51,7 +51,7 @@
 
   <RoadMapPhase icon="🏔️" title="进阶探索" subtitle="Advanced" time="持续" :difficulty="5" :num="7">
     <ChapterLink num="01" href="kernel/mainline/" variant="sub">主线内核移植</ChapterLink>
-    <ChapterLink num="02" href="kernel/core_features/" variant="sub">内核并发机制</ChapterLink>
+    <ChapterLink num="02" href="kernel/core-functional/" variant="sub">内核并发机制</ChapterLink>
     <ChapterLink num="03" href="uboot/bonus_qa" variant="sub">U-Boot Q&A</ChapterLink>
   </RoadMapPhase>
 </RoadMap>
@@ -107,8 +107,15 @@
 ### 驱动开发
 
 <ChapterNav>
-  <ChapterLink num="01" href="driver/modules/">模块开发</ChapterLink>
-  <ChapterLink num="02" href="driver/firmware_apply/">固件应用</ChapterLink>
+  <ChapterLink num="01" href="driver/00_chardev_base/">字符设备基础</ChapterLink>
+  <ChapterLink num="02" href="driver/01_device_tree_base/">设备树驱动基础</ChapterLink>
+  <ChapterLink num="03" href="driver/02_pinctrl_gpio/01_introduction">Pin Control & GPIO</ChapterLink>
+  <ChapterLink num="04" href="driver/03_platform_led_driver/">Platform LED 驱动</ChapterLink>
+  <ChapterLink num="05" href="driver/04_beep_driver/">蜂鸣器驱动</ChapterLink>
+  <ChapterLink num="06" href="driver/05_gpio_key_driver/">GPIO 按键驱动</ChapterLink>
+  <ChapterLink num="07" href="driver/07_input_subsystem_key/">Input 子系统按键</ChapterLink>
+  <ChapterLink num="08" href="driver/modules/">模块开发</ChapterLink>
+  <ChapterLink num="09" href="driver/firmware_apply/">固件应用</ChapterLink>
 </ChapterNav>
 
 ### 实战演练

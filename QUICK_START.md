@@ -151,7 +151,7 @@ arm-none-linux-gnueabihf-gcc --version
 
 快速开始后，建议按以下顺序学习：
 
-1. [Docker 教程](document/tutorial/docker/README.md) —— 熟悉开发环境
+1. [Docker 教程](document/tutorial/docker/) —— 熟悉开发环境
 2. [工具链教程](document/tutorial/start/) —— 理解交叉编译
 3. [U-Boot 教程](document/tutorial/uboot/) —— Bootloader 基础
 4. [内核教程](document/tutorial/kernel/) —— Linux 内核开发
