@@ -1,0 +1,257 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Version segment to bump'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      version_override:
+        description: 'Optional explicit version, for example v1.1.0'
+        required: false
+        type: string
+      create_github_release:
+        description: 'Create a GitHub Release'
+        required: true
+        default: true
+        type: boolean
+      dry_run:
+        description: 'Preview only; do not create tag or release'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          VERSION_OVERRIDE: ${{ inputs.version_override }}
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          latest_tag="$(
+            git tag --list 'v[0-9]*.[0-9]*.[0-9]*' |
+              grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
+              sort -V |
+              tail -n 1 || true
+          )"
+          latest_tag="${latest_tag:-v0.0.0}"
+
+          version_re='^v([0-9]+)\.([0-9]+)\.([0-9]+)$'
+          if [[ ! "${latest_tag}" =~ ${version_re} ]]; then
+            echo "Latest stable tag is invalid: ${latest_tag}" >&2
+            exit 1
+          fi
+
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          patch="${BASH_REMATCH[3]}"
+
+          if [[ -n "${VERSION_OVERRIDE}" ]]; then
+            new_version="${VERSION_OVERRIDE}"
+            if [[ ! "${new_version}" =~ ${version_re} ]]; then
+              echo "version_override must match vX.Y.Z: ${new_version}" >&2
+              exit 1
+            fi
+          else
+            case "${RELEASE_TYPE}" in
+              patch)
+                new_version="v${major}.${minor}.$((patch + 1))"
+                ;;
+              minor)
+                new_version="v${major}.$((minor + 1)).0"
+                ;;
+              major)
+                new_version="v$((major + 1)).0.0"
+                ;;
+              *)
+                echo "Unsupported release_type: ${RELEASE_TYPE}" >&2
+                exit 1
+                ;;
+            esac
+          fi
+
+          if git rev-parse -q --verify "refs/tags/${new_version}" >/dev/null; then
+            echo "Tag already exists: ${new_version}" >&2
+            exit 1
+          fi
+
+          highest="$(printf '%s\n%s\n' "${latest_tag}" "${new_version}" | sort -V | tail -n 1)"
+          if [[ "${highest}" != "${new_version}" || "${new_version}" == "${latest_tag}" ]]; then
+            echo "New version must be greater than latest stable tag (${latest_tag}): ${new_version}" >&2
+            exit 1
+          fi
+
+          release_doc="document/release/${new_version}.md"
+          release_doc_status="not-required"
+          if [[ -f "${release_doc}" ]]; then
+            release_doc_status="present"
+          elif [[ "${RELEASE_TYPE}" != "patch" ]]; then
+            release_doc_status="missing"
+          fi
+
+          {
+            echo "latest_tag=${latest_tag}"
+            echo "new_version=${new_version}"
+            echo "release_doc=${release_doc}"
+            echo "release_doc_status=${release_doc_status}"
+          } >> "${GITHUB_OUTPUT}"
+
+          {
+            echo "## Release Preview"
+            echo ""
+            echo "- Latest stable tag: \`${latest_tag}\`"
+            echo "- New version: \`${new_version}\`"
+            echo "- Release type: \`${RELEASE_TYPE}\`"
+            echo "- Release document: \`${release_doc_status}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Validate release files
+        shell: bash
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          RELEASE_DOC: ${{ steps.version.outputs.release_doc }}
+          RELEASE_DOC_STATUS: ${{ steps.version.outputs.release_doc_status }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          test -f changelog/CHANGELOG.md
+          test -f document/release/versioning-strategy.md
+
+          if [[ "${RELEASE_TYPE}" != "patch" && "${RELEASE_DOC_STATUS}" == "missing" ]]; then
+            if [[ "${DRY_RUN}" == "true" ]]; then
+              echo "MINOR/MAJOR release document is missing for this dry run: ${RELEASE_DOC}" >&2
+            else
+              echo "MINOR/MAJOR releases require a release document: ${RELEASE_DOC}" >&2
+              exit 1
+            fi
+          fi
+
+      - name: Build documentation
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      - name: Generate release body
+        id: body
+        shell: bash
+        env:
+          LATEST_TAG: ${{ steps.version.outputs.latest_tag }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+          RELEASE_DOC: ${{ steps.version.outputs.release_doc }}
+          RELEASE_DOC_STATUS: ${{ steps.version.outputs.release_doc_status }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          compare_range="${LATEST_TAG}..HEAD"
+          if [[ "${LATEST_TAG}" == "v0.0.0" ]]; then
+            compare_range="HEAD"
+          fi
+
+          {
+            echo "## Highlights"
+            echo ""
+            echo "- Stable release ${NEW_VERSION}."
+            echo ""
+            echo "## Changes"
+            echo ""
+            commits="$(git log --no-merges --pretty='- %s (%h)' "${compare_range}" | sed -n '1,80p')"
+            if [[ -n "${commits}" ]]; then
+              echo "${commits}"
+            else
+              echo "- No commit summary available."
+            fi
+            echo ""
+            echo "## Documents"
+            echo ""
+            echo "- Changelog: [changelog/CHANGELOG.md](https://github.com/${REPOSITORY}/blob/${NEW_VERSION}/changelog/CHANGELOG.md)"
+            if [[ "${RELEASE_DOC_STATUS}" == "present" ]]; then
+              echo "- Release note: [${RELEASE_DOC}](https://github.com/${REPOSITORY}/blob/${NEW_VERSION}/${RELEASE_DOC})"
+            else
+              echo "- Release note: not required for this release."
+            fi
+            echo "- Versioning strategy: [document/release/versioning-strategy.md](https://github.com/${REPOSITORY}/blob/${NEW_VERSION}/document/release/versioning-strategy.md)"
+            echo ""
+            echo "## Release Metadata"
+            echo ""
+            echo "- Previous tag: ${LATEST_TAG}"
+            echo "- New tag: ${NEW_VERSION}"
+          } > release-body.md
+
+          echo "body_file=release-body.md" >> "${GITHUB_OUTPUT}"
+
+      - name: Preview release body
+        run: sed -n '1,200p' release-body.md
+
+      - name: Create and push tag
+        if: ${{ !inputs.dry_run }}
+        shell: bash
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${NEW_VERSION}" >/dev/null; then
+            echo "Tag already exists after refetch: ${NEW_VERSION}" >&2
+            exit 1
+          fi
+
+          git tag -a "${NEW_VERSION}" -m "IMX-Forge ${NEW_VERSION}"
+          git push origin "refs/tags/${NEW_VERSION}"
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run && inputs.create_github_release }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          gh release create "${NEW_VERSION}" \
+            --title "IMX-Forge ${NEW_VERSION}" \
+            --notes-file release-body.md
+
+      - name: Dry run notice
+        if: ${{ inputs.dry_run }}
+        run: echo "Dry run enabled. No tag or GitHub Release was created."

@@ -12,6 +12,7 @@
 **面向 NXP i.MX6ULL 的嵌入式 Linux 开发工坊 —— 从工具链到驱动的完整学习路径**
 
 [![CI](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/actions/workflows/ci-build.yml/badge.svg)](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/actions/workflows/ci-build.yml)
+[![Release](https://img.shields.io/github/v/release/Awesome-Embedded-Learning-Studio/imx-forge?style=flat-square&label=Release&color=blue)](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-orange?style=flat-square)](LICENSE)
 [![Contributors](https://img.shields.io/github/contributors/Awesome-Embedded-Learning-Studio/imx-forge?style=flat-square)](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/graphs/contributors)
 [![Docker](https://img.shields.io/badge/Docker-supported%20%EF%83%8B-blue?style=flat-square)](docker/README.md)
