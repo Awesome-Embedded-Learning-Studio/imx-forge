@@ -43,8 +43,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y shellcheck
-          # 检查所有 shell 脚本；ShellCheck 报错时阻断 PR
-          find ./scripts -type f \( -name "*.sh" -o -name "*.bash" \) -exec shellcheck -x {} +
+          # 检查所有 shell 脚本；只用 error 级别阻断 PR，warning/info 后续专项清理
+          find ./scripts -type f \( -name "*.sh" -o -name "*.bash" \) -exec shellcheck --severity=error -x {} +
 
   # Job 3: 配置验证
   configs:

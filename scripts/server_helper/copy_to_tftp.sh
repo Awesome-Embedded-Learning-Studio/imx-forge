@@ -403,7 +403,7 @@ if [[ "$PRESERVE_NAMES" == "true" ]]; then
     UBOOT_DST="${TFTP_PATH}/$(basename "${UBOOT}")"
 else
     # Add board name prefix
-    local prefix="${BOARD_NAME:-board}"
+    prefix="${BOARD_NAME:-board}"
     KERNEL_DST="${TFTP_PATH}/${prefix}-$(basename "${KERNEL}")"
     DTB_DST="${TFTP_PATH}/${prefix}-$(basename "${DTB}")"
     ROOTFS_DST="${TFTP_PATH}/${prefix}-$(basename "${ROOTFS}")"
