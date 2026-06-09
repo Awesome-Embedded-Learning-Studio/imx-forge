@@ -85,7 +85,7 @@ sudo systemctl restart rpcbind
 
 Use this `/etc/ganesha/ganesha.conf`:
 
-```conf
+```text
 NFS_CORE_PARAM {
     Protocols = 3;
     Bind_addr = 0.0.0.0;
@@ -201,7 +201,7 @@ NFSv3 uses both:
 
 Ganesha was configured with:
 
-```conf
+```text
 NFS_Port = 2049;
 MNT_Port = 20048;
 ```
@@ -244,4 +244,3 @@ vers=3,proto=tcp,nolock,port=2049,mountport=20048
 ```
 
 5. If the board cannot reach it but localhost can, inspect Windows/WSL networking next.
-

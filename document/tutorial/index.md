@@ -38,6 +38,7 @@
     <ChapterLink num="01" href="practical/01_practical_overview" variant="sub">实战概述</ChapterLink>
     <ChapterLink num="02" href="practical/02_build_system" variant="sub">构建系统</ChapterLink>
     <ChapterLink num="03" href="practical/03_boot_and_debug" variant="sub">启动与调试</ChapterLink>
+    <ChapterLink num="04" href="flash/" variant="sub">镜像构建</ChapterLink>
   </RoadMapPhase>
 
   <RoadMapPhase icon="⚙️" title="驱动开发" subtitle="Driver Dev" time="~15 天" :difficulty="4" :num="6">
@@ -117,6 +118,29 @@
   <ChapterLink num="02" href="practical/02_build_system">构建系统</ChapterLink>
   <ChapterLink num="03" href="practical/03_boot_and_debug">启动与调试</ChapterLink>
   <ChapterLink num="04" href="practical/04-nfs-experience">NFS 体验</ChapterLink>
+</ChapterNav>
+
+### 镜像构建与烧录准备
+
+<ChapterNav>
+  <ChapterLink num="01" href="flash/01_storage_media_basics">存储介质基础</ChapterLink>
+  <ChapterLink num="02" href="flash/02_image_partition_filesystem_basics">镜像、分区和文件系统</ChapterLink>
+  <ChapterLink num="03" href="flash/03_imx6ull_boot_flow_and_offsets">i.MX6ULL 启动链路与偏移</ChapterLink>
+  <ChapterLink num="04" href="flash/04_why_full_image">为什么需要完整镜像</ChapterLink>
+  <ChapterLink num="05" href="flash/05_image_layout_design">镜像布局设计</ChapterLink>
+  <ChapterLink num="06" href="flash/06_build_imx6ull_image_script">脚本设计拆解</ChapterLink>
+  <ChapterLink num="07" href="flash/07_image_size_and_usage">镜像大小与使用</ChapterLink>
+  <ChapterLink num="08" href="flash/08_sd_card_flashing">SD 卡烧录实战</ChapterLink>
+  <ChapterLink num="09" href="flash/09_uuu_ums_emmc_flashing">UUU + UMS eMMC 烧录</ChapterLink>
+</ChapterNav>
+
+### 命令速查
+
+<ChapterNav>
+  <ChapterLink num="01" href="commands/01_image_builder_commands">镜像构建命令</ChapterLink>
+  <ChapterLink num="02" href="commands/02_image_inspection_commands">镜像检查命令</ChapterLink>
+  <ChapterLink num="03" href="commands/03_storage_tool_commands">存储工具命令</ChapterLink>
+  <ChapterLink num="04" href="commands/04_flashing_commands">烧录命令</ChapterLink>
 </ChapterNav>
 
 ### 构建进阶
