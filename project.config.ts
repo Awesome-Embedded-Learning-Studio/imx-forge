@@ -37,6 +37,8 @@ export default defineProject({
       { name: 'modules', srcDir: 'modules', urlPrefix: '/modules' },
       { name: 'release', srcDir: 'release', urlPrefix: '/release' },
       { name: 'team', srcDir: 'team', urlPrefix: '/team' },
+      { name: 'notes', srcDir: 'notes', urlPrefix: '/notes' },
+      { name: 'qa', srcDir: 'qa', urlPrefix: '/qa' },
       { name: 'todo', srcDir: 'todo', urlPrefix: '/todo' },
     ],
   },

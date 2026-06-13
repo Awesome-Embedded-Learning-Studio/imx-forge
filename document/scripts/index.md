@@ -1,3 +1,7 @@
+---
+title: 构建脚本
+---
+
 <PageHeader icon="📜" title="脚本文档" description="IMX-Forge 构建系统的脚本说明" />
 
 ## 主要脚本

@@ -86,7 +86,7 @@ static struct platform_device *smdk2440_devices[] __initdata = {
 
 一个 SOC 可以造出无数种板子，但我们只需要把通用的 SOC 信息提取到 `.dtsi` 里，具体的 `.dts` 文件直接 `include` 进去就行了。这不仅解决了代码膨胀，还让代码结构变得清晰。
 
-关于设备树的事情——咱们的仓库笔者提交了之前的笔者读文档的时候随手写的教程，可以访问仓库中的document/tutorial/driver/device_tree目录查看。
+关于设备树的事情——本教程从「设备树语法详解」到「OF API」再到「完整实战」是一条完整链路，学完它你就能读懂厂商的设备树代码。需要查阅权威定义时，可参考 devicetree.org 的设备树规范。
 
 ## 与之前教程的衔接：从硬编码到设备树
 

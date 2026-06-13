@@ -1,3 +1,7 @@
+---
+title: 项目规划
+---
+
 <PageHeader icon="📋" title="项目规划" description="IMX-Forge 项目的规划和进度跟踪" />
 
 ## 快速开始

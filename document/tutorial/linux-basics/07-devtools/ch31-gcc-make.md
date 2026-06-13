@@ -1,6 +1,6 @@
 # 第 31 章  GCC 与 Makefile 基础
 
-> **Part: Part 7 · 开发工具链**
+> **Part 7 · 开发工具链**
 
 ---
 

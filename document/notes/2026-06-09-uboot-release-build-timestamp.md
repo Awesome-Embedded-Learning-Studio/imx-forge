@@ -1,3 +1,7 @@
+---
+title: U-Boot 发布构建时间戳
+---
+
 # 2026-06-09 U-Boot Release Build Timestamp Note
 
 ## Background

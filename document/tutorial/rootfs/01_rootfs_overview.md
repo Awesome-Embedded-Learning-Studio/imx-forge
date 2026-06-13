@@ -1,4 +1,19 @@
+---
+title: Rootfs 概述
+---
+
 # Rootfs 概述：Linux 系统的"最后一公里"，以及为什么内核启动后还需要它
+
+::: info 本节你将学到
+- 为什么内核启动之后还需要 Rootfs，它到底放些什么
+- BusyBox / Buildroot / Debian 等常见方案的取舍
+- 为什么本项目选择 BusyBox 作为入门方案
+:::
+
+::: tip 前置知识 · 环境
+- 了解内核启动流程（见 [内核概述](../kernel/01_kernel_overview)）
+- 工具链已就绪
+:::
 
 ## 为什么要写这篇文章
 

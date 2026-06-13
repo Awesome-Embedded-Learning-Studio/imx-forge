@@ -1,3 +1,7 @@
+---
+title: IDE 配置指南
+---
+
 # IDE 配置指南 - VSCode + clangd 驱动开发环境搭建
 
 ## 前言：为什么需要配置 clangd

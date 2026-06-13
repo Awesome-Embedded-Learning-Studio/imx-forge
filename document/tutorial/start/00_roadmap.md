@@ -85,15 +85,15 @@
 
 好，说完了嵌入式Linux是什么，以及它和单片机的区别，我们来聊聊这个项目的结构。我尽量按照"从底层到上层"的逻辑来组织这个项目，你把它想象成一栋楼，得先打地基，然后一层一层往上盖。
 
-最底层是**工具链**，这是地基。没有工具链，你啥也干不了，**U-Boot**编不了、**内核**编不了、应用编不了。我们的教程从这里开始，你去看看[工具链安装](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/start/01_start_from_toolchain)就知道了，这一步绕不过。
+最底层是**工具链**，这是地基。没有工具链，你啥也干不了，**U-Boot**编不了、**内核**编不了、应用编不了。我们的教程从这里开始，你去看看[工具链安装](/tutorial/start/01_start_from_toolchain)就知道了，这一步绕不过。
 
-再往上是**U-Boot**，你可以把它理解为嵌入式Linux的"第一个程序"。上电之后它先跑起来，负责初始化硬件——内存、串口、网络、存储这些，然后把**Linux内核**加载进来，最后把控制权交出去。这块的内容在[U-Boot教程](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/uboot/)里，你想了解**Bootloader**的话可以看看。
+再往上是**U-Boot**，你可以把它理解为嵌入式Linux的"第一个程序"。上电之后它先跑起来，负责初始化硬件——内存、串口、网络、存储这些，然后把**Linux内核**加载进来，最后把控制权交出去。这块的内容在[U-Boot教程](/tutorial/uboot/)里，你想了解**Bootloader**的话可以看看。
 
-然后是**Linux内核**，这是整个系统的核心。进程调度、内存管理、文件系统、设备驱动框架、网络协议栈，全是它在管。内核这块水挺深的，我们准备了[内核教程](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/kernel/)，从编译配置到**设备树**，一步步带你走。
+然后是**Linux内核**，这是整个系统的核心。进程调度、内存管理、文件系统、设备驱动框架、网络协议栈，全是它在管。内核这块水挺深的，我们准备了[内核教程](/tutorial/kernel/)，从编译配置到**设备树**，一步步带你走。
 
-内核启动后需要挂载一个**根文件系统**，这里面有**init进程**（第一个用户进程）、/bin和/sbin这些目录下的工具、配置文件、库文件等等。**RootFS**这块的内容在[Rootfs教程](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/rootfs/)里，**BusyBox**怎么编、**inittab**怎么写、**NFS**怎么挂，都有。
+内核启动后需要挂载一个**根文件系统**，这里面有**init进程**（第一个用户进程）、/bin和/sbin这些目录下的工具、配置文件、库文件等等。**RootFS**这块的内容在[Rootfs教程](/tutorial/rootfs/)里，**BusyBox**怎么编、**inittab**怎么写、**NFS**怎么挂，都有。
 
-再往上是**驱动开发**，这是连接硬件和应用的桥梁。驱动负责硬件初始化、寄存器操作、向上提供统一的接口、处理中断。这块是重头戏，[驱动教程](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/driver/)从**字符设备**到并发机制，从硬件访问到设备树，内容相当扎实。
+再往上是**驱动开发**，这是连接硬件和应用的桥梁。驱动负责硬件初始化、寄存器操作、向上提供统一的接口、处理中断。这块是重头戏，[驱动教程](/tutorial/driver/)从**字符设备**到并发机制，从硬件访问到设备树，内容相当扎实。
 
 最顶层就是你的**应用**了，通过设备文件访问驱动，调用各种系统库，做你想做的事情。应用开发和在PC上写程序差不多，只是编译时要用**交叉编译工具链**。
 
@@ -101,11 +101,11 @@
 
 这个问题其实没有标准答案，取决于你的背景。我给几个不同的路线，你可以对号入座。
 
-如果你是完全的新手，建议按顺序来。先搞懂**工具链**，这一步绕不过，必须先搞定。然后了解一下**U-Boot**，不需要深入，知道它是干嘛的就行。接着了解一下**内核**，同样概念层面理解即可。搞一下**RootFS**，知道根文件系统是啥、里面有什么。最后开始**驱动入门**，这里是真正开始写代码的地方。这个路径比较稳，虽然慢一点，但基础打得牢。
+如果你是完全的新手、连 Linux 命令行都不太熟，建议先去 [Linux 基础预备营](/tutorial/linux-basics/) 补课（35 章 Ubuntu 实用教程，专为嵌入式准备），补完再回来。接下来按顺序来：先搞懂**工具链**，这一步绕不过，必须先搞定。然后了解一下**U-Boot**，不需要深入，知道它是干嘛的就行。接着了解一下**内核**，同样概念层面理解即可。搞一下**RootFS**，知道根文件系统是啥、里面有什么。最后开始**驱动入门**，这里是真正开始写代码的地方。这个路径比较稳，虽然慢一点，但基础打得牢。
 
-如果你有单片机经验，你可以跳过一些基础概念，重点关注那些不一样的点。**工具链安装**还是得看，和单片机不一样。然后重点看**内核空间基础**，这个概念在单片机里没有，但是很重要。**设备树**也得学，单片机里硬件配置在代码里，Linux里在设备树里。之后就可以直接从[字符设备驱动教程](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/driver/00_chardev_base/)开始了。
+如果你有单片机经验，你可以跳过一些基础概念，重点关注那些不一样的点。**工具链安装**还是得看，和单片机不一样。然后重点看**内核空间基础**，这个概念在单片机里没有，但是很重要。**设备树**也得学，单片机里硬件配置在代码里，Linux里在设备树里。之后就可以直接从[字符设备驱动教程](/tutorial/driver/00_chardev_base/)开始了。
 
-如果你想快速上手，想尽快看到效果，可以走"实战路线"。不喜欢折腾工具链安装的，先把**Docker环境**搭起来，看[QUICK_START.md](https://awesome-embedded-learning-studio.github.io/imx-forge/QUICK_START)就行。然后直接运行 `./scripts/release-all.sh` 构建整套系统，把镜像烧到板子上，先跑起来再说。跑起来之后，你再回头慢慢研究各个模块，这样心里有底。
+如果你想快速上手，想尽快看到效果，可以走"实战路线"。不喜欢折腾工具链安装的，先把**Docker环境**搭起来，看[QUICK_START.md](/QUICK_START)就行。然后直接运行 `./scripts/release-all.sh` 构建整套系统，把镜像烧到板子上，先跑起来再说。跑起来之后，你再回头慢慢研究各个模块，这样心里有底。
 
 ## 学习路线图（时间线）
 
@@ -119,14 +119,16 @@
 
 如果你已经看到这里，说明你是真的想学。那么下一步，
 
-完全新手去[工具链安装](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/start/01_start_from_toolchain)
+没有 Linux 基础的，先去 [Linux 基础预备营](/tutorial/linux-basics/)；
 
-想先看效果的去看[QUICK_START.md](https://awesome-embedded-learning-studio.github.io/imx-forge/QUICK_START)，
+完全新手去[工具链安装](/tutorial/start/01_start_from_toolchain)
 
-想直接看驱动的去[字符设备驱动教程](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/driver/00_chardev_base/01_introduction)，
+想先看效果的去看[QUICK_START.md](/QUICK_START)，
 
-想了解U-Boot的去[什么是U-Boot](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/uboot/01_what_is_uboot)，
+想直接看驱动的去[字符设备驱动教程](/tutorial/driver/00_chardev_base/01_introduction)，
 
-想了解内核的去[内核概述](https://awesome-embedded-learning-studio.github.io/imx-forge/tutorial/kernel/01_kernel_overview)。
+想了解U-Boot的去[什么是U-Boot](/tutorial/uboot/01_what_is_uboot)，
+
+想了解内核的去[内核概述](/tutorial/kernel/01_kernel_overview)。
 
 祝你在嵌入式Linux的世界里玩得开心！如果有问题随时去[GitHub Issues](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)找我们！！

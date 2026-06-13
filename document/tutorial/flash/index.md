@@ -1,3 +1,7 @@
+---
+title: 镜像与烧录
+---
+
 <PageHeader icon="💾" title="镜像构建与烧录准备" description="从构建产物到完整 SD/eMMC 镜像，理解 IMX-Forge 如何把 U-Boot、内核、设备树和 Rootfs 打包到一起" />
 
 ## 章节目录

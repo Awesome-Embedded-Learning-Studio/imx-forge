@@ -1,3 +1,7 @@
+---
+title: 驱动开发
+---
+
 <PageHeader icon="⚙️" title="驱动开发" description="Linux 驱动开发是嵌入式开发的高级技能" />
 
 ## 章节目录

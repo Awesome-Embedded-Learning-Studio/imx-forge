@@ -1,3 +1,7 @@
+---
+title: 常见问题
+---
+
 <PageHeader icon="❓" title="Issue 答疑记录" description="收录 GitHub Issue 中有价值的问答内容" />
 
 ## 答疑列表

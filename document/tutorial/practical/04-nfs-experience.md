@@ -1,3 +1,7 @@
+---
+title: NFS rootfs 多版本切换
+---
+
 # NFS rootfs 多版本切换：用 bind mount 解决嵌入式开发痛点
 
 > 场景：嵌入式板子通过 NFS 挂载 rootfs，需要频繁在不同版本之间切换，但每次都要重启 NFS 服务太麻烦。

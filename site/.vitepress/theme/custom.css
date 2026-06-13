@@ -2,7 +2,7 @@
 
 .vp-doc {
   line-height: 1.85;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
 }
 
 .vp-doc h1 { line-height: 1.4; }
@@ -24,12 +24,12 @@
 
 .vp-doc div[class*='language-'] {
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   line-height: 1.6;
 }
 
 .vp-doc div[class*='language-'] code {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .vp-doc :not(pre) > code {

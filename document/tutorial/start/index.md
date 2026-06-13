@@ -1,3 +1,7 @@
+---
+title: 入门准备
+---
+
 <PageHeader icon="👋" title="入门准备" description="欢迎开始你的嵌入式 Linux 之旅" />
 
 ## 章节

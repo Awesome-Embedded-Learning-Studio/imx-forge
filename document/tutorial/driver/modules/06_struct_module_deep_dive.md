@@ -1,3 +1,7 @@
+---
+title: struct module 解析
+---
+
 # struct module 深度解析：内核模块的核心数据结构
 
 > **适用平台**：i.MX6ULL (ARM Cortex-A7)

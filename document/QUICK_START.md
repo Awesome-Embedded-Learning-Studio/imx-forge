@@ -16,6 +16,20 @@
 
 ---
 
+## 📸 实测成果
+
+> 项目已在正点原子阿尔法 i.MX6ULL 开发板上完成 SD 卡启动与 UUU + UMS eMMC 启动的实测。完整的串口启动日志见下方 [验证成功](#验证成功) 章节。
+
+**开发板 LCD 点屏实测** —— 系统启动后成功点亮 7 寸 LCD（1024×600）：
+
+![i.MX6ULL 开发板 LCD 点屏实拍](/lcd-on.jpg)
+
+**主线内核 Linux 7.0rc 启动实测** —— 上游主线内核已在板子上跑起来（对应文中的「双轨内核策略」）：
+
+![主线内核 Linux 7 启动实拍](/linux7.png)
+
+---
+
 ## 开发方式选择
 
 在开始之前，请选择适合您的开发方式：
@@ -316,28 +330,25 @@ imx-forge/
 │   ├── linux_mainline/     # Linux Kernel 上游主线
 │   ├── busybox/            # BusyBox
 │   └── qt-compile-pipeline/  # QT 交叉编译流水线
-├── patches/                # 补丁文件
-│   ├── linux-imx/
-│   ├── linux-mainline/
-│   └── uboot/
-├── driver/                 # 设备树和驱动
-│   ├── device_tree/
-│   │   └── alpha-board/    # 正点原子阿尔法板配置
-│   ├── base_driver/        # 基础驱动框架
-│   ├── led/                # LED 驱动示例
-│   └── firmwares/          # 固件
+├── patches/                # 补丁文件（按轨道分目录）
+│   ├── linux-imx/          # NXP BSP 内核补丁
+│   ├── linux_mainline/     # 主线内核补丁
+│   └── uboot-imx/          # U-Boot 补丁
+├── driver/                 # 驱动源码与板级设备树
+│   ├── device_tree/alpha-board/  # 板级设备树（.dts）
+│   ├── base_driver/             # 基础驱动框架
+│   ├── example-driver/          # 示例驱动
+│   ├── firmwares/               # 固件
+│   └── NN_tutorial_*/           # 各驱动教程对应源码（LED/按键/蜂鸣器…）
 ├── examples/               # 示例工程
-│   ├── qt/                 # QT 应用示例
-│   ├── driver/             # 驱动示例
-│   ├── system/             # 系统示例
-│   └── project/            # 完整项目示例
+│   └── qt/                 # QT 应用示例
 ├── rootfs/                 # 根文件系统
-│   ├── nfs/                # NFS 挂载用 rootfs
+│   ├── src/                # rootfs 构建源
 │   └── overlay/            # Overlay 叠加目录
 ├── out/                    # 编译输出目录
 ├── develop/                # 开发工具
 ├── tools/                  # 辅助工具
-└── document/               # 文档和教程
+└── document/               # 文档和教程（本网站源文件）
 ```
 
 > **Docker 用户注意**: Docker 镜像已包含工具链，无需手动安装 ARM GNU Toolchain。但项目仍需要克隆子模块以获取 U-Boot、Linux 内核等源码。

@@ -1,3 +1,7 @@
+---
+title: Platform 驱动框架
+---
+
 # Platform 驱动框架 - Linux 嵌入式驱动的核心
 
 ## 前言：为什么需要 Platform 框架

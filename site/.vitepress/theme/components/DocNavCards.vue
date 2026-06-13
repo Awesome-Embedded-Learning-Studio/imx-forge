@@ -30,18 +30,18 @@ const navInfo = computed(() => {
   const sidebar = theme.value.sidebar
   if (!sidebar) return null
 
-  let allPages: FlatPage[] = []
-  for (const key of Object.keys(sidebar)) {
-    const group = sidebar[key]
-    if (Array.isArray(group)) {
-      flattenSidebar(group, allPages)
-    }
-  }
+  const relPath = page.value.relativePath // e.g. "tutorial/uboot/07_network_porting.md"
 
+  // 只在当前页面所属的 volume（顶级目录）内做上一篇/下一篇导航，
+  // 避免读完一篇教程后跨主题跳到架构/脚本等不相关章节。
+  const topSegment = relPath.slice(0, relPath.indexOf('/'))
+  const group = sidebar[`/${topSegment}/`]
+  if (!Array.isArray(group)) return null
+
+  const allPages: FlatPage[] = flattenSidebar(group, [])
   if (allPages.length === 0) return null
 
   // Try multiple path formats to find current page
-  const relPath = page.value.relativePath // e.g. "tutorial/uboot/07_network_porting.md"
   const candidates = [
     normalize('/' + relPath),              // /tutorial/uboot/07_network_porting
     normalize('/' + relPath.replace(/\.md$/, '') + '/'), // for index pages

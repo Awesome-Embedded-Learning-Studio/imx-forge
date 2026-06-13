@@ -1,6 +1,6 @@
 # 第 4 章  Windows 与 Linux 文件互传
 
-> **Part: Part 1 · 环境搭建**
+> **Part 1 · 环境搭建**
 
 ---
 

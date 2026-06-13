@@ -1,3 +1,7 @@
+---
+title: 完整系统构建
+---
+
 # 从零构建完整系统：U-Boot、Linux 内核与 BusyBox Rootfs 的整合艺术
 
 ## 为什么这一章这么重要

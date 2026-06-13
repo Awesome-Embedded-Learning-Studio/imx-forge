@@ -1,3 +1,7 @@
+---
+title: class 与 device 模型
+---
+
 # class 和 device 模型 - 自动创建设备节点的幕后机制
 
 ## 前言：从手动 mknod 的痛苦说起

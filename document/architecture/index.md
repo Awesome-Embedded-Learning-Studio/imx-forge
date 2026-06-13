@@ -1,3 +1,7 @@
+---
+title: 架构
+---
+
 <PageHeader icon="🏛️" title="架构文档" description="深入了解 IMX-Forge 的设计和实现" />
 
 <ChapterNav>

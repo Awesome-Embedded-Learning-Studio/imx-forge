@@ -1,3 +1,7 @@
+---
+title: 内核
+---
+
 <PageHeader icon="🐧" title="内核教程" description="Linux 内核是嵌入式系统的核心，理解内核是成为高级嵌入式开发者的必经之路" />
 
 ## 章节目录

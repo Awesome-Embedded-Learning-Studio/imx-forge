@@ -6,7 +6,7 @@
 >
 > **阅读时间**：10-15分钟
 >
-> **前置知识**：阅读过[内核设备树编译机制](./kernel_mechanism.md)，了解Bash脚本
+> **前置知识**：阅读过[内核设备树编译机制](./11_compile_mechanism.md)，了解Bash脚本
 
 ## 目录
 
@@ -429,10 +429,10 @@ dtc -I dts -O dtb -o test.dtb /tmp/test.dts.tmp
 
 ## 扩展阅读
 
-- [内核设备树编译机制](./kernel_mechanism.md) - 深入理解内核实现
-- [驱动基建文档](../../../../scripts/) - 完整的驱动开发系统文档
-- [example_driver验证](../../../../scripts/examples/example_driver.md) - 验证步骤详解
+- [内核设备树编译机制](./11_compile_mechanism.md) - 深入理解内核实现
+- [驱动基建文档](../../../scripts/) - 完整的驱动开发系统文档
+- [example_driver验证](../../../scripts/examples/example_driver.md) - 验证步骤详解
 
 ---
 
-**下一步**：阅读[驱动脚本使用指南](../../../../scripts/driver_helper/workflow.md)，了解如何在实际开发中使用设备树编译系统。
+**下一步**：阅读[驱动脚本使用指南](../../../scripts/driver_helper/workflow.md)，了解如何在实际开发中使用设备树编译系统。

@@ -1,3 +1,7 @@
+---
+title: U-Boot
+---
+
 <PageHeader icon="🚀" title="U-Boot 教程" description="U-Boot 是嵌入式 Linux 系统的第一个重要程序，理解它对嵌入式开发至关重要" />
 
 ## 章节目录

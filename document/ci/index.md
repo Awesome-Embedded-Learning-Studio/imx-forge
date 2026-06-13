@@ -1,3 +1,7 @@
+---
+title: CI/CD
+---
+
 <PageHeader icon="🔄" title="CI/CD 文档" description="IMX-Forge 项目采用分层 CI 策略，平衡验证速度和完整性" />
 
 ## 工作流概览

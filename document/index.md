@@ -20,6 +20,10 @@ hero:
       link: https://github.com/Awesome-Embedded-Learning-Studio/imx-forge
 
 features:
+  - icon: 🐧
+    title: 零基础？从 Linux 基础开始
+    details: 35 章 Ubuntu 实用教程，从命令行到交叉编译，专为嵌入式开发预备营打造，无缝衔接本教程
+    link: /tutorial/linux-basics/
   - icon: 🐳
     title: 开箱即用的开发环境
     details: 预装 ARM GNU Toolchain 15.2，Docker 一键部署，WSL2 深度友好
@@ -48,4 +52,8 @@ features:
     title: 常见问题
     details: 收录 Issue 答疑记录，快速解决常见问题
     link: /qa/
+  - icon: 🤝
+    title: 参与贡献
+    details: 补丁命名规范、Issue/PR 引导、教程写作指南，欢迎一起完善项目
+    link: /team/
 ---

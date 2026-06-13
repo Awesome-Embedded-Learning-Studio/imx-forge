@@ -1,3 +1,7 @@
+---
+title: UUU + UMS eMMC 烧录
+---
+
 # UUU + UMS eMMC 烧录实战 - 让板子把 eMMC 借给主机
 
 ## 前言：eMMC 不能像 SD 卡那样拔下来

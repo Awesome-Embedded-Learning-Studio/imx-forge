@@ -1,3 +1,7 @@
+---
+title: 功能模块
+---
+
 <PageHeader icon="📖" title="参考手册" description="IMX-Forge 相关的参考文档" />
 
 <ChapterNav variant="sub">

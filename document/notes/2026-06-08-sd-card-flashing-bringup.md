@@ -1,3 +1,7 @@
+---
+title: SD 卡烧录 Bring-up 实测
+---
+
 # 2026-06-08 SD Card Flashing Bring-up Note
 
 ## Goal

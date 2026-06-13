@@ -1,3 +1,7 @@
+---
+title: 版本发布
+---
+
 <PageHeader icon="🏷️" title="发布说明" description="IMX-Forge 版本发布记录与验收基线" />
 
 ## 版本列表

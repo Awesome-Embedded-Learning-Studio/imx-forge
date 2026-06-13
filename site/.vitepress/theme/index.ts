@@ -3,6 +3,7 @@ import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import HomeTipBanner from './components/HomeTipBanner.vue'
 import HomeArchDiagram from './components/HomeArchDiagram.vue'
+import HomeShowcase from './components/HomeShowcase.vue'
 import ChapterNav from './components/ChapterNav.vue'
 import ChapterLink from './components/ChapterLink.vue'
 import PageHeader from './components/PageHeader.vue'
@@ -21,7 +22,7 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'home-features-before': () => h(HomeTipBanner, { config: projectConfig }),
-      'home-features-after': () => h(HomeArchDiagram),
+      'home-features-after': () => [h(HomeShowcase), h(HomeArchDiagram)],
       'doc-after': () => h(DocNavCards)
     })
   },

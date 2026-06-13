@@ -1,3 +1,7 @@
+---
+title: Linux 基础
+---
+
 # Ubuntu Linux 实用教程 —— 嵌入式开发预备营
 
 > 35 章场景驱动教程，从零 Linux 基础到交叉编译，无缝衔接 [imx-forge](../../tutorial/start/00_roadmap.md) 嵌入式 Linux 项目。

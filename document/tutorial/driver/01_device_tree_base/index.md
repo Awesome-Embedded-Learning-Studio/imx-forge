@@ -51,6 +51,13 @@ title: 设备树基础教程
 9. **[09_board_dts_modification.md](09_board_dts_modification)** - 板级DTS修改实操（50分钟）
 10. **[10_complete_practice.md](10_complete_practice)** - 完整实战演练（80分钟）⭐
 
+#### **阶段四：编译机制（进阶·可选）**
+
+面向项目维护者和想深入理解设备树编译链路的同学，新手可跳过，需要时再回来看：
+
+11. **[11_compile_mechanism.md](11_compile_mechanism)** - 内核设备树编译机制深度解析（高级）
+12. **[12_compile_migration.md](12_compile_migration)** - 设备树编译机制迁移实践（中级）
+
 ### 快速路径（有经验开发者）
 
 如果你已经有了一定的设备树基础，或者时间比较紧张，可以选择性地阅读重点章节：
@@ -84,6 +91,13 @@ title: 设备树基础教程
   <ChapterLink num="08" href="08_device_tree_driver">设备树驱动改造</ChapterLink>
   <ChapterLink num="09" href="09_board_dts_modification">板级 DTS 修改实操</ChapterLink>
   <ChapterLink num="10" href="10_complete_practice">完整实战演练</ChapterLink>
+</ChapterNav>
+
+### 阶段四：编译机制（进阶 · 可选）
+
+<ChapterNav>
+  <ChapterLink num="11" href="11_compile_mechanism">内核设备树编译机制深度解析</ChapterLink>
+  <ChapterLink num="12" href="12_compile_migration">设备树编译机制迁移实践</ChapterLink>
 </ChapterNav>
 
 ::: tip 学习目标

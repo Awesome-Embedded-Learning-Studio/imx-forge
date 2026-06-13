@@ -1,3 +1,7 @@
+---
+title: UUU + UMS eMMC Bring-up 实测
+---
+
 # 2026-06-08 UUU + UMS + eMMC Bring-up Note
 
 ## Goal

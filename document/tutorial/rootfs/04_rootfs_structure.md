@@ -1,3 +1,7 @@
+---
+title: Rootfs 目录结构
+---
+
 # Rootfs 目录结构创建：Linux 文件系统的"骨架"
 
 ## 前面的话

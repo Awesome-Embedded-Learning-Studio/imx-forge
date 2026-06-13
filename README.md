@@ -139,6 +139,7 @@ v1.0.0 的 SD 卡启动与 UUU + UMS eMMC 启动流程，已由仓库主作者 C
 
 | 阶段 | 主题 | 内容 | 状态 |
 |------|------|------|------|
+| 🌱 | [Linux 基础预备营](document/tutorial/linux-basics) | 零基础？35 章 Ubuntu 实用教程，补齐嵌入式必备 Linux 功课 | ✅ 新增 |
 | 0️⃣ | [Docker 基础](document/tutorial/docker) | Docker 基础知识与 IMX-Forge 开发指南 | ✅ |
 | 1️⃣ | [工具链](document/tutorial/start) | ARM GNU Toolchain 15.2 安装与配置 | ✅ |
 | 2️⃣ | [U-Boot](document/tutorial/uboot) | U-Boot 原理、编译、移植、Logo 定制 | ✅ |

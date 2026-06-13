@@ -1,3 +1,7 @@
+---
+title: 根文件系统
+---
+
 <PageHeader icon="📁" title="根文件系统" description="根文件系统 (Rootfs) 是 Linux 运行时挂载的第一个文件系统，包含系统运行所需的所有程序和配置" />
 
 ## 章节目录

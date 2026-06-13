@@ -23,16 +23,19 @@ function humanize(name: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-// 学习顺序：入门准备 → Linux基础 → Docker环境 → U-Boot → 内核 → 文件系统 → 驱动 → 实战 → 进阶
+// 学习顺序：Linux基础(预备营) → 入门准备 → Docker → U-Boot → 内核 → 文件系统 → 驱动 → 实战 → 镜像烧录 → 命令速查 → 构建进阶 → 第三方
 const LEARNING_ORDER = [
-  'start',
   'linux-basics',
+  'start',
   'docker',
   'uboot',
   'kernel',
   'rootfs',
   'driver',
   'practical',
+  'flash',
+  'commands',
+  'build',
   'third_party',
 ]
 

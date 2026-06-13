@@ -1,3 +1,7 @@
+---
+title: inittab 与 init
+---
+
 # inittab 与 init 系统：Linux 启动的"第一号进程"全解析
 
 ## 为什么要写这篇文章

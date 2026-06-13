@@ -1,8 +1,16 @@
+---
+title: 教程
+---
+
 <PageHeader icon="📚" title="教程系列" description="系统学习嵌入式 Linux 开发的完整路径" />
 
 ## 学习路线图
 
 <RoadMap>
+  <RoadMapPhase icon="🐧" title="Linux 基础预备营" subtitle="Pre-Camp · 可选" time="按需" :difficulty="1" :num="0">
+    <ChapterLink num="01" href="linux-basics/" variant="sub">零基础？先补 Linux 基本功（35 章）</ChapterLink>
+  </RoadMapPhase>
+
   <RoadMapPhase icon="🌱" title="环境搭建" subtitle="Foundation" time="~2 天" :difficulty="1" :num="1">
     <ChapterLink num="01" href="docker/" variant="sub">Docker 环境搭建</ChapterLink>
     <ChapterLink num="02" href="start/01_start_from_toolchain" variant="sub">工具链安装</ChapterLink>
@@ -43,7 +51,7 @@
 
   <RoadMapPhase icon="⚙️" title="驱动开发" subtitle="Driver Dev" time="~15 天" :difficulty="4" :num="6">
     <ChapterLink num="01" href="driver/00_chardev_base/" variant="sub">字符设备基础</ChapterLink>
-    <ChapterLink num="02" href="driver/device_tree/" variant="sub">设备树实践</ChapterLink>
+    <ChapterLink num="02" href="driver/01_device_tree_base/" variant="sub">设备树基础</ChapterLink>
     <ChapterLink num="03" href="driver/02_pinctrl_gpio/01_introduction" variant="sub">Pin Control & GPIO</ChapterLink>
     <ChapterLink num="04" href="driver/modules/" variant="sub">模块开发</ChapterLink>
     <ChapterLink num="05" href="driver/firmware_apply/" variant="sub">固件应用</ChapterLink>
@@ -57,6 +65,12 @@
 </RoadMap>
 
 ## 教程目录
+
+### Linux 基础（零基础预备营）
+
+<ChapterNav>
+  <ChapterLink num="★" href="linux-basics/">Ubuntu Linux 实用教程（35 章）</ChapterLink>
+</ChapterNav>
 
 ### 入门准备
 

@@ -1,3 +1,7 @@
+---
+title: 固件安装指南
+---
+
 # i.MX6ULL 固件安装完全指南：SDMA 与 regulatory.db 实战排查
 
 > **适用平台**：i.MX6ULL / i.MX6UL  

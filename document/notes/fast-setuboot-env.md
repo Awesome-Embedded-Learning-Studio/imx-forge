@@ -1,3 +1,7 @@
+---
+title: U-Boot 环境变量快速设置
+---
+
 # SD卡蔟笔者直接设置的
 
 setenv sd_dev 0

@@ -1,6 +1,6 @@
 # 第 1 章  WSL2：Windows 里秒开 Linux
 
-> **Part: Part 1 · 环境搭建**
+> **Part 1 · 环境搭建**
 
 ---
 

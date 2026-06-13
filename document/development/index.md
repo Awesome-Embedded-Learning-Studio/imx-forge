@@ -1,3 +1,7 @@
+---
+title: 开发指南
+---
+
 <PageHeader icon="🛠️" title="开发指南" description="开发 IMX-Forge 相关的工具和指南" />
 
 <ChapterNav variant="sub">

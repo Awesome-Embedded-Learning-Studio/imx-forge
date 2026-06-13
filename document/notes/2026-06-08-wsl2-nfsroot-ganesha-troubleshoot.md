@@ -1,3 +1,7 @@
+---
+title: WSL2 NFS Rootfs 排查
+---
+
 # 2026-06-08 WSL2 NFS Rootfs Troubleshooting Note
 
 ## Symptom

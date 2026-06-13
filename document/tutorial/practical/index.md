@@ -1,3 +1,7 @@
+---
+title: 实战演练
+---
+
 <PageHeader icon="🎯" title="实战演练" description="将所学知识整合，完成一个完整的嵌入式项目" />
 
 ## 章节目录
