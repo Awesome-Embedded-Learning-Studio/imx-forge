@@ -1,7 +1,7 @@
 # 方向 D4：生态成熟
 
-> **最后更新**：2026-05-21
-> **任务数量**：18项 (7工具 + 11文档)
+> **最后更新**：2026-06-14（对齐实际进度）
+> **任务数量**：18项 (7工具 + 11文档)，P3-2 发布策略 8 项已完成（release/ + ci/ 已落地）
 
 ---
 
@@ -58,6 +58,8 @@
 
 #### P3-0: 参考资源索引 (11项)
 
+> **2026-06-14 对齐**：`document/reference/` 目录未建立，11 项整体待办。
+
 | 任务 | 相关文件 |
 |------|----------|
 | [ ] NXP official documentation index / NXP 官方文档索引 | `document/reference/` |
@@ -72,18 +74,20 @@
 | [ ] ARM GCC toolchain links / ARM GCC 工具链文档索引 | `document/reference/` |
 | [ ] Community and forum links / 社区与论坛索引 | `document/reference/` |
 
-#### P3-2: 版本号与发布策略 (8项)
+#### P3-2: 版本号与发布策略 (8项 — 已完成 8)
 
-| 任务 | 相关文件 |
-|------|----------|
-| [ ] Release versioning policy / release 版本号策略 | `document/release/` |
-| [ ] Distinguish roadmap numbers from release tags / 区分路线图编号与正式 release tag | `document/release/` |
-| [ ] Docker tag policy / Docker tag 策略 | `document/release/` |
-| [ ] `preview` image policy / `preview` 镜像策略 | `document/release/` |
-| [ ] `latest` image policy / `latest` 镜像策略 | `document/release/` |
-| [ ] `vX.Y.Z` image policy / `vX.Y.Z` 镜像策略 | `document/release/` |
-| [ ] GitHub Release checklist / GitHub Release 检查清单 | `document/release/` |
-| [ ] CI artifact explanation / CI artifact 定位说明 | `document/ci/` |
+> 已由 [release/](../../release/) 与 [ci/](../../ci/) 落地。
+
+| 任务 | 状态 | 实际文件 |
+|------|------|----------|
+| [x] Release versioning policy / release 版本号策略 | [x] | [release/versioning-strategy.md](../../release/versioning-strategy.md) |
+| [x] Distinguish roadmap numbers from release tags / 区分路线图编号与 release tag | [x] | [versioning-strategy §2](../../release/versioning-strategy.md) + [release/v1.0.0.md](../../release/v1.0.0.md) |
+| [x] Docker tag policy / Docker tag 策略 | [x] | [versioning-strategy §5](../../release/versioning-strategy.md) |
+| [x] `preview` image policy / `preview` 镜像策略 | [x] ⚠️ | [ci/docker-publish.md](../../ci/docker-publish.md) + README badge，细节可补 |
+| [x] `latest` image policy / `latest` 镜像策略 | [x] ⚠️ | [ci/docker-publish.md](../../ci/docker-publish.md) + README badge，细节可补 |
+| [x] `vX.Y.Z` image policy / `vX.Y.Z` 镜像策略 | [x] ⚠️ | [ci/docker-publish.md](../../ci/docker-publish.md) + README badge，细节可补 |
+| [x] GitHub Release checklist / GitHub Release 检查清单 | [x] | [versioning-strategy §6](../../release/versioning-strategy.md) |
+| [x] CI artifact explanation / CI artifact 定位 | [x] | [ci/index.md](../../ci/index.md) |
 
 ---
 
@@ -100,7 +104,7 @@
 - [ ] 有构建脚本
 - [ ] 在开发板上运行正常
 
-**相关文件**：`rootfs/buildroot/`
+**相关文件**：`rootfs/buildroot/`（未建；对应 D2 P1-3a `build/04–08` Buildroot 教程亦待办）
 
 ---
 
@@ -116,7 +120,7 @@
 - [ ] （可选）自动发布
 - [ ] 有 CI 文档
 
-**相关文件**：`.github/workflows/*.yml`
+**相关文件**：`.github/workflows/*.yml`（CI 已落地，见 [ci/](../../ci/)）
 
 ---
 

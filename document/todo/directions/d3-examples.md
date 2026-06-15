@@ -1,7 +1,7 @@
 # 方向 D3：示例展示
 
-> **最后更新**：2026-05-21
-> **任务数量**：11项 (3工具 + 8文档)
+> **最后更新**：2026-06-14（对齐实际进度）
+> **任务数量**：11项 (3工具 + 8文档)，文档整体待办（`tutorial/app/` 未建）；Qt 侧仅有最小示例 `examples/qt/button_click`
 
 ---
 
@@ -42,6 +42,8 @@
 
 #### P1-0: 应用开发与部署 (8项)
 
+> **2026-06-14 对齐**：`tutorial/app/`、`tutorial/debug/` 目录均未建立，8 项文档整体待办。Qt 侧目前仅有最小示例 [examples/qt/button_click](../../../examples/qt/button_click/)。
+
 | 任务 | 相关文件 |
 |------|----------|
 | [ ] C / CMake cross-compilation tutorial / C/CMake 交叉编译应用教程 | `document/tutorial/app/` |
@@ -72,7 +74,7 @@
 - [ ] 有完整文档
 - [ ] 可在开发板上运行
 
-**相关文件**：`examples/qt/complete_demo/`
+**相关文件**：`examples/qt/complete_demo/`（未建，当前仅有 [examples/qt/button_click](../../../examples/qt/button_click/) 最小示例）
 
 ---
 

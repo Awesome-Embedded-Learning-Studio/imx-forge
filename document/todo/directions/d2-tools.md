@@ -1,7 +1,7 @@
 # 方向 D2：工具完备
 
-> **最后更新**：2026-06-07
-> **任务数量**：50项 (9工具 + 41文档)
+> **最后更新**：2026-06-14（对齐实际进度）
+> **任务数量**：66项 (9工具 + 57文档)，文档已完成约 8 项
 
 ---
 
@@ -21,16 +21,19 @@
 
 | 优先级 | 工具任务 | 文档任务 | 总计 |
 |--------|----------|----------|------|
-| P0 | - | - | - |
-| P1 | 6项 | 41项 | 47 |
-| P2 | 3项 | - | 3 |
-| **总计** | **9** | **41** | **50** |
+| P1 | 6项（待办）| 49项（✅约8 / 待办约41）| 55 |
+| P2 | 3项（待办）| 8项（待办）| 11 |
+| **总计** | **9** | **57** | **66** |
+
+> 注：原概览表 P2 文档记为 `-` 且总数 50 有误，本次重计为 9 工具 + 57 文档 = 66。
 
 ---
 
-## 📋 P1: 重要功能 (20项)
+## 📋 P1: 重要功能 (6工具 + 49文档)
 
 > 提升开发效率和调试能力的关键功能
+>
+> **2026-06-14 对齐**：P1-1 系统调试手册、P1-2 交叉调试所引用的 `tutorial/debug/`、`tutorial/workflow/`、`tutorial/tools/` 目录均尚未建立，整体待办；现有部分覆盖见 [kernel/mainline/11 常见问题](../../tutorial/kernel/mainline/11_common_issues.md)、[practical/03 启动调试](../../tutorial/practical/03_boot_and_debug.md)、[kernel/08 内核启动调试](../../tutorial/kernel/08_kernel_boot_debug.md)。
 
 ### 工具任务 (6项)
 
@@ -72,27 +75,29 @@
 | [ ] Basic logging workflow / 基础日志收集流程 | `document/tutorial/debug/` |
 | [ ] Basic performance inspection tools / 基础性能分析工具说明 | `document/tutorial/tools/` |
 
-#### P1-3: 构建工具 (新增，基于旧教程 Ch 3, 34, 40)
+#### P1-3: 构建工具 (17项 — 已完成 9，基于旧教程 Ch 3, 34, 40)
 
-| 任务 | 相关文件 |
-|------|----------|
-| [ ] Makefile basics and advanced / Makefile 基础与进阶 | `document/tutorial/tools/` |
-| [ ] Makefile syntax and实战 / Makefile 语法与实战 | `document/tutorial/tools/` |
-| [ ] Cross-compilation Makefile practice / 交叉编译 Makefile 实践 | `document/tutorial/tools/` |
-| [ ] CMake cross-compilation / CMake 交叉编译 | `document/tutorial/tools/` |
-| [ ] CMakeLists.txt writing / CMakeLists.txt 编写 | `document/tutorial/tools/` |
-| [ ] CMake with Qt cross-compilation / CMake 与 Qt 交叉编译 | `document/tutorial/tools/` |
-| [ ] menuconfig principles and usage / menuconfig 原理与使用 | `document/tutorial/tools/` |
-| [ ] Kconfig syntax / Kconfig 语法 | `document/tutorial/tools/` |
-| [ ] Kernel/U-Boot configuration practice / 内核/uboot 配置实战 | `document/tutorial/tools/` |
-| [ ] VIM quick start / VIM 快速入门 | `document/tutorial/ubuntu/` |
-| [ ] VIM modes and operations / VIM 模式与操作 | `document/tutorial/ubuntu/` |
-| [ ] VIM configuration and plugins / VIM 配置与插件 | `document/tutorial/ubuntu/` |
-| [ ] GCC compilation options / GCC 编译选项详解 | `document/tutorial/tools/` |
-| [ ] Static and dynamic library compilation / 静态库与动态库编译 | `document/tutorial/tools/` |
-| [ ] objdump, nm, readelf usage / objdump, nm, readelf 使用 | `document/tutorial/tools/` |
-| [ ] ldd library dependency checking / ldd 查看库依赖 | `document/tutorial/tools/` |
-| [ ] Time measurement and performance analysis / 时间测量与性能分析 | `document/tutorial/tools/` |
+> VIM/GCC/二进制工具基础已由 [linux-basics/](../../tutorial/linux-basics/) 覆盖（原路径 `tutorial/tools/`、`tutorial/ubuntu/` 已废弃）。
+
+| 任务 | 状态 | 实际文件 |
+|------|------|----------|
+| Makefile basics and advanced / Makefile 基础 | [x] | [ch31 gcc 与 make](../../tutorial/linux-basics/07-devtools/ch31-gcc-make.md) |
+| Makefile syntax 实战 / Makefile 语法进阶 | [ ] ⚠️ | ch31 覆盖基础，进阶待补 |
+| Cross-compilation Makefile practice / 交叉编译 Makefile | [ ] ⚠️ | 见 [ch35 交叉编译](../../tutorial/linux-basics/07-devtools/ch35-crosscompile.md)，Makefile 实践待补 |
+| CMake cross-compilation / CMake 交叉编译 | [ ] | 缺 |
+| CMakeLists.txt writing / CMakeLists.txt 编写 | [ ] | 缺 |
+| CMake with Qt cross-compilation / CMake 与 Qt 交叉编译 | [ ] | 缺 |
+| menuconfig principles and usage / menuconfig 原理与使用 | [x] | [kernel/03 内核配置](../../tutorial/kernel/03_kernel_config.md) |
+| Kconfig syntax / Kconfig 语法 | [ ] ⚠️ | 缺专篇 |
+| Kernel/U-Boot configuration practice / 内核/uboot 配置实战 | [x] | [kernel/03](../../tutorial/kernel/03_kernel_config.md) + [uboot/02](../../tutorial/uboot/02_uboot_compile.md) |
+| VIM quick start / VIM 快速入门 | [x] | [ch12 vim](../../tutorial/linux-basics/03-text/ch12-vim.md) |
+| VIM modes and operations / VIM 模式与操作 | [x] | [ch12 vim](../../tutorial/linux-basics/03-text/ch12-vim.md) |
+| VIM configuration and plugins / VIM 配置与插件 | [ ] ⚠️ | ch12 覆盖基础，插件待补 |
+| GCC compilation options / GCC 编译选项 | [x] | [ch31 gcc 与 make](../../tutorial/linux-basics/07-devtools/ch31-gcc-make.md) |
+| Static and dynamic library compilation / 静态库与动态库 | [x] | [ch31 gcc 与 make](../../tutorial/linux-basics/07-devtools/ch31-gcc-make.md) |
+| objdump, nm, readelf usage / objdump, nm, readelf | [x] | [ch33 binutils](../../tutorial/linux-basics/07-devtools/ch33-binutils.md) |
+| ldd library dependency checking / ldd 查看库依赖 | [x] | [ch33 binutils](../../tutorial/linux-basics/07-devtools/ch33-binutils.md) |
+| Time measurement and performance analysis / 时间测量与性能 | [ ] ⚠️ | 缺 |
 
 ##### P1-3a: Buildroot 根文件系统构建（新增）
 
@@ -105,19 +110,21 @@
 | [ ] Buildroot 故障排查手册 / Buildroot troubleshooting guide | `document/tutorial/build/08_buildroot_troubleshooting.md` |
 | [ ] Buildroot 与 QT6 集成实战 / Buildroot with QT6 integration | `document/tutorial/practical/03_buildroot_qt6.md` |
 
-#### P1-4: 驱动开发工具 (新增，基于旧教程 Ch 52-76)
+#### P1-4: 驱动开发工具 (9项 — 已完成 2，基于旧教程 Ch 52-76)
 
-| 任务 | 相关文件 |
-|------|----------|
-| [ ] I2C driver framework complete tutorial / I2C 驱动框架完整教程 | `document/tutorial/driver/` |
-| [ ] SPI driver framework complete tutorial / SPI 驱动框架完整教程 | `document/tutorial/driver/` |
-| [ ] UART driver development / UART 驱动开发 | `document/tutorial/driver/` |
-| [ ] Blocking/non-blocking I/O complete tutorial / 阻塞/非阻塞 I/O 完整教程 | `document/tutorial/driver/` |
-| [ ] Async notification (fasync) / 异步通知机制 | `document/tutorial/driver/` |
-| [ ] Linux device model detailed / Linux 设备模型详解 | `document/tutorial/driver/` |
-| [ ] Regmap API detailed guide / Regmap API 详解 | `document/tutorial/driver/` |
-| [ ] IIO subsystem framework / IIO 子系统框架 | `document/tutorial/driver/` |
-| [ ] ADC driver development / ADC 驱动开发 | `document/tutorial/driver/` |
+> 阻塞/非阻塞 I/O、异步通知已由 [kernel/core-functional/](../../tutorial/kernel/core-functional/) 覆盖；I2C/SPI/UART 等子系统驱动见 [Issue #54 驱动开发待做清单](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/54)。
+
+| 任务 | 状态 | 实际文件 |
+|------|------|----------|
+| I2C driver framework complete tutorial / I2C 驱动框架 | [ ] | 缺，见 #54 |
+| SPI driver framework complete tutorial / SPI 驱动框架 | [ ] | 缺，见 #54 |
+| UART driver development / UART 驱动开发 | [ ] | 缺，见 #54 |
+| Blocking/non-blocking I/O complete tutorial / 阻塞/非阻塞 I/O | [x] | [core-functional/09 阻塞 IO](../../tutorial/kernel/core-functional/09_blocking_io.md) + [10 非阻塞 IO](../../tutorial/kernel/core-functional/10_nonblocking_io.md) |
+| Async notification (fasync) / 异步通知 | [x] | [core-functional/11 异步通知](../../tutorial/kernel/core-functional/11_async_notification.md) |
+| Linux device model detailed / 设备模型详解 | [ ] | 缺，见 #54 |
+| Regmap API detailed guide / Regmap API | [ ] | 缺，见 #54 |
+| IIO subsystem framework / IIO 子系统 | [ ] | 缺，见 #54 |
+| ADC driver development / ADC 驱动 | [ ] | 缺，见 #54 |
 
 ---
 

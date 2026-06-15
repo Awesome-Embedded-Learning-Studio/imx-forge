@@ -912,6 +912,19 @@ cd ../..
 git submodule update --remote --merge
 ```
 
+### 问题 7: 串口设备权限被拒绝（Permission denied）
+
+**症状**: 访问 `/dev/ttyUSB*` 时提示 `Permission denied`，或 `picocom` 打开串口失败。
+
+**原因**: 串口设备默认归属于 `dialout` 组，普通用户没有读写权限。
+
+**解决方法**: 把当前用户加入 `dialout` 组：
+
+```bash
+sudo usermod -aG dialout $USER
+# 需要重新登录（或执行 newgrp dialout）后生效
+```
+
 ---
 
 ## 下一步

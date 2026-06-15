@@ -1,7 +1,0 @@
-check_links.py
-pyproject.toml
-imx_forge_docs.egg-info/PKG-INFO
-imx_forge_docs.egg-info/SOURCES.txt
-imx_forge_docs.egg-info/dependency_links.txt
-imx_forge_docs.egg-info/requires.txt
-imx_forge_docs.egg-info/top_level.txt

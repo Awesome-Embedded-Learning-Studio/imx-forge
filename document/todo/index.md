@@ -11,7 +11,7 @@ title: 项目规划
 如果你是第一次了解 IMX-Forge，建议按以下顺序阅读：
 
 1. **📖 [总体路线图](roadmap)** - 了解项目全貌和发展规划
-2. **📦 v0.5 里程碑** - Mainline 内核迁移 + QT6 支持已完成
+2. **📦 v1.0.0 发布** - SD/eMMC 完整闭环，见 [release/v1.0.0.md](../../release/v1.0.0.md)
 3. **🎯 [当前重点：D1 方向](directions/d1-environment)** - 查看环境完善方向
 
 ### 贡献者入口
@@ -29,17 +29,16 @@ title: 项目规划
   <ChapterLink num="01" href="./">TODO 索引 —— 文档导航首页</ChapterLink>
   <ChapterLink num="02" href="roadmap">总体路线图 —— 项目发展规划和方向</ChapterLink>
   <ChapterLink num="03" href="todo">待办事项 —— 当前进度和任务总览</ChapterLink>
-  <ChapterLink num="04" href="tutorial-gap-analysis">教程缺口分析 —— 旧教程对比与缺口补充</ChapterLink>
-  <ChapterLink num="05" href="projects/">示例项目 —— 完整的项目清单和详情</ChapterLink>
+  <ChapterLink num="04" href="projects/">示例项目 —— 完整的项目清单和详情</ChapterLink>
 </ChapterNav>
 
 ::: warning 当前重点：D1 方向 - 环境完善
-- [ ] Docker 开发环境
-- [ ] 环境初始化脚本
-- [ ] 烧录脚本
-- [ ] VS Code Devcontainer
+- [x] Docker 开发环境（D1-001）
+- [x] 环境初始化脚本（D1-004）
+- [x] 烧录脚本 + flash/ 烧录教程（D1-005）
+- [ ] VS Code Devcontainer（D1-003，待办）
 
-详见：[D1 详情](directions/d1-environment)
+P0 文档已完成 23/29，剩余缺口见 [D1 详情](directions/d1-environment)
 :::
 
 ## 进度概览
@@ -47,6 +46,7 @@ title: 项目规划
 | 里程碑 | 状态 |
 |---------|------|
 | v0.5 Mainline 内核迁移 + QT6 | <StatusTag type="done" /> |
+| v1.0.0 SD/eMMC 完整闭环 | <StatusTag type="done" /> |
 | D1: 环境完善 | <StatusTag type="active" /> |
 | D2: 工具完备 | <StatusTag type="planned" /> |
 | D3: 示例展示 | <StatusTag type="planned" /> |
@@ -67,6 +67,7 @@ title: 项目规划
 [✅] v0.1 - 基础框架搭建
 [✅] v0.3 - U-Boot 和内核移植
 [✅] v0.5 - Mainline 内核迁移 + QT6 支持
+[✅] v1.0.0 - SD/eMMC 完整构建→烧录→启动闭环
 [🚧] 当前重点：环境完善与工具开发
 [📋] 方向 D1：环境完善
 [📋] 方向 D2：工具完备

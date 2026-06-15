@@ -17,7 +17,7 @@
 [![License](https://img.shields.io/badge/License-MIT-orange?style=flat-square)](LICENSE)
 [![Contributors](https://img.shields.io/github/contributors/Awesome-Embedded-Learning-Studio/imx-forge?style=flat-square)](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/graphs/contributors)
 [![Docker](https://img.shields.io/badge/Docker-supported%20%EF%83%8B-blue?style=flat-square)](docker/README.md)
-[![WSL2](https://img.shields.io/badge/WSL2-Tested%20%26%20OK-brightgreen?style=flat-square)](QUICK_START.md)
+[![WSL2](https://img.shields.io/badge/WSL2-Tested%20%26%20OK-brightgreen?style=flat-square)](document/QUICK_START.md)
 [![Kernel](https://img.shields.io/badge/Kernel-dual%20track%20(6.12.3%20%2B%207.0rc)-blue?style=flat-square)](#-为什么选择-imx-forge)
 [![Mainline](https://img.shields.io/badge/Mainline-migrated%20%EF%83%A0-brightgreen?style=flat-square)](#-为什么选择-imx-forge)
 
@@ -131,7 +131,7 @@ v1.0.0 的 SD 卡启动与 UUU + UMS eMMC 启动流程，已由仓库主作者 C
 
 ---
 
-📖 **详细配置指南**: [QUICK_START.md](QUICK_START.md)
+📖 **详细配置指南**: [QUICK_START.md](document/QUICK_START.md)
 
 ---
 
@@ -208,7 +208,7 @@ MIT LICENSE —— 详见 [LICENSE](LICENSE)
 
 ## 🔗 相关链接
 
-- **快速开始**: [QUICK_START.md](QUICK_START.md)
+- **快速开始**: [QUICK_START.md](document/QUICK_START.md)
 - **教程目录**: [document/tutorial/](document/tutorial/)
 - **项目规划**: [document/todo/todo.md](document/todo/todo.md)
 - **问题反馈**: [GitHub Issues](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)

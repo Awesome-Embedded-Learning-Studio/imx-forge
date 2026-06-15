@@ -34,3 +34,8 @@ modules.builtin
 modules.builtin.modinfo
 
 .venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/

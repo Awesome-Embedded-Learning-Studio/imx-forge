@@ -304,7 +304,7 @@ find . -name "*.c" -o -name "*.h" | xargs clang-format -i
 
 ### 文档资源
 
-- [快速开始](QUICK_START.md)
+- [快速开始](document/QUICK_START.md)
 - [项目规划](document/todo/roadmap.md)
 - [教程目录](document/tutorial/)
 - [示例代码](examples/)
@@ -314,7 +314,7 @@ find . -name "*.c" -o -name "*.h" | xargs clang-format -i
 #### Q: 我是一名新手，可以从哪里开始？
 
 A: 我们建议从以下方式开始：
-1. 阅读 [快速开始指南](QUICK_START.md)
+1. 阅读 [快速开始指南](document/QUICK_START.md)
 2. 尝试构建项目
 3. 查看现有的 [Issues](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)，寻找标记为 `good first issue` 的问题
 
