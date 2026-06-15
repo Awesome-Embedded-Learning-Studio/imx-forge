@@ -11,7 +11,7 @@ title: 项目规划
 如果你是第一次了解 IMX-Forge，建议按以下顺序阅读：
 
 1. **📖 [总体路线图](roadmap)** - 了解项目全貌和发展规划
-2. **📦 v1.0.0 发布** - SD/eMMC 完整闭环，见 [release/v1.0.0.md](../../release/v1.0.0.md)
+2. **📦 v1.0.0 发布** - SD/eMMC 完整闭环，见 [release/v1.0.0.md](../release/v1.0.0.md)
 3. **🎯 [当前重点：D1 方向](directions/d1-environment)** - 查看环境完善方向
 
 ### 贡献者入口

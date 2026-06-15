@@ -28,6 +28,7 @@ IMX-Forge 支持两种内核：
 
 <ChapterNav variant="sub">
   <ChapterLink href="mainline/" variant="sub">Mainline 主线内核 —— 迁移指南</ChapterLink>
+  <ChapterLink href="core-functional/" variant="sub">内核核心功能 —— 并发·中断·I/O 模型</ChapterLink>
 </ChapterNav>
 
 ::: tip 学习目标
