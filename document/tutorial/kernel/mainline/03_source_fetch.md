@@ -8,7 +8,7 @@ title: 获取主线内核源码
 
 你可能会觉得，下载源码有什么好讲的？不就是 `git clone` 一下吗？但事情没那么简单。Linux 内核的源码管理有一套约定俗成的工作流程，如果你按照正确的方式做，后续更新、打补丁、切换版本都会很顺。反之，如果你把源码下载到一个乱七八糟的目录，或者用了错误的分支，后面会有很多麻烦。
 
-这篇文章会教你如何以"正确的方式"获取主线内核源码，并应用 i.MX6ULL 的移植补丁。我们用的版本是 Linux 7.0-rc4，这是 2026 年初的候选版本。
+这篇文章会教你如何以"正确的方式"获取主线内核源码，并应用 i.MX6ULL 的移植补丁。我们用的版本是 Linux 7.1，这是 2026 年中的主线稳定版。
 
 ## 第一步——从 kernel.org 克隆源码
 
@@ -36,7 +36,11 @@ cd linux-mainline
 git describe
 ```
 
-我这跟的是Master分支，此时此刻，你应该看到类似 `v7.0-rc4` 的输出。之后可能就不是了，7.0到底是candidate版本，没发呢还！
+如果你跟的是 master 分支，`git describe` 的输出会随克隆时机变化（主线一直在往前推进）。本项目主线轨固定在 **v7.1**（2026 年中的稳定版），建议直接切到这个标签，保证和本文档、补丁完全一致：
+
+```bash
+git checkout v7.1
+```
 
 ## 第二步——理解内核目录结构
 
@@ -84,7 +88,7 @@ linux-mainline/
 
 ## 第三步——应用移植补丁
 
-这个项目里有一个完整的移植补丁：`patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260322.patch`。这个补丁包含了设备树文件和 defconfig 的改动。
+这个项目里有一个完整的移植补丁：`patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch`。这个补丁包含了设备树文件和 defconfig 的改动。
 
 ### 补丁格式说明
 
@@ -93,7 +97,7 @@ linux-mainline/
 ```bash
 # 方法一：使用 git am（推荐，会保留 commit 信息）
 cd ~/linux-kernel/linux-mainline
-git am /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260322.patch
+git am /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch
 ```
 
 如果 `git am` 报错（比如冲突），可以尝试：
@@ -101,7 +105,7 @@ git am /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_pat
 ```bash
 # 方法二：使用 patch（更宽容，但不会保留 commit 信息）
 cd ~/linux-kernel/linux-mainline
-patch -p1 < /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat_imx6ull_patches-20260322.patch
+patch -p1 < /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch
 ```
 
 ### 验证补丁应用结果
@@ -129,11 +133,11 @@ ls arch/arm/configs/imx_aes_mainline_defconfig
 ```bash
 # 在主线内核仓库里创建一个新的 worktree
 cd ~/linux-kernel/linux-mainline
-git worktree add ../linux-mainline-v7.0 v7.0-rc4
+git worktree add ../linux-mainline-v7.1 v7.1
 
 # 现在你有两个工作目录：
 # ~/linux-kernel/linux-mainline（主工作区）
-# ~/linux-kernel/linux-mainline-v7.0（v7.0-rc4 分支）
+# ~/linux-kernel/linux-mainline-v7.1（v7.1 分支）
 ```
 
 每个 worktree 都是独立的，你可以在一个里编译，另一个里调试，互不影响。
@@ -147,7 +151,7 @@ git worktree list
 ### 删除 worktree
 
 ```bash
-git worktree remove ../linux-mainline-v7.0
+git worktree remove ../linux-mainline-v7.1
 ```
 
 ## 第五步——对比 BSP 内核和主线内核
@@ -178,7 +182,7 @@ kernel.org 的镜像在国内可能比较慢，你可以用国内的镜像：
 
 ```bash
 # 使用清华镜像
-git clone --depth=1 --branch v7.0-rc4 https://mirrors.tuna.tsinghua.edu.cn/git/linux.git linux-mainline
+git clone --depth=1 --branch v7.1 https://mirrors.tuna.tsinghua.edu.cn/git/linux.git linux-mainline
 ```
 
 ### 问题三：补丁冲突
@@ -210,8 +214,8 @@ git am --continue
 **参考命令速查**
 
 ```bash
-# 克隆主线内核（v7.0-rc4）
-git clone --depth=1 --branch v7.0-rc4 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux-mainline
+# 克隆主线内核（v7.1）
+git clone --depth=1 --branch v7.1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux-mainline
 
 # 应用补丁
 git am /path/to/patch.diff

@@ -8,7 +8,7 @@ title: Platform LED 驱动教程
 
 本教程基于以下内核版本：
 - **linux-imx** 6.12.49 <Badge type="tip" text="推荐" />
-- **mainline** 7.0.0-rc4 <Badge type="info" text="进阶" />
+- **mainline** 7.1.0 <Badge type="info" text="进阶" />
 
 ## 学习路径
 

@@ -27,11 +27,11 @@
 * **自旋锁**：等待时间短，但浪费CPU
 * **信号量/互斥体**：等待时间长，但节省CPU
 
-## 环境：基于Linux 7.0-rc4
+## 环境：基于Linux 7.1
 
 | 项目 | 版本/信息 |
 |------|-----------|
-| 内核版本 | Linux 7.0-rc4 (主线内核) |
+| 内核版本 | Linux 7.1 (主线内核) |
 | 架构 | ARMv7-A (Cortex-A7 dual-core) |
 | 相关头文件 | `include/linux/mutex.h`, `include/linux/semaphore.h` |
 

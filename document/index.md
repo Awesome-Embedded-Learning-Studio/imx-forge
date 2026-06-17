@@ -30,7 +30,7 @@ features:
     link: /tutorial/docker/
   - icon: 🔧
     title: 双轨内核策略
-    details: NXP BSP (6.12.3) 稳定可靠 + Mainline (7.0rc) 紧跟上游
+    details: NXP BSP (6.12.3) 稳定可靠 + Mainline (7.1) 紧跟上游
     link: /tutorial/kernel/
   - icon: 📚
     title: 完整学习路径

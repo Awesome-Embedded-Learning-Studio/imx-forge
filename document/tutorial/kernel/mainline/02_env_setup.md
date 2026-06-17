@@ -17,7 +17,7 @@
 | 宿主机 | Ubuntu 22.04 LTS 或 Debian 12（WSL2 也可以） |
 | 目标架构 | ARMv7 (i.MX6ULL) |
 | 交叉编译工具链 | arm-none-linux-gnueabihf- |
-| 内核版本 | Linux 7.0-rc4 |
+| 内核版本 | Linux 7.1 |
 
 如果你用的是其他发行版，包名可能略有不同，但依赖本质是一样的。
 

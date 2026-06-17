@@ -148,7 +148,7 @@ cat /dev/aes
 [  138.137695] WARNING: mm/maccess.c:234 at __copy_overflow+0x24/0x34
 [  138.158630] Buffer overflow detected (100 < 4096)!  ← 关键信息！
 [  138.163512] Modules linked in: chardev_base_00_driver(O)
-[  138.168890] CPU: 0 UID: 0 PID: 66 Comm: cat Tainted: G        W  O        7.0.0-rc4-g113ae7b4decc-dirty #1
+[  138.168890] CPU: 0 UID: 0 PID: 66 Comm: cat Tainted: G        W  O        7.1.0-dirty #1
 [  138.179550] Tainted: [W]=WARN, [O]=OOT_MODULE
 [  138.183924] Hardware name: Freescale i.MX6 Ultralite (Device Tree)
 [  138.190125] Call trace:

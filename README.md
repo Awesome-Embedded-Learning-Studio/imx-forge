@@ -18,7 +18,7 @@
 [![Contributors](https://img.shields.io/github/contributors/Awesome-Embedded-Learning-Studio/imx-forge?style=flat-square)](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/graphs/contributors)
 [![Docker](https://img.shields.io/badge/Docker-supported%20%EF%83%8B-blue?style=flat-square)](docker/README.md)
 [![WSL2](https://img.shields.io/badge/WSL2-Tested%20%26%20OK-brightgreen?style=flat-square)](document/QUICK_START.md)
-[![Kernel](https://img.shields.io/badge/Kernel-dual%20track%20(6.12.3%20%2B%207.0rc)-blue?style=flat-square)](#-为什么选择-imx-forge)
+[![Kernel](https://img.shields.io/badge/Kernel-dual%20track%20(6.12.3%20%2B%207.1)-blue?style=flat-square)](#-为什么选择-imx-forge)
 [![Mainline](https://img.shields.io/badge/Mainline-migrated%20%EF%83%A0-brightgreen?style=flat-square)](#-为什么选择-imx-forge)
 
 </div>
@@ -44,7 +44,7 @@
 > **紧跟上游，学习最新内核技术**
 
 - 📦 **NXP BSP 轨道** —— 基于 6.12.3，稳定可靠
-- 🚀 **Mainline 轨道** —— 基于 7.0rc，紧跟上游最新特性
+- 🚀 **Mainline 轨道** —— 基于 7.1，紧跟上游最新特性
 - 🔄 完整的迁移指南和对比分析
 
 ### 📚 完整的 0→1 学习路径

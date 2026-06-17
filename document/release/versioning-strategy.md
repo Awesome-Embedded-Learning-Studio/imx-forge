@@ -345,7 +345,7 @@ changelog/CHANGELOG.md
 |---|---|
 | U-Boot | lf_v2025.04 |
 | Linux (NXP BSP) | lf-6.12.y |
-| Linux (Mainline) | v7.0-rc |
+| Linux (Mainline) | v7.1 |
 | BusyBox | master / pinned commit |
 | Toolchain | ARM GNU 15.2.rel1 |
 ```

@@ -16,11 +16,11 @@ title: 时间管理
 
 这一节，我们从最基础的`jiffies`开始，逐步理解内核是如何管理时间的。
 
-## 环境：基于Linux 7.0-rc4
+## 环境：基于Linux 7.1
 
 | 项目 | 版本/信息 |
 |------|-----------|
-| 内核版本 | Linux 7.0-rc4 (主线内核) |
+| 内核版本 | Linux 7.1 (主线内核) |
 | 架构 | ARMv7-A (Cortex-A7) |
 | 相关头文件 | `include/linux/jiffies.h`, `include/linux/timer.h` |
 

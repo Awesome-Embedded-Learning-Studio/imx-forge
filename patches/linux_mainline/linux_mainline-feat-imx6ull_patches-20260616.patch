@@ -1,24 +1,18 @@
-From 9fb86cba35fe42e01bed05d41376b3fd7b6206ee Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
-Date: Sun, 8 Jun 2026 23:15:00 +0800
-Subject: [PATCH] feat: apply success with mainline + fix SD1 timeout
+Date: Tue, 16 Jun 2026 20:31:15 +0800
+Subject: [PATCH] feat: apply success with mainline v7.1 + fix SD1 timeout
+
+Rebased onto Linux v7.1 (was v7.0-rc4). Bundles the i.MX6ULL AES board
+DTS/dtsi/defconfig and the SD1 (USDHC1) pinctrl timeout fix (formerly
+applied out-of-tree) so the patch now applies cleanly via git apply --check.
 
 ---
- arch/arm/boot/dts/nxp/imx/Makefile          |   1 +
- arch/arm/boot/dts/nxp/imx/imx6ul.dtsi       |   9 +
- arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts   |  43 +
- arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi  | 822 ++++++++++++++++++++
- arch/arm/configs/imx_aes_mainline_defconfig | 481 ++++++++++++
- 5 files changed, 1356 insertions(+)
- create mode 100644 arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
- create mode 100644 arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
- create mode 100644 arch/arm/configs/imx_aes_mainline_defconfig
-
 diff --git a/arch/arm/boot/dts/nxp/imx/Makefile b/arch/arm/boot/dts/nxp/imx/Makefile
-index de4142e8f..1b70756da 100644
+index 856c9f21bd70..84b96c888a8b 100644
 --- a/arch/arm/boot/dts/nxp/imx/Makefile
 +++ b/arch/arm/boot/dts/nxp/imx/Makefile
-@@ -340,6 +340,7 @@ dtb-$(CONFIG_SOC_IMX6UL) += \
+@@ -377,6 +377,7 @@ dtb-$(CONFIG_SOC_IMX6UL) += \
  	imx6ul-tx6ul-mainboard.dtb \
  	imx6ul-var-som-concerto.dtb \
  	imx6ull-14x14-evk.dtb \
@@ -26,11 +20,31 @@ index de4142e8f..1b70756da 100644
  	imx6ull-colibri-aster.dtb \
  	imx6ull-colibri-emmc-aster.dtb \
  	imx6ull-colibri-emmc-eval-v3.dtb \
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
+index 3d147b160ecf..1dfd472e2f29 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
+@@ -658,14 +658,12 @@ MX6UL_PAD_GPIO1_IO00__ANATOP_OTG1_ID	0x17059
+ 	pinctrl_usdhc1: usdhc1grp {
+ 		fsl,pins = <
+ 			MX6UL_PAD_SD1_CMD__USDHC1_CMD     	0x17059
+-			MX6UL_PAD_SD1_CLK__USDHC1_CLK     	0x10059
++			MX6UL_PAD_SD1_CLK__USDHC1_CLK		0x10071
+ 			MX6UL_PAD_SD1_DATA0__USDHC1_DATA0 	0x17059
+ 			MX6UL_PAD_SD1_DATA1__USDHC1_DATA1 	0x17059
+ 			MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 	0x17059
+ 			MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 	0x17059
+ 			MX6UL_PAD_UART1_RTS_B__GPIO1_IO19       0x17059 /* SD1 CD */
+-			MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 /* SD1 VSELECT */
+-			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
+ 		>;
+ 	};
+ 
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ul.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ul.dtsi
-index 6eb80f867..19d2c50ab 100644
+index 24541fdf49ce..2b4c1aa21608 100644
 --- a/arch/arm/boot/dts/nxp/imx/imx6ul.dtsi
 +++ b/arch/arm/boot/dts/nxp/imx/imx6ul.dtsi
-@@ -985,6 +985,15 @@ memory-controller@21b0000 {
+@@ -992,6 +992,15 @@ memory-controller@21b0000 {
  				clocks = <&clks IMX6UL_CLK_MMDC_P0_IPG>;
  			};
  
@@ -48,7 +62,7 @@ index 6eb80f867..19d2c50ab 100644
  				#size-cells = <1>;
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
 new file mode 100644
-index 000000000..19da037bb
+index 000000000000..19da037bb224
 --- /dev/null
 +++ b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
 @@ -0,0 +1,43 @@
@@ -97,7 +111,7 @@ index 000000000..19da037bb
 +};
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
 new file mode 100644
-index 000000000..a69849d95
+index 000000000000..7a7b18d56683
 --- /dev/null
 +++ b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
 @@ -0,0 +1,822 @@
@@ -925,7 +939,7 @@ index 000000000..a69849d95
 +};
 diff --git a/arch/arm/configs/imx_aes_mainline_defconfig b/arch/arm/configs/imx_aes_mainline_defconfig
 new file mode 100644
-index 000000000..ed588add8
+index 000000000000..ed588add8d31
 --- /dev/null
 +++ b/arch/arm/configs/imx_aes_mainline_defconfig
 @@ -0,0 +1,481 @@
@@ -1410,26 +1424,3 @@ index 000000000..ed588add8
 +CONFIG_DEBUG_FS=y
 +# CONFIG_SLUB_DEBUG is not set
 +# CONFIG_FTRACE is not set
--- 
-diff --git a/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
-index 3d147b160ecf..1dfd472e2f29 100644
---- a/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
-+++ b/arch/arm/boot/dts/nxp/imx/imx6ul-14x14-evk.dtsi
-@@ -658,14 +658,12 @@ MX6UL_PAD_GPIO1_IO00__ANATOP_OTG1_ID	0x17059
- 	pinctrl_usdhc1: usdhc1grp {
- 		fsl,pins = <
- 			MX6UL_PAD_SD1_CMD__USDHC1_CMD     	0x17059
--			MX6UL_PAD_SD1_CLK__USDHC1_CLK     	0x10059
-+			MX6UL_PAD_SD1_CLK__USDHC1_CLK		0x10071
- 			MX6UL_PAD_SD1_DATA0__USDHC1_DATA0 	0x17059
- 			MX6UL_PAD_SD1_DATA1__USDHC1_DATA1 	0x17059
- 			MX6UL_PAD_SD1_DATA2__USDHC1_DATA2 	0x17059
- 			MX6UL_PAD_SD1_DATA3__USDHC1_DATA3 	0x17059
- 			MX6UL_PAD_UART1_RTS_B__GPIO1_IO19       0x17059 /* SD1 CD */
--			MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 /* SD1 VSELECT */
--			MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
- 		>;
- 	};
- 
--- 
-2.43.0

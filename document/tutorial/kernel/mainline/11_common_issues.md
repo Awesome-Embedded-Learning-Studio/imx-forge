@@ -305,7 +305,7 @@ error: 'CONFIG_FB_MXS' conflicts with 'CONFIG_DRM_MXSFB'
 ```bash
 # 1. 内核版本
 uname -r
-# 应该显示 7.0.0-rc4 或类似
+# 应该显示 7.1.0 或类似
 
 # 2. DRM 设备
 ls /dev/dri/card0

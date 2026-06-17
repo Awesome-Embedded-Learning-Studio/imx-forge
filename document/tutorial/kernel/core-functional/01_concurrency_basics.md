@@ -24,7 +24,7 @@ title: 并发基础
 
 | 项目 | 版本/信息 |
 |------|-----------|
-| 内核版本 | Linux 7.0-rc4 (主线内核) |
+| 内核版本 | Linux 7.1 (主线内核) |
 | 架构 | ARMv7-A (Cortex-A7 dual-core) |
 | 工具链 | arm-none-linux-gnueabihf-gcc |
 | 开发板 | i.MX6ULL (正点原子Alpha板) |

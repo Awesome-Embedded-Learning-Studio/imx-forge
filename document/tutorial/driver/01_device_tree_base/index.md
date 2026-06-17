@@ -126,7 +126,7 @@ title: 设备树基础教程
 - **操作系统**：Linux（推荐Ubuntu 20.04或更高版本）
 - **内核版本**：
   - Linux 6.12.49 (linux-imx)
-  - Linux 7.0.0-rc4 (mainline)
+  - Linux 7.1.0 (mainline)
 - **交叉编译工具链**：arm-linux-gnueabhif-gcc
 
 ## 常见问题
