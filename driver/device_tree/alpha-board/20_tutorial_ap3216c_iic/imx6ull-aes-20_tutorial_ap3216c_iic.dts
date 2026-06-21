@@ -1,0 +1,36 @@
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
+
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Tutorial 20 - AP3216C I2C";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+};
+
+/*
+ * base dtsi 的 &i2c1 下挂着 NXP EVK 的 mag3110 和 fxls8471，但咱们这块 alpha 板子上
+ * 一个都没有。更要命的是 fxls8471 的地址就是 0x1e，和 AP3216C 撞车——同一条 I2C 总线
+ * 上两个节点都声明 0x1e，i2c 核心在实例化第二个 client 的时候会直接报 EBUSY，咱们的
+ * 驱动就永远 probe 不上。
+ *
+ * 这俩节点在 base dtsi 里没有 label，没法用 /delete-node/ &label 的常规写法干掉，
+ * 只能按完整路径删。/soc/bus@2100000/i2c@21a0000 是 imx6ul.dtsi 里 i2c1 的固定位置
+ * （i2c1 挂在 aips2/bus@2100000 下，不是 aips1）。
+ * （base dtsi 是共享文件、会被工作流覆盖回去，所以这种板级裁剪放在每章独立的 dts 里做。）
+ */
+/delete-node/ &{/soc/bus@2100000/i2c@21a0000/magnetometer@e};
+/delete-node/ &{/soc/bus@2100000/i2c@21a0000/fxls8471@1e};
+
+&i2c1 {
+	/*
+	 * AP3216C：IR / ALS / PS 三合一传感器，7 位从机地址 0x1e。
+	 *   compatible - 必须和驱动 of_match_table 里那串一字不差，否则 probe 不触发；
+	 *   reg        - 真正生效的硬件地址，写错了线上只会回 NACK。
+	 * I2C1 的 SCL/SDA 引脚复用（pinctrl_i2c1）base dtsi 早就配好了，这里一行都不用动。
+	 */
+	ap3216c@1e {
+		compatible = "imxaes,ap3216c";
+		reg = <0x1e>;
+	};
+};

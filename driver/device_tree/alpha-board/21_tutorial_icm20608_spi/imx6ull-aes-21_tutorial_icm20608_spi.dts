@@ -1,0 +1,72 @@
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
+
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Tutorial 21 - ICM20608 SPI";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+};
+
+/*
+ * ECSPI3 复用的是 UART2 那四个引脚（见下面 pinctrl_ecspi3）。但 base dtsi 里的 &uart2
+ * 是 okay 的、底下还挂着颗蓝牙，它会占着 UART2_TX/RX 两个引脚，跟 ECSPI3 抢线。所以
+ * 这里先把 uart2 关掉把引脚腾出来。alpha 板上并没有那颗 88w8987 蓝牙芯片，关掉无损；
+ * 要是你的板子真在用 UART2 蓝牙，那就得换一组 ECSPI3 引脚了。
+ */
+&uart2 {
+	status = "disabled";
+};
+
+/*
+ * CAN2（flexcan2）的 pinctrl 抢的就是 UART2 的 RTS/CTS 两根线，正好和下面 ECSPI3 的
+ * MISO/MOSI 撞车——内核会报 "pin MX6UL_PAD_UART2_RTS_B already requested by 2094000.can"，
+ * ECSPI3 的引脚设置整个回滚、控制器起不来，icm20608 自然不会实例化成 spi_device。
+ * alpha 板上没有 CAN2 收发器，关掉无损（和上面关 uart2 同理）。CAN1 走的是 UART3，不冲突。
+ */
+&can2 {
+	status = "disabled";
+};
+
+&iomuxc {
+	/*
+	 * ICM-20608 接在 ECSPI3 上，四根线复用 UART2 的引脚。
+	 * 注意第一行：片选 CS 我们没交给硬件 SS0，而是复用成 GPIO1_IO20，交给 SPI 核心
+	 * 用 cs-gpios 统一拉低/拉高——这跟 spi-imx 的 use_gpio_descriptors 是配套的，
+	 * 缺一头 CS 都拉不下来。
+	 */
+	pinctrl_ecspi3: ecspi3grp {
+		fsl,pins = <
+			MX6UL_PAD_UART2_TX_DATA__GPIO1_IO20   0x10b0  /* CS   */
+			MX6UL_PAD_UART2_RX_DATA__ECSPI3_SCLK  0x10b1  /* SCLK */
+			MX6UL_PAD_UART2_RTS_B__ECSPI3_MISO    0x10b1  /* MISO */
+			MX6UL_PAD_UART2_CTS_B__ECSPI3_MOSI    0x10b1  /* MOSI */
+		>;
+	};
+};
+
+/*
+ * ECSPI3 控制器本身的"骨架"（寄存器、中断、时钟）定义在 imx6ull.dtsi 里，默认 disabled。
+ * 我们在这里把它唤醒、配片选、再挂上 ICM-20608。
+ */
+&ecspi3 {
+	/*
+	 * ECSPI3 默认带 dmas=<&sdma ...>（见 imx6ul.dtsi），spi-imx 会强求 sdma 的 TX
+	 * channel；本板那条 channel 一直拿不到，导致 "deferred probe pending: spi_imx:
+	 * can't get the TX DMA channel!"，ECSPI3 起不来、icm20608 没法 probe。
+	 * ICM-20608 只读几个寄存器，PIO 足够且更可靠——删掉 dmas 让 spi-imx 退回 PIO。
+	 */
+	/delete-property/ dmas;
+	/delete-property/ dma-names;
+	fsl,spi-num-chipselects = <1>;
+	cs-gpios = <&gpio1 20 GPIO_ACTIVE_LOW>;	/* CS = GPIO1_IO20，低有效 */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi3>;
+	status = "okay";
+
+	icm20608@0 {
+		compatible = "imxaes,icm20608";
+		spi-max-frequency = <8000000>;		/* 8MHz */
+		reg = <0>;							/* 挂在 CS0 */
+	};
+};

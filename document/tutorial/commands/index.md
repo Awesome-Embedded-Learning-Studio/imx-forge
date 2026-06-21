@@ -25,13 +25,14 @@ title: 命令速查
 
 - [存储介质基础](../flash/01_storage_media_basics)
 - [镜像、分区和文件系统](../flash/02_image_partition_filesystem_basics)
-- [i.MX6ULL 启动链路与偏移](../flash/03_imx6ull_boot_flow_and_offsets)
-- [为什么需要完整镜像](../flash/04_why_full_image)
-- [镜像布局设计](../flash/05_image_layout_design)
-- [脚本设计拆解](../flash/06_build_imx6ull_image_script)
-- [镜像大小与使用](../flash/07_image_size_and_usage)
-- [SD 卡烧录实战](../flash/08_sd_card_flashing)
-- [UUU + UMS eMMC 烧录实战](../flash/09_uuu_ums_emmc_flashing)
+- [常见打包与镜像格式](../flash/03_common_image_and_archive_formats)
+- [i.MX6ULL 启动链路与偏移](../flash/04_imx6ull_boot_flow_and_offsets)
+- [为什么需要完整镜像](../flash/05_why_full_image)
+- [镜像布局设计](../flash/06_image_layout_design)
+- [脚本设计拆解](../flash/07_build_imx6ull_image_script)
+- [镜像大小与使用](../flash/08_image_size_and_usage)
+- [SD 卡烧录实战](../flash/09_sd_card_flashing)
+- [UUU + UMS eMMC 烧录实战](../flash/10_uuu_ums_emmc_flashing)
 
 ## 继续学习
 

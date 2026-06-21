@@ -49,8 +49,8 @@
 |------|------|----------|
 | Board bring-up quick start / 板子上手与硬件速查 | [ ] ⚠️ | 起步引导见 [start/](../../tutorial/start/)，缺「硬件接口速查表」专篇 |
 | First boot and serial console checklist / 第一次上电与串口检查 | [ ] ⚠️ | 部分覆盖 [practical/03_boot_and_debug](../../tutorial/practical/03_boot_and_debug.md) |
-| Boot mode and storage selection guide / 启动介质选择 | [x] | [flash/01 存储介质](../../tutorial/flash/01_storage_media_basics.md) + [flash/03 启动流程与偏移](../../tutorial/flash/03_imx6ull_boot_flow_and_offsets.md) |
-| Safe flashing guide / 安全烧录教程 | [x] | [flash/08 SD 卡烧录](../../tutorial/flash/08_sd_card_flashing.md) + [flash/09 uuu/ums emmc](../../tutorial/flash/09_uuu_ums_emmc_flashing.md) |
+| Boot mode and storage selection guide / 启动介质选择 | [x] | [flash/01 存储介质](../../tutorial/flash/01_storage_media_basics.md) + [flash/04 启动流程与偏移](../../tutorial/flash/04_imx6ull_boot_flow_and_offsets.md) |
+| Safe flashing guide / 安全烧录教程 | [x] | [flash/09 SD 卡烧录](../../tutorial/flash/09_sd_card_flashing.md) + [flash/10 uuu/ums emmc](../../tutorial/flash/10_uuu_ums_emmc_flashing.md) |
 | **Full build workflow from a clean clone** / 从空仓库到完整构建 | [x] | [practical/02 构建系统](../../tutorial/practical/02_build_system.md) |
 | **`out/` directory explanation** / `out/` 目录结构 | [x] | [build/01 out 目录结构](../../tutorial/build/01_out_directory_structure.md) |
 | BSP default build workflow / BSP 默认构建链路 | [x] | [uboot/02](../../tutorial/uboot/02_uboot_compile.md) + [kernel/02](../../tutorial/kernel/02_kernel_compile.md) + [rootfs/02](../../tutorial/rootfs/02_busybox_compile.md) |

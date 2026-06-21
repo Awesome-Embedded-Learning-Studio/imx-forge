@@ -15,12 +15,14 @@ title: 驱动开发
   <ChapterLink num="06" href="05_gpio_key_driver/">GPIO 按键驱动 —— 输入采样与轮询</ChapterLink>
   <ChapterLink num="07" href="06_debounced_key_driver/">按键消抖驱动 —— 中断、工作队列与同步</ChapterLink>
   <ChapterLink num="08" href="07_input_subsystem_key/">Input 子系统按键 —— 标准输入事件上报</ChapterLink>
-  <ChapterLink num="09" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
-  <ChapterLink num="10" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
+  <ChapterLink num="09" href="08_i2c_ap3216c_driver/">AP3216C I2C 驱动 —— 现代 I2C API 完整实战</ChapterLink>
+  <ChapterLink num="10" href="09_spi_icm20608_driver/">ICM-20608 SPI 驱动 —— 现代 SPI API 完整实战</ChapterLink>
+  <ChapterLink num="11" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
+  <ChapterLink num="12" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
 </ChapterNav>
 
 ::: tip v1.0.0 状态
-驱动教程已经覆盖字符设备、设备树、pinctrl/gpio、platform、beep、key/input、模块与固件等主线章节。后续章节会继续扩展，但基础学习链路已经可以按目录顺序推进。
+驱动教程已经覆盖字符设备、设备树、pinctrl/gpio、platform、beep、key/input、I2C、SPI、模块与固件等主线章节。后续章节会继续扩展，但基础学习链路已经可以按目录顺序推进。
 :::
 
 ::: tip 学习目标

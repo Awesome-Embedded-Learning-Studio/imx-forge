@@ -1,6 +1,6 @@
 # 存储工具命令速查
 
-本页只做速查和安全提示，不展开完整烧录教程。真实烧录请结合 [SD 卡烧录实战](../flash/08_sd_card_flashing.md) 和 [UUU + UMS eMMC 烧录实战](../flash/09_uuu_ums_emmc_flashing.md) 操作。
+本页只做速查和安全提示，不展开完整烧录教程。真实烧录请结合 [SD 卡烧录实战](../flash/09_sd_card_flashing.md) 和 [UUU + UMS eMMC 烧录实战](../flash/10_uuu_ums_emmc_flashing.md) 操作。
 
 ## 查看块设备
 
@@ -170,7 +170,7 @@ bootz ${loadaddr} - ${fdt_addr}
 ## 相关资料
 
 - [烧录命令速查](04_flashing_commands.md)
-- [SD 卡烧录实战](../flash/08_sd_card_flashing.md)
-- [UUU + UMS eMMC 烧录实战](../flash/09_uuu_ums_emmc_flashing.md)
+- [SD 卡烧录实战](../flash/09_sd_card_flashing.md)
+- [UUU + UMS eMMC 烧录实战](../flash/10_uuu_ums_emmc_flashing.md)
 - [SD 卡烧录 Bring-up 笔记](../../notes/2026-06-08-sd-card-flashing-bringup.md)
 - [UUU + UMS + eMMC Bring-up 笔记](../../notes/2026-06-08-uuu-ums-emmc-bringup.md)

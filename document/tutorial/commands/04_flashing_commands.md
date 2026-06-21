@@ -1,6 +1,6 @@
 # 烧录命令速查
 
-本页专门放 SD 卡直写和 UUU + UMS eMMC 烧录命令。原理和排查过程见 [SD 卡烧录实战](../flash/08_sd_card_flashing.md) 和 [UUU + UMS eMMC 烧录实战](../flash/09_uuu_ums_emmc_flashing.md)。
+本页专门放 SD 卡直写和 UUU + UMS eMMC 烧录命令。原理和排查过程见 [SD 卡烧录实战](../flash/09_sd_card_flashing.md) 和 [UUU + UMS eMMC 烧录实战](../flash/10_uuu_ums_emmc_flashing.md)。
 
 ## 生成 SD 镜像
 

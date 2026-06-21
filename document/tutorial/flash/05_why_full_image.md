@@ -168,4 +168,4 @@ NFS 在开发阶段非常舒服。你改主机上的 rootfs，板子重启后就
 
 你会发现，脚本并没有做什么神秘的事情。它只是把我们原来手工做的步骤，变成了一套固定、可检查、可复现的流程。
 
-**下一步：** 继续阅读 [05_image_layout_design.md](05_image_layout_design.md)，看完整镜像内部到底长什么样。
+**下一步：** 继续阅读 [06_image_layout_design.md](06_image_layout_design.md)，看完整镜像内部到底长什么样。

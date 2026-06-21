@@ -338,4 +338,4 @@ scripts/release-all.sh --continue --stage 5 --boot-media sd
 
 它不是一个神秘工具，而是一份可复现的装配流程。理解这一点之后，你就可以放心地改参数、看 manifest、查分区表，而不是把镜像当成黑盒。
 
-**下一步：** 阅读 [07_image_size_and_usage.md](07_image_size_and_usage.md)，专门处理镜像大小、SD/eMMC 参数和常见错误。
+**下一步：** 阅读 [08_image_size_and_usage.md](08_image_size_and_usage.md)，专门处理镜像大小、SD/eMMC 参数和常见错误。

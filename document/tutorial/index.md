@@ -146,13 +146,14 @@ title: 教程
 <ChapterNav>
   <ChapterLink num="01" href="flash/01_storage_media_basics">存储介质基础</ChapterLink>
   <ChapterLink num="02" href="flash/02_image_partition_filesystem_basics">镜像、分区和文件系统</ChapterLink>
-  <ChapterLink num="03" href="flash/03_imx6ull_boot_flow_and_offsets">i.MX6ULL 启动链路与偏移</ChapterLink>
-  <ChapterLink num="04" href="flash/04_why_full_image">为什么需要完整镜像</ChapterLink>
-  <ChapterLink num="05" href="flash/05_image_layout_design">镜像布局设计</ChapterLink>
-  <ChapterLink num="06" href="flash/06_build_imx6ull_image_script">脚本设计拆解</ChapterLink>
-  <ChapterLink num="07" href="flash/07_image_size_and_usage">镜像大小与使用</ChapterLink>
-  <ChapterLink num="08" href="flash/08_sd_card_flashing">SD 卡烧录实战</ChapterLink>
-  <ChapterLink num="09" href="flash/09_uuu_ums_emmc_flashing">UUU + UMS eMMC 烧录</ChapterLink>
+  <ChapterLink num="03" href="flash/03_common_image_and_archive_formats">常见打包与镜像格式</ChapterLink>
+  <ChapterLink num="04" href="flash/04_imx6ull_boot_flow_and_offsets">i.MX6ULL 启动链路与偏移</ChapterLink>
+  <ChapterLink num="05" href="flash/05_why_full_image">为什么需要完整镜像</ChapterLink>
+  <ChapterLink num="06" href="flash/06_image_layout_design">镜像布局设计</ChapterLink>
+  <ChapterLink num="07" href="flash/07_build_imx6ull_image_script">脚本设计拆解</ChapterLink>
+  <ChapterLink num="08" href="flash/08_image_size_and_usage">镜像大小与使用</ChapterLink>
+  <ChapterLink num="09" href="flash/09_sd_card_flashing">SD 卡烧录实战</ChapterLink>
+  <ChapterLink num="10" href="flash/10_uuu_ums_emmc_flashing">UUU + UMS eMMC 烧录</ChapterLink>
 </ChapterNav>
 
 ### 命令速查

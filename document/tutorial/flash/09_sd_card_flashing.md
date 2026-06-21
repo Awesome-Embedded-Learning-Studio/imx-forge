@@ -271,4 +271,4 @@ root=/dev/mmcblk0p2
 
 SD 卡流程适合第一次验证镜像，也适合快速换卡测试。下一章我们看 eMMC：它不能直接插到主机上，所以要先用 UUU 把 U-Boot 跑进 RAM，再让 U-Boot 把 eMMC 暴露成 UMS。
 
-**下一步：** 阅读 [09_uuu_ums_emmc_flashing.md](09_uuu_ums_emmc_flashing.md)。
+**下一步：** 阅读 [10_uuu_ums_emmc_flashing.md](10_uuu_ums_emmc_flashing.md)。

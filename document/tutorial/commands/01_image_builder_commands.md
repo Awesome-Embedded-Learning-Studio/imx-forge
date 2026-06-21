@@ -1,6 +1,6 @@
 # 镜像构建命令速查
 
-本页只汇总 `scripts/image_builder/build_imx6ull_image.sh` 的常用命令。原理解释见 [脚本设计拆解](../flash/06_build_imx6ull_image_script)。
+本页只汇总 `scripts/image_builder/build_imx6ull_image.sh` 的常用命令。原理解释见 [脚本设计拆解](../flash/07_build_imx6ull_image_script)。
 
 ## 查看帮助
 

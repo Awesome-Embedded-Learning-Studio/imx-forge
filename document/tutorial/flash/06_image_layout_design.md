@@ -209,4 +209,4 @@ unit: sectors
 
 现在你已经知道镜像内部长什么样了。下一章我们回到 `build_imx6ull_image.sh`，看看它是怎么一步一步把这个布局做出来的。
 
-**下一步：** 阅读 [06_build_imx6ull_image_script.md](06_build_imx6ull_image_script.md)，拆解脚本的设计思路。
+**下一步：** 阅读 [07_build_imx6ull_image_script.md](07_build_imx6ull_image_script.md)，拆解脚本的设计思路。

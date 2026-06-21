@@ -21,6 +21,8 @@ title: 镜像、分区与文件系统
 
 理解了这一点，后面很多命令就不奇怪了。`sfdisk -d xxx.img` 能看分区表，是因为这个 `.img` 里面真的有分区表。`dd` 能把它写进 SD 卡，是因为它本来就是按整盘布局生成的。
 
+如果你还不确定 `.img`、`.iso`、`.tar.gz`、`rootfs.ext4` 这些常见后缀彼此什么关系，可以配合 [常见打包与镜像格式](03_common_image_and_archive_formats.md) 横向对比着看。
+
 ## 从整盘到文件：中间有几层
 
 我们先用一个层级把概念摆正：
@@ -236,6 +238,6 @@ of=/dev/sdb1
 
 `zImage`、DTB、rootfs 里的内容，都是文件系统里的普通文件。U-Boot 则写在整盘前面的 raw 区域，不属于 boot 分区。
 
-下一章我们继续看 i.MX6ULL 的启动链路。重点解决一个问题：为什么项目脚本偏偏把 `u-boot-dtb.imx` 写到 1 KiB，而 boot 分区又从 16 MiB 开始。
+下一章我们先把常见的打包和镜像格式横向梳理一遍，把 `.img`、`.iso`、`.tar.gz`、`rootfs.ext4` 这些后缀的关系理顺。之后再进入 i.MX6ULL 的启动链路。
 
-**下一步：** 阅读 [03_imx6ull_boot_flow_and_offsets.md](03_imx6ull_boot_flow_and_offsets.md)，理解 i.MX6ULL 启动链路和这些偏移的意义。
+**下一步：** 阅读 [03_common_image_and_archive_formats.md](03_common_image_and_archive_formats.md)，把常见格式分门别类。
