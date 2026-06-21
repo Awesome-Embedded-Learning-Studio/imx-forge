@@ -289,6 +289,17 @@ do_build() {
     ${cmd}
 }
 
+# Prepare the build tree for out-of-tree (driver) module builds.
+# `make zImage dtbs` does not emit scripts/module.lds, which the external
+# module link rule (scripts/Makefile.modfinal) requires; without it
+# `make M=... modules` fails with "No rule to make target '<mod>.ko'".
+do_modules_prepare() {
+    log_info "Preparing build tree for out-of-tree modules..."
+    local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} modules_prepare"
+    echo -e "${YELLOW}[CMD]${NC} ${cmd}"
+    ${cmd}
+}
+
 # Verify build artifacts
 verify_build_artifacts() {
     log_info "Verifying build artifacts in ${OUTPUT_DIR}..."
@@ -412,6 +423,17 @@ main() {
     prepare_defconfig
     do_configure
     do_build
+    do_modules_prepare
+
+    # Ensure Module.symvers exists for out-of-tree (driver) module builds.
+    # Since Linux >= 6.4, `make vmlinux`/`zImage` only emits vmlinux.symvers;
+    # Module.symvers is normally produced by `make modules`, which fast-build
+    # skips. External module builds still expect Module.symvers, so symlink it
+    # to vmlinux.symvers when missing (idempotent; safe for normal builds too).
+    if [[ ! -e "${OUTPUT_DIR}/Module.symvers" && -f "${OUTPUT_DIR}/vmlinux.symvers" ]]; then
+        ln -sf vmlinux.symvers "${OUTPUT_DIR}/Module.symvers"
+        log_info "  ✓ Module.symvers -> vmlinux.symvers (ready for out-of-tree module builds)"
+    fi
 
     log_info "========================================"
 

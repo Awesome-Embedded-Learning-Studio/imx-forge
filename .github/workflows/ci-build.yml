@@ -321,6 +321,20 @@ jobs:
       - name: 应用 Linux Mainline 补丁
         run: cd third_party/linux_mainline && ../../scripts/apply_patches.sh linux_mainline
 
+      - name: 采集内核缓存元信息
+        id: kernel-meta
+        run: echo "sha=$(git -C third_party/linux_mainline rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: 缓存内核构建产物（整树）
+        id: kernel-cache
+        uses: actions/cache@v4
+        with:
+          path: out/mainline/linux
+          # 命中即跳过 16 分钟的内核编译；key 覆盖内核源、defconfig 模板、补丁与构建脚本
+          key: linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-mainline-linux.sh', 'patches/linux_mainline/**') }}
+          restore-keys: |
+            linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-
+
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
 
@@ -355,6 +369,7 @@ jobs:
             "
 
       - name: 准备内核环境
+        if: steps.kernel-cache.outputs.cache-hit != 'true'
         run: |
           docker run --rm \
             --user root \
@@ -375,6 +390,15 @@ jobs:
               ./scripts/build_helper/build-mainline-linux.sh --fast-build
               ccache -s
             '
+
+      - name: 确保 Module.symvers（外挂模块编译需要）
+        # cache 命中时构建步骤被跳过，这里兜底保证 Module.symvers 软链存在
+        run: |
+          OUT=out/mainline/linux
+          if [ -f "$OUT/vmlinux.symvers" ] && [ ! -e "$OUT/Module.symvers" ]; then
+            ln -s vmlinux.symvers "$OUT/Module.symvers"
+            echo "Created Module.symvers -> vmlinux.symvers"
+          fi
 
       - name: 构建所有驱动
         run: |
