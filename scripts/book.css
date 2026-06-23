@@ -1,0 +1,185 @@
+/* rk-forge 教程 PDF 书版样式(WeasyPrint / CSS Paged Media) */
+
+/* ── 页面: A4、页边距、底部页码(首页/封面不显示)────────────────── */
+@page {
+  size: A4;
+  margin: 22mm 18mm 18mm 18mm;
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Sans CJK SC", sans-serif;
+    font-size: 9pt;
+    color: #9aa0a6;
+  }
+}
+@page :first {
+  @bottom-center { content: ''; }
+}
+
+/* ── 封面(第一页,满版居中,无页码)────────────────────────────── */
+.cover {
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 245mm;
+  text-align: center;
+  padding: 0 12mm;
+}
+.cover-eyebrow {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 11pt;
+  letter-spacing: 0.25em;
+  color: #2c7be5;
+  margin-bottom: 1.6em;
+}
+.cover-title {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 34pt;
+  font-weight: 700;
+  color: #1f2d3d;
+  line-height: 1.25;
+  margin: 0 0 0.45em;
+  padding: 0;
+  border: none;
+}
+.cover-sub {
+  font-family: "Noto Serif CJK SC", serif;
+  font-size: 13pt;
+  color: #5a6675;
+  max-width: 130mm;
+  line-height: 1.7;
+}
+.cover-rule {
+  width: 60mm;
+  height: 3px;
+  background: #2c7be5;
+  border-radius: 2px;
+  margin: 2.2em 0;
+}
+.cover-meta {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  font-size: 10.5pt;
+  color: #8a94a3;
+  line-height: 1.9;
+}
+.cover-date { font-size: 9.5pt; }
+
+/* ── 正文 ──────────────────────────────────────────────────────── */
+html {
+  font-family: "Noto Serif CJK SC", "Noto Sans CJK SC", serif;
+  font-size: 11pt;
+  line-height: 1.75;
+  color: #24292f;
+}
+body { margin: 0; }
+
+/* ── 标题 ──────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: "Noto Sans CJK SC", sans-serif;
+  break-after: avoid;
+  line-height: 1.35;
+}
+h1 {
+  font-size: 20pt;
+  margin: 0 0 0.4em;
+  padding-bottom: 0.2em;
+  border-bottom: 2px solid #d0d7de;
+}
+h2 {
+  font-size: 15pt;
+  margin: 1.4em 0 0.5em;
+  padding-left: 0.4em;
+  border-left: 5px solid #2c7be5;
+}
+h3 { font-size: 12.5pt; margin: 1.1em 0 0.4em; }
+h4 { font-size: 11pt; margin: 1em 0 0.3em; }
+
+p { margin: 0.6em 0; }
+
+/* ── 代码 ──────────────────────────────────────────────────────── */
+code, pre, pre code {
+  font-family: "Liberation Mono", "DejaVu Sans Mono", "Noto Sans Mono CJK SC", monospace;
+}
+pre {
+  background: #f6f8fa;
+  border: 1px solid #e6e8eb;
+  border-radius: 5px;
+  padding: 9px 12px;
+  font-size: 8.8pt;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  break-inside: avoid;
+}
+code { font-size: 9.5pt; }
+:not(pre) > code {
+  background: #eef0f2;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ── 表格 ──────────────────────────────────────────────────────── */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 9.8pt;
+  break-inside: avoid;
+  margin: 1em 0;
+}
+th, td {
+  border: 1px solid #d0d7de;
+  padding: 5px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #f3f5f7; }
+
+/* ── 引用 / 提示容器(::: tip 等 → pandoc fenced_divs → div.tip)── */
+blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 3px solid #4a90d9;
+  background: #f6f9fd;
+  color: #444;
+}
+div.tip, div.warning, div.info, div.danger {
+  margin: 1em 0;
+  padding: 0.6em 1em;
+  border-radius: 5px;
+  break-inside: avoid;
+}
+div.tip { background: #eef7ff; border-left: 4px solid #2c7be5; }
+div.warning { background: #fff8e1; border-left: 4px solid #f0ad4e; }
+div.danger { background: #fdecea; border-left: 4px solid #d64545; }
+
+/* ── 图片 ──────────────────────────────────────────────────────── */
+img { max-width: 100%; break-inside: avoid; }
+
+/* ── 链接 ──────────────────────────────────────────────────────── */
+a { color: #1a6fb0; text-decoration: none; }
+
+/* ── 章节分页(每篇/每卷另起一页)──────────────────────────────── */
+.chapter-break, .part-break { break-before: page; }
+
+/* ── 目录(pandoc 生成 nav#TOC;WeasyPrint 用 target-counter 补页码)── */
+nav#TOC > ul {
+  list-style: none;
+  padding-left: 0;
+}
+nav#TOC ul { list-style: none; padding-left: 1.2em; }
+nav#TOC a {
+  color: #24292f;
+  text-decoration: none;
+}
+nav#TOC a::after {
+  content: leader('.') target-counter(attr(href), page);
+  color: #9aa0a6;
+  font-family: "Noto Sans CJK SC", sans-serif;
+}
+
+/* 列表间距 */
+ul, ol { margin: 0.5em 0; padding-left: 1.6em; }
+li { margin: 0.2em 0; }
+
+hr { border: none; border-top: 1px solid #e6e8eb; margin: 1.4em 0; }

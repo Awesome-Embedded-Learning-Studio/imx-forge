@@ -18,6 +18,9 @@ site/.vitepress/.build-tmp/
 *.tgz
 .pnpm-store/
 
+# 整站 PDF 导出产物(pandoc + WeasyPrint 输出;走 Release asset 分发,不提交进仓库)
+dist-pdf/
+
 # Kernel module build artifacts
 *.o
 *.ko

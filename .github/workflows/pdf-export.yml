@@ -1,0 +1,64 @@
+name: Export site PDF
+
+# 把整站教程 markdown 渲染成单本 PDF(纯 Python:pandoc + WeasyPrint)。
+# 手动触发,与发版 Release / Pages 部署完全解耦(不挂 push/tag/release)。
+# 产物:CI artifact(14 天质检)+ 独立轻量 PDF Release asset。
+# 读者稳定下载链接(产物名固定):https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/releases/latest/download/imx-forge.pdf
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: '按分支/tag 构建(留空用默认分支)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write # gh release create 需要
+
+concurrency:
+  group: pdf-export
+  cancel-in-progress: false
+
+jobs:
+  pdf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Install system deps (WeasyPrint libs + Chinese fonts)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
+            libcairo2 libgdk-pixbuf-2.0-0 \
+            fonts-noto-cjk
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Build PDF
+        run: ./scripts/build-pdf.sh
+
+      - name: Upload PDF artifact (14-day QA)
+        uses: actions/upload-artifact@v4
+        with:
+          name: imx-forge-pdf
+          path: dist-pdf/*.pdf
+          retention-days: 14
+          if-no-files-found: error
+
+      # 与发版语义无关的独立轻量 release;asset 名固定,供 /releases/latest/download/ 稳定指向。
+      - name: Publish as a lightweight PDF release (decoupled from version releases)
+        run: |
+          TAG="pdf/$(date -u +%Y-%m-%d-%H%M)"
+          gh release create "$TAG" dist-pdf/imx-forge.pdf \
+            --title "整站教程 PDF @ $(date -u +%F)" \
+            --notes "手动触发(pandoc + WeasyPrint)生成的整站教程 PDF,与发版 Release 解耦。" \
+            --target ${{ inputs.ref || github.ref }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
