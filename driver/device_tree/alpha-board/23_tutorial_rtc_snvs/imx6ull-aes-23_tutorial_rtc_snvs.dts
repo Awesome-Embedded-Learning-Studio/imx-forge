@@ -1,0 +1,24 @@
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
+
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Tutorial 23 - RTC SNVS";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+};
+
+/*
+ * RTC 这一章是「分析型」：驱动复用主线 drivers/rtc/rtc-snvs.c，本目录不提供 .ko。
+ *
+ * snvs-rtc-lp 节点在 imx6ul.dtsi 里早就配好了（compatible "fsl,sec-v4.0-mon-rtc-lp"、
+ * regmap=<&snvs>、offset=<0x34>、GIC 中断 19/20），alpha 板继承后默认启用——没有 status
+ * 属性就等同于 status = "okay"。所以板级 dts 这里其实一行硬件配置都不用加。
+ *
+ * 下面这段只是把 snvs_rtc 显式标成 okay 加以确认（它本来就是 okay，写不写都不影响 probe），
+ * 留着是为了和其它章节 dts 风格统一，也方便你改成 disabled 做对比实验（比如观察
+ * 没有 /dev/rtc0 时 hwclock 的行为）。
+ */
+&snvs_rtc {
+	status = "okay";
+};

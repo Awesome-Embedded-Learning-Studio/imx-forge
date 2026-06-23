@@ -17,8 +17,10 @@ title: 驱动开发
   <ChapterLink num="08" href="07_input_subsystem_key/">Input 子系统按键 —— 标准输入事件上报</ChapterLink>
   <ChapterLink num="09" href="08_i2c_ap3216c_driver/">AP3216C I2C 驱动 —— 现代 I2C API 完整实战</ChapterLink>
   <ChapterLink num="10" href="09_spi_icm20608_driver/">ICM-20608 SPI 驱动 —— 现代 SPI API 完整实战</ChapterLink>
-  <ChapterLink num="11" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
-  <ChapterLink num="12" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
+  <ChapterLink num="11" href="10_rtc_snvs_driver/">RTC 驱动（SNVS）—— 主线 rtc-snvs.c 分析</ChapterLink>
+  <ChapterLink num="12" href="11_goodix_touchscreen_driver/">电容触摸驱动（goodix）—— 主线 goodix.c 分析</ChapterLink>
+  <ChapterLink num="13" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
+  <ChapterLink num="14" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
 </ChapterNav>
 
 ::: tip v1.0.0 状态

@@ -1,0 +1,44 @@
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
+
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Tutorial 22 - Goodix Touchscreen";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+};
+
+/*
+ * 触摸这一章是「分析型」：驱动复用主线 drivers/input/touchscreen/goodix.c，本目录不提供 .ko。
+ * alpha 板 defconfig 已开 CONFIG_TOUCHSCREEN_GOODIX=y，开机自动 probe。
+ *
+ * alpha 板的 imx6ull-aes.dtsi 里 i2c2 下已有一个 gt9147@5d 节点，但它用的是 interrupt-gpios
+ * 属性。7.1 的 goodix.c（goodix_get_gpio_config）用 devm_gpiod_get(dev, "irq") 取 INT 引脚，
+ * gpiod 框架找的是 irq-gpios —— 一字之差会让 goodix 拿不到 INT 的 GPIO 描述符、走
+ * IRQ_PIN_ACCESS_NONE 路径、跳过复位序列（client->irq 来自 interrupts 属性、基本触摸仍可用，
+ * 但不够规范，详见教程 05 节的踩坑说明）。
+ *
+ * 下面把 alpha 板原有的 gt9147 节点删掉，换成一个属性规范的版本：interrupt-gpios → irq-gpios，
+ * 让 goodix 完整跑复位序列、稳稳锁定 0x5d 地址模式。其余属性与 alpha dtsi 保持一致：
+ *   - compatible "goodix,gt9147" 命中 goodix.c:1551 的 of_match；
+ *   - interrupts <9 0>（GPIO1_IO09）→ client->irq，request_irq 用；
+ *   - reset-gpios GPIO1_IO05、irq-gpios GPIO1_IO09；
+ *   - vdd/avdd-supply 两路电源、pinctrl_tsc + pinctrl_tsc_reset 两个引脚复用。
+ */
+/delete-node/ &gt9147;
+
+&i2c2 {
+	gt9147: gt9147@5d {
+		compatible = "goodix,gt9147", "goodix,gt9xx";
+		reg = <0x5d>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_tsc &pinctrl_tsc_reset>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <9 0>;
+		reset-gpios = <&gpio1 5 GPIO_ACTIVE_LOW>;
+		irq-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;	/* 规范命名，符合 goodix.yaml binding */
+		status = "okay";
+		vdd-supply = <&reg_vddio>;
+		avdd-supply = <&reg_avdd28>;
+	};
+};
