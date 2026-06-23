@@ -423,6 +423,10 @@ jobs:
               ccache -s
             '
 
+      - name: 修复内核缓存目录权限
+        if: steps.kernel-cache.outputs.cache-hit != 'true'
+        run: sudo chown -R "$USER:$USER" out/mainline/linux
+
       - name: 验证驱动产物
         run: |
           find driver -name "*.ko" -exec file {} \; 2>/dev/null | head -5 || echo "No kernel modules found, continuing..."
