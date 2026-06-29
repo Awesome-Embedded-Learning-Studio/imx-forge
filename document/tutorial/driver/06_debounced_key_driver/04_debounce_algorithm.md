@@ -73,7 +73,7 @@ msleep_interruptible(DEBOUNCE_MS);
 你可能会问：为什么不用 `usleep()` 或者 `ndelay()`？因为按键抖动是毫秒级别的，用 `msleep()` 就够了。`usleep()` 或 `ndelay()` 提供的微秒级精度在这里没有意义，反而增加了不必要的开销。
 
 ::: info msleep_interruptible 的选择
-我们用 `msleep_interruptible()` 而不是 `msleep()`，因为前者可以被信号中断。这对于用户交互的设备是个好特性——用户按 Ctrl+C 时，工作队列能快速响应。
+工作队列处理函数运行在内核线程（`kworker`）上下文里，它不是用户进程，收不到用户按 Ctrl+C 产生的信号，所以这里的 `msleep_interruptible()` 实际上几乎永远不会被信号打断，行为接近 `msleep()`。两者真正的区别在睡眠状态：`msleep()` 把任务置为 `TASK_UNINTERRUPTIBLE`，`msleep_interruptible()` 置为 `TASK_INTERRUPTIBLE`。这里选 `msleep_interruptible()` 主要是"能被打断就让它能被打断"的习惯写法；真正响应用户 Ctrl+C 的是 `read()` 里的 `wait_event_interruptible()`（会返回 `-ERESTARTSYS`），而不是这个工作函数。
 :::
 
 ## 步骤二：读取 GPIO 状态
@@ -107,21 +107,20 @@ if (current_state != dev->last_gpio_state) {
 
 这是消抖算法的核心逻辑。我们不是无条件地报告事件，而是比较当前状态和上一次状态。只有状态真的变化了，才报告事件。
 
-为什么要这样？考虑这个场景：
+为什么要这样？考虑这个场景（按下过程伴随抖动）：
 
 ```
-t=0ms:   按键按下，GPIO 从 1 变成 0，中断触发
-t=0ms:   工作队列调度，开始延时
-t=5ms:  抖动，GPIO 从 0 变成 1，中断触发
-t=5ms:   工作队列重新调度，开始延时
-t=10ms: 抖动，GPIO 从 1 变成 0，中断触发
-t=10ms:  工作队列重新调度，开始延时
-t=20ms: 延时结束，读取 GPIO = 0（按下）
+t=0ms:   按下，GPIO 1→0，IRQ 触发，schedule_work() 成功，work 开始延时
+t=5ms:   抖动，GPIO 0→1，IRQ 触发，schedule_work() 成功（见下文）
+t=10ms:  抖动，GPIO 1→0，IRQ 触发，schedule_work() 失败（no-op）
+...      GPIO 最终稳定在 0
+t≈20ms:  第 1 次 handler 的延时结束，读 GPIO=0
+t≈40ms:  第 2 次 handler 的延时结束，读 GPIO=0
 ```
 
-如果没有 `last_gpio_state` 比较，我们会报告多次按下事件。但有了这个比较，我们可以看到：
-- 第一次工作队列执行：`current_state=0` ≠ `last_gpio_state=1`，报告事件
-- 第二次工作队列执行：`current_state=0` = `last_gpio_state=0`，跳过（抖动）
+注意：t=5ms 那次中断**并没有"重置"第 1 次延时**——它只是趁 work 正在睡眠（pending 位为空）又排了一次队，让 work 在第 1 次跑完后再跑一次。也就是说，这一次按下实际上会触发**两次** handler 执行。如果没有 `last_gpio_state` 比较，两次执行都会上报"按下"，应用层就收到重复事件。有了状态比较：
+- 第 1 次 handler：`current_state=0` ≠ `last_gpio_state=1`（probe 时初始化为松开态），**报告按下事件**，并把 `last_gpio_state` 更新为 0
+- 第 2 次 handler：`current_state=0` == `last_gpio_state=0`，**跳过**（`debounce_skipped` +1）
 
 ::: tip 状态比较的妙处
 这个状态比较不仅过滤了抖动，还自然地实现了"边沿检测"。只有当 GPIO 状态真正变化时才报告事件，而不是每次中断都报告。这比单纯延时更可靠。
@@ -146,7 +145,7 @@ atomic_inc(&dev->event_count);
 
 `key_value` 的转换是因为硬件和软件的约定不同。硬件上，按键按下时 GPIO 为 0（连接到 GND）。但在软件层面，我们通常用 1 表示按下，0 表示松开。所以这里做了取反操作。
 
-## 步骤五：统计抖动次数
+## 步骤五：统计"未上报"的 handler 执行
 
 ```c
 } else {
@@ -155,63 +154,114 @@ atomic_inc(&dev->event_count);
 }
 ```
 
-如果状态没有变化，我们递增 `debounce_skipped` 计数器。这个计数器可以帮助我们验证消抖效果。如果 `debounce_skipped` 很高，说明消抖在工作，成功过滤了很多抖动。
+这里要特别澄清 `debounce_skipped` 到底在数什么。它**不是**"被跳过的中断次数"，而是：**handler 真正执行到状态比较这一步后，发现 `current_state == last_gpio_state`、于是没有上报事件的次数**。
 
-::: tip 统计信息的作用
-驱动维护了三个计数器：
-- `irq_count`：中断触发次数
-- `event_count`：实际事件次数
-- `debounce_skipped`：被过滤的抖动次数
+也就是说，只有当一次 work handler 完整跑完（延时 → 读 GPIO → 进临界区比较）并且走进了 `else` 分支，`debounce_skipped` 才会 +1。而那些被 `schedule_work()` 直接吞掉（返回 0、根本没排上队）的中断，既不会增加 `event_count`，也不会增加 `debounce_skipped`。
 
-正常情况下，`event_count << irq_count`，`debounce_skipped` 应该比较高。这能证明消抖在有效工作。
+::: tip 三个计数器不是简单加减关系
+驱动维护了三个计数器，统计口径互不相同：
+- `irq_count`：每进入一次中断处理函数就 +1（不管这次中断最终有没有用）。
+- `event_count`：每上报一次按键事件（`current_state != last_gpio_state` 那个分支）就 +1。
+- `debounce_skipped`：handler 跑完但没上报事件（`else` 分支）就 +1。
+
+不要写成 `irq_count == event_count + debounce_skipped`。因为有些中断会让 `schedule_work()` 变成 no-op（工作已在队列里），这些中断不会产生任何一次 handler 执行，自然既不算进 `event_count` 也不算进 `debounce_skipped`。实际能观察到的是 `event_count ≤ irq_count`，而 `debounce_skipped` 反映的是"handler 多跑了多少次却没产生事件"。
 :::
 
 ## 完整的时序图
 
-让我们看一个完整的时序，假设用户按下按键：
+让我们看一个完整的时序（按下过程伴随抖动）：GPIO 在 t=0、t=5、t=10 来回跳，最终稳定在 0（按下）。
 
 ```
-时间    GPIO状态   中断   工作队列          动作
-------------------------------------------------------------
-t=0     1→0        ✓     调度              开始延时20ms
-t=1     0→1        ✓     重新调度           延时重置，再等20ms
-t=2     1→0        ✓     重新调度           延时重置，再等20ms
-t=3     0          -     (仍在延时)        ...
-t=5     0          -     (仍在延时)        ...
-t=22    0          -     执行              读取GPIO=0
-                                                last_state=1
-                                                状态变化→报告事件
-                                                last_state更新为0
+时间     GPIO   IRQ (irq_count)   schedule_work()    work 状态               关键动作
+====================================================================================================
+t≈0     1→0    IRQ1 (→1)         成功（首次排队）   IDLE → PENDING          首次调度
+t≈0+ε   —      —                 —                  PENDING → RUNNING       worker 取走，清 PENDING 位
+                                                                            └─ msleep(20) 开始，睡到 t≈20
+t=5     0→1    IRQ2 (→2)         成功（重新排队）   RUNNING + PENDING       work 正在睡(非pending)，可再排队
+                                                                            └─ 注意: 不打断、不重置当前 msleep!
+t=10    1→0    IRQ3 (→3)         失败（返回 0）     RUNNING + PENDING       已 pending → schedule_work() 是 no-op
+…       0      —                 —                  —                       GPIO 已稳定在 0
+t≈20    0      —                 —                  ── 第 1 次 handler ──    msleep 结束
+                                    读 GPIO=0; last_gpio_state=1 → 不等
+                                    event_count+1(=1); last_gpio_state:=0; wake_up()    ← 真正上报"按下"
+t≈20+ε  —      —                 —                  PENDING → RUNNING       第 2 次 handler 立即开始(来自 t=5 那次排队)
+                                                                            └─ msleep(20) 睡到 t≈40
+t≈40    0      —                 —                  ── 第 2 次 handler ──    msleep 结束
+                                    读 GPIO=0; last_gpio_state=0 → 相等
+                                    debounce_skipped+1(=1)                            ← 这次没上报
+t≈40+ε  —      —                 —                  → IDLE
+----------------------------------------------------------------------------------------------------
+结果: irq_count=3, event_count=1, debounce_skipped=1   （注意 3 ≠ 1+1；延时从头到尾没被"重置"过）
 ```
 
-注意 t=1ms 和 t=2ms 的抖动会触发新的中断，新的中断会重新调度工作队列，重置延时。最终工作队列在 t=22ms 执行，此时 GPIO 已经稳定在 0，状态从上次的 1 变成了 0，所以报告按下事件。
+读这张图的关键三点：
 
-## 为什么用 schedule_work 而不是 schedule_delayed_work
+1. **延时从未被重置**。第 1 次 handler 从 t≈0 开始，固定睡满 20ms 到 t≈20 就读 GPIO，t=5、t=10 的中断对这次睡眠没有任何影响——既不延长也不缩短。
+2. **t=5 的中断让 work 多跑了一次**。因为此时 work 正在睡眠（pending 位为空），`schedule_work()` 成功，于是 work 在第 1 次跑完后会**再跑一次**（第 2 次于 t≈40 执行）。t=10 的中断则因为 work 已 pending，变成 no-op。
+3. **真正挡住重复事件的是状态比较**。第 2 次 handler 读到 `current_state=0` 与 `last_gpio_state=0` 相等，走 `else` 分支不上报，所以应用层只收到一次"按下"。`debounce_skipped` 记的就是这种"白跑一趟"的次数。
 
-你可能会问，为什么不直接用 `schedule_delayed_work()` 延时调度，而是立即调度然后在工作函数里 `msleep()`？
+## 当前实现的真实语义（普通 `schedule_work` + `msleep`）
+
+先澄清一个常见的误解：本驱动用的 `schedule_work()` **并不会**因为重复中断而"重置延时"。同一个 `work_struct` 在内核里只能 pending 一次，`schedule_work()` 的行为分两种情况：
+
+- work 还在队列里 **pending（没开始跑）**：再次调用直接返回 0，**完全 no-op**，既不挪到队尾也不重置任何东西；
+- work **正在运行（handler 已进入 `msleep`）**：pending 位是清的，这次调用会成功，**但效果是"当前这次跑完之后再排队跑一次"，绝不会打断或重置当前正在睡的 `msleep`**。
+
+所以当前实现的真实延时语义是 **"第一次中断 + 20ms"**（外加每 20ms 一次的重复采样），**不是**"最后一次中断 + 20ms"。它在实践中"看起来能消抖"，主要功劳其实落在 `last_gpio_state` 状态比较上——多次 handler 执行里只有状态真正变化那次才上报。把这点理解清楚，才不会误以为延时被反复重置。
+
+## 想要"最后一次中断 + 20ms"？改用 `delayed_work`
+
+如果你希望"抖动期每次中断都把采样点往后推、只在最后一次抖动后再等 20ms 才读一次"，普通 `schedule_work()` 做不到，应该用 `delayed_work` + `mod_delayed_work()`：
 
 ```c
-// 方式一：立即调度 + 工作函数里延时
-schedule_work(&dev->work);
-// 工作函数里：msleep(20);
+/* 结构体：work_struct 改成 delayed_work */
+struct delayed_work dwork;
 
-// 方式二：延时调度
-schedule_delayed_work(&dev->work, msecs_to_jiffies(20));
+/* 初始化：INIT_WORK 换成 INIT_DELAYED_WORK */
+INIT_DELAYED_WORK(&dev->dwork, key_work_handler);
+
+/* 中断里：每次都"重新计时"为 20ms 后执行 */
+static irqreturn_t key_irq_handler(int irq, void *dev_id) {
+    struct key_debounce_dev *dev = dev_id;
+    atomic_inc(&dev->irq_count);
+    mod_delayed_work(system_wq, &dev->dwork, msecs_to_jiffies(DEBOUNCE_MS));
+    return IRQ_HANDLED;
+}
+
+/* handler 里：去掉 msleep，直接读已经稳定的 GPIO */
+static void key_work_handler(struct work_struct *work) {
+    struct key_debounce_dev *dev =
+        container_of(to_delayed_work(work), struct key_debounce_dev, dwork);
+    int current_state = key_get_state(dev->gpio);   /* 不再 msleep */
+    /* ……后面的状态比较、上报逻辑不变…… */
+}
+
+/* remove 里：cancel_work_sync 换成 cancel_delayed_work_sync */
+cancel_delayed_work_sync(&dev->dwork);
 ```
 
-两种方式都能实现 20ms 延时，但第一种方式有个好处：每次中断触发都会重新调度工作队列，重置延时。这对于消抖是个很好的特性——如果抖动持续触发中断，延时会被不断重置，直到抖动真正结束。
+`mod_delayed_work()` 会取消尚未触发的定时器并重新计时，所以抖动期每次中断都把执行点往后推，**只在最后一次中断后 20ms 才真正执行一次**。这样一轮抖动通常只跑一次 handler，消抖更干净，`debounce_skipped` 也会明显变小。
 
-::: tip 工作队列的重调度
-`schedule_work()` 可以重复调用，如果工作已经在队列里，会被移动到队列末尾（相当于重置延时）。这个特性对于消抖很有用。
+::: warning 别把两种语义混着讲
+
+| 维度 | `schedule_work` + `msleep`（**当前源码**） | `mod_delayed_work`（改进方案） |
+|---|---|---|
+| 真实延时语义 | 第一次中断 + 20ms | 最后一次中断 + 20ms |
+| 抖动期多次中断 | 部分 no-op，部分让 work"跑完再跑一次" | 每次都重新计时，最终只执行一次 |
+| 延时会被"重置"吗 | **不会** | 会 |
+| 一轮抖动的 handler 次数 | 通常 ≥ 2 次 | 通常 1 次 |
+| 消抖主要靠 | 状态比较（延时不可靠） | 延时本身 + 状态比较（双保险） |
+
+本驱动源码用的是左边那一列。本文按源码现状描述，右边只作为"想做到更好"的改进建议。
 :::
 
 ## 本章小结
 
-消抖算法的核心是延时读取 + 状态比较。中断触发时不立即读取，而是调度工作队列，等 20ms 后再读取稳定的 GPIO 状态。只有当前状态和上一次状态不同时，才报告事件。
+消抖算法的核心是延时读取 + 状态比较。中断触发时不立即读取，而是调度工作队列，等 20ms 后再读取 GPIO 状态。只有当前状态和上一次状态不同时，才报告事件。
 
-这个算法简单但有效。它利用了工作队列的重调度特性——抖动期间的每个中断都会重新调度工作队列，重置延时。最终工作队列执行时，抖动早已结束，读到的就是稳定的按键状态。
+这个算法简单，但在当前实现（普通 `schedule_work` + `msleep`）下要正确理解它的行为：抖动期间的后续中断**并不会重置那个 20ms 延时**，handler 仍从第一次中断起固定睡满 20ms；真正把多余采样过滤掉的是 `last_gpio_state` 状态比较——多次 handler 执行里，只有状态真正变化那次才上报，其余的走 `else` 分支记进 `debounce_skipped`。
 
-状态比较的加入使得算法更加可靠。即使工作队列多次执行，只有状态真正变化时才报告事件。这有效地过滤了所有抖动，只保留真实的按键事件。
+换句话说，状态比较才是这套算法可靠性的主心骨；延时只是"让 GPIO 大致稳定"的粗筛。如果你想让延时本身也能扛住"最后一次中断后 20ms"的语义，需要升级成 `delayed_work`，见上一节。
 
 下一章我们会讲同步机制，看看为什么需要自旋锁和等待队列，它们是如何保证多线程安全的。
 

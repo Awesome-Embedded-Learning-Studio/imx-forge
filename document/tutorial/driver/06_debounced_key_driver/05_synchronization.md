@@ -7,16 +7,19 @@
 让我们看看我们的驱动里有哪些并发场景：
 
 ```c
-// 场景一：中断处理函数和工作队列同时访问 dev->last_gpio_state
-static irqreturn_t key_irq_handler(int irq, void *dev_id) {
-    atomic_inc(&dev->irq_count);      // 中断上下文
-    schedule_work(&dev->work);
-    return IRQ_HANDLED;
+// 场景一：工作队列处理函数在进程上下文里改写共享状态
+static void key_work_handler(struct work_struct *work) {
+    // ... 读取 GPIO ...
+    dev->last_gpio_state = current_state;   // kworker 线程，进程上下文
+    dev->event_ready = true;
+    // ...
 }
 
-static void key_work_handler(struct work_struct *work) {
-    dev->last_gpio_state = current_state;  // 进程上下文
-    // ...
+// 中断处理函数（顶半部）只做两件本身安全的事，并不碰上面的共享字段：
+static irqreturn_t key_irq_handler(int irq, void *dev_id) {
+    atomic_inc(&dev->irq_count);            // 原子操作，天然安全
+    schedule_work(&dev->work);              // 只是排队，不访问共享状态
+    return IRQ_HANDLED;
 }
 
 // 场景二：多个进程同时调用 read()
