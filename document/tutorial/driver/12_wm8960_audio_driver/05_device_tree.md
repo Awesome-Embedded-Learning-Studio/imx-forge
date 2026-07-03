@@ -165,7 +165,7 @@ pinctrl_sai2: sai2grp {
 `MX6UL_PAD_JTAG_TDI__SAI2_TX_BCLK` 这种宏名一眼能看出来：「JTAG 的 TDI 脚，复用成 SAI2 的 TX_BCLK 功能」。五个 JTAG 脚（TDI/TDO/TRST/TCK/TMS）正好变成 SAI2 的五根信号线，外加一个 SNVS 域的 GPIO 当耳机检测。
 
 ::: details 那个 0x17088 / 0x11088 是什么？
-是 i.MX IOMUX 控制寄存器的配置值，编码了引脚的驱动强度（DSE）、压摆率（SRE）、上下拉（PUS/PUE/PKE）、复用模式（MUX_MODE）等。`0x17088` 和 `0x11088` 的差异主要在上下拉/输入输出方向相关位——TX_BCLK/TX_SYNC/MCLK 是 codec 驱动的输入脚（SAI2 接收），TX_DATA/RX_DATA 是数据脚，配置略有不同。细节属于 pinctrl 子系统（[02_pinctrl_gpio](../02_pinctrl_gpio/) 章），这里知道「每根脚的电气属性都由这个值决定」即可。
+是 i.MX IOMUX 控制寄存器的配置值，编码了引脚的驱动强度（DSE）、压摆率（SRE）、上下拉（PUS/PUE/PKE）、复用模式（MUX_MODE）等。`0x17088` 和 `0x11088` 的差异主要在上下拉/输入输出方向相关位——TX_BCLK/TX_SYNC/MCLK 是 codec 驱动的输入脚（SAI2 接收），TX_DATA/RX_DATA 是数据脚，配置略有不同。细节属于 pinctrl 子系统（[02_pinctrl_gpio](../02_pinctrl_gpio/01_introduction) 章），这里知道「每根脚的电气属性都由这个值决定」即可。
 :::
 
 ## 五、本章的章节级 dts

@@ -72,9 +72,7 @@ dtc -I dtb -O dts /home/charliechen/tftp/imx6ull-aes.dtb 2>/dev/null | grep -A3 
 # 					reg = <0x5d>;
 ```
 
-果然 `reg = <0x5d>`。源在
-[imx6ull-aes.dtsi](../../driver/device_tree/alpha-board/linux/imx6ull-aes.dtsi)
-的 goodix 节点。
+果然 `reg = <0x5d>`。源在 `driver/device_tree/alpha-board/linux/imx6ull-aes.dtsi` 的 goodix 节点。
 
 ### Step 3 —— 为什么是 0x14 不是 0x5d
 
