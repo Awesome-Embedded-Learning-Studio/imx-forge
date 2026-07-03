@@ -1572,5 +1572,5 @@ index 000000000000..9c1cbd5a7757
 +CONFIG_AHCI_IMX=y
 +CONFIG_PATA_IMX=y
 +CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
-+CONFIG_EXTRA_FIRMWARE_DIR="/home/charliechen/imx-forge/driver/firmwares"
++CONFIG_EXTRA_FIRMWARE_DIR="${FIRMWARE_DIR}"
 \ No newline at end of file

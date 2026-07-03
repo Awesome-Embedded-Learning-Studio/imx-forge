@@ -573,4 +573,4 @@ CONFIG_SATA_AHCI_PLATFORM=y
 CONFIG_AHCI_IMX=y
 CONFIG_PATA_IMX=y
 CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
-CONFIG_EXTRA_FIRMWARE_DIR="/home/charliechen/imx-forge/driver/firmwares"
+CONFIG_EXTRA_FIRMWARE_DIR="${FIRMWARE_DIR}"
