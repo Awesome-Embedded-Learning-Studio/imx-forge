@@ -1,0 +1,31 @@
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
+
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Tutorial 24 - WM8960 Audio";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+};
+
+/*
+ * 音频这一章是「分析型」：驱动复用主线 sound/soc/fsl/fsl-asoc-card.c（machine）
+ * + sound/soc/codecs/wm8960.c（codec）+ sound/soc/fsl/fsl_sai.c（cpu DAI），本目录不提供 .ko。
+ *
+ * 整条音频链路的硬件描述早就配在共享 imx6ull-aes.dtsi 里了：
+ *   - sound-wm8960 节点（machine，compatible "fsl,imx-audio-wm8960"，audio-cpu=<&sai2>、
+ *     audio-codec=<&codec>、audio-asrc=<&asrc>、hp-det-gpio、audio-routing）
+ *   - codec: wm8960@1a（I2C2 上，compatible "wlf,wm8960"，MCLK 取自 SAI2）
+ *   - &sai2（assigned-clock-parents PLL4_AUDIO_DIV、assigned-clock-rates 12288000 = 48k×256、
+ *     fsl,sai-mclk-direction-output、status okay）
+ *   - pinctrl_sai2（JTAG 引脚复用为 SAI2 TX_BCLK/TX_SYNC/TX_DATA/RX_DATA/MCLK + GPIO5_IO04 耳机检测）
+ * alpha 板继承后默认启用——所以板级 dts 这里其实一行硬件配置都不用加。
+ *
+ * 下面把 &sai2 显式标成 okay 加以确认（它本来就是 okay，写不写都不影响 probe），
+ * 留着是为了和其它章节 dts 风格统一，也方便你改成 disabled 做对比实验：
+ * 比如观察 sai2 关掉后 fsl-asoc-card 还能不能 probe、/proc/asound/cards 还有没有声卡
+ * （预期：aplay 报 "no soundcards found"，正好复现 Issue #43 的现象）。
+ */
+&sai2 {
+	status = "okay";
+};

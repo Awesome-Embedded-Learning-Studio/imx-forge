@@ -1,13 +1,3 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Charliechen114514 <725610365@qq.com>
-Date: Tue, 16 Jun 2026 20:31:15 +0800
-Subject: [PATCH] feat: apply success with mainline v7.1 + fix SD1 timeout
-
-Rebased onto Linux v7.1 (was v7.0-rc4). Bundles the i.MX6ULL AES board
-DTS/dtsi/defconfig and the SD1 (USDHC1) pinctrl timeout fix (formerly
-applied out-of-tree) so the patch now applies cleanly via git apply --check.
-
----
 diff --git a/arch/arm/boot/dts/nxp/imx/Makefile b/arch/arm/boot/dts/nxp/imx/Makefile
 index 856c9f21bd70..84b96c888a8b 100644
 --- a/arch/arm/boot/dts/nxp/imx/Makefile
@@ -111,10 +101,10 @@ index 000000000000..19da037bb224
 +};
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
 new file mode 100644
-index 000000000000..7a7b18d56683
+index 000000000000..6dda611759a5
 --- /dev/null
 +++ b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
-@@ -0,0 +1,822 @@
+@@ -0,0 +1,886 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
 +// Copyright (C) 2015 Freescale Semiconductor, Inc.
@@ -288,6 +278,31 @@ index 000000000000..7a7b18d56683
 +			/* enable-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>; */
 +		};
 +	};
++
++	/* 教程外设（自写 platform 驱动，从 16/15/17 章提到默认启用）*/
++	imx_aes_led {
++		compatible = "imxaes,led";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_aes_led>;
++		status = "okay";
++		led-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
++	};
++
++	beep {
++		compatible = "imxaes,beep";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_beep>;
++		status = "okay";
++		beep-gpios = <&gpio5 1 GPIO_ACTIVE_HIGH>;
++	};
++
++	imxaes_key_gpio: key-gpio {
++		compatible = "imxaes-key-gpio";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_key>;
++		gpios = <&gpio1 18 GPIO_ACTIVE_LOW>;
++		status = "okay";
++	};
 +};
 +
 +&clks {
@@ -310,17 +325,6 @@ index 000000000000..7a7b18d56683
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_i2c2>;
 +	status = "okay";
-+
-+	codec: wm8960@1a {
-+		#sound-dai-cells = <0>;
-+		compatible = "wlf,wm8960";
-+		reg = <0x1a>;
-+		wlf,shared-lrclk;
-+		wlf,hp-cfg = <3 2 3>;
-+		wlf,gpio-cfg = <1 3>;
-+		clocks = <&clks IMX6UL_CLK_SAI2>;
-+		clock-names = "mclk";
-+	};
 +
 +	gt9147: gt9147@5d {
 +		compatible = "goodix,gt9147", "goodix,gt9xx";
@@ -408,7 +412,8 @@ index 000000000000..7a7b18d56683
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_flexcan2>;
 +	xceiver-supply = <&reg_can_3v3>;
-+	status = "okay";
++	/* alpha 板无 CAN2 收发器；教程优先，让 RTS/CTS 引脚给 ECSPI3（ICM20608）*/
++	status = "disabled";
 +};
 +
 +&gpio_spi {
@@ -433,20 +438,23 @@ index 000000000000..7a7b18d56683
 +	pinctrl-0 = <&pinctrl_i2c1>;
 +	status = "okay";
 +
-+	magnetometer@e {
-+		compatible = "fsl,mag3110";
-+		reg = <0x0e>;
-+		vdd-supply = <&reg_peri_3v3>;
-+		vddio-supply = <&reg_peri_3v3>;
-+		position = <2>;
++	/* 教程 AP3216C（IR/ALS/PS），替代原 EVK 的 mag3110/fxls8471
++	 * alpha 板没有这两颗，且 fxls8471@0x1e 与 AP3216C 撞地址 */
++	ap3216c@1e {
++		compatible = "imxaes,ap3216c";
++		reg = <0x1e>;
 +	};
 +
-+	fxls8471@1e {
-+		compatible = "fsl,fxls8471";
-+		reg = <0x1e>;
-+		position = <0>;
-+		interrupt-parent = <&gpio5>;
-+		interrupts = <0 8>;
++	/* WM8960 实测在 I2C1 @0x1a（非原 EVK 的 I2C2；原版 patch/BSP 此处写错）*/
++	codec: wm8960@1a {
++		#sound-dai-cells = <0>;
++		compatible = "wlf,wm8960";
++		reg = <0x1a>;
++		wlf,shared-lrclk;
++		wlf,hp-cfg = <3 2 3>;
++		wlf,gpio-cfg = <1 3>;
++		clocks = <&clks IMX6UL_CLK_SAI2>;
++		clock-names = "mclk";
 +	};
 +};
 +
@@ -503,6 +511,23 @@ index 000000000000..7a7b18d56683
 +	status = "okay";
 +};
 +
++/* 教程 ICM20608（SPI），复用 UART2 四引脚（uart2/can2 已 disable 让位）*/
++&ecspi3 {
++	/delete-property/ dmas;
++	/delete-property/ dma-names;
++	fsl,spi-num-chipselects = <1>;
++	cs-gpios = <&gpio1 20 GPIO_ACTIVE_LOW>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi3>;
++	status = "okay";
++
++	icm20608@0 {
++		compatible = "imxaes,icm20608";
++		spi-max-frequency = <8000000>;
++		reg = <0>;
++	};
++};
++
 +&snvs_poweroff {
 +	status = "okay";
 +};
@@ -549,7 +574,8 @@ index 000000000000..7a7b18d56683
 +	/* for DTE mode, add below change */
 +	/* fsl,dte-mode; */
 +	/* pinctrl-0 = <&pinctrl_uart2dte>; */
-+	status = "okay";
++	/* alpha 板无 88w8987 蓝牙；教程优先，让 UART2 引脚给 ECSPI3（ICM20608）*/
++	status = "disabled";
 +
 +	bluetooth {
 +		compatible = "nxp,88w8987-bt";
@@ -936,13 +962,49 @@ index 000000000000..7a7b18d56683
 +			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08		0x10B0
 +		>;
 +	};
++
++	/* 教程外设 pinctrl（LED / 蜂鸣器 / 按键 / ECSPI3-ICM20608）*/
++	pinctrl_aes_led: led_grp {
++		fsl,pins = <
++			MX6UL_PAD_GPIO1_IO03__GPIO1_IO03    0x10B0
++		>;
++	};
++
++	pinctrl_beep: beep_grp {
++		fsl,pins = <
++			MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
++		>;
++	};
++
++	pinctrl_key: keygrp {
++		fsl,pins = <
++			MX6UL_PAD_UART1_CTS_B__GPIO1_IO18  0x1b0b0
++		>;
++	};
++
++	pinctrl_ecspi3: ecspi3grp {
++		fsl,pins = <
++			MX6UL_PAD_UART2_TX_DATA__GPIO1_IO20   0x10b0  /* CS   */
++			MX6UL_PAD_UART2_RX_DATA__ECSPI3_SCLK  0x10b1  /* SCLK */
++			MX6UL_PAD_UART2_RTS_B__ECSPI3_MISO    0x10b1  /* MISO */
++			MX6UL_PAD_UART2_CTS_B__ECSPI3_MOSI    0x10b1  /* MOSI */
++		>;
++	};
 +};
 diff --git a/arch/arm/configs/imx_aes_mainline_defconfig b/arch/arm/configs/imx_aes_mainline_defconfig
 new file mode 100644
-index 000000000000..ed588add8d31
+index 000000000000..9c1cbd5a7757
 --- /dev/null
 +++ b/arch/arm/configs/imx_aes_mainline_defconfig
-@@ -0,0 +1,481 @@
+@@ -0,0 +1,576 @@
++#
++# i.MX6ULL Mainline Kernel Defconfig
++# Based on upstream imx_v6_v7_defconfig with i.MX6ULL specific optimizations
++#
++# Build: make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- imx6ull_mainline_defconfig
++#
++
++# --- General Setup ---
 +CONFIG_SYSVIPC=y
 +CONFIG_NO_HZ_IDLE=y
 +CONFIG_HIGH_RES_TIMERS=y
@@ -958,26 +1020,28 @@ index 000000000000..ed588add8d31
 +CONFIG_EXPERT=y
 +CONFIG_PERF_EVENTS=y
 +CONFIG_KEXEC=y
++
++# --- Architecture (i.MX6ULL specific) ---
 +CONFIG_ARCH_MULTI_V6=y
 +CONFIG_ARCH_MXC=y
-+CONFIG_SOC_IMX31=y
-+CONFIG_SOC_IMX35=y
-+CONFIG_SOC_IMX50=y
-+CONFIG_SOC_IMX51=y
-+CONFIG_SOC_IMX53=y
++# i.MX6ULL is part of i.MX6UL family
++CONFIG_SOC_IMX6UL=y
++# Enable other i.MX6 variants for compatibility
 +CONFIG_SOC_IMX6Q=y
 +CONFIG_SOC_IMX6SL=y
 +CONFIG_SOC_IMX6SLL=y
 +CONFIG_SOC_IMX6SX=y
-+CONFIG_SOC_IMX6UL=y
 +CONFIG_SOC_IMX7D=y
-+CONFIG_SOC_IMX7ULP=y
-+CONFIG_SOC_VF610=y
-+CONFIG_SMP=y
++CONFIG_SMP=n
++# i.MX6ULL is single core, but SMP doesn't hurt if enabled
 +CONFIG_ARM_PSCI=y
 +CONFIG_HIGHMEM=y
 +CONFIG_ARCH_FORCE_MAX_ORDER=13
 +CONFIG_CMDLINE="noinitrd console=ttymxc0,115200"
++CONFIG_VFP=y
++CONFIG_NEON=y
++
++# --- CPU Frequency & Power Management ---
 +CONFIG_CPU_FREQ=y
 +CONFIG_CPU_FREQ_STAT=y
 +CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND=y
@@ -985,22 +1049,23 @@ index 000000000000..ed588add8d31
 +CONFIG_CPU_FREQ_GOV_USERSPACE=y
 +CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
 +CONFIG_CPUFREQ_DT=y
-+CONFIG_ARM_IMX6Q_CPUFREQ=y
++# i.MX6ULL uses the same cpufreq as i.MX6UL
 +CONFIG_ARM_IMX_CPUFREQ_DT=y
 +CONFIG_CPU_IDLE=y
 +CONFIG_ARM_CPUIDLE=y
-+CONFIG_ARM_PSCI_CPUIDLE=y
-+CONFIG_VFP=y
-+CONFIG_NEON=y
 +CONFIG_PM_DEBUG=y
 +CONFIG_PM_TEST_SUSPEND=y
 +CONFIG_KPROBES=y
++
++# --- Modules ---
 +CONFIG_MODULES=y
 +CONFIG_MODULE_UNLOAD=y
 +CONFIG_MODVERSIONS=y
 +CONFIG_MODULE_SRCVERSION_ALL=y
 +CONFIG_BINFMT_MISC=m
 +# CONFIG_COMPAT_BRK is not set
++
++# --- Networking ---
 +CONFIG_NET=y
 +CONFIG_PACKET=y
 +CONFIG_UNIX=y
@@ -1020,49 +1085,8 @@ index 000000000000..ed588add8d31
 +CONFIG_MAC80211=y
 +CONFIG_RFKILL=y
 +CONFIG_RFKILL_INPUT=y
-+CONFIG_PCI=y
-+CONFIG_PCI_MSI=y
-+CONFIG_PCI_IMX6_HOST=y
-+CONFIG_DEVTMPFS=y
-+CONFIG_DEVTMPFS_MOUNT=y
-+# CONFIG_STANDALONE is not set
-+CONFIG_IMX_WEIM=y
-+CONFIG_CONNECTOR=y
-+CONFIG_MTD=y
-+CONFIG_MTD_CMDLINE_PARTS=y
-+CONFIG_MTD_BLOCK=y
-+CONFIG_MTD_CFI=y
-+CONFIG_MTD_JEDECPROBE=y
-+CONFIG_MTD_CFI_INTELEXT=y
-+CONFIG_MTD_CFI_AMDSTD=y
-+CONFIG_MTD_CFI_STAA=y
-+CONFIG_MTD_PHYSMAP=y
-+CONFIG_MTD_PHYSMAP_OF=y
-+CONFIG_MTD_DATAFLASH=y
-+CONFIG_MTD_SST25L=y
-+CONFIG_MTD_RAW_NAND=y
-+CONFIG_MTD_NAND_GPMI_NAND=y
-+CONFIG_MTD_NAND_VF610_NFC=y
-+CONFIG_MTD_NAND_MXC=y
-+CONFIG_MTD_SPI_NOR=y
-+CONFIG_MTD_UBI=y
-+CONFIG_MTD_UBI_FASTMAP=y
-+CONFIG_MTD_UBI_BLOCK=y
-+CONFIG_BLK_DEV_LOOP=y
-+CONFIG_BLK_DEV_RAM=y
-+CONFIG_BLK_DEV_RAM_SIZE=65536
-+CONFIG_EEPROM_AT24=y
-+CONFIG_EEPROM_AT25=y
-+# CONFIG_SCSI_PROC_FS is not set
-+CONFIG_BLK_DEV_SD=y
-+# CONFIG_BLK_DEV_BSG is not set
-+CONFIG_SCSI_CONSTANTS=y
-+CONFIG_SCSI_LOGGING=y
-+CONFIG_SCSI_SCAN_ASYNC=y
-+CONFIG_ATA=y
-+CONFIG_SATA_AHCI_PLATFORM=y
-+CONFIG_AHCI_IMX=y
-+CONFIG_PATA_IMX=y
++
++# --- Ethernet (important for i.MX6ULL) ---
 +CONFIG_NETDEVICES=y
 +# CONFIG_NET_VENDOR_BROADCOM is not set
 +CONFIG_CS89x0_PLATFORM=y
@@ -1077,10 +1101,12 @@ index 000000000000..ed588add8d31
 +CONFIG_SMC91X=y
 +CONFIG_SMSC911X=y
 +# CONFIG_NET_VENDOR_STMICRO is not set
++# PHY drivers - important for i.MX6ULL Ethernet
 +CONFIG_MICREL_PHY=y
 +CONFIG_AT803X_PHY=y
 +CONFIG_DP83867_PHY=y
 +CONFIG_CAN_FLEXCAN=y
++# USB Ethernet
 +CONFIG_USB_PEGASUS=m
 +CONFIG_USB_RTL8150=m
 +CONFIG_USB_RTL8152=y
@@ -1089,15 +1115,17 @@ index 000000000000..ed588add8d31
 +CONFIG_USB_NET_CDC_EEM=m
 +CONFIG_USB_NET_SMSC95XX=y
 +CONFIG_USB_NET_MCS7830=y
++# WiFi
 +CONFIG_ATH10K=m
 +CONFIG_ATH10K_SDIO=m
 +CONFIG_BRCMFMAC=m
 +CONFIG_MWIFIEX=m
 +CONFIG_MWIFIEX_SDIO=m
-+CONFIG_MWIFIEX_PCIE=m
 +CONFIG_WL12XX=m
 +CONFIG_WL18XX=m
 +CONFIG_WLCORE_SDIO=m
++
++# --- Input Devices ---
 +CONFIG_INPUT_EVDEV=y
 +CONFIG_KEYBOARD_GPIO=y
 +CONFIG_KEYBOARD_SNVS_PWRKEY=y
@@ -1127,6 +1155,8 @@ index 000000000000..ed588add8d31
 +CONFIG_INPUT_MMA8450=y
 +CONFIG_INPUT_GPIO_BEEPER=m
 +CONFIG_INPUT_PWM_BEEPER=y
++
++# --- Serial Port (UART) ---
 +CONFIG_SERIO_SERPORT=m
 +# CONFIG_LEGACY_PTYS is not set
 +CONFIG_SERIAL_IMX=y
@@ -1134,6 +1164,8 @@ index 000000000000..ed588add8d31
 +CONFIG_SERIAL_FSL_LPUART=y
 +CONFIG_SERIAL_FSL_LPUART_CONSOLE=y
 +CONFIG_SERIAL_DEV_BUS=y
++
++# --- I2C ---
 +CONFIG_I2C_CHARDEV=y
 +CONFIG_I2C_MUX_GPIO=y
 +# CONFIG_I2C_HELPER_AUTO is not set
@@ -1141,11 +1173,17 @@ index 000000000000..ed588add8d31
 +CONFIG_I2C_ALGOPCA=m
 +CONFIG_I2C_GPIO=y
 +CONFIG_I2C_IMX=y
++
++# --- SPI (important for i.MX6ULL) ---
 +CONFIG_SPI=y
 +CONFIG_SPI_FSL_QUADSPI=y
 +CONFIG_SPI_GPIO=y
 +CONFIG_SPI_IMX=y
 +CONFIG_SPI_FSL_DSPI=y
++# Enable SPI slave for testing if needed
++# CONFIG_SPI_SLAVE is not set
++
++# --- GPIO ---
 +CONFIG_GPIO_SYSFS=y
 +CONFIG_GPIO_MXC=y
 +CONFIG_GPIO_SIOX=m
@@ -1156,9 +1194,13 @@ index 000000000000..ed588add8d31
 +CONFIG_GPIO_BD71815=y
 +CONFIG_GPIO_STMPE=y
 +CONFIG_GPIO_74X164=y
++
++# --- W1 (1-Wire bus) ---
 +CONFIG_W1=m
 +CONFIG_W1_MASTER_DS2482=m
 +CONFIG_W1_SLAVE_THERM=m
++
++# --- Power Management / PMIC ---
 +CONFIG_POWER_RESET=y
 +CONFIG_POWER_RESET_SYSCON=y
 +CONFIG_POWER_RESET_SYSCON_POWEROFF=y
@@ -1179,6 +1221,8 @@ index 000000000000..ed588add8d31
 +CONFIG_RN5T618_WATCHDOG=y
 +CONFIG_IMX2_WDT=y
 +CONFIG_IMX7ULP_WDT=y
++
++# --- MFD (PMIC drivers) ---
 +CONFIG_MFD_DA9052_I2C=y
 +CONFIG_MFD_DA9062=y
 +CONFIG_MFD_DA9063=y
@@ -1188,6 +1232,8 @@ index 000000000000..ed588add8d31
 +CONFIG_MFD_RN5T618=y
 +CONFIG_MFD_STMPE=y
 +CONFIG_MFD_ROHM_BD71828=y
++
++# --- Regulator ---
 +CONFIG_REGULATOR_FIXED_VOLTAGE=y
 +CONFIG_REGULATOR_ANATOP=y
 +CONFIG_REGULATOR_BD71815=y
@@ -1203,9 +1249,14 @@ index 000000000000..ed588add8d31
 +CONFIG_REGULATOR_PFUZE100=y
 +CONFIG_REGULATOR_RN5T618=y
 +CONFIG_REGULATOR_SY7636A=y
++
++# --- Remote Control ---
 +CONFIG_RC_CORE=y
 +CONFIG_RC_DEVICES=y
 +CONFIG_IR_GPIO_CIR=y
++
++# --- Multimedia / Display ---
++# IMPORTANT: Using DRM/etnaviv for mainline, NOT old framebuffer
 +CONFIG_MEDIA_SUPPORT=y
 +CONFIG_MEDIA_USB_SUPPORT=y
 +CONFIG_USB_VIDEO_CLASS=m
@@ -1218,8 +1269,12 @@ index 000000000000..ed588add8d31
 +CONFIG_VIDEO_OV5640=m
 +CONFIG_VIDEO_OV5645=m
 +CONFIG_VIDEO_ADV7180=m
++CONFIG_VIDEO_IMX_MEDIA=y
++# IPUv3 core for display support
 +CONFIG_IMX_IPUV3_CORE=y
++# DRM/KMS - Modern display subsystem for i.MX6
 +CONFIG_DRM=y
++# Qualcomm MSM DRM - not used on i.MX but included for compatibility
 +CONFIG_DRM_MSM=y
 +CONFIG_DRM_PANEL_LVDS=y
 +CONFIG_DRM_PANEL_SEIKO_43WVF1G=y
@@ -1232,13 +1287,16 @@ index 000000000000..ed588add8d31
 +CONFIG_DRM_TI_TFP410=y
 +CONFIG_DRM_DW_HDMI_AHB_AUDIO=m
 +CONFIG_DRM_DW_HDMI_CEC=y
++# i.MX DRM drivers
 +CONFIG_DRM_IMX=y
 +CONFIG_DRM_IMX_PARALLEL_DISPLAY=y
 +CONFIG_DRM_IMX_TVE=y
 +CONFIG_DRM_IMX_LDB=y
 +CONFIG_DRM_IMX_HDMI=y
++# etnaviv - GPU driver for Vivante cores (i.MX6ULL has GCNano)
 +CONFIG_DRM_ETNAVIV=y
 +CONFIG_DRM_MXSFB=y
++# Legacy framebuffer - minimal support
 +CONFIG_FB=y
 +CONFIG_FB_MODE_HELPERS=y
 +CONFIG_LCD_CLASS_DEVICE=y
@@ -1248,6 +1306,8 @@ index 000000000000..ed588add8d31
 +CONFIG_BACKLIGHT_PWM=y
 +CONFIG_BACKLIGHT_GPIO=y
 +CONFIG_LOGO=y
++
++# --- Sound ---
 +CONFIG_SOUND=y
 +CONFIG_SND=y
 +CONFIG_SND_USB_AUDIO=m
@@ -1257,7 +1317,8 @@ index 000000000000..ed588add8d31
 +CONFIG_SND_SOC_EUKREA_TLV320=y
 +CONFIG_SND_SOC_IMX_ES8328=y
 +CONFIG_SND_SOC_IMX_SGTL5000=y
-+CONFIG_SND_SOC_FSL_ASOC_CARD=m
++# fsl-asoc-card（WM8960 等 machine 驱动）必须 =y：build 不 modules_install，=m 会让声卡整机静音（Issue #43）
++CONFIG_SND_SOC_FSL_ASOC_CARD=y
 +CONFIG_SND_SOC_AC97_CODEC=y
 +CONFIG_SND_SOC_CS42XX8_I2C=y
 +CONFIG_SND_SOC_SPDIF=y
@@ -1265,9 +1326,13 @@ index 000000000000..ed588add8d31
 +CONFIG_SND_SOC_WM8960=y
 +CONFIG_SND_SOC_WM8962=y
 +CONFIG_SND_SIMPLE_CARD=y
++
++# --- HID ---
 +CONFIG_HID_MULTITOUCH=y
 +CONFIG_HID_WACOM=y
 +CONFIG_I2C_HID_OF=y
++
++# --- USB ---
 +CONFIG_USB=y
 +CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
 +CONFIG_USB_EHCI_HCD=y
@@ -1313,10 +1378,14 @@ index 000000000000..ed588add8d31
 +CONFIG_USB_FUNCTIONFS=m
 +CONFIG_USB_MASS_STORAGE=m
 +CONFIG_USB_G_SERIAL=m
++
++# --- MMC/SD (important for i.MX6ULL boot) ---
 +CONFIG_MMC=y
 +CONFIG_MMC_SDHCI=y
 +CONFIG_MMC_SDHCI_PLTFM=y
 +CONFIG_MMC_SDHCI_ESDHC_IMX=y
++
++# --- LED ---
 +CONFIG_LEDS_GPIO=y
 +CONFIG_LEDS_PWM=y
 +CONFIG_LEDS_TRIGGER_TIMER=y
@@ -1325,6 +1394,8 @@ index 000000000000..ed588add8d31
 +CONFIG_LEDS_TRIGGER_BACKLIGHT=y
 +CONFIG_LEDS_TRIGGER_GPIO=y
 +CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
++
++# --- RTC ---
 +CONFIG_RTC_CLASS=y
 +CONFIG_RTC_INTF_DEV_UIE_EMUL=y
 +CONFIG_RTC_DRV_DS1307=y
@@ -1340,21 +1411,31 @@ index 000000000000..ed588add8d31
 +CONFIG_RTC_DRV_MXC=y
 +CONFIG_RTC_DRV_MXC_V2=y
 +CONFIG_RTC_DRV_SNVS=y
++
++# --- DMA (i.MX6ULL uses SDMA) ---
 +CONFIG_DMADEVICES=y
 +CONFIG_FSL_EDMA=y
-+CONFIG_IMX_SDMA=m
++# SDMA =y：alpha 板 SAI2/音频走 SDMA DMA；=m 在「不 modules_install」build 里 = 缺失。
++# 固件 sdma-imx6q.bin（6ULL 复用 imx6q 脚本）由 install_firmwares.sh 装进 /lib/firmware/imx/sdma/
++CONFIG_IMX_SDMA=y
 +CONFIG_MXS_DMA=y
 +CONFIG_DMATEST=m
++
++# --- Staging ---
 +CONFIG_STAGING=y
 +CONFIG_STAGING_MEDIA=y
-+CONFIG_VIDEO_IMX_MEDIA=y
++
++# --- Clock ---
 +CONFIG_COMMON_CLK_PWM=y
 +CONFIG_COMMON_CLK_BD718XX=y
++# i.MX8 clocks (not needed for 6ULL but included)
 +CONFIG_CLK_IMX8MM=y
 +CONFIG_CLK_IMX8MN=y
 +CONFIG_CLK_IMX8MP=y
 +CONFIG_CLK_IMX8MQ=y
 +CONFIG_SOC_IMX8M=y
++
++# --- IIO (Sensors) ---
 +CONFIG_EXTCON_USB_GPIO=y
 +CONFIG_IIO=y
 +CONFIG_IIO_ST_ACCEL_3AXIS=m
@@ -1366,18 +1447,30 @@ index 000000000000..ed588add8d31
 +CONFIG_SENSORS_ISL29018=y
 +CONFIG_MAG3110=y
 +CONFIG_MPL3115=y
++
++# --- PWM ---
 +CONFIG_PWM=y
 +CONFIG_PWM_FSL_FTM=y
 +CONFIG_PWM_IMX27=y
 +CONFIG_PWM_IMX_TPM=y
++
++# --- NVMEM / OCOTP ---
 +CONFIG_NVMEM_IMX_OCOTP=y
 +CONFIG_NVMEM_SNVS_LPGPR=y
 +CONFIG_NVMEM_VF610_OCOTP=y
++
++# --- TEE ---
 +CONFIG_TEE=y
 +CONFIG_OPTEE=y
++
++# --- Mux ---
 +CONFIG_MUX_MMIO=y
++
++# --- SIOX ---
 +CONFIG_SIOX=m
 +CONFIG_SIOX_BUS_GPIO=m
++
++# --- File Systems ---
 +CONFIG_EXT2_FS=y
 +CONFIG_EXT2_FS_XATTR=y
 +CONFIG_EXT2_FS_POSIX_ACL=y
@@ -1404,23 +1497,80 @@ index 000000000000..ed588add8d31
 +CONFIG_NFS_V4_1=y
 +CONFIG_NFS_V4_2=y
 +CONFIG_ROOT_NFS=y
++
++# --- NLS ---
 +CONFIG_NLS_DEFAULT="cp437"
 +CONFIG_NLS_CODEPAGE_437=y
 +CONFIG_NLS_ASCII=y
 +CONFIG_NLS_ISO8859_1=y
 +CONFIG_NLS_ISO8859_15=m
 +CONFIG_NLS_UTF8=y
++
++# --- Security ---
 +CONFIG_SECURITYFS=y
++# Crypto drivers for i.MX
 +CONFIG_CRYPTO_DEV_FSL_CAAM=y
 +CONFIG_CRYPTO_DEV_SAHARA=y
 +CONFIG_CRYPTO_DEV_MXS_DCP=y
++
++# --- Memory Management ---
 +CONFIG_CMA_SIZE_MBYTES=64
++
++# --- Fonts ---
 +CONFIG_FONTS=y
 +CONFIG_FONT_8x8=y
 +CONFIG_FONT_8x16=y
++
++# --- Debug Options ---
 +CONFIG_PRINTK_TIME=y
 +# CONFIG_DEBUG_BUGVERBOSE is not set
 +CONFIG_MAGIC_SYSRQ=y
 +CONFIG_DEBUG_FS=y
 +# CONFIG_SLUB_DEBUG is not set
 +# CONFIG_FTRACE is not set
++
++# --- MTD (NOR/NAND Flash) ---
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++# CONFIG_STANDALONE is not set
++CONFIG_IMX_WEIM=y
++CONFIG_CONNECTOR=y
++CONFIG_MTD=y
++CONFIG_MTD_CMDLINE_PARTS=y
++CONFIG_MTD_BLOCK=y
++CONFIG_MTD_CFI=y
++CONFIG_MTD_JEDECPROBE=y
++CONFIG_MTD_CFI_INTELEXT=y
++CONFIG_MTD_CFI_AMDSTD=y
++CONFIG_MTD_CFI_STAA=y
++CONFIG_MTD_PHYSMAP=y
++CONFIG_MTD_PHYSMAP_OF=y
++CONFIG_MTD_DATAFLASH=y
++CONFIG_MTD_SST25L=y
++CONFIG_MTD_RAW_NAND=y
++CONFIG_MTD_NAND_GPMI_NAND=y
++# i.MX6ULL doesn't have VF610 NFC but doesn't hurt
++CONFIG_MTD_NAND_VF610_NFC=y
++CONFIG_MTD_NAND_MXC=y
++CONFIG_MTD_SPI_NOR=y
++CONFIG_MTD_UBI=y
++CONFIG_MTD_UBI_FASTMAP=y
++CONFIG_MTD_UBI_BLOCK=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=65536
++CONFIG_EEPROM_AT24=y
++CONFIG_EEPROM_AT25=y
++# CONFIG_SCSI_PROC_FS is not set
++CONFIG_BLK_DEV_SD=y
++# CONFIG_BLK_DEV_BSG is not set
++CONFIG_SCSI_CONSTANTS=y
++CONFIG_SCSI_LOGGING=y
++CONFIG_SCSI_SCAN_ASYNC=y
++CONFIG_ATA=y
++CONFIG_SATA_AHCI_PLATFORM=y
++CONFIG_AHCI_IMX=y
++CONFIG_PATA_IMX=y
++CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
++CONFIG_EXTRA_FIRMWARE_DIR="/home/charliechen/imx-forge/driver/firmwares"
+\ No newline at end of file
