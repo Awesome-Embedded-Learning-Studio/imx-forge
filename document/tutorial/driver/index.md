@@ -19,12 +19,13 @@ title: 驱动开发
   <ChapterLink num="10" href="09_spi_icm20608_driver/">ICM-20608 SPI 驱动 —— 现代 SPI API 完整实战</ChapterLink>
   <ChapterLink num="11" href="10_rtc_snvs_driver/">RTC 驱动（SNVS）—— 主线 rtc-snvs.c 分析</ChapterLink>
   <ChapterLink num="12" href="11_goodix_touchscreen_driver/">电容触摸驱动（goodix）—— 主线 goodix.c 分析</ChapterLink>
-  <ChapterLink num="13" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
-  <ChapterLink num="14" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
+  <ChapterLink num="13" href="12_wm8960_audio_driver/">WM8960 音频驱动 —— ASoC 三件套与主线 fsl-asoc-card 分析</ChapterLink>
+  <ChapterLink num="14" href="modules/">模块开发 —— 内核模块编程</ChapterLink>
+  <ChapterLink num="15" href="firmware_apply/">固件应用 —— 固件加载</ChapterLink>
 </ChapterNav>
 
 ::: tip v1.0.0 状态
-驱动教程已经覆盖字符设备、设备树、pinctrl/gpio、platform、beep、key/input、I2C、SPI、模块与固件等主线章节。后续章节会继续扩展，但基础学习链路已经可以按目录顺序推进。
+驱动教程已经覆盖字符设备、设备树、pinctrl/gpio、platform、beep、key/input、I2C、SPI、RTC、触摸、音频（ASoC）、模块与固件等主线章节。后续章节会继续扩展，但基础学习链路已经可以按目录顺序推进。
 :::
 
 ::: tip 学习目标

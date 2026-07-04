@@ -124,6 +124,7 @@ check_directory_safe() {
 
 check_valid_rootfs() {
     local rootfs="$1"
+    local label="${2:-Directory}"
     local missing=()
     local found=()
 
@@ -140,13 +141,13 @@ check_valid_rootfs() {
     fi
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        log_error "Parent directory does not appear to be a valid rootfs"
+        log_error "${label} does not appear to be a valid rootfs: ${rootfs}"
         log_error "Missing required directories: ${missing[*]}"
-        log_error "Please ensure parent has at least: bin, sbin, usr"
+        log_error "Please ensure it has at least: bin, sbin, usr"
         return 1
     fi
 
-    log_info "  Parent directory is a valid rootfs"
+    log_info "  ${label} is a valid rootfs"
     return 0
 }
 
@@ -300,6 +301,12 @@ main() {
             log_error "Source directory validation failed"
             exit 1
         fi
+
+        # Verify the source actually looks like a rootfs (has bin/sbin/usr).
+        # Non-fatal: warn so custom layouts can still proceed.
+        if ! check_valid_rootfs "$source_dir" "Source directory"; then
+            log_warn "Source doesn't look like a rootfs; continuing anyway"
+        fi
         log_info "  Source directory is safe"
         log_info ""
 
@@ -312,20 +319,12 @@ main() {
 
         # Validate target directory
         if [[ -d "$target_dir" ]]; then
-            # Target exists, check if it's a valid rootfs
+            # Target is just a mount point; only check safety, not rootfs validity.
+            # An empty placeholder dir is the normal, expected state before mounting.
             log_info "Target directory exists, validating..."
             if ! check_directory_safe "$target_dir" "target directory"; then
                 log_error "Target directory validation failed"
                 exit 1
-            fi
-
-            # Check if it's a valid rootfs (has required directories)
-            if ! check_valid_rootfs "$target_dir"; then
-                log_warn "Target directory exists but doesn't appear to be a valid rootfs"
-                log_warn "This might be intentional if you're populating it for the first time"
-                log_info ""
-            else
-                log_info "  Target directory is a valid rootfs"
             fi
         else
             # Target doesn't exist, check parent directory is safe

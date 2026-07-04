@@ -15,6 +15,7 @@ description: "板卡 bring-up、烧录与网络启动的实测排查记录"
   <ChapterLink num="03" href="2026-06-08-wsl2-nfsroot-ganesha-troubleshoot">WSL2 NFS Rootfs 排查记录</ChapterLink>
   <ChapterLink num="04" href="2026-06-09-uboot-release-build-timestamp">U-Boot 发布构建时间戳问题</ChapterLink>
   <ChapterLink num="05" href="fast-setuboot-env">U-Boot 环境变量快速设置</ChapterLink>
+  <ChapterLink num="06" href="2026-07-03-wm8960-asoc-card-m-not-built">WM8960 主线声卡无声根因（Issue #43：ASOC_CARD=m）</ChapterLink>
 </ChapterNav>
 
 ::: tip 遇到问题？

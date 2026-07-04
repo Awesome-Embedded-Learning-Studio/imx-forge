@@ -40,6 +40,40 @@ panicked:
 [ 120.197141] Kernel panic - not syncing: No working init found.
 ```
 
+## Variant (2026-06-29): No ESTALE — Mount + Pivot Succeed, Then `No working init found`
+
+The 06-23 case above is the **hard** failure: the NFS mount itself dies with ESTALE.
+A subtler **soft** failure has the **same root cause** (ganesha cached a stale export
+root before the bind-mount existed) but a misleading symptom — the NFS root **mounts
+and pivots successfully**, then the kernel finds an empty/stale tree:
+
+```text
+[   19.269190] VFS: Mounted root (nfs filesystem) on device 0:17.   ← mount OK
+[   19.279424] devtmpfs: error mounting -2                          ← new root has no /dev
+[   19.279604] VFS: Pivoted into new rootfs                         ← pivot OK
+[   19.297836] Run /sbin/init as init process
+[   19.306409] Run /etc/init as init process
+[   19.310694] Run /bin/init as init process
+[   19.323130] Run /bin/sh as init process
+[   19.323249] Kernel panic - not syncing: No working init found.
+```
+
+No `ESTALE`, no `Unable to mount root fs via NFS` — so it **looks like the rootfs is
+broken** (missing init), when really ganesha is serving a stale/empty view because it
+started **before** the `mount --bind` was established. `devtmpfs: error mounting -2`
+(`-ENOENT`, no `/dev` in the served tree) is the tell-tale.
+
+**Diagnose by timestamps**, not by packet capture (nothing looks wrong on the wire —
+the mount RPCs succeed):
+
+```bash
+systemctl show nfs-ganesha -p ActiveEnterTimestamp --value   # when did ganesha start?
+mountpoint rootfs/nfs && findmnt rootfs/nfs                   # is the bind-mount live?
+```
+
+ganesha active **before** the bind-mount was established → stale view → **same fix**:
+`sudo systemctl restart nfs-ganesha`, then reboot the board.
+
 ## Key Insight — the freeze point exonerated the rootfs content
 
 The board never printed `VFS: Mounted root (nfs filesystem)` nor `Run /sbin/init`
@@ -171,6 +205,11 @@ BusyBox release rootfs, or to any `out/...` rootfs, needs the same restart.
 > succeeding but the first `fsinfo` returning **`Stale NFS file handle`** →
 > restart ganesha after your bind-mount change. Do not blame the board, bootargs,
 > firewall, or the rootfs content.
+
+> **Soft variant (2026-06-29)**: NFS root `Mounted root (nfs filesystem)` **and**
+> `Pivoted into new rootfs` both succeed, but `devtmpfs: error mounting -2` and
+> `No working init found` (no ESTALE, no `Unable to mount root fs`) → ganesha
+> started before the bind-mount; same fix, restart ganesha.
 
 ## Command Cheat-Sheet
 
