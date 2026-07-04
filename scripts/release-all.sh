@@ -361,7 +361,8 @@ stage_4_rootfs() {
     log_info "RootFS directory: ${ROOTFS_DIR}"
     echo ""
     log_info "Running Command: ${SCRIPT_DIR}/varified_rootfs_ok.sh --rootfs-dir=${ROOTFS_DIR}"
-    bash "${SCRIPT_DIR}/varified_rootfs_ok.sh" --rootfs-dir="${ROOTFS_DIR}"
+    # varified_rootfs_ok.sh 失败时必须中止，否则会把残缺 rootfs 继续合 overlay 并制成镜像（issue #76）。
+    bash "${SCRIPT_DIR}/varified_rootfs_ok.sh" --rootfs-dir="${ROOTFS_DIR}" || { log_error "Stage 4: RootFS completion failed"; exit 1; }
 
     echo ""
     log_info "Merging Rootfs Overlay from rootfs/overlay/rootfs to ${ROOTFS_DIR}"

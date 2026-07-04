@@ -320,6 +320,9 @@ run_third_party_installs() {
 
     log_info "Running third-party installation scripts..."
 
+    # 任一安装脚本失败将使本函数返回非零；循环仍继续以便一次看到所有失败，
+    # 但最终致命 —— 不再像过去那样 "continuing anyway" 后还打印 RootFS 成功（issue #76）。
+    local failed=0
     for script in "${scripts[@]}"; do
         local name
         name="$(basename "$script")"
@@ -332,11 +335,13 @@ run_third_party_installs() {
         if bash "$script"; then
             log_info "    ✓ $name completed"
         else
-            log_warn "    ✗ $name failed (continuing anyway)"
+            log_error "    ✗ $name failed"
+            failed=1
         fi
     done
 
     log_info "Third-party installations completed"
+    return $failed
 }
 
 # Verify rootfs completion
@@ -384,6 +389,51 @@ verify_rootfs() {
     fi
 }
 
+# Verify Qt artifacts (only invoked when third-party install actually ran).
+# 致命集：任何 Qt6 构建必产出的核心产物，缺失即判定 Qt 安装失败。
+# 软警告集：qmake 等 host 工具可能被裁剪部署，缺失只 warn 不致命。
+verify_qt_artifacts() {
+    local rootfs="$1"
+
+    log_info "Verifying Qt artifacts..."
+
+    local all_ok=1
+
+    # 致命：libQt6Core.so*（Qt6 核心 .so；glob 兼容 .so / .so.6 / .so.6.x.x）
+    local qt_core_hit
+    qt_core_hit=$(compgen -G "${rootfs}/usr/lib/libQt6Core.so*" 2>/dev/null | head -1)
+    if [[ -n "$qt_core_hit" ]]; then
+        log_debug "  ✓ libQt6Core.so found"
+    else
+        log_error "  ✗ libQt6Core.so* missing under ${rootfs}/usr/lib/"
+        all_ok=0
+    fi
+
+    # 致命：plugins/platforms/ 非空（target.conf 强制 FEATURE_linuxfb=ON，必有 libqlinuxfb.so）
+    local platforms_dir="${rootfs}/usr/lib/qt6/plugins/platforms"
+    if [[ -d "$platforms_dir" ]] && [[ -n "$(ls -A "$platforms_dir" 2>/dev/null)" ]]; then
+        log_debug "  ✓ Qt platform plugins present"
+    else
+        log_error "  ✗ Qt platform plugins missing or empty: ${platforms_dir}"
+        all_ok=0
+    fi
+
+    # 软警告：qmake（host 工具，裁剪部署可能省略）
+    if [[ -f "${rootfs}/usr/bin/qmake" ]] || [[ -f "${rootfs}/usr/bin/qmake6" ]]; then
+        log_debug "  ✓ qmake found"
+    else
+        log_warn "  ! qmake not found under ${rootfs}/usr/bin/ (host tool, may be stripped)"
+    fi
+
+    if [[ $all_ok -eq 1 ]]; then
+        log_info "Qt artifact verification passed"
+        return 0
+    else
+        log_error "Qt artifact verification failed"
+        return 1
+    fi
+}
+
 # Main function
 main() {
     # Handle help
@@ -425,12 +475,19 @@ main() {
 
     # Run third-party installations
     log_info "Step 5: Running third-party installations..."
-    run_third_party_installs "$ROOTFS_DIR"
+    run_third_party_installs "$ROOTFS_DIR" || { log_error "Third-party installation failed"; exit 1; }
     log_info ""
 
     # Verify
     log_info "Step 6: Verifying completion..."
-    verify_rootfs "$ROOTFS_DIR"
+    verify_rootfs "$ROOTFS_DIR" || { log_error "Rootfs verification failed"; exit 1; }
+
+    # Qt 产物校验：仅在第三方安装实际执行（未被 SKIP）且 install_qt_with_compile.sh 存在时进行，
+    # 避免误伤默认 CI（SKIP_THIRD_PARTY_INSTALL=true 时不装 Qt）。
+    if [[ "${SKIP_THIRD_PARTY_INSTALL:-false}" != "true" \
+        && -f "${THIRD_PARTY_INSTALL_DIR}/install_qt_with_compile.sh" ]]; then
+        verify_qt_artifacts "$ROOTFS_DIR" || { log_error "Qt artifact verification failed"; exit 1; }
+    fi
     log_info ""
 
     log_info "========================================"
