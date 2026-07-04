@@ -1,9 +1,9 @@
 import DefaultTheme from 'vitepress/theme'
-import { h } from 'vue'
+import { defineComponent, h, type VNodeChild } from 'vue'
 import type { Theme } from 'vitepress'
-import HomeTipBanner from './components/HomeTipBanner.vue'
-import HomeArchDiagram from './components/HomeArchDiagram.vue'
-import HomeShowcase from './components/HomeShowcase.vue'
+import ImxHero from './components/ImxHero.vue'
+import ScreenshotCarousel from './components/ScreenshotCarousel.vue'
+import HomeRoadmap from './components/HomeRoadmap.vue'
 import ChapterNav from './components/ChapterNav.vue'
 import ChapterLink from './components/ChapterLink.vue'
 import PageHeader from './components/PageHeader.vue'
@@ -14,18 +14,62 @@ import InfoCard from './components/InfoCard.vue'
 import RoadMap from './components/RoadMap.vue'
 import RoadMapPhase from './components/RoadMapPhase.vue'
 import DocNavCards from './components/DocNavCards.vue'
+import FontSizeSwitcher from './components/FontSizeSwitcher.vue'
+import ResizableSidebar from './components/ResizableSidebar.vue'
+import ReadingProgress from './components/ReadingProgress.vue'
+import { setupMermaid } from './mermaid-client'
 import projectConfig from '../../../project.config.ts'
 import './custom.css'
 
+// 首页设计对齐 anatomy_gui:自定义 ImxHero(替换默认 VPHero)+ features + HomeRoadmap,三段式极简。
+// Layout 用 defineComponent 包,以便在 setup() 里:
+//  (1) 条件挂载 mermaid 客户端(useRouter/onMounted 必须在组件 setup 上下文调用);
+//  (2) 据 projectConfig 条件拼装 Layout 插槽 —— 阅读体验三件套 / 首页路线图走开关。
+// HomeTipBanner / HomeArchDiagram / HomeShowcase / ScreenshotCarousel 组件文件均保留(可逆),
+// 但不再挂到首页 —— 首页视觉由 ImxHero 的启动链 SVG 承担,避免堆叠。
+const Layout = defineComponent({
+  setup() {
+    if (projectConfig.plugins.mermaid) {
+      setupMermaid()
+    }
+
+    const slots: Record<string, () => VNodeChild> = {}
+
+    // ── 首页 hero 之前:自定义 ImxHero(组件内关掉默认 VPHero)──
+    slots['home-hero-before'] = () => h(ImxHero)
+
+    // ── 首页 features 之前:截图轮播「先睹为快」(有数据才挂)──
+    const hasShots = !!(projectConfig.homeScreenshots && projectConfig.homeScreenshots.length)
+    if (hasShots) {
+      slots['home-features-before'] = () =>
+        h(ScreenshotCarousel, { shots: projectConfig.homeScreenshots! })
+    }
+
+    // ── 首页 features 之后:学习路线图(有数据才挂)──
+    const hasRoadmap = !!(projectConfig.homeRoadmap && projectConfig.homeRoadmap.stages.length)
+    if (hasRoadmap) {
+      slots['home-features-after'] = () => h(HomeRoadmap, { roadmap: projectConfig.homeRoadmap! })
+    }
+
+    // ── 阅读体验三件套(readingUX 总开关)──
+    // layout-top:阅读进度条(固定 3px)+ 侧栏拖拽手柄(运行时注入 DOM,无视觉模板)
+    // nav-bar-content-after / nav-screen-content-after:字号切换器 A-/A+
+    if (projectConfig.plugins.readingUX) {
+      slots['layout-top'] = () => [h(ReadingProgress), h(ResizableSidebar)]
+      slots['nav-bar-content-after'] = () => h(FontSizeSwitcher)
+      slots['nav-screen-content-after'] = () => h(FontSizeSwitcher)
+    }
+
+    // ── 文档页底部:上下篇导航卡 ──
+    slots['doc-after'] = () => h(DocNavCards)
+
+    return () => h(DefaultTheme.Layout, null, slots)
+  },
+})
+
 export default {
   extends: DefaultTheme,
-  Layout() {
-    return h(DefaultTheme.Layout, null, {
-      'home-features-before': () => h(HomeTipBanner, { config: projectConfig }),
-      'home-features-after': () => [h(HomeShowcase), h(HomeArchDiagram)],
-      'doc-after': () => h(DocNavCards)
-    })
-  },
+  Layout,
   enhanceApp({ app }) {
     app.component('ChapterNav', ChapterNav)
     app.component('ChapterLink', ChapterLink)
