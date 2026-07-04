@@ -2,12 +2,10 @@
 layout: home
 
 hero:
+  kicker: "i.MX6ULL · 嵌入式 Linux 全栈教程"
   name: "IMX-Forge"
-  text: "嵌入式 Linux 开发工坊"
-  tagline: 面向 NXP i.MX6ULL，从工具链到 QT 应用的完整学习路径
-  image:
-    src: /Awesome-Embedded.png
-    alt: IMX-Forge Logo
+  text: "锻造你的嵌入式功底"
+  tagline: 面向 NXP i.MX6ULL，从工具链、U-Boot、内核、根文件系统到驱动实战的完整学习路径 —— 把每一层都拆开看清楚。
   actions:
     - theme: brand
       text: 快速开始

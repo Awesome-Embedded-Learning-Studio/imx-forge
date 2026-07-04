@@ -64,6 +64,32 @@ function buildLocales(): Record<string, any> {
   return locales
 }
 
+// ── <head> 注入 ──────────────────────────────────────────────
+// favicon 之外,当 readingUX 开启时注入两段「防闪烁」内联脚本:
+// 它们在 Vue hydration 之前同步执行,把 localStorage 里持久化的字号/侧栏宽度直接应用成
+// CSS 变量与 data 属性,避免「先以默认值渲染再跳变」的 FOUC。默认值取自 readingDefaults。
+const head: NonNullable<ReturnType<typeof defineConfig>['head']> = [
+  ['link', { rel: 'icon', href: projectConfig.favicon || `${projectConfig.base}favicon.ico` }],
+]
+
+if (projectConfig.plugins.readingUX) {
+  const defaultFont = projectConfig.readingDefaults?.fontTier ?? 'normal'
+  // 字号档:校验后写 documentElement.dataset.fontSize(custom.css 的 html[data-font-size] zoom 据此生效)
+  head.push([
+    'script',
+    {},
+    `(function(){try{var s=localStorage.getItem('vp-font-size')||'${defaultFont}';if(s!=='xxsmall'&&s!=='small'&&s!=='normal'&&s!=='large'&&s!=='xxlarge'){s='normal';}document.documentElement.dataset.fontSize=s;}catch(e){}})()`,
+  ])
+  // 侧栏 / 大纲宽度:clamp 到合法区间,越界回落默认(防篡改 / 旧脏值)
+  const sbDef = projectConfig.readingDefaults?.sidebarWidth ?? 272
+  const aDef = projectConfig.readingDefaults?.asideWidth ?? 256
+  head.push([
+    'script',
+    {},
+    `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=${sbDef};}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');var a=parseInt(localStorage.getItem('vp-aside-width'));if(!a||a<180||a>360){a=${aDef};}document.documentElement.style.setProperty('--vp-aside-width',a+'px');}catch(e){}})()`,
+  ])
+}
+
 export default defineConfig({
   srcDir: `../${projectConfig.documentsDir}`,
   title: defaultTitle,
@@ -84,9 +110,7 @@ export default defineConfig({
 
   locales: buildLocales(),
 
-  head: [
-    ['link', { rel: 'icon', href: projectConfig.favicon || `${projectConfig.base}favicon.ico` }],
-  ],
+  head,
 
   markdown: {
     lineNumbers: true,
@@ -102,6 +126,11 @@ export default defineConfig({
 
   vite: {
     publicDir: resolve(__dirname, '../public'),
+    // mermaid 通过动态 import('mermaid') 懒加载;SSR 构建时把它外置,避免 SSR bundle
+    // 试图打包这个浏览器侧重依赖(会因 DOM 依赖失败)。客户端构建照常拆成独立 chunk。
+    ssr: {
+      external: ['mermaid'],
+    },
     build: {
       chunkSizeWarningLimit: 5000,
     },

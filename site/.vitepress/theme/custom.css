@@ -421,3 +421,240 @@
     height: 44px;
   }
 }
+
+/* ================================================================
+   阅读体验增强(移植自 AMCPP / C-Journey,纯追加,不改动以上任何规则)
+   —— 字号五档 / 长代码折叠 / Mermaid 图表 / 可拖拽侧栏
+   全部由 project.config.ts 的 plugins.readingUX/codeFold/mermaid 开关驱动;
+   关闭对应功能时这些 CSS 不生效(无对应 DOM / data 属性),零副作用。
+   ================================================================ */
+
+/* ── 正文字号五档(超小/小/正常/大/超大)── 由 FontSizeSwitcher 切 documentElement 的 data-font-size。
+   默认「正常」(zoom 1);用 CSS zoom 整页缩放:rem + 所有 px 字号 + 组件尺寸一并跟随,
+   等同浏览器 Ctrl+/- 原生缩放,避免「只有正文跳动、组件不动」的割裂感。
+   首屏由 config head 内联脚本提前设 data-font-size(默认 normal),避免刷新闪烁。
+   注:zoom 连尺寸/间距一起按比例缩放。2026 年全主流浏览器支持(Chrome/Safari/Edge 一直支持,
+   Firefox 自 126 版(2024-05)起支持)。刻意不使用 transform: scale() 回退 —— transform 作用在
+   <html> 上会建立新的包含块、破坏 position:fixed(顶栏/侧栏/进度条全部错位),且不触发 reflow
+   (缩小留白、放大溢出),比 zoom 失效更糟。zoom 失效的极旧 Firefox 已无现实占比。 */
+html[data-font-size='xxsmall'] { zoom: 0.85; }
+html[data-font-size='small']   { zoom: 0.92; }
+html[data-font-size='normal']  { zoom: 1; }
+html[data-font-size='large']   { zoom: 1.08; }
+html[data-font-size='xxlarge'] { zoom: 1.16; }
+
+/* ── 长代码折叠(.vp-code-fold):构建期 code-fold-plugin 把 >阈值行数的代码块
+   包成 <div class="vp-code-fold"><details><summary/></details><代码/></div>。
+   - 代码在 <details> 外,靠纯 CSS :has(details[open]) 控制 display;零 JS、无 JS 也能展开。
+   - 收起 = 只显示 summary 条(代码完全隐藏);展开 = 代码全部显示。不做预览,二态干净。
+   - 内部 div.language-* 兄弟链(copy/lang/pre/line-numbers)不动,复制按钮不受影响。
+   - @media print 强制显示,打印/PDF 完整。 */
+.vp-doc .vp-code-fold {
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--vp-code-block-bg);
+}
+
+.vp-doc .vp-code-fold > details > summary {
+  list-style: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+  user-select: none;
+  background: linear-gradient(90deg, var(--vp-c-brand-soft) 0%, var(--vp-code-block-bg) 45%);
+  border-left: 3px solid var(--vp-c-brand-1);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.vp-doc .vp-code-fold > details > summary:hover {
+  color: var(--vp-c-brand-1);
+  background: linear-gradient(90deg, var(--vp-c-brand-soft-2) 0%, var(--vp-code-block-bg) 45%);
+}
+
+.vp-doc .vp-code-fold > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 展开三角:放进 brand-soft 圆角容器;展开时旋转 */
+.vp-doc .vp-code-fold > details > summary::before {
+  content: '▶';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  line-height: 1;
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  border-radius: 5px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+}
+
+.vp-doc .vp-code-fold > details > summary:hover::before {
+  background: var(--vp-c-brand-soft-2);
+}
+
+.vp-doc .vp-code-fold:has(details[open]) > details > summary::before {
+  transform: rotate(90deg);
+}
+
+.vp-doc .vp-code-fold:has(details[open]) > details > summary {
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+/* 展开/收起文案随 details[open] 切换(:has 全浏览器 2023+ 支持) */
+.vp-doc .vp-code-fold:not(:has(details[open])) .vp-cf-open { display: none; }
+.vp-doc .vp-code-fold:has(details[open]) .vp-cf-closed { display: none; }
+.vp-doc .vp-code-fold:has(details[open]) .vp-cf-open { display: inline; }
+
+.vp-doc .vp-code-fold > details > summary em {
+  font-style: normal;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+/* 代码块:收起态完全隐藏(不预览);展开态默认显示。margin/圆角由外层 .vp-code-fold 统一裁 */
+.vp-doc .vp-code-fold > div[class*='language-'] {
+  margin: 0;
+  border-radius: 0;
+}
+
+.vp-doc .vp-code-fold:not(:has(details[open])) > div[class*='language-'] {
+  display: none;
+}
+
+@media print {
+  .vp-doc .vp-code-fold > div[class*='language-'] {
+    display: block !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc .vp-code-fold > details > summary,
+  .vp-doc .vp-code-fold > details > summary::before {
+    transition: none;
+  }
+}
+
+/* ── Mermaid 图表(markdown-it 插件把 ```mermaid 改型为 .mermaid-diagram,客户端 CDN 渲染)── */
+.mermaid-diagram {
+  margin: 1rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 节点/边标签:给足内边距与行高,避免 CJK 多行文字被节点框裁剪 */
+.mermaid-diagram .nodeLabel,
+.mermaid-diagram .edgeLabel {
+  padding: 0.15em 0.35em;
+  line-height: 1.45;
+}
+
+.mermaid-diagram foreignObject {
+  overflow: visible;
+}
+
+.mermaid-error {
+  padding: 12px;
+  border: 1px solid var(--vp-c-danger-2);
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.85em;
+}
+
+/* ── 可拖拽侧栏宽度(ResizableSidebar.vue)
+   左 handle 在组件模板内(fixed),右 handle 运行时注入 .aside(absolute)。
+   宽度由 --vp-sidebar-width(VitePress 原生,全链路消费)与 --vp-aside-width(本站自定义)驱动。 */
+:root {
+  --vp-aside-width: 256px; /* 右大纲栏宽度变量,默认与 VitePress 原值一致;首屏防闪脚本会按 localStorage 覆盖 */
+}
+
+/* 右栏宽度由变量驱动,覆盖 VitePress 的固定 max-width / width */
+.VPDoc.has-aside .aside {
+  max-width: var(--vp-aside-width);
+  position: relative; /* 给注入的 absolute handle 提供锚点 */
+}
+.VPDoc .aside-container {
+  width: calc(var(--vp-aside-width) - 32px); /* 保持原 32px 内边距逻辑(原 max-width 256 → container 224) */
+}
+
+/* 手柄公共态:常显一条 1px 淡灰细线(::before),悬浮 / 拖拽时变品牌色加粗。
+   命中热区 8px(透明本体),避免过窄扫不到。z-index 压在 sidebar 之上,防止被侧栏盖住。 */
+.rs-handle {
+  z-index: calc(var(--vp-z-index-sidebar) + 1);
+  width: 8px;
+  background: transparent;
+  cursor: col-resize;
+}
+.rs-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--vp-c-divider);
+  transition: width 0.15s ease, background-color 0.15s ease;
+}
+.rs-handle:hover::before,
+.rs-handle.is-active::before {
+  width: 2px;
+  background: var(--vp-c-brand-1);
+}
+
+/* 左手柄:fixed。left 仅作 SSR 首屏 fallback,onMounted 后由 JS 读 .VPSidebar 右边缘精确覆盖。 */
+.rs-handle--left {
+  position: fixed;
+  left: var(--vp-sidebar-width);
+  margin-left: -4px;
+  top: var(--vp-nav-height, 64px);
+  bottom: 0;
+}
+
+/* 右手柄:absolute 注入 .aside 内,居中压在其左边缘(默认隐藏,仅大屏显示见下方媒体查询) */
+.rs-handle--right {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  display: none;
+}
+
+/* 拖拽进行中:禁选中文,全屏 col-resize 光标 */
+body.rs-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
+/* 响应式:左栏 <960px 沉为抽屉;右栏 aside 仅 ≥1280px 显示 */
+@media (max-width: 959px) {
+  .rs-handle--left {
+    display: none;
+  }
+}
+@media (min-width: 1280px) {
+  .rs-handle--right {
+    display: block;
+  }
+}
