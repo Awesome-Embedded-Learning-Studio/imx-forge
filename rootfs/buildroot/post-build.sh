@@ -55,6 +55,31 @@ if [[ ! -s "${FW_CACHE}/sdma-imx6q.bin" ]]; then
 fi
 [[ -s "${FW_CACHE}/sdma-imx6q.bin" ]] && cp -a "${FW_CACHE}/sdma-imx6q.bin" "${IMX_FW_DIR}/"
 
+# ③-bis Noto CJK + Emoji 字体:DejaVu 由 buildroot dejavu 包装,CJK/Emoji 在此下载
+#      (对齐原 install_fonts.sh)。Qt FONTCONFIG 会扫描 /usr/share/fonts/。
+FONTS_DIR="${TARGET_DIR}/usr/share/fonts"
+FONTS_CACHE="${PROJECT_ROOT}/out/.fonts-cache"
+mkdir -p "${FONTS_DIR}" "${FONTS_CACHE}"
+# Noto Sans CJK Regular(中文;zip 含 7 个分权重 ttc,只取 Regular 省 volume,~18MB)
+if [[ ! -s "${FONTS_CACHE}/NotoSansCJK-Regular.ttc" ]]; then
+    echo "[post-build] Downloading Noto Sans CJK..."
+    if curl -fL --retry 3 --connect-timeout 30 -o "${FONTS_CACHE}/03_NotoSansCJK-OTC.zip" \
+        "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/03_NotoSansCJK-OTC.zip"; then
+        unzip -o "${FONTS_CACHE}/03_NotoSansCJK-OTC.zip" "NotoSansCJK-Regular.ttc" -d "${FONTS_CACHE}/" 2>/dev/null
+    else
+        echo "[post-build] WARN: Noto CJK 下载失败(网络?),rootfs 不含中文字体" >&2
+    fi
+fi
+[[ -s "${FONTS_CACHE}/NotoSansCJK-Regular.ttc" ]] && cp -a "${FONTS_CACHE}/NotoSansCJK-Regular.ttc" "${FONTS_DIR}/"
+# Noto Color Emoji(表情,直接 ttf,~9MB)
+if [[ ! -s "${FONTS_CACHE}/NotoColorEmoji.ttf" ]]; then
+    echo "[post-build] Downloading Noto Color Emoji..."
+    curl -fL --retry 3 --connect-timeout 30 -o "${FONTS_CACHE}/NotoColorEmoji.ttf" \
+        "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf" \
+        || echo "[post-build] WARN: Noto Emoji 下载失败" >&2
+fi
+[[ -s "${FONTS_CACHE}/NotoColorEmoji.ttf" ]] && cp -a "${FONTS_CACHE}/NotoColorEmoji.ttf" "${FONTS_DIR}/"
+
 # ④ 校验闸门(致命;失败则 buildroot make 中止)
 echo "[post-build] Running rootfs verification gate..."
 bash "${PROJECT_ROOT}/scripts/varified_rootfs_ok.sh" --rootfs-dir="${TARGET_DIR}"

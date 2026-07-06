@@ -55,10 +55,43 @@ BR2_PACKAGE_ALSA_UTILS_ALSACTL=y
 BR2_PACKAGE_ALSA_UTILS_ALSAUCM=y
 BR2_PACKAGE_ALSA_UTILS_SPEAKER_TEST=y
 
+# ===== Qt6 base(buildroot 2026.02 原生 6.9.1 = 项目 qt-compile-pipeline 版本)=====
+# i.MX6ULL 无 GPU:linuxfb + tslib,关 XCB/EGLFS/OpenGL(对齐 target.conf)
+# 必须选父 BR2_PACKAGE_QT6(menuconfig),它 select QT6BASE 并使子选项可见
+BR2_PACKAGE_QT6=y
+BR2_PACKAGE_QT6BASE=y
+BR2_PACKAGE_QT6BASE_GUI=y
+BR2_PACKAGE_QT6BASE_WIDGETS=y
+BR2_PACKAGE_QT6BASE_LINUXFB=y        # FEATURE_linuxfb=ON(裸 framebuffer)
+BR2_PACKAGE_QT6BASE_TSLIB=y          # FEATURE_tslib=ON(触摸校准)
+BR2_PACKAGE_QT6BASE_NETWORK=y
+BR2_PACKAGE_QT6BASE_XML=y
+BR2_PACKAGE_QT6BASE_SQL=y
+BR2_PACKAGE_QT6BASE_SQLITE=y
+BR2_PACKAGE_QT6BASE_PNG=y
+BR2_PACKAGE_QT6BASE_JPEG=y
+BR2_PACKAGE_QT6BASE_GIF=y
+BR2_PACKAGE_QT6BASE_FONTCONFIG=y
+BR2_PACKAGE_TSLIB=y                  # qt6base TSLIB 依赖
+BR2_PACKAGE_FONTCONFIG=y             # 字体配置(Qt FONTCONFIG)
+BR2_PACKAGE_DEJAVU=y                 # DejaVu 字体(西文 + 基础符号)
+
+# Qt6 子模块(对齐 qt-compile-pipeline qt.conf QT_MODULES 八模块)
+BR2_PACKAGE_QT6DECLARATIVE=y        # QML/QtQuick
+BR2_PACKAGE_QT6DECLARATIVE_QUICK=y  # QtQuick(拉 qt6shadertools + host qmlprofiler 需 HOST_QT6BASE_NETWORK)
+BR2_PACKAGE_QT6MULTIMEDIA=y         # 多媒体(FFmpeg + ALSA 后端,wm8960)
+BR2_PACKAGE_QT6CHARTS=y
+BR2_PACKAGE_QT6SHADERTOOLS=y        # qt6declarative 依赖
+BR2_PACKAGE_QT6SERIALPORT=y
+BR2_PACKAGE_QT6VIRTUALKEYBOARD=y
+BR2_PACKAGE_QT6CORE5COMPAT=y
+
 # ===== Overlay + post-build(补 linuxrc/rcS/inittab + 跑 varified 校验)=====
 BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_imxforge_PATH)/overlay"
 BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_imxforge_PATH)/post-build.sh"
 
-# ===== Rootfs 输出(ext4;最终镜像由外部 build_imx6ull_image.sh 打包)=====
-BR2_TARGET_ROOTFS_EXT2=y
-BR2_TARGET_ROOTFS_EXT2_4=y
+# ===== Rootfs 输出 =====
+# 不用 buildroot 自带 ext2/ext4 镜像:它尺寸固定,加 Qt6 后需不断手调;
+# 且最终 SD/eMMC 镜像由 build_imx6ull_image.sh 从 out/release-latest/rootfs/ 用
+# mke2fs -d 现打(按实际内容动态尺寸,更灵活),NFS root 直接挂 rootfs/ 目录。
+# 故 buildroot 只产 target/(→ rsync 到 rootfs/),不打 fs image。
