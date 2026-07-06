@@ -17,7 +17,9 @@ title: 构建脚本
 | build-uboot.sh | 构建 U-Boot |
 | build-linux.sh | 构建 NXP BSP 内核 |
 | build-mainline-linux.sh | 构建主线内核 |
-| build-busybox.sh | 构建 BusyBox |
+| build-buildroot.sh | buildroot 构建 rootfs(D2-007) |
+| buildroot_menuconfig.sh | buildroot 配置(D2-008) |
+| clean_buildroot.sh | buildroot 清理(D2-009) |
 | copy_to_tftp.sh | 部署内核和设备树到 TFTP 目录 |
 
 ::: details 目录结构
@@ -27,14 +29,15 @@ scripts/
 │   ├── build-uboot.sh
 │   ├── build-linux.sh
 │   ├── build-mainline-linux.sh
-│   └── build-busybox.sh
+│   ├── build-buildroot.sh       # buildroot rootfs(D2-007)
+│   ├── buildroot_menuconfig.sh  # buildroot 配置(D2-008)
+│   └── clean_buildroot.sh       # buildroot 清理(D2-009)
 ├── release-all.sh         # 一键构建
 ├── patch_maker.sh         # 补丁生成
 ├── lib/                   # 共享库
 ├── logo_helper/           # Logo 处理
 ├── release_builder/       # 发布构建
-├── server_helper/         # 服务器工具
-└── third_party_install/   # 第三方安装
+└── server_helper/         # 服务器工具
 ```
 :::
 
@@ -48,7 +51,7 @@ scripts/
 # 分步构建
 ./scripts/build_helper/build-uboot.sh
 ./scripts/build_helper/build-linux.sh
-./scripts/build_helper/build-busybox.sh
+./scripts/build_helper/build-buildroot.sh    # rootfs(buildroot 接管)
 ```
 
 ```bash

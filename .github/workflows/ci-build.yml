@@ -23,7 +23,6 @@ jobs:
       uboot: ${{ steps.changes.outputs.uboot }}
       linux-imx: ${{ steps.changes.outputs.linux-imx }}
       linux-mainline: ${{ steps.changes.outputs.linux-mainline }}
-      busybox: ${{ steps.changes.outputs.busybox }}
       driver: ${{ steps.changes.outputs.driver }}
       scripts: ${{ steps.changes.outputs.scripts }}
     steps:
@@ -45,10 +44,6 @@ jobs:
             linux-mainline:
               - 'patches/linux_mainline/**'
               - 'scripts/build_helper/build-mainline-linux.sh'
-            busybox:
-              - 'patches/busybox/**'
-              - 'scripts/build_helper/build-busybox.sh'
-              - 'scripts/release_builder/build_release_busybox.sh'
             driver:
               - 'driver/**'
             scripts:
@@ -241,66 +236,6 @@ jobs:
           path: |
             out/release-latest/linux/arch/arm/boot/zImage
             out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
-          retention-days: 7
-
-  # BusyBox 构建
-  busybox:
-    name: BusyBox
-    runs-on: ubuntu-latest
-    needs: detect
-    if: needs.detect.outputs.busybox == 'true' || needs.detect.outputs.scripts == 'true'
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: 初始化 busybox 子模块
-        run: git submodule update --init --depth=1 third_party/busybox
-
-      - name: 构建 Docker 镜像
-        run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
-
-      - name: Cache ccache for BusyBox
-        uses: actions/cache@v4
-        with:
-          path: .ccache
-          key: ${{ runner.os }}-ccache-busybox-${{ github.base_ref || github.ref_name }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-busybox-
-
-      - name: 构建 BusyBox
-        run: |
-          docker run --rm \
-            --user root \
-            -v $PWD:/workspace \
-            -w /workspace \
-            -e CCACHE_DIR=/workspace/.ccache \
-            -e CCACHE_BASEDIR=/workspace \
-            -e CCACHE_NOHASHDIR=true \
-            -e CCACHE_COMPILERCHECK=content \
-            ${{ env.DOCKER_IMAGE }} \
-            bash -c '
-              ccache -M 2G && ccache -z
-              mkdir -p /workspace/ccache-bin
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
-              export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/build_helper/build-busybox.sh
-              ccache -s
-            '
-
-      - name: 验证产物
-        run: |
-          [ -f out/busybox/busybox ] || exit 1
-          file out/busybox/busybox | grep -q "ARM"
-
-      - name: 上传产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: busybox
-          path: out/busybox/busybox
           retention-days: 7
 
   # 驱动构建

@@ -106,7 +106,7 @@ echo ""\n\
 echo "快速开始:"\n\
 echo "  ./scripts/build_helper/build-uboot.sh      # 编译 U-Boot"\n\
 echo "  ./scripts/build_helper/build-linux.sh      # 编译 Linux 内核"\n\
-echo "  ./scripts/build_helper/build-busybox.sh    # 编译 BusyBox"\n\
+echo "  ./scripts/build_helper/build-buildroot.sh  # 构建 rootfs(buildroot)"\n\
 echo "  ./scripts/release-all.sh                   # 一键构建所有组件"\n\
 echo ""\n\
 exec "$@"' > /entrypoint.sh && chmod +x /entrypoint.sh
