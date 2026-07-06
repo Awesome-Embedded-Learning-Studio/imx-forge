@@ -44,6 +44,9 @@ RELEASE_ROOTFS="${PROJECT_ROOT}/out/release-latest/rootfs"
 CLEAN=0
 RECONFIGURE=0
 SOURCE_ONLY=0
+# Qt6 fragment:--with-qt6 或 BUILDROOT_QT6=1 触发(CI compile-support-3rd-party label)
+WITH_QT6=0
+[[ "${BUILDROOT_QT6:-0}" == "1" ]] && WITH_QT6=1
 
 show_usage() {
     sed -n '3,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
@@ -56,6 +59,7 @@ while [[ $# -gt 0 ]]; do
         --clean) CLEAN=1; shift ;;
         --reconfigure) RECONFIGURE=1; shift ;;
         --source-only) SOURCE_ONLY=1; shift ;;
+        --with-qt6) WITH_QT6=1; shift ;;
         --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
         --output-dir=*) OUTPUT_DIR="${1#*=}"; shift ;;
         --release-rootfs) RELEASE_ROOTFS="$2"; shift 2 ;;
@@ -115,6 +119,21 @@ if [[ ${CLEAN} -eq 1 || ${RECONFIGURE} -eq 1 || ! -f "${OUTPUT_DIR}/.config" ]];
 else
     log_info "Step 1: Reusing existing .config (use --reconfigure to re-apply defconfig)"
 fi
+
+# Qt6 fragment merge(可选):Qt6 全模块编译 2-4h,默认最小 rootfs 不含;
+# CI 由 compile-support-3rd-party label 触发,本地用 --with-qt6 或 BUILDROOT_QT6=1。
+if [[ ${WITH_QT6} -eq 1 ]]; then
+    QT6_FRAGMENT="${BR2_EXTERNAL_DIR}/fragments/qt6.config"
+    if [[ ! -f "${QT6_FRAGMENT}" ]]; then
+        log_error "Qt6 fragment not found: ${QT6_FRAGMENT}"
+        exit 1
+    fi
+    log_info "Step 1b: Merging Qt6 fragment ($(basename "${QT6_FRAGMENT}"))"
+    # merge_config.sh -m:把 fragment 合进 .config;olddefconfig 重解依赖(填 select)
+    "${BUILDROOT_DIR}/support/kconfig/merge_config.sh" -m -O "${OUTPUT_DIR}" "${OUTPUT_DIR}/.config" "${QT6_FRAGMENT}"
+    make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}" BR2_EXTERNAL="${BR2_EXTERNAL_DIR}" olddefconfig
+fi
+
 echo ""
 
 # Step 2: 构建(或仅下载源码)

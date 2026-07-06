@@ -55,8 +55,9 @@ if [[ ! -s "${FW_CACHE}/sdma-imx6q.bin" ]]; then
 fi
 [[ -s "${FW_CACHE}/sdma-imx6q.bin" ]] && cp -a "${FW_CACHE}/sdma-imx6q.bin" "${IMX_FW_DIR}/"
 
-# ③-bis Noto CJK + Emoji 字体:DejaVu 由 buildroot dejavu 包装,CJK/Emoji 在此下载
-#      (对齐原 install_fonts.sh)。Qt FONTCONFIG 会扫描 /usr/share/fonts/。
+# ③-bis Noto CJK + Emoji 字体:仅当 rootfs 含 Qt6 时下载(Qt GUI 才需;最小 rootfs
+#      无 Qt6 → 跳过省 ~30MB)。DejaVu 由 buildroot dejavu 包装(随 Qt6 fragment)。
+if [[ -f "${TARGET_DIR}/usr/lib/libQt6Core.so" ]]; then
 FONTS_DIR="${TARGET_DIR}/usr/share/fonts"
 FONTS_CACHE="${PROJECT_ROOT}/out/.fonts-cache"
 mkdir -p "${FONTS_DIR}" "${FONTS_CACHE}"
@@ -79,6 +80,9 @@ if [[ ! -s "${FONTS_CACHE}/NotoColorEmoji.ttf" ]]; then
         || echo "[post-build] WARN: Noto Emoji 下载失败" >&2
 fi
 [[ -s "${FONTS_CACHE}/NotoColorEmoji.ttf" ]] && cp -a "${FONTS_CACHE}/NotoColorEmoji.ttf" "${FONTS_DIR}/"
+else
+    echo "[post-build] Qt6 not in rootfs — 跳过 CJK/Emoji 字体(最小 rootfs)"
+fi
 
 # ④ 校验闸门(致命;失败则 buildroot make 中止)
 echo "[post-build] Running rootfs verification gate..."

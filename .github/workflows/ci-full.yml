@@ -266,7 +266,7 @@ jobs:
             -e CCACHE_BASEDIR=/workspace \
             -e CCACHE_NOHASHDIR=true \
             -e CCACHE_COMPILERCHECK=content \
-            -e SKIP_THIRD_PARTY_INSTALL=${{ needs.check.outputs.compile_3rd_party != 'true' }} \
+            -e BUILDROOT_QT6=${{ needs.check.outputs.compile_3rd_party == 'true' && '1' || '0' }} \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
               git config --global --add safe.directory "*"
@@ -309,9 +309,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 第三方组件" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ needs.check.outputs.compile_3rd_party }}" == "true" ]]; then
-            echo "- **Qt/字体/固件**: 已编译" >> $GITHUB_STEP_SUMMARY
+            echo "- **Qt6/字体**: 已编译(全模块 + CJK/Emoji 字体)" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **Qt/字体/固件**: 已跳过 (添加 \`compile-support-3rd-party\` 标签启用)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Qt6/字体**: 已跳过(最小 rootfs;添加 \`compile-support-3rd-party\` 标签启用)" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 上传 Release 产物
