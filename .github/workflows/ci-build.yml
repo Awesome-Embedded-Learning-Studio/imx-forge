@@ -212,7 +212,7 @@ jobs:
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
               git config --global --add safe.directory "*"
-              ccache -M 2G && ccache -z
+              ccache -M 5G && ccache -z
               mkdir -p /workspace/ccache-bin
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++

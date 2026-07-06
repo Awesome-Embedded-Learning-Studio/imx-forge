@@ -188,7 +188,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ccache
-          key: ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}-${{ github.run_id }}
+          key: ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}
           restore-keys: |
             ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}-
             ${{ runner.os }}-ccache-full-linux-mainline-
@@ -205,7 +205,7 @@ jobs:
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
               git config --global --add safe.directory "*"
-              ccache -M 2G && ccache -z
+              ccache -M 5G && ccache -z
               mkdir -p /workspace/ccache-bin
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
