@@ -194,6 +194,20 @@ jobs:
       - name: 应用 Linux Mainline 补丁
         run: cd third_party/linux_mainline && ../../scripts/apply_patches.sh linux_mainline
 
+      - name: 采集内核缓存元信息
+        id: kernel-meta
+        run: echo "sha=$(git -C third_party/linux_mainline rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: 缓存内核构建产物（整树）
+        id: kernel-cache
+        uses: actions/cache@v4
+        with:
+          path: out/mainline/linux
+          # 命中即跳过内核编译；key 覆盖内核源、defconfig 模板、补丁与构建脚本
+          key: linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-mainline-linux.sh', 'patches/linux_mainline/**') }}
+          restore-keys: |
+            linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-
+
       - name: Cache ccache for Linux Mainline
         uses: actions/cache@v4
         with:
@@ -203,6 +217,7 @@ jobs:
             ${{ runner.os }}-ccache-linux-mainline-
 
       - name: 构建 Linux Mainline
+        if: steps.kernel-cache.outputs.cache-hit != 'true'
         run: |
           docker run --rm \
             --user root \
