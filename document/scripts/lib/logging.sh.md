@@ -647,4 +647,4 @@ log_info "Hello from interactive shell!"
 
 - [build-linux.sh](../build_helper/build-linux.sh) - 使用 logging.sh 的脚本示例
 - [build-uboot.sh](../build_helper/build-uboot.sh) - 使用 logging.sh 的脚本示例
-- [build-busybox.sh](../build_helper/build-busybox.sh) - 使用 logging.sh 的脚本示例
+- [build-buildroot.sh](../build_helper/build-buildroot.sh) - 使用 logging.sh 的脚本示例

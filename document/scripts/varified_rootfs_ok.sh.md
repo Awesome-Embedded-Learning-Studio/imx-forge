@@ -1049,7 +1049,7 @@ verify_rootfs() {
 - inittab 与 init 系统 - init 系统详解
 - Rootfs 目录结构 - 目录结构详解
 - 应用集成 - 如何添加自定义应用
-- [build-busybox.sh](build_helper/build-busybox.sh) - BusyBox 构建脚本
+- [build-buildroot.sh](build_helper/build-buildroot.sh) - buildroot rootfs 构建
 - install_libc.sh - libc 安装脚本
 
 ## 更新日志
