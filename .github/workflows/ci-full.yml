@@ -188,7 +188,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ccache
-          key: ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}-${{ github.run_id }}
+          key: ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}
           restore-keys: |
             ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}-
             ${{ runner.os }}-ccache-full-linux-mainline-
@@ -205,7 +205,7 @@ jobs:
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
               git config --global --add safe.directory "*"
-              ccache -M 2G && ccache -z
+              ccache -M 5G && ccache -z
               mkdir -p /workspace/ccache-bin
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
@@ -234,8 +234,8 @@ jobs:
         with:
           submodules: false
 
-      - name: 初始化 busybox 子模块
-        run: git submodule update --init --depth=1 third_party/busybox
+      - name: 初始化 buildroot 子模块
+        run: git submodule update --init --depth=1 third_party/buildroot
 
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
@@ -249,7 +249,15 @@ jobs:
             ${{ runner.os }}-ccache-full-busybox-${{ github.base_ref || github.ref_name }}-
             ${{ runner.os }}-ccache-full-busybox-
 
-      - name: 构建 BusyBox (Stage 3) + 完成 RootFS (Stage 4)
+      - name: Cache buildroot dl/
+        uses: actions/cache@v4
+        with:
+          path: out/release-latest/buildroot/dl
+          key: ${{ runner.os }}-buildroot-dl-2026.02-${{ github.base_ref || github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-buildroot-dl-2026.02-
+
+      - name: 构建 rootfs via buildroot (Stage 3) + 校验 (Stage 4)
         run: |
           docker run --rm --user root \
             -v $PWD:/workspace \
@@ -258,7 +266,7 @@ jobs:
             -e CCACHE_BASEDIR=/workspace \
             -e CCACHE_NOHASHDIR=true \
             -e CCACHE_COMPILERCHECK=content \
-            -e SKIP_THIRD_PARTY_INSTALL=${{ needs.check.outputs.compile_3rd_party != 'true' }} \
+            -e BUILDROOT_QT6=${{ needs.check.outputs.compile_3rd_party == 'true' && '1' || '0' }} \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
               git config --global --add safe.directory "*"
@@ -274,10 +282,10 @@ jobs:
               ccache -s
             '
 
-      - name: 验证 BusyBox 产物
+      - name: 验证 rootfs 产物
         run: |
-          [ -f ${{ env.BUILD_OUTPUT }}/busybox/busybox ] || exit 1
-          [ -f ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ] || exit 1
+          [ -x ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ] || exit 1
+          [ -f ${{ env.BUILD_OUTPUT }}/rootfs/etc/inittab ] || exit 1
 
   # 最终验证和产物上传
   final:
@@ -301,9 +309,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 第三方组件" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ needs.check.outputs.compile_3rd_party }}" == "true" ]]; then
-            echo "- **Qt/字体/固件**: 已编译" >> $GITHUB_STEP_SUMMARY
+            echo "- **Qt6/字体**: 已编译(全模块 + CJK/Emoji 字体)" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- **Qt/字体/固件**: 已跳过 (添加 \`compile-support-3rd-party\` 标签启用)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Qt6/字体**: 已跳过(最小 rootfs;添加 \`compile-support-3rd-party\` 标签启用)" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: 上传 Release 产物

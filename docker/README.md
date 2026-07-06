@@ -101,7 +101,7 @@ docker run -it --rm \
 ```bash
 ./scripts/build_helper/build-uboot.sh      # 编译 U-Boot
 ./scripts/build_helper/build-linux.sh      # 编译 Linux 内核
-./scripts/build_helper/build-busybox.sh    # 编译 BusyBox
+./scripts/build_helper/build-buildroot.sh  # 构建 rootfs(buildroot)
 ./scripts/release-all.sh                   # 一键构建所有组件
 ```
 
@@ -243,11 +243,11 @@ cd /workspace
 ./scripts/build_helper/build-linux.sh
 ```
 
-### 测试 BusyBox 编译
+### 测试 rootfs 构建
 
 ```bash
 cd /workspace
-./scripts/build_helper/build-busybox.sh
+./scripts/build_helper/build-buildroot.sh
 ```
 
 ## 常见问题

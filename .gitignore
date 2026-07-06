@@ -1,6 +1,9 @@
 # Outputs
 out/
 
+# buildroot 验证残留(make 在仓库根生成,正常 .config 在 out/ 内)
+/.config
+
 # Host Third Parties
 host/
 

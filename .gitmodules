@@ -6,10 +6,6 @@
 	path = third_party/busybox
 	url = https://github.com/mirror/busybox.git
 	ignore = dirty
-[submodule "third_party/qt-compile-pipeline"]
-	path = third_party/qt-compile-pipeline
-	url = https://github.com/Awesome-Embedded-Learning-Studio/qt-compile-pipeline
-	ignore = dirty
 [submodule "third_party/uboot-imx"]
 	path = third_party/uboot-imx
 	url = https://github.com/nxp-imx/uboot-imx.git
@@ -17,4 +13,8 @@
 [submodule "third_party/linux_mainline"]
 	path = third_party/linux_mainline
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+	ignore = dirty
+[submodule "third_party/buildroot"]
+	path = third_party/buildroot
+	url = https://github.com/buildroot/buildroot.git
 	ignore = dirty

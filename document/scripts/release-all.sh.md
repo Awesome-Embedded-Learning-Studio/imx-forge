@@ -1263,9 +1263,8 @@ tar czf ../release-${CI_COMMIT_TAG:-latest}.tar.gz .
 
 - [build_release_uboot.sh](release_builder/build_release_uboot.sh) - U-Boot 发布构建脚本
 - [build_release_linux.sh](release_builder/build_release_linux.sh) - Linux 发布构建脚本
-- [build_release_busybox.sh](release_builder/build_release_busybox.sh) - BusyBox 发布构建脚本
+- [build-buildroot.sh](build_helper/build-buildroot.sh) - buildroot rootfs 构建
 - [varified_rootfs_ok.sh](./varified_rootfs_ok.sh) - RootFS 验证脚本
-- [merge_overlay_rootfs.sh](./merge_overlay_rootfs.sh) - RootFS 叠加层合并脚本
 - 构建系统概述 - 构建系统总体介绍
 - 快速入门 - 项目快速入门指南
 
