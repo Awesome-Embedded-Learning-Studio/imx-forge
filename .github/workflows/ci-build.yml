@@ -179,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect
     if: needs.detect.outputs.linux-mainline == 'true' || needs.detect.outputs.scripts == 'true'
-    timeout-minutes: 22
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -190,6 +190,9 @@ jobs:
 
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
+
+      - name: 应用 Linux Mainline 补丁
+        run: cd third_party/linux_mainline && ../../scripts/apply_patches.sh linux_mainline
 
       - name: Cache ccache for Linux Mainline
         uses: actions/cache@v4
@@ -218,24 +221,23 @@ jobs:
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
               export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/release-all.sh --mainline --stage 2
+              ./scripts/build_helper/build-mainline-linux.sh
               ccache -s
             '
 
       - name: 验证产物
         run: |
-          [ -f out/release-latest/linux/arch/arm/boot/zImage ] || exit 1
-          [ -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
-          file out/release-latest/linux/arch/arm/boot/zImage | grep -q ARM
-          grep -q "Kernel Track: mainline" out/release-latest/linux/build_info.txt
+          [ -f out/mainline/linux/arch/arm/boot/zImage ] || exit 1
+          [ -f out/mainline/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
+          file out/mainline/linux/arch/arm/boot/zImage | grep -q ARM
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
           name: linux-mainline
           path: |
-            out/release-latest/linux/arch/arm/boot/zImage
-            out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
+            out/mainline/linux/arch/arm/boot/zImage
+            out/mainline/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
           retention-days: 7
 
   # 驱动构建
