@@ -18,3 +18,7 @@
 	path = third_party/linux_mainline
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 	ignore = dirty
+[submodule "third_party/buildroot"]
+	path = third_party/buildroot
+	url = https://github.com/buildroot/buildroot.git
+	ignore = dirty

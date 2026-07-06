@@ -234,8 +234,8 @@ jobs:
         with:
           submodules: false
 
-      - name: 初始化 busybox 子模块
-        run: git submodule update --init --depth=1 third_party/busybox
+      - name: 初始化 buildroot 子模块
+        run: git submodule update --init --depth=1 third_party/buildroot
 
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
@@ -249,7 +249,15 @@ jobs:
             ${{ runner.os }}-ccache-full-busybox-${{ github.base_ref || github.ref_name }}-
             ${{ runner.os }}-ccache-full-busybox-
 
-      - name: 构建 BusyBox (Stage 3) + 完成 RootFS (Stage 4)
+      - name: Cache buildroot dl/
+        uses: actions/cache@v4
+        with:
+          path: out/release-latest/buildroot/dl
+          key: ${{ runner.os }}-buildroot-dl-2026.02-${{ github.base_ref || github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-buildroot-dl-2026.02-
+
+      - name: 构建 rootfs via buildroot (Stage 3) + 校验 (Stage 4)
         run: |
           docker run --rm --user root \
             -v $PWD:/workspace \
@@ -274,10 +282,10 @@ jobs:
               ccache -s
             '
 
-      - name: 验证 BusyBox 产物
+      - name: 验证 rootfs 产物
         run: |
-          [ -f ${{ env.BUILD_OUTPUT }}/busybox/busybox ] || exit 1
-          [ -f ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ] || exit 1
+          [ -x ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ] || exit 1
+          [ -f ${{ env.BUILD_OUTPUT }}/rootfs/etc/inittab ] || exit 1
 
   # 最终验证和产物上传
   final:

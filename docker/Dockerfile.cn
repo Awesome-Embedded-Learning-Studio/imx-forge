@@ -79,6 +79,9 @@ RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.aliyun.com@g' /etc/apt/sources.li
     libpulse-dev \
     libasound2-dev \
     unzip \
+    which \
+    bzip2 \
+    perl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

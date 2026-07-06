@@ -83,6 +83,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     ccache \
     unzip \
+    which \
+    bzip2 \
+    perl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

@@ -1,0 +1,2 @@
+name: imxforge
+desc: IMX-Forge buildroot external tree — 定制 imx6ull-aes rootfs(defconfig/fragments/overlay/post-build)

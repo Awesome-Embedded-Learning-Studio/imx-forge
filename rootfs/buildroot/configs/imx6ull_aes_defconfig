@@ -1,0 +1,64 @@
+# imx6ull_aes_defconfig — IMX-Forge buildroot rootfs for i.MX6ULL AES board
+#
+# buildroot 只构建 rootfs 用户空间(Stage 3+4);kernel/uboot 由 build_helper
+# 外部构建,产物在 out/release-latest/{uboot,linux}/;镜像由 build_imx6ull_image.sh
+# 从 out/release-latest/rootfs/ 组装。本 defconfig 不设 BR2_LINUX_KERNEL / BR2_TARGET_UBOOT。
+
+# ===== Architecture(ARM Cortex-A7, hard-float, NEON VFPv4)=====
+BR2_arm=y
+BR2_cortex_a7=y
+BR2_ARM_EABIHF=y
+BR2_ARM_FPU_NEON_VFPV4=y
+
+# ===== External preinstalled toolchain:Arm GNU Toolchain 15.2.rel1 (/opt/arm-gnu-toolchain)
+# GCC 15.2 / glibc / kernel headers 6.6(arm-gnu-toolchain 15.2.rel1 的 sysroot headers)
+BR2_TOOLCHAIN_EXTERNAL=y
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
+BR2_TOOLCHAIN_EXTERNAL_PREINSTALLED=y
+BR2_TOOLCHAIN_EXTERNAL_PATH="/opt/arm-gnu-toolchain"
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="$(ARCH)-none-linux-gnueabihf"
+BR2_TOOLCHAIN_EXTERNAL_GCC_15=y
+BR2_TOOLCHAIN_EXTERNAL_HEADERS_6_6=y
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_GLIBC=y
+BR2_TOOLCHAIN_EXTERNAL_CXX=y
+BR2_TOOLCHAIN_EXTERNAL_FORTRAN=y
+BR2_TOOLCHAIN_EXTERNAL_OPENMP=y
+# BR2_TOOLCHAIN_EXTERNAL_INET_RPC is not set
+BR2_TOOLCHAIN_EXTERNAL_HAS_SSP=y
+BR2_TOOLCHAIN_EXTERNAL_LOCALE=y
+BR2_TOOLCHAIN_EXTERNAL_WCHAR=y
+BR2_TOOLCHAIN_EXTERNAL_THREADS=y
+BR2_TOOLCHAIN_EXTERNAL_THREADS_POSIX=y
+
+# ===== System(串口 ttymxc0 115200,busybox init,eudev 动态设备节点)=====
+BR2_TARGET_GENERIC_GETTY_PORT="ttymxc0"
+BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200=y
+BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_EUDEV=y
+BR2_INIT_BUSYBOX=y
+
+# ===== ccache(加速重复构建)=====
+BR2_CCACHE=y
+
+# ===== busybox(用项目导出的完整 .config,877 applet 全功能;关 x86-only SHA HWACCEL)=====
+BR2_PACKAGE_BUSYBOX=y
+BR2_PACKAGE_BUSYBOX_CONFIG="$(BR2_EXTERNAL_imxforge_PATH)/fragments/busybox.config"
+
+# ===== ALSA(wm8960 音频章节:alsa-lib + utils,替代 install_alsa.sh 手工交叉编译)=====
+BR2_PACKAGE_ALSA_LIB=y
+BR2_PACKAGE_ALSA_LIB_MIXER=y
+BR2_PACKAGE_ALSA_LIB_PCM=y
+BR2_PACKAGE_ALSA_LIB_UCM=y
+BR2_PACKAGE_ALSA_UTILS=y
+BR2_PACKAGE_ALSA_UTILS_APLAY=y        # aplay + arecord(同一二进制)
+BR2_PACKAGE_ALSA_UTILS_AMIXER=y
+BR2_PACKAGE_ALSA_UTILS_ALSACTL=y
+BR2_PACKAGE_ALSA_UTILS_ALSAUCM=y
+BR2_PACKAGE_ALSA_UTILS_SPEAKER_TEST=y
+
+# ===== Overlay + post-build(补 linuxrc/rcS/inittab + 跑 varified 校验)=====
+BR2_ROOTFS_OVERLAY="$(BR2_EXTERNAL_imxforge_PATH)/overlay"
+BR2_ROOTFS_POST_BUILD_SCRIPT="$(BR2_EXTERNAL_imxforge_PATH)/post-build.sh"
+
+# ===== Rootfs 输出(ext4;最终镜像由外部 build_imx6ull_image.sh 打包)=====
+BR2_TARGET_ROOTFS_EXT2=y
+BR2_TARGET_ROOTFS_EXT2_4=y

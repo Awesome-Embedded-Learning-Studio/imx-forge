@@ -15,8 +15,8 @@
 # Stages:
 #   1 - U-Boot bootloader
 #   2 - Linux kernel
-#   3 - BusyBox userland
-#   4 - RootFS completion (third-party dependencies)
+#   3 - Rootfs via buildroot (busybox + 用户空间)
+#   4 - RootFS verification gate
 #   5 - SD/eMMC full image creation
 #
 # Output directory: out/release-latest/
@@ -80,8 +80,8 @@ Environment Variables:
 Stages:
   1  U-Boot bootloader
   2  Linux kernel
-  3  BusyBox userland
-  4  RootFS completion with third-party dependencies
+  3  Rootfs via buildroot (busybox + 用户空间)
+  4  RootFS verification gate
   5  SD/eMMC full image creation
 
 Examples:
@@ -208,7 +208,7 @@ ensure_submodules_initialized() {
                 fi
                 ;;
             3)
-                required+=("third_party/busybox:BusyBox")
+                required+=("third_party/buildroot:Buildroot")
                 ;;
         esac
     done
@@ -320,55 +320,42 @@ stage_2_linux() {
     fi
 }
 
-# Stage 3: BusyBox
-stage_3_busybox() {
+# Stage 3: Rootfs(buildroot —— busybox + 用户空间一次性构建)
+stage_3_rootfs() {
     log_info "========================================="
-    log_info "Stage 3/5: Building BusyBox"
+    log_info "Stage 3/5: Building rootfs via buildroot"
     log_info "========================================="
-
-    export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/busybox"
-    export INSTALL_DIR="${BUILD_OUTPUT_DIR}/rootfs"
-
-    log_info "Output directory: ${OUTPUT_DIR}"
-    log_info "Install directory: ${INSTALL_DIR}"
+    log_info "busybox + 用户空间由 buildroot 构建(原 build-busybox.sh 已退役)"
     echo ""
 
-    bash "${SCRIPT_DIR}/release_builder/build_release_busybox.sh"
-    
-    # Verify key artifacts
-    if [[ -f "${OUTPUT_DIR}/busybox" ]]; then
-        log_info "BusyBox build successful"
-    else
-        log_error "BusyBox build failed - busybox binary not found"
-        exit 1
-    fi
+    bash "${SCRIPT_DIR}/build_helper/build-buildroot.sh"
 
-    if [[ -f "${INSTALL_DIR}/bin/busybox" ]]; then
-        log_info "BusyBox installed to rootfs"
+    # Verify key artifacts
+    if [[ -x "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" ]]; then
+        log_info "Buildroot rootfs build successful"
     else
-        log_warn "BusyBox installation may have issues"
+        log_error "Buildroot rootfs build failed - rootfs/bin/busybox not found"
+        exit 1
     fi
 }
 
-# Stage 4: RootFS completion
+# Stage 4: RootFS 校验闸门
+# buildroot 接管后,rootfs 构造(目录骨架/fstab/inittab/rcS/busybox/第三方库/overlay)在
+# Stage 3 由 buildroot 一次性完成。Stage 4 仅作独立校验闸门,失败必须中止(issue #76)。
+# overlay 合并已由 buildroot BR2_ROOTFS_OVERLAY 在构建时完成,merge_overlay_rootfs.sh 已退役。
 stage_4_rootfs() {
     log_info "========================================="
-    log_info "Stage 4/5: Completing RootFS"
+    log_info "Stage 4/5: RootFS verification gate"
     log_info "========================================="
 
-    export ROOTFS_DIR="${BUILD_OUTPUT_DIR}/rootfs"
-    mkdir -p "$ROOTFS_DIR"
-    log_info "RootFS directory: ${ROOTFS_DIR}"
+    local rootfs_dir="${BUILD_OUTPUT_DIR}/rootfs"
+    log_info "RootFS directory: ${rootfs_dir}"
     echo ""
-    log_info "Running Command: ${SCRIPT_DIR}/varified_rootfs_ok.sh --rootfs-dir=${ROOTFS_DIR}"
-    # varified_rootfs_ok.sh 失败时必须中止，否则会把残缺 rootfs 继续合 overlay 并制成镜像（issue #76）。
-    bash "${SCRIPT_DIR}/varified_rootfs_ok.sh" --rootfs-dir="${ROOTFS_DIR}" || { log_error "Stage 4: RootFS completion failed"; exit 1; }
+    log_info "Running: varified_rootfs_ok.sh --rootfs-dir=${rootfs_dir}"
+    bash "${SCRIPT_DIR}/varified_rootfs_ok.sh" --rootfs-dir="${rootfs_dir}" \
+        || { log_error "Stage 4: RootFS verification failed"; exit 1; }
 
-    echo ""
-    log_info "Merging Rootfs Overlay from rootfs/overlay/rootfs to ${ROOTFS_DIR}"
-    bash "${SCRIPT_DIR}/merge_overlay_rootfs.sh" --rootfs-dir="${ROOTFS_DIR}" --overlay-name=rootfs
-
-    log_info "RootFS completion successful"
+    log_info "RootFS verification passed"
 }
 
 # Stage 5: Full image creation
@@ -446,7 +433,7 @@ show_summary() {
     log_info "Directory structure:"
     log_info "  uboot/        - U-Boot bootloader"
     log_info "  linux/        - Linux kernel"
-    log_info "  busybox/      - BusyBox userland"
+    log_info "  buildroot/    - Buildroot build tree (rootfs source)"
     log_info "  rootfs/       - Complete root filesystem"
     log_info "  images/       - Flashable images (symlinks)"
     log_info ""
@@ -481,11 +468,10 @@ is_stage_completed() {
             grep -q "Kernel Track: ${KERNEL_TRACK}" "${BUILD_OUTPUT_DIR}/linux/build_info.txt"
             ;;
         3)
-            [[ -f "${BUILD_OUTPUT_DIR}/busybox/busybox" && -f "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" ]]
+            [[ -x "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" ]]
             ;;
         4)
-            # Stage 4 completion is hard to verify, assume incomplete
-            false
+            [[ -x "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" && -f "${BUILD_OUTPUT_DIR}/rootfs/etc/inittab" ]]
             ;;
         5)
             local images_dir="${BUILD_OUTPUT_DIR}/images"
@@ -564,7 +550,7 @@ main() {
         case "${stage}" in
             1) stage_1_uboot ;;
             2) stage_2_linux ;;
-            3) stage_3_busybox ;;
+            3) stage_3_rootfs ;;
             4) stage_4_rootfs ;;
             5) stage_5_image ;;
         esac

@@ -1,0 +1,9 @@
+# IMX-Forge buildroot external tree 配置入口
+#
+# buildroot 只构建 rootfs 用户空间(Stage 3+4);kernel/uboot 由 build_helper 外部提供。
+# 当前无自定义 package;defconfig 与 fragment 在 configs/ 与 fragments/ 下。
+
+menuconfig BR2_PACKAGE_IMXFORGE
+	bool "imxforge custom packages (placeholder)"
+	help
+	  Placeholder for future IMX-Forge custom buildroot packages.
