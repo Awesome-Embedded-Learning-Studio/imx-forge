@@ -3,7 +3,9 @@
 # U-Boot build script for mx6ull_14x14_evk_emmc
 #
 
-set -e
+# -o pipefail: do_build pipes make | buildmeter; without it a failed make would
+# be masked by buildmeter's exit-0 and set -e would miss the failure.
+set -eo pipefail
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,6 +28,10 @@ else
     log_debug() { if [[ "${DEBUG:-0}" == "1" ]]; then echo -e "${BLUE}[DEBUG]${NC} $1"; fi; }
     log_cmd() { echo -e "${YELLOW}[CMD]${NC} $1"; }
 fi
+
+# buildmeter progress bar (optional; auto-falls back to bare make if buildmeter
+# is absent or FORGE_PROGRESS_DISABLE=1). See scripts/lib/progress.sh.
+source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
 
 # 导入依赖检查脚本
 source "${SCRIPT_DIR}/../init/env-init.sh"
@@ -134,7 +140,21 @@ do_build() {
     log_info "Building U-Boot..."
     local cmd="make -C ${UBOOT_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC}"
     echo -e "${YELLOW}[CMD]${NC} ${cmd}"
-    ${cmd}
+    if forge_progress_enabled; then
+        # uboot 也是 kbuild(同 kernel):dry-run 预扫描出 %。binman 的 'Error 103'/
+        # 'images are invalid' 是已知噪音(非真错),--ignore-errors 过滤免误报。
+        log_info "Pre-scanning dry-run (make -n -k) for progress total…"
+        local total=$(${cmd} -n -k 2>/dev/null | python3 "${FORGE_PROGRESS_PY}" uboot --count-only || true)
+        if [[ -n "${total}" ]]; then
+            ${cmd} 2>&1 | python3 "${FORGE_PROGRESS_PY}" uboot --total "${total}" \
+                --tail "${FORGE_PROGRESS_TAIL}" --ignore-errors 'Error 103|images are invalid'
+        else
+            ${cmd} 2>&1 | python3 "${FORGE_PROGRESS_PY}" uboot \
+                --tail "${FORGE_PROGRESS_TAIL}" --ignore-errors 'Error 103|images are invalid'
+        fi
+    else
+        ${cmd}
+    fi
 }
 
 # Verify build artifacts
