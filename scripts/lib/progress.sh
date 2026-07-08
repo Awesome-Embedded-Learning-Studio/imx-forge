@@ -9,8 +9,8 @@
 #   make ... 2>&1 | python3 "$FORGE_PROGRESS_PY" <kind> [--total N]
 # 以便各自保留 make 参数 + 退出码处理(配合 set -o pipefail,make 失败不被吞)。
 #
-# 临时阶段:buildmeter 在 ~/buildmeter(本地克隆),不进 imx-forge 仓、不 pip。
-# 成熟后改 vendor/pip 只动本文件默认路径,调用方零改动。
+# buildmeter 是 third_party/buildmeter submodule(正式接入,非临时克隆)。默认路径从
+# 本文件(scripts/lib)位置算项目根,不依赖调用方是否设了 PROJECT_ROOT。
 #
 # 环境变量:
 #   FORGE_PROGRESS_PY        cli.py 路径(默认 ~/buildmeter/src/buildmeter/cli.py)
@@ -20,8 +20,11 @@
 #   $FORGE_PROGRESS_PY       cli.py 绝对路径(buildmeter 缺失时空串)
 #   forge_progress_enabled   返回 0=可用,1=不可用(缺失/被禁)
 
-# 默认:本地克隆位置(临时验证用;可被环境变量覆盖)
-: "${FORGE_PROGRESS_PY:=$HOME/buildmeter/src/buildmeter/cli.py}"
+# 默认:third_party/buildmeter submodule。PROJECT_ROOT 由 source 方(build_helper
+# 脚本)提供 —— 它们都在 source 本文件前用 SCRIPT_DIR 算好 PROJECT_ROOT。不自己用
+# BASH_SOURCE 算:在 bash -c / 嵌套 source 下 BASH_SOURCE[0] 会退化成空串,dirname
+# 拿到 "."。PROJECT_ROOT 未设 → 路径无效 → forge_progress_enabled 返回 false → 回退裸 make。
+: "${FORGE_PROGRESS_PY:=${PROJECT_ROOT}/third_party/buildmeter/src/buildmeter/cli.py}"
 : "${FORGE_PROGRESS_TAIL:=5}"   # bar 下方滑动显示的最近 raw 行数(buildmeter --tail)
 
 forge_progress_enabled() {
