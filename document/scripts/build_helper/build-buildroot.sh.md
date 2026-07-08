@@ -8,6 +8,7 @@
 
 - 应用 `imx6ull_aes_defconfig`(ARM Cortex-A7 / 外部 arm-gnu 15.2 工具链 / busybox / alsa / eudev)
 - 可选 merge `fragments/qt6.config`(`--with-qt6`)出 Qt6 全模块 rootfs
+- **buildmeter 进度条**:`make` 输出 pipe 给 [buildmeter](https://github.com/Awesome-Embedded-Learning-Studio/buildmeter),显示 `N pkgs done` + 当前包名/阶段 + ninja 子进度(`[N/M]`/`[NN%]`)+ 尾部 finalizing phase + `All Packages: N` 总数(来自 `make show-targets` 预扫描)。详见 [progress.sh](../lib/progress.sh.md)
 - `make` 后 rsync `target/` → `out/release-latest/rootfs/`(排除 NFS root 运行时目录)
 - buildroot `post-build.sh` 内联补 linuxrc / home / securetty / SDMA 固件 / 字体 + 跑 varified 校验闸门
 
@@ -32,7 +33,7 @@
 | `--with-qt6` | merge `fragments/qt6.config`(Qt6 全模块) |
 | `--defconfig NAME` | buildroot defconfig 名(默认 imx6ull_aes_defconfig) |
 | `--reconfigure` | 强制重新 defconfig(不删 output) |
-| `--clean` | 构建前删 buildroot output(重新 defconfig) |
+| `--clean` | 只删 buildroot output(`rm -rf`)后**退出,不构建**;要构建再跑本脚本(不带 `--clean`) |
 | `--source-only` | 仅 `make source` 下载源码到 dl/,不构建 |
 | `--output-dir PATH` | buildroot O= 目录(默认 out/release-latest/buildroot) |
 | `--release-rootfs PATH` | 最终 rootfs 目录(默认 out/release-latest/rootfs) |
@@ -43,11 +44,14 @@
 |------|------|
 | `BUILDROOT_QT6=1` | 等效 `--with-qt6`(CI 用) |
 | `DEFAULT_BUILDROOT_DEFCONFIG` | 覆盖默认 defconfig 名 |
+| `FORGE_PROGRESS_DISABLE=1` | 关掉 buildmeter 进度条,回退裸 make |
+| `FORGE_PROGRESS_TAIL` | 进度条下方滑动显示的最近 raw 行数(默认 5) |
 
 ## 输出产物
 
 - `out/release-latest/buildroot/target/`(buildroot rootfs)
 - `out/release-latest/buildroot/dl/`(源码缓存,可复用)
+- `out/release-latest/buildroot/buildmeter-full.log`(完整构建日志,`tee` 落盘;buildmeter 进度条只取尾部窗口,排查看这个)
 - `out/release-latest/rootfs/`(rsync 副本,NFS export / 镜像脚本消费)
 
 ## 相关

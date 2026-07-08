@@ -18,3 +18,7 @@
 	path = third_party/buildroot
 	url = https://github.com/buildroot/buildroot.git
 	ignore = dirty
+[submodule "third_party/buildmeter"]
+	path = third_party/buildmeter
+	url = https://github.com/Awesome-Embedded-Learning-Studio/buildmeter
+	ignore = dirty

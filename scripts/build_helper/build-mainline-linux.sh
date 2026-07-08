@@ -3,7 +3,9 @@
 # Linux kernel build script for i.MX6ULL
 #
 
-set -e
+# -o pipefail: do_build pipes make | buildmeter; without it a failed make would
+# be masked by buildmeter's exit-0 and set -e would miss the failure.
+set -eo pipefail
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,6 +28,10 @@ else
     log_debug() { if [[ "${DEBUG:-0}" == "1" ]]; then echo -e "${BLUE}[DEBUG]${NC} $1"; fi; }
     log_cmd() { echo -e "${YELLOW}[CMD]${NC} $1"; }
 fi
+
+# buildmeter progress bar (optional; auto-falls back to bare make if buildmeter
+# is absent or FORGE_PROGRESS_DISABLE=1). See scripts/lib/progress.sh.
+source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
 
 # Configuration
 ARCH=arm
@@ -286,7 +292,26 @@ do_build() {
     log_info "Building Linux kernel..."
     local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC} zImage dtbs"
     echo -e "${YELLOW}[CMD]${NC} ${cmd}"
-    ${cmd}
+
+    if forge_progress_enabled; then
+        # clean build(FAST_BUILD=0):先 make -n -k 预扫描拿进度分母(~15s;实测欠 ~6%
+        # 因 vmlinux 链接断链 dry-run 不枚举 post-link CC,buildmeter cap 100% +
+        # finalizing 尾部兜底,不会误读 >100%)。
+        # fast-build(增量)跳过预扫描 → indeterminate(count+rate+ETA,无 %),不收 15s 税。
+        local total=""
+        if [[ ${FAST_BUILD} -eq 0 ]]; then
+            log_info "Pre-scanning dry-run (make -n -k) for progress total (~15s)…"
+            # dry-run 在 vmlinux 链接处会非零退出(预期);2>/dev/null 吞报错,|| true 兜退出码
+            total=$(${cmd} -n -k 2>/dev/null | python3 "${FORGE_PROGRESS_PY}" kernel --count-only || true)
+        fi
+        if [[ -n "${total}" ]]; then
+            ${cmd} 2>&1 | python3 "${FORGE_PROGRESS_PY}" kernel --total "${total}" --tail "${FORGE_PROGRESS_TAIL}"
+        else
+            ${cmd} 2>&1 | python3 "${FORGE_PROGRESS_PY}" kernel --tail "${FORGE_PROGRESS_TAIL}"
+        fi
+    else
+        ${cmd}
+    fi
 }
 
 # Prepare the build tree for out-of-tree (driver) module builds.

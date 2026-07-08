@@ -389,8 +389,8 @@ if [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/zImage" ]]; then
 fi
 
 # 4. 设备树链接
-if [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb" ]]; then
-    ln -sf "../linux/arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb" "${images_dir}/"
+if [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb" ]]; then
+    ln -sf "../linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb" "${images_dir}/"
 fi
 
 # 5. NFS rootfs 导出
@@ -408,7 +408,7 @@ ln -sf "${BUILD_OUTPUT_DIR}/rootfs" "${nfs_dir}"
 [build-all] ========================================
 [build-all]   + images/u-boot-dtb.imx
 [build-all]   + images/zImage
-[build-all]   + images/imx6ull-14x14-evk-emmc.dtb
+[build-all]   + images/imx6ull-aes.dtb
 [build-all] Symlinks created in out/release-latest/images/
 [build-all] Exporting NFS rootfs...
 [build-all]   + rootfs/nfs/ -> out/release-latest/rootfs/ (NFS export ready)
@@ -463,7 +463,7 @@ log_info "  2. Or copy to SD card"
 [build-all] Flashable images:
 [build-all]   - u-boot-dtb.imx
 [build-all]   - zImage
-[build-all]   - imx6ull-14x14-evk-emmc.dtb
+[build-all]   - imx6ull-aes.dtb
 [build-all]
 [build-all] To use the rootfs:
 [build-all]   1. Export via NFS: out/release-latest/rootfs
@@ -534,7 +534,7 @@ out/release-latest/
 │   ├── arch/arm/boot/
 │   │   ├── zImage                # 压缩内核镜像
 │   │   └── dts/
-│   │       ├── imx6ull-14x14-evk-emmc.dtb
+│   │       ├── imx6ull-aes.dtb
 │   │       └── ...
 │   ├── vmlinux                   # 未压缩内核
 │   ├── System.map                # 符号表
@@ -571,7 +571,7 @@ out/release-latest/
 └── images/                        # 便捷符号链接目录
     ├── u-boot-dtb.imx -> ../uboot/u-boot-dtb.imx
     ├── zImage -> ../linux/arch/arm/boot/zImage
-    └── imx6ull-14x14-evk-emmc.dtb -> ../linux/arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb
+    └── imx6ull-aes.dtb -> ../linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
 ```
 
 ### 归档目录
@@ -740,7 +740,7 @@ $ ./scripts/release-all.sh
 [build-all] ========================================
 [build-all]   + images/u-boot-dtb.imx
 [build-all]   + images/zImage
-[build-all]   + images/imx6ull-14x14-evk-emmc.dtb
+[build-all]   + images/imx6ull-aes.dtb
 [build-all] Symlinks created in out/release-latest/images/
 [build-all] Exporting NFS rootfs...
 [build-all]   + rootfs/nfs/ -> out/release-latest/rootfs/ (NFS export ready)
@@ -761,7 +761,7 @@ $ ./scripts/release-all.sh
 [build-all] Flashable images:
 [build-all]   - u-boot-dtb.imx
 [build-all]   - zImage
-[build-all]   - imx6ull-14x14-evk-emmc.dtb
+[build-all]   - imx6ull-aes.dtb
 [build-all]
 [build-all] To use the rootfs:
 [build-all]   1. Export via NFS: out/release-latest/rootfs

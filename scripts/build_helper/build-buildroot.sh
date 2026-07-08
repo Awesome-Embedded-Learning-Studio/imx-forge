@@ -11,7 +11,7 @@
 #
 # Options:
 #   --defconfig NAME      buildroot defconfig 名(默认 imx6ull_aes_defconfig)
-#   --clean               构建前清理 buildroot output(重新 defconfig)
+#   --clean               只清理 buildroot output(rm -rf)后退出,不构建;再跑本脚本(不带 --clean)构建
 #   --source-only         仅下载源码包到 dl/(make source),不构建
 #   --reconfigure         强制重新 defconfig(不删 output)
 #   --output-dir PATH     buildroot O= 目录(默认 out/release-latest/buildroot)
@@ -20,7 +20,9 @@
 #
 # 相关:buildroot_menuconfig.sh(D2-008)、clean_buildroot.sh(D2-009)
 
-set -e
+# -o pipefail: Step 2 pipes make | tee | buildmeter; without it a failed make
+# would be masked by tee/buildmeter exit-0 and set -e would miss the failure.
+set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
@@ -34,6 +36,10 @@ else
     log_error() { echo -e "${RED}[buildroot]${NC} $1"; }
     log_warn()  { echo -e "${YELLOW}[buildroot]${NC} $1"; }
 fi
+
+# buildmeter progress bar (optional; auto-falls back to bare make if buildmeter
+# is absent or FORGE_PROGRESS_DISABLE=1). See scripts/lib/progress.sh.
+source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
 
 BUILDROOT_DIR="${PROJECT_ROOT}/third_party/buildroot"
 BR2_EXTERNAL_DIR="${PROJECT_ROOT}/rootfs/buildroot"
@@ -83,6 +89,9 @@ fi
 if [[ ${CLEAN} -eq 1 ]]; then
     log_info "Cleaning buildroot output: ${OUTPUT_DIR}"
     rm -rf "${OUTPUT_DIR}"
+    log_info "Cleaned (--clean only). To build, re-run without --clean:"
+    log_info "  ./scripts/build_helper/build-buildroot.sh --with-qt6"
+    exit 0
 fi
 mkdir -p "${OUTPUT_DIR}"
 
@@ -144,8 +153,27 @@ if [[ ${SOURCE_ONLY} -eq 1 ]]; then
     exit 0
 fi
 
-log_info "Step 2: Building (make)"
-make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}"
+NPROC=$(nproc)
+# Full build log tee'd here — feed buildmeter AND keep a complete record for
+# post-build analysis (e.g. checking ninja [N/M] output from meson/cmake pkgs).
+LOG="${OUTPUT_DIR}/buildmeter-full.log"
+if forge_progress_enabled; then
+    # show-targets lists every package (host+target) buildroot will build → total
+    # count, shown on the bar as "All Packages: N" (info only, NOT a %: incremental
+    # builds skip already-built pkgs so done undercounts). Excludes a few internal
+    # pkgs (skeleton...) show-targets omits; close enough for context. buildroot
+    # dry-run can't give a compile ORDER (it halts early), so no ETA/%.
+    PKG_TOTAL=$(make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}" show-targets 2>/dev/null \
+        | tr ' ' '\n' | grep -E '^[a-z][a-z0-9-]*$' | grep -vxE 'directory|make|entering' \
+        | sort -u | wc -l)
+    log_info "Step 2: Building (make -j${NPROC}) — progress bar on; ${PKG_TOTAL} packages; full log: ${LOG}"
+    make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}" -j"${NPROC}" 2>&1 \
+        | tee "${LOG}" \
+        | python3 "${FORGE_PROGRESS_PY}" buildroot --log "${LOG}" --tail "${FORGE_PROGRESS_TAIL}" --total "${PKG_TOTAL}"
+else
+    log_info "Step 2: Building (make -j${NPROC}); full log: ${LOG}"
+    make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}" -j"${NPROC}" 2>&1 | tee "${LOG}"
+fi
 echo ""
 
 # Step 3: 同步 target/ → release rootfs
