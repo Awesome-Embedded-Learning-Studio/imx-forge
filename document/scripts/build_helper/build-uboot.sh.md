@@ -28,9 +28,11 @@ U-Boot 的构建比 Linux 内核更复杂，因为它需要生成多种格式的
 ```
 build-uboot.sh
     ├─ scripts/lib/logging.sh (日志工具库)
-    ├─ scripts/init/env-init.sh (依赖检查库) ← 新增
+    ├─ scripts/lib/progress.sh (buildmeter 进度条接入)
+    ├─ scripts/init/env-init.sh (依赖检查库)
     ├─ scripts/logo_helper/logo_helper.sh (Logo 生成工具)
     ├─ third_party/uboot-imx (U-Boot 源码子模块)
+    ├─ third_party/buildmeter (进度条工具子模块,可选)
     └─ arm-none-linux-gnueabihf-gcc (交叉编译工具链)
 ```
 
@@ -45,7 +47,7 @@ build-uboot.sh
 | `ARCH` | 目标架构 | `arm` |
 | `CROSS_COMPILE` | 交叉编译器前缀 | `arm-none-linux-gnueabihf-` |
 | `DEFCONFIG` | U-Boot 配置文件 | `mx6ull_aes_emmc_defconfig` |
-| `DEFAULT_DEVICE_TREE` | 默认设备树名称 | `imx6ull-14x14-evk-emmc` |
+| `DEFAULT_DEVICE_TREE` | 默认设备树名称 | `imx6ull-aes` |
 | `DEBUG` | 启用调试输出 | `0` |
 
 ## 执行流程
@@ -185,19 +187,19 @@ ${UBOOT_SRC_DIR}/arch/arm/dts/${DEFAULT_DEVICE_TREE}.dts
 对于默认配置，完整路径是：
 
 ```
-third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-emmc.dts
+third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
 ```
 
 **同时检查基础设备树**：
 
-脚本还会检查基础设备树文件 `imx6ull-14x14-evk.dts` 是否存在，因为 eMMC 版本通常继承自基础版本。
+脚本还会检查基础设备树 `.dtsi` 文件 `${DEFAULT_DEVICE_TREE}.dtsi`(即 `imx6ull-aes.dtsi`)是否存在,因为板级 dts 通常 `.include` 它。
 
 **输出示例**：
 
 ```
 [INFO] Checking device tree...
-[INFO] Device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-emmc.dts
-[INFO] Base device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk.dts
+[INFO] Device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
+[INFO] Base device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dtsi
 ```
 
 #### check_defconfig()
@@ -251,7 +253,7 @@ make -C ${UBOOT_SRC_DIR} \
 
 **作用**：编译 U-Boot。
 
-**执行的命令**：
+**基础命令**：
 
 ```bash
 make -C ${UBOOT_SRC_DIR} \
@@ -260,6 +262,36 @@ make -C ${UBOOT_SRC_DIR} \
     O=${OUTPUT_DIR} \
     -j${NPROC}
 ```
+
+**buildmeter 进度条接入**(U-Boot 也是 kbuild,与 Linux 内核同形 `  CC`/`  LD`/`  AR` 输出):
+
+脚本开头顶着 `set -eo pipefail`,`source` 进 `scripts/lib/progress.sh`,构建时把 make 输出 pipe 给 buildmeter:
+
+```bash
+if forge_progress_enabled; then
+    # dry-run 预扫描出 % 分母(binman 在尾部会吐 'Error 103'/'images are invalid',
+    # 那是已知噪音非真错,--ignore-errors 过滤免误报)
+    local total=$(${cmd} -n -k 2>/dev/null \
+        | python3 "$FORGE_PROGRESS_PY" uboot --count-only || true)
+    if [[ -n "${total}" ]]; then
+        ${cmd} 2>&1 | python3 "$FORGE_PROGRESS_PY" uboot --total "${total}" \
+            --tail "$FORGE_PROGRESS_TAIL" --ignore-errors 'Error 103|images are invalid'
+    else
+        ${cmd} 2>&1 | python3 "$FORGE_PROGRESS_PY" uboot \
+            --tail "$FORGE_PROGRESS_TAIL" --ignore-errors 'Error 103|images are invalid'
+    fi
+else
+    ${cmd}   # buildmeter 缺失/被禁 → 回退裸 make
+fi
+```
+
+要点:
+
+- `--count-only` 预扫描只数单元数不渲染,dry-run 非零退出由 `2>/dev/null` + `|| true` 兜
+- `--total` 有则显百分比,无则 indeterminate(count + rate + ETA)
+- `--ignore-errors 'Error 103|images are invalid'`:binman 打包阶段的已知噪音,过滤掉不触发错误转储(构建实际是成功的)
+- `pipefail`:make 失败不被 buildmeter 的 exit-0 吞掉,`set -e` 才抓得到
+- 详见 [progress.sh](../lib/progress.sh.md)
 
 **编译过程**：
 
@@ -339,7 +371,7 @@ NXP i.MX 系列芯片的 Boot ROM 有特殊要求，它要求镜像开头有一�
 ARCH=arm
 CROSS_COMPILE=arm-none-linux-gnueabihf-
 DEFCONFIG=mx6ull_aes_emmc_defconfig
-DEFAULT_DEVICE_TREE="imx6ull-14x14-evk-emmc"
+DEFAULT_DEVICE_TREE="imx6ull-aes"
 
 UBOOT_SRC_DIR="${PROJECT_ROOT}/third_party/uboot-imx"
 OUTPUT_DIR="${PROJECT_ROOT}/out/uboot"
@@ -352,7 +384,7 @@ PROJECT_ROOT/
 ├── third_party/
 │   └── uboot-imx/                    # U-Boot 源码（子模块）
 │       ├── arch/arm/dts/
-│       │   └── imx6ull-14x14-evk-emmc.dts
+│       │   └── imx6ull-aes.dts
 │       └── configs/
 │           └── mx6ull_aes_emmc_defconfig
 ├── out/
@@ -409,8 +441,8 @@ DEBUG=1 ./scripts/build_helper/build-uboot.sh
 [INFO] Toolchain found: arm-none-linux-gnueabihf-gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 [INFO] All required toolchain components found
 [INFO] Checking device tree...
-[INFO] Device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-emmc.dts
-[INFO] Base device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk.dts
+[INFO] Device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
+[INFO] Base device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dtsi
 [INFO] Checking defconfig...
 [INFO] Defconfig found: third_party/uboot-imx/configs/mx6ull_aes_emmc_defconfig
 [INFO] ========================================
@@ -426,6 +458,9 @@ DEBUG=1 ./scripts/build_helper/build-uboot.sh
 #
 [INFO] Building U-Boot...
 [CMD] make -C third_party/uboot-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/uboot -j8
+[INFO] Pre-scanning dry-run (make -n -k) for progress total…
+buildmeter
+:: ▓▓▓▓▓▓░░░░  62% • 1280/2064 units • 1:12 elapsed • CC arch/arm/lib/cache.o
   CC      arch/arm/lib/asm.o
   CC      arch/arm/lib/cache.o
   ...
@@ -486,7 +521,7 @@ sudo apt install python3-pyelftools
 #### 错误 3：设备树文件不存在
 
 ```
-[ERROR] Device tree file not found: third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-emmc.dts
+[ERROR] Device tree file not found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
 ```
 
 **可能原因**：

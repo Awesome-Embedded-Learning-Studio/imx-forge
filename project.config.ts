@@ -93,6 +93,18 @@ export default defineProject({
       desc: '上游主线内核在 i.MX6ULL 上稳定运行',
     },
     {
+      src: '/build_linux.png',
+      href: '/tutorial/kernel/',
+      title: '内核编译实时进度',
+      desc: 'buildmeter 解析 kbuild —— 数千个编译单元逐个点亮,长构建不再黑盒',
+    },
+    {
+      src: '/build_buildroot.png',
+      href: '/tutorial/rootfs/',
+      title: 'rootfs 编译进度',
+      desc: 'buildroot 全包序 + ninja 子进度 + All Packages 计数,漫长构建一目了然',
+    },
+    {
       src: '/Awesome-Embedded.png',
       href: '/',
       title: 'IMX-Forge 文档站',

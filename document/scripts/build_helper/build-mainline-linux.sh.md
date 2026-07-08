@@ -28,7 +28,9 @@
 ```
 build-mainline-linux.sh
     ├─ scripts/lib/logging.sh (日志工具库)
-    ├─ third_party/linux_mainline (主线内核源码)
+    ├─ scripts/lib/progress.sh (buildmeter 进度条接入)
+    ├─ third_party/linux_mainline (主线内核源码子模块)
+    ├─ third_party/buildmeter (进度条工具子模块,可选)
     └─ arm-none-linux-gnueabihf-gcc (交叉编译工具链)
 ```
 
@@ -51,6 +53,7 @@ build-mainline-linux.sh
 | `ARCH` | 目标架构 | `arm` |
 | `CROSS_COMPILE` | 交叉编译器前缀 | `arm-none-linux-gnueabihf-` |
 | `DEFCONFIG` | 内核配置文件 | `imx_aes_mainline_defconfig` |
+| `DEVICE_TREE` | 目标设备树名(校验 dtb 用) | `imx6ull-aes` |
 | `OUTPUT_DIR` | 编译输出目录 | `out/mainline/linux` |
 | `FIRMWARE_DIR` | 固件目录 | `driver/firmwares` |
 | `DEBUG` | 启用调试输出 | `0` |
@@ -76,10 +79,12 @@ build-mainline-linux.sh
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │  3. 构建阶段                                                 │
-│     - do_distclean() [可选]                                 │
+│     - do_distclean() [可选,--fast-build 跳过]               │
 │     - prepare_defconfig()                                    │
 │     - do_configure()                                         │
-│     - do_build()                                             │
+│     - do_build()       (buildmeter 进度条)                   │
+│     - do_modules_prepare()  (备好外挂驱动构建树)             │
+│     - Module.symvers 软链(备好外挂模块符号表)               │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -123,6 +128,66 @@ cp regulatory.db driver/firmwares/
 cp regulatory.db.p7s driver/firmwares/
 ```
 
+#### do_build()
+
+**作用**：编译内核,产物为 `zImage`(压缩内核) + `dtbs`(设备树)。
+
+**基础命令**：
+
+```bash
+make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} \
+    O=${OUTPUT_DIR} -j${NPROC} zImage dtbs
+```
+
+**buildmeter 进度条接入**(脚本开头顶着 `set -eo pipefail`,`source` 进 `scripts/lib/progress.sh`):
+
+```bash
+if forge_progress_enabled; then
+    local total=""
+    # clean build 才预扫描:make -n -k 枚举全部编译单元数当 % 分母(~15s)。
+    # dry-run 在 vmlinux 链接处非零退出(预期),2>/dev/null + || true 兜。
+    if [[ ${FAST_BUILD} -eq 0 ]]; then
+        log_info "Pre-scanning dry-run (make -n -k) for progress total (~15s)…"
+        total=$(${cmd} -n -k 2>/dev/null \
+            | python3 "$FORGE_PROGRESS_PY" kernel --count-only || true)
+    fi
+    if [[ -n "${total}" ]]; then
+        ${cmd} 2>&1 | python3 "$FORGE_PROGRESS_PY" kernel --total "${total}" --tail "$FORGE_PROGRESS_TAIL"
+    else
+        ${cmd} 2>&1 | python3 "$FORGE_PROGRESS_PY" kernel --tail "$FORGE_PROGRESS_TAIL"
+    fi
+else
+    ${cmd}   # buildmeter 缺失/被禁 → 回退裸 make
+fi
+```
+
+要点:
+
+- **clean build**(`FAST_BUILD=0`):预扫描出 % 分母,bar 显真实百分比(实测欠 ~6% —— vmlinux 链接断链让 dry-run 不枚举 post-link 的 CC,但 buildmeter cap 100% + finalizing 尾部兜底,不会误读 >100%)
+- **fast-build**(`--fast-build`):增量跳过预扫描,走 indeterminate(count + rate + ETA,无 %),省 15s 干预扫描税
+- `pipefail`:make 失败不被 buildmeter exit-0 吞掉
+- 详见 [progress.sh](../lib/progress.sh.md)
+
+#### do_modules_prepare()
+
+**作用**：备好构建树,让外挂(驱动)模块能 `make M=... modules` 编译。
+
+`make zImage dtbs` **不会**生成 `scripts/module.lds`,而外挂模块的链接规则(`scripts/Makefile.modfinal`)需要它 —— 缺了 `make M=... modules` 会报 `No rule to make target '<mod>.ko'`。
+
+**执行的命令**：
+
+```bash
+make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} \
+    O=${OUTPUT_DIR} modules_prepare
+```
+
+紧接其后,脚本还会确保 `Module.symvers` 存在(Linux ≥ 6.4 起 `zImage` 只吐 `vmlinux.symvers`,而外挂模块仍找 `Module.symvers`),缺失则软链过去:
+
+```bash
+[[ ! -e "${OUTPUT_DIR}/Module.symvers" && -f "${OUTPUT_DIR}/vmlinux.symvers" ]] \
+    && ln -sf vmlinux.symvers "${OUTPUT_DIR}/Module.symvers"
+```
+
 #### verify_build_artifacts()
 
 **作用**：验证编译产物是否正确。
@@ -131,9 +196,10 @@ cp regulatory.db.p7s driver/firmwares/
 
 | 产物 | 验证方法 | 期望结果 |
 |------|----------|----------|
-| `vmlinux` | `readelf -h | grep Machine` | `ARM` |
-| `vmlinux` | `readelf -h | grep Entry point` | 有效入口地址 |
-| `zImage` | 文件存在性检查 | 存在 |
+| `vmlinux` | `readelf -h \| grep Machine` | `ARM` |
+| `vmlinux` | `readelf -h \| grep Entry point` | 有效入口地址 |
+| `zImage` | 文件存在性 + 大小 | 存在 |
+| `${DEVICE_TREE}.dtb` | 文件存在性 + 大小(`arch/arm/boot/dts/nxp/imx/`) | 存在 |
 | `.config` | 文件存在性检查 | 存在 |
 | `System.map` | 文件存在性检查 | 存在（可选） |
 | `modules/` | 目录存在性检查 | 存在（可选） |
@@ -147,6 +213,7 @@ ARCH=arm
 CROSS_COMPILE=arm-none-linux-gnueabihf-
 DEFCONFIG=imx_aes_mainline_defconfig
 FAST_BUILD=0
+DEVICE_TREE="${DEFAULT_DEVICE_TREE:-imx6ull-aes}"
 
 LINUX_SRC_DIR="${PROJECT_ROOT}/third_party/linux_mainline"
 OUTPUT_DIR="${PROJECT_ROOT}/out/mainline/linux"
@@ -233,12 +300,22 @@ FIRMWARE_DIR=/path/to/firmwares ./scripts/build_helper/build-mainline-linux.sh
 [INFO] Configuring Linux kernel with imx_aes_mainline_defconfig...
 [CMD] make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/mainline/linux imx_aes_mainline_defconfig
 [INFO] Building Linux kernel...
-[CMD] make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/mainline/linux -j8
+[CMD] make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/mainline/linux -j14 zImage dtbs
+[INFO] Pre-scanning dry-run (make -n -k) for progress total (~15s)…
+buildmeter
+:: ▓▓▓▓▓▓▓▓▓░  91% • 3750/4125 units • 7:20 elapsed • LD arch/arm/boot/compressed/vmlinux
+  LD      arch/arm/boot/compressed/vmlinux
+  OBJCOPY arch/arm/boot/zImage
+  Kernel: arch/arm/boot/zImage is ready
+[INFO] Preparing build tree for out-of-tree modules...
+[CMD] make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/mainline/linux modules_prepare
+[INFO]   ✓ Module.symvers -> vmlinux.symvers (ready for out-of-tree module builds)
 [INFO] ========================================
 [INFO] Verifying build artifacts in out/mainline/linux...
 [INFO]   ✓ vmlinux: ARM
 [INFO]     Entry: 0xc0008000
 [INFO]   ✓ zImage: 3245152 bytes
+[INFO]   ✓ imx6ull-aes.dtb: 42118 bytes
 [INFO]   ✓ .config: present
 [INFO]   ✓ System.map: present
 [INFO] All build artifacts verified successfully
