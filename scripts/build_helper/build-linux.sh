@@ -313,7 +313,7 @@ main() {
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
         source "${SCRIPT_LIB_DIR}/release.sh"
         release_prepare "linux-imx" "${LINUX_SRC_DIR}" \
-            "${PROJECT_ROOT}/patches/linux-imx/linux-imx-latest.patch"
+            "${PROJECT_ROOT}/patches/linux-imx/linux-imx-latest.patch" "${PROJECT_ROOT}"
         log_info "========================================"
     fi
 

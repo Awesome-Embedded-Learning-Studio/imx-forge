@@ -72,12 +72,8 @@ release_prepare() {
 
     log_warn "release_prepare: about to reset/clean ${src} to pristine upstream state — uncommitted changes will be lost."
 
-    # --- reset 净源码 ---
-    if [[ "$component" == "linux-mainline" ]]; then
-        _release_reset_mainline "$src" "$project_root"
-    else
-        _release_reset_to_origin "$src" "$component"
-    fi
+    # --- reset 净源码(锁定到 superproject gitlink commit,可复现) ---
+    _release_reset_to_gitlink "$src" "$project_root" "$component"
 
     # --- 捕获元数据 ---
     RELEASE_COMMIT=$(git -C "$src" rev-parse HEAD)
@@ -94,56 +90,42 @@ release_prepare() {
     _release_apply_patch "$component" "$src" "$patch_arg"
 }
 
-# uboot / linux-imx:跟 origin 默认分支
-_release_reset_to_origin() {
-    local src="$1"
-    local component="$2"
-
-    local fallback_branch
-    case "$component" in
-        uboot)     fallback_branch="lf_v2025.04" ;;
-        linux-imx) fallback_branch="lf-6.12.y"   ;;
+# 组件 → 超项目内子模块路径(用于解析 gitlink commit)
+_release_submodule_path() {
+    case "$1" in
+        uboot)          echo "third_party/uboot-imx" ;;
+        linux-imx)      echo "third_party/linux-imx" ;;
+        linux-mainline) echo "third_party/linux_mainline" ;;
+        *) return 1 ;;
     esac
-
-    local default_branch
-    default_branch=$(git -C "$src" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
-                     | sed 's@^refs/remotes/origin/@@' || true)
-    : "${default_branch:=$fallback_branch}"
-    log_info "Default branch: ${default_branch}"
-
-    log_info "Fetching from upstream..."
-    git -C "$src" fetch origin || true
-
-    log_info "Cleaning working directory..."
-    git -C "$src" reset --hard HEAD 2>/dev/null || true
-    git -C "$src" clean -ffdx
-
-    log_info "Switching to ${default_branch}..."
-    git -C "$src" checkout -B "$default_branch" "origin/$default_branch"
-    git -C "$src" reset --hard "origin/$default_branch"
-    git -C "$src" clean -ffdx
-
-    log_info "${component} submodule reset complete"
 }
 
-# linux-mainline:锁定到超项目 gitlink commit(detached)
-_release_reset_mainline() {
+# 锁定到 superproject gitlink commit(detached):三个组件统一走这条路径,保证可复现。
+# 早期 uboot/linux-imx 走 _release_reset_to_origin(跟 origin 滚动默认分支 + fetch),会让
+# patch 基于的 base 随上游漂移 → CI 上 charlies_board.patch 因 base 已更新到 lf_v2026.04 而
+# 打不上。统一锁超项目 pin 的 gitlink commit 后,base 与 patch 制作时一致,patch 才稳。
+_release_reset_to_gitlink() {
     local src="$1"
     local project_root="$2"
+    local component="$3"
 
-    [[ -n "$project_root" ]] || { log_error "release_prepare: linux-mainline requires <project-root> arg"; exit 1; }
+    [[ -n "$project_root" ]] || { log_error "release_prepare: ${component} requires <project-root> arg"; exit 1; }
+
+    local sub_path
+    sub_path=$(_release_submodule_path "$component") \
+        || { log_error "release_prepare: unknown component '$component'"; exit 1; }
 
     local locked_commit
-    locked_commit=$(git -C "$project_root" rev-parse HEAD:third_party/linux_mainline) \
-        || { log_error "release_prepare: cannot resolve linux_mainline gitlink from superproject"; exit 1; }
+    locked_commit=$(git -C "$project_root" rev-parse "HEAD:${sub_path}") \
+        || { log_error "release_prepare: cannot resolve ${sub_path} gitlink from superproject"; exit 1; }
     log_info "Locked commit from superproject: ${locked_commit}"
 
     if ! git -C "$src" cat-file -e "${locked_commit}^{commit}" 2>/dev/null; then
         log_info "Locked commit not present locally; initializing submodule..."
-        git -C "$project_root" submodule update --init --depth=1 third_party/linux_mainline
+        git -C "$project_root" submodule update --init --depth=1 "${sub_path}"
     fi
     if ! git -C "$src" cat-file -e "${locked_commit}^{commit}" 2>/dev/null; then
-        log_error "release_prepare: locked mainline commit unavailable locally: ${locked_commit}"
+        log_error "release_prepare: locked ${component} commit unavailable locally: ${locked_commit}"
         exit 1
     fi
 
@@ -156,7 +138,7 @@ _release_reset_mainline() {
     git -C "$src" reset --hard "$locked_commit"
     git -C "$src" clean -ffdx
 
-    log_info "linux_mainline submodule reset complete at locked commit"
+    log_info "${component} submodule reset complete at locked commit"
 }
 
 _release_create_branch() {

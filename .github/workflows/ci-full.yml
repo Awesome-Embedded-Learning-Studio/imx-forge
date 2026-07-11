@@ -97,6 +97,7 @@ jobs:
             -e CCACHE_COMPILERCHECK=content \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
+              set -e
               git config --global --add safe.directory "*"
               ccache -M 2G && ccache -z
               mkdir -p /workspace/ccache-bin
@@ -110,7 +111,12 @@ jobs:
 
       - name: 验证产物
         run: |
-          [ -f ${{ env.BUILD_OUTPUT }}/uboot/u-boot-dtb.imx ] || exit 1
+          if [ ! -f ${{ env.BUILD_OUTPUT }}/uboot/u-boot-dtb.imx ]; then
+            echo "::error::产物缺失: ${{ env.BUILD_OUTPUT }}/uboot/u-boot-dtb.imx"
+            echo "上方「构建 U-Boot」步骤可能已失败(回看其日志);实际 uboot/ 内容:"
+            ls -lh ${{ env.BUILD_OUTPUT }}/uboot/ 2>/dev/null || echo "(目录不存在)"
+            exit 1
+          fi
           ls -lh ${{ env.BUILD_OUTPUT }}/uboot/
 
   # Stage 2: 双内核并行构建
@@ -151,6 +157,7 @@ jobs:
             -e CCACHE_COMPILERCHECK=content \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
+              set -e
               git config --global --add safe.directory "*"
               ccache -M 2G && ccache -z
               mkdir -p /workspace/ccache-bin
@@ -164,8 +171,12 @@ jobs:
 
       - name: 验证产物
         run: |
-          [ -f ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/zImage ] || exit 1
-          [ -f ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
+          if [ ! -f ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/zImage ] || \
+             [ ! -f ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ]; then
+            echo "::error::Linux (NXP BSP) 产物缺失;上方「构建 Linux NXP BSP」步骤可能已失败(回看其日志)"
+            ls -lh ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/ 2>/dev/null || echo "(目录不存在)"
+            exit 1
+          fi
 
   stage2-mainline:
     name: Stage 2 - Linux (Mainline)
@@ -204,6 +215,7 @@ jobs:
             -e CCACHE_COMPILERCHECK=content \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
+              set -e
               git config --global --add safe.directory "*"
               ccache -M 5G && ccache -z
               mkdir -p /workspace/ccache-bin
@@ -217,9 +229,14 @@ jobs:
 
       - name: 验证产物
         run: |
-          [ -f out/release-latest/linux/arch/arm/boot/zImage ] || exit 1
-          [ -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
-          grep -q "Kernel Track: mainline" out/release-latest/linux/build_info.txt
+          if [ ! -f out/release-latest/linux/arch/arm/boot/zImage ] || \
+             [ ! -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || \
+             ! grep -q "Kernel Track: mainline" out/release-latest/linux/build_info.txt; then
+            echo "::error::Linux (Mainline) 产物缺失或 build_info 无 Kernel Track;上方「构建 Linux Mainline」步骤可能已失败(回看其日志)"
+            ls -lh out/release-latest/linux/arch/arm/boot/ 2>/dev/null || echo "(目录不存在)"
+            cat out/release-latest/linux/build_info.txt 2>/dev/null || echo "(build_info.txt 不存在)"
+            exit 1
+          fi
 
   # Stage 3+4: BusyBox + RootFS (合并)
   stage3-4:
@@ -269,6 +286,7 @@ jobs:
             -e BUILDROOT_QT6=${{ needs.check.outputs.compile_3rd_party == 'true' && '1' || '0' }} \
             ${{ env.DOCKER_IMAGE }} \
             bash -c '
+              set -e
               git config --global --add safe.directory "*"
               ccache -M 2G && ccache -z
               mkdir -p /workspace/ccache-bin
@@ -284,8 +302,12 @@ jobs:
 
       - name: 验证 rootfs 产物
         run: |
-          [ -x ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ] || exit 1
-          [ -f ${{ env.BUILD_OUTPUT }}/rootfs/etc/inittab ] || exit 1
+          if [ ! -x ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ] || \
+             [ ! -f ${{ env.BUILD_OUTPUT }}/rootfs/etc/inittab ]; then
+            echo "::error::rootfs 产物缺失;上方 Stage 3/4 构建步骤可能已失败(回看其日志)"
+            ls -lh ${{ env.BUILD_OUTPUT }}/rootfs/bin/busybox ${{ env.BUILD_OUTPUT }}/rootfs/etc/inittab 2>/dev/null || echo "(rootfs 不完整或不存在)"
+            exit 1
+          fi
 
   # 最终验证和产物上传
   final:

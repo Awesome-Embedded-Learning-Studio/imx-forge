@@ -280,7 +280,7 @@ main() {
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
         source "${SCRIPT_LIB_DIR}/release.sh"
         release_prepare "uboot" "${UBOOT_SRC_DIR}" \
-            "${PROJECT_ROOT}/patches/uboot-imx/charlies_board.patch"
+            "${PROJECT_ROOT}/patches/uboot-imx/charlies_board.patch" "${PROJECT_ROOT}"
         log_info "========================================"
     fi
 
