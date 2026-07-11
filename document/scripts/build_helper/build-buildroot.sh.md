@@ -26,6 +26,8 @@
 ./scripts/build_helper/build-buildroot.sh --reconfigure
 ```
 
+> **Qt6 是增量构建**:`--with-qt6` 在已有 output 上 merge `fragments/qt6.config` 后增量编译——前面构建的 busybox / glibc / 各库都保留,只新增 Qt6 及其依赖(约 2-4h)。要从零全量重建先 `--clean`。补完 Qt6 后配合 `release-all.sh --continue --stage 5` 重打包镜像,详见 [release-all.sh 文档](../release-all.sh.md)。
+
 ## 参数
 
 | 参数 | 说明 |

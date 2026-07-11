@@ -2,6 +2,8 @@
 
 > 5分钟快速体验 i.MX6ULL 嵌入式 Linux 系统构建
 
+> 📖 **优先阅读[文档站](https://awesome-embedded-learning-studio.github.io/imx-forge/)完整版**：本文的实拍图片只在文档站正常渲染；GitHub 上的 `.md` 预览不显示 `/public` 图片，仅供源码参考。
+
 ---
 
 ## 目录

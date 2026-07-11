@@ -36,6 +36,24 @@ source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
 # 导入依赖检查脚本
 source "${SCRIPT_DIR}/../init/env-init.sh"
 
+# Parse arguments
+# --release 触发 release 编排(reset 净源码→打 patch→建 release 分支→写 build_info),
+# 详见 scripts/lib/release.sh。不传时本脚本行为与之前完全一致(分步构建)。
+RELEASE_MODE=0
+RELEASE_VERSION="unknown"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --release) RELEASE_MODE=1; shift ;;
+        --release-version)
+            [[ $# -ge 2 ]] || { log_error "--release-version requires a value"; exit 1; }
+            RELEASE_VERSION="$2"; shift 2 ;;
+        --help|-h)
+            echo "Usage: $0 [--release] [--release-version V]"
+            exit 0 ;;
+        *) log_error "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
 # Configuration
 ARCH=arm
 CROSS_COMPILE=arm-none-linux-gnueabihf-
@@ -256,6 +274,16 @@ main() {
     log_info "Starting U-Boot build for ${DEFCONFIG}"
     log_info "========================================"
 
+    # Release 编排(--release):reset 净源码→打 patch→建 release 分支。必须在所有 check
+    # (尤其 check_defconfig —— mx6ull_aes_emmc_defconfig 由 patch 引入)和 logo_helper
+    # 之前:否则 git clean -ffdx 会清掉 logo_helper 写入的 tools/logos/denx.bmp。
+    if [[ ${RELEASE_MODE} -eq 1 ]]; then
+        source "${SCRIPT_LIB_DIR}/release.sh"
+        release_prepare "uboot" "${UBOOT_SRC_DIR}" \
+            "${PROJECT_ROOT}/patches/uboot-imx/charlies_board.patch"
+        log_info "========================================"
+    fi
+
     # Pre-build checks
     check_host_dependencies
     check_toolchain
@@ -279,6 +307,11 @@ main() {
 
     # Verify build artifacts
     verify_build_artifacts || exit 1
+
+    # Release 收尾(--release):写 build_info.txt(uboot 无 Kernel Track 字段)
+    if [[ ${RELEASE_MODE} -eq 1 ]]; then
+        release_finalize "uboot" "${OUTPUT_DIR}" "${RELEASE_VERSION}"
+    fi
 
     log_info "========================================"
     log_info "Build completed successfully!"

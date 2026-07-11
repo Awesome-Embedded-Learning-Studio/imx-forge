@@ -3,7 +3,9 @@
 # Linux kernel build script for i.MX6ULL
 #
 
-set -e
+# -o pipefail: do_build pipes make | buildmeter; without it a failed make would
+# be masked by buildmeter's exit-0 and set -e would miss the failure.
+set -eo pipefail
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,19 +32,33 @@ fi
 # 导入依赖检查脚本
 source "${SCRIPT_DIR}/../init/env-init.sh"
 
+# buildmeter progress bar (optional; auto-falls back to bare make if buildmeter
+# is absent or FORGE_PROGRESS_DISABLE=1). See scripts/lib/progress.sh.
+source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
+
 # Configuration
 ARCH=arm
 CROSS_COMPILE=arm-none-linux-gnueabihf-
 DEFCONFIG=imx_aes_defconfig
+DEFAULT_DEVICE_TREE="${DEFAULT_DEVICE_TREE:-imx6ull-aes}"
 FAST_BUILD=0
 
 # Parse arguments
-for arg in "$@"; do
-    case $arg in
-        --fast-build)
-            FAST_BUILD=1
-            shift
-            ;;
+# --release 触发 release 编排(reset 净源码→打 patch→建 release 分支→build_info),
+# 详见 scripts/lib/release.sh。不传时分步构建行为与之前完全一致。
+RELEASE_MODE=0
+RELEASE_VERSION="unknown"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --fast-build) FAST_BUILD=1; shift ;;
+        --release) RELEASE_MODE=1; shift ;;
+        --release-version)
+            [[ $# -ge 2 ]] || { log_error "--release-version requires a value"; exit 1; }
+            RELEASE_VERSION="$2"; shift 2 ;;
+        --help|-h)
+            echo "Usage: $0 [--fast-build] [--release] [--release-version V]"
+            exit 0 ;;
+        *) log_error "Unknown option: $1"; exit 1 ;;
     esac
 done
 
@@ -180,9 +196,23 @@ do_configure() {
 # Build Linux kernel
 do_build() {
     log_info "Building Linux kernel..."
-    local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC}"
+    # 显式 zImage dtbs:arm 默认 goal 只出 zImage 不出 dtbs,release-all Stage2 要校验 dtb。
+    local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC} zImage dtbs"
     echo -e "${YELLOW}[CMD]${NC} ${cmd}"
-    ${cmd}
+    if forge_progress_enabled; then
+        local total=""
+        if [[ ${FAST_BUILD} -eq 0 ]]; then
+            log_info "Pre-scanning dry-run (make -n -k) for progress total (~15s)…"
+            total=$(${cmd} -n -k 2>/dev/null | python3 "${FORGE_PROGRESS_PY}" kernel --count-only || true)
+        fi
+        if [[ -n "${total}" ]]; then
+            ${cmd} 2>&1 | python3 "${FORGE_PROGRESS_PY}" kernel --total "${total}" --tail "${FORGE_PROGRESS_TAIL}"
+        else
+            ${cmd} 2>&1 | python3 "${FORGE_PROGRESS_PY}" kernel --tail "${FORGE_PROGRESS_TAIL}"
+        fi
+    else
+        ${cmd}
+    fi
 }
 
 # Verify build artifacts
@@ -230,6 +260,16 @@ verify_build_artifacts() {
         has_error=1
     fi
 
+    # 2b. Verify device tree blob (release-all Stage2 校验 dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb)
+    local dtb_path="${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb"
+    if [ -f "${dtb_path}" ]; then
+        SIZE=$(stat -c%s "${dtb_path}" 2>/dev/null || stat -f%z "${dtb_path}" 2>/dev/null)
+        log_info "  ✓ ${DEFAULT_DEVICE_TREE}.dtb: ${SIZE} bytes"
+    else
+        log_error "  ✗ ${DEFAULT_DEVICE_TREE}.dtb: not found (${dtb_path})"
+        has_error=1
+    fi
+
     # 3. Verify .config file
     if [ -f "${OUTPUT_DIR}/.config" ]; then
         log_info "  ✓ .config: present"
@@ -268,6 +308,15 @@ main() {
     fi
     log_info "========================================"
 
+    # Release 编排(--release):reset 净源码→打 patch→建 release 分支。必须在 checks 前
+    # (defconfig 由 prepare_defconfig 从超项目模板生成,reset 后会重建,不受影响)。
+    if [[ ${RELEASE_MODE} -eq 1 ]]; then
+        source "${SCRIPT_LIB_DIR}/release.sh"
+        release_prepare "linux-imx" "${LINUX_SRC_DIR}" \
+            "${PROJECT_ROOT}/patches/linux-imx/linux-imx-latest.patch"
+        log_info "========================================"
+    fi
+
     # Pre-build checks
     check_host_dependencies
     check_toolchain
@@ -299,6 +348,11 @@ main() {
     # Verify build artifacts
     verify_build_artifacts || exit 1
 
+    # Release 收尾(--release):写 build_info.txt(含 `Kernel Track: imx`,release-all Stage2 硬依赖)
+    if [[ ${RELEASE_MODE} -eq 1 ]]; then
+        release_finalize "linux-imx" "${OUTPUT_DIR}" "${RELEASE_VERSION}"
+    fi
+
     log_info "========================================"
     log_info "Build completed successfully!"
 
@@ -306,6 +360,7 @@ main() {
     log_info "Kernel artifacts in ${OUTPUT_DIR}:"
     [ -f "${OUTPUT_DIR}/vmlinux" ] && log_info "  ✓ vmlinux (ELF kernel)"
     [ -f "${OUTPUT_DIR}/arch/arm/boot/zImage" ] && log_info "  ✓ arch/arm/boot/zImage (compressed kernel)"
+    [ -f "${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb" ] && log_info "  ✓ arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb (device tree)"
     [ -f "${OUTPUT_DIR}/System.map" ] && log_info "  ✓ System.map (symbol table)"
     [ -f "${OUTPUT_DIR}/.config" ] && log_info "  ✓ .config (kernel configuration)"
 

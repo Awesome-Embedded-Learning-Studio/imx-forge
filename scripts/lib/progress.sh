@@ -13,7 +13,7 @@
 # 本文件(scripts/lib)位置算项目根,不依赖调用方是否设了 PROJECT_ROOT。
 #
 # 环境变量:
-#   FORGE_PROGRESS_PY        cli.py 路径(默认 ~/buildmeter/src/buildmeter/cli.py)
+#   FORGE_PROGRESS_PY        cli.py 路径(默认 ${PROJECT_ROOT}/third_party/buildmeter/src/buildmeter/cli.py)
 #   FORGE_PROGRESS_TAIL      bar 下方滑动显示的最近 raw 行数(默认 5)
 #   FORGE_PROGRESS_DISABLE=1 强制关闭(回退裸 make)
 # source 后可用:
