@@ -117,7 +117,21 @@ fi
 # arm-none-linux-gnueabihf-gcc 的真实位置反推,换机器/换工具链版本都不用改 defconfig。
 # buildroot 的 Kconfig 符号不取 `make BR2_X=Y` 命令行覆盖(conf 只读 .config),
 # 故算出 TC_ROOT 后在 Step 1c 用 sed 写进 .config + olddefconfig 规范化。
-_tc_gcc="$(command -v arm-none-linux-gnueabihf-gcc || true)"
+# 遍历 PATH 找真实 gcc,跳过 ccache 包装:CI(及本地若配了 ccache)在 PATH 前段塞
+# ccache-bin/arm-none-linux-gnueabihf-gcc -> /usr/bin/ccache 符号链接,command -v 会先命中它,
+# readlink -f 解析到 .../ccache → 误把工具链根算成 /usr,buildroot 去找 /usr/bin/...gcc
+# 报 "Cannot execute cross-compiler"。取第一个 readlink 后 basename 不是 ccache 的候选。
+_tc_gcc=""
+_oifs="$IFS"; IFS=':'; read -ra _pd <<< "${PATH}"; IFS="$_oifs"
+for _d in "${_pd[@]}"; do
+    [[ -z "$_d" ]] && continue
+    _c="${_d}/arm-none-linux-gnueabihf-gcc"
+    [[ -x "$_c" ]] || continue
+    _r="$(readlink -f "$_c" 2>/dev/null || printf '%s' "$_c")"
+    [[ "$(basename "$_r")" == "ccache" ]] && continue   # ccache 包装,跳过
+    _tc_gcc="$_c"; break
+done
+unset _oifs _pd _d _c _r
 if [[ -n "${_tc_gcc}" ]]; then
     TC_ROOT="$(cd "$(dirname "$(readlink -f "${_tc_gcc}")")/.." && pwd)"
 else
