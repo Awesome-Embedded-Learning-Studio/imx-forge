@@ -258,7 +258,7 @@ stage_1_uboot() {
     log_info "Output directory: ${OUTPUT_DIR}"
     echo ""
 
-    bash "${SCRIPT_DIR}/release_builder/build_release_uboot.sh"
+    bash "${SCRIPT_DIR}/build_helper/build-uboot.sh" --release
 
     # Verify key artifacts
     if [[ -f "${OUTPUT_DIR}/u-boot-dtb.imx" ]]; then
@@ -280,12 +280,12 @@ stage_2_linux() {
     log_info "Output directory: ${OUTPUT_DIR}"
     log_info "Kernel track: ${KERNEL_TRACK}"
 
-    local build_script="${SCRIPT_DIR}/release_builder/build_release_linux.sh"
+    local build_script="${SCRIPT_DIR}/build_helper/build-linux.sh"
     if [[ "${KERNEL_TRACK}" == "mainline" ]]; then
-        build_script="${SCRIPT_DIR}/release_builder/build_release_mainline_linux.sh"
+        build_script="${SCRIPT_DIR}/build_helper/build-mainline-linux.sh"
     fi
 
-    local build_args=()
+    local build_args=(--release)
     if [[ ${FAST_BUILD} -eq 1 ]]; then
         log_info "Fast build mode enabled"
         build_args+=(--fast-build)

@@ -66,13 +66,13 @@ This makes the U-Boot banner match the release artifact build time.
 If a byte-for-byte reproducible build is needed, pass a fixed value explicitly:
 
 ```bash
-SOURCE_DATE_EPOCH=1740988800 ./scripts/release_builder/build_release_uboot.sh v0.1.0
+SOURCE_DATE_EPOCH=1740988800 ./scripts/build_helper/build-uboot.sh --release --release-version v0.1.0
 ```
 
 ## Files Changed
 
-- `scripts/release_builder/build_release_uboot.sh`
-- `document/scripts/release_builder/build_release_uboot.sh.md`
+- `scripts/lib/release.sh`（release 编排下沉于此；U-Boot 分支默认当前时间戳）
+- `scripts/build_helper/build-uboot.sh`（`--release` 模式调用 release.sh）
 - `document/notes/2026-06-09-uboot-release-build-timestamp.md`
 
 ## Verification

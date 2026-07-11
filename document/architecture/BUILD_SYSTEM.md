@@ -435,50 +435,40 @@ log_error "构建失败！"
 
 ### 3.3 辅助脚本
 
-#### 3.3.1 build_release_uboot.sh
+#### 3.3.1 build-uboot.sh --release（U-Boot 发布构建）
 
-**位置**：`scripts/release_builder/build_release_uboot.sh`
+**位置**：`scripts/build_helper/build-uboot.sh`（`--release` 模式）；编排逻辑下沉在共享库 `scripts/lib/release.sh`
 
-**主要职责**：
+**主要职责**（`--release` 模式下，由 `lib/release.sh` 承接）：
 
 - 执行可重现的 U-Boot 发布构建
-- 管理 U-Boot 子模块状态
-- 应用补丁
-- 生成构建信息文件
+- 重置 U-Boot 子模块到上游默认分支的纯净状态
+- 应用补丁 `patches/uboot-imx/charlies_board.patch`
+- 创建发布分支 `release-build-YYYYMMDD-<short-sha>`
+- 生成构建信息文件 `build_info.txt`
 
-**构建流程**：
+不加 `--release` 时，`build-uboot.sh` 仅做编译（distclean→configure→build→verify），适合日常分步开发构建。
+
+**编排流程**（`release_prepare` / `release_finalize`，见 `scripts/lib/release.sh`）：
 
 ```bash
-# Step 1: 重置 U-Boot 子模块到默认分支
-# - 检测默认分支
-# - 切换并重置到 upstream
-# - 清理工作目录
-
-# Step 2: 验证子模块状态
-# - 显示当前 commit
-# - 显示版本和分支信息
-
-# Step 3: 创建发布分支
-# - 命名格式: release-build-YYYYMMDD-<short-sha>
-
-# Step 4: 应用补丁
-# - 应用 patches/uboot-imx/charlies_board.patch
-
-# Step 5: 构建
-# - 调用 build-uboot.sh 执行实际构建
-
-# Step 6: 生成构建信息
-# - 保存到 out/uboot/build_info.txt
+# release_prepare "uboot":
+#   1. 设 SOURCE_DATE_EPOCH(默认当前时间) + LC_ALL=C
+#   2. reset 子模块到 origin 默认分支(lf_v2025.04 回退) + git clean -ffdx
+#   3. 捕获 commit / version / branch
+#   4. 创建 release-build-YYYYMMDD-<short-sha> 分支
+#   5. 应用 patches/uboot-imx/charlies_board.patch(git apply,失败回退 --3way)
+# —— 随后走编译流程 distclean → configure → build → verify ——
+# release_finalize "uboot":
+#   6. 写 ${OUTPUT_DIR}/build_info.txt
 ```
 
 **可重现构建**：
 
 ```bash
-# 设置固定的时间戳确保构建可重现
-export SOURCE_DATE_EPOCH=1609459200  # 2021-01-01 00:00:00 UTC
-
-# 执行发布构建
-./scripts/release_builder/build_release_uboot.sh v0.1.0
+# U-Boot 默认用当前构建时间(让 banner 匹配产物时间)。
+# 需要逐字节可重现时,显式固定 SOURCE_DATE_EPOCH:
+SOURCE_DATE_EPOCH=1740988800 ./scripts/build_helper/build-uboot.sh --release --release-version v0.1.0
 ```
 
 **构建信息文件**：
@@ -634,7 +624,7 @@ which arm-none-linux-gnueabihf-gcc
 DEBUG=1 ./scripts/build_helper/build-linux.sh
 
 # 设置固定时间戳
-SOURCE_DATE_EPOCH=1609459200 ./scripts/release_builder/build_release_uboot.sh
+SOURCE_DATE_EPOCH=1740988800 ./scripts/build_helper/build-uboot.sh --release
 
 # 覆盖并行任务数
 NPROC=4 ./scripts/build_helper/build-linux.sh
@@ -1274,7 +1264,7 @@ convert document/logo/logo.png -resize 800x480! -alpha off -depth 8 bmp3:test.bm
 | `scripts/build_helper/build-uboot.sh` | U-Boot 构建 |
 | `scripts/build_helper/build-busybox.sh` | BusyBox 构建 |
 | `scripts/lib/logging.sh` | 日志共享库 |
-| `scripts/release_builder/build_release_uboot.sh` | U-Boot 发布构建 |
+| `scripts/lib/release.sh` | release 编排共享库(reset/patch/分支/build_info) |
 | `scripts/server_helper/copy_to_tftp.sh` | TFTP 复制工具 |
 | `scripts/logo_helper/logo_helper.sh` | Logo 转换工具 |
 

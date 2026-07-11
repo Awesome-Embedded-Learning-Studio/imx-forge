@@ -111,7 +111,7 @@ int example_function() {
 - **项目根目录**：[../../](../../)
 - **驱动脚本**：`scripts/driver_helper/`
 - **示例驱动**：`driver/example-driver/`
-- **配置文件**：[../../scripts/driver_helper/driver_helper.conf](../../scripts/driver_helper/driver_helper.conf)
+- **配置文件**：`scripts/driver_helper/driver_helper.conf`
 
 ### 外部资源
 

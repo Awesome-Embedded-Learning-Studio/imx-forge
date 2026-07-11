@@ -321,7 +321,7 @@ patches/
 │  │                                                                   │
 │  ├── patch_maker.sh  ────▶ 生成 patches/*.patch                     │
 │  │                                                                   │
-│  ├── release_builder/  ────▶ 打包输出产物                            │
+│  ├── lib/release.sh    ────▶ release 编排(build-* --release 调用)    │
 │  │                                                                   │
 │  ├── third_party_install/                                           │
 │  │   └── install_libc.sh  ────▶ rootfs/nfs/                         │
@@ -646,11 +646,11 @@ imx-forge/
 │   │   ├── build-busybox.sh    # BusyBox 构建脚本
 │   │   ├── build-linux.sh      # Linux 内核构建脚本
 │   │   └── build-uboot.sh      # U-Boot 构建脚本
-│   ├── lib/                    # 公共库
-│   │   └── logging.sh          # 日志工具库
+│   ├── lib/                    # 公共库(logging/progress/release)
+│   │   ├── logging.sh          # 日志工具库
+│   │   └── release.sh          # release 编排(build-* --release 调用)
 │   ├── logo_helper/            # Logo 生成工具
 │   ├── patch_maker.sh          # 补丁生成脚本
-│   ├── release_builder/        # 发布构建脚本
 │   ├── server_helper/          # 服务器辅助脚本
 │   ├── third_party_install/    # 第三方依赖安装
 │   │   ├── README.md           # 安装脚本说明
@@ -880,7 +880,7 @@ Rootfs 需要包含库文件、配置文件、初始化脚本等，手动维护�
 │  工具支持层                                                        │
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │  scripts/patch_maker.sh - 补丁生成工具                        │  │
-│  │  scripts/release_builder/ - 发布打包工具                      │  │
+│  │  scripts/lib/release.sh - release 编排(--release 模式)        │  │
 │  │  scripts/third_party_install/ - 依赖安装脚本                  │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 │                                                                      │

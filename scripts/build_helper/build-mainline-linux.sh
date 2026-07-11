@@ -41,12 +41,21 @@ FAST_BUILD=0
 DEVICE_TREE="${DEFAULT_DEVICE_TREE:-imx6ull-aes}"
 
 # Parse arguments
-for arg in "$@"; do
-    case $arg in
-        --fast-build)
-            FAST_BUILD=1
-            shift
-            ;;
+# --release 触发 release 编排(reset 净源码→打 patch→建 release 分支→build_info),
+# 详见 scripts/lib/release.sh。不传时分步构建行为与之前完全一致。
+RELEASE_MODE=0
+RELEASE_VERSION="unknown"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --fast-build) FAST_BUILD=1; shift ;;
+        --release) RELEASE_MODE=1; shift ;;
+        --release-version)
+            [[ $# -ge 2 ]] || { log_error "--release-version requires a value"; exit 1; }
+            RELEASE_VERSION="$2"; shift 2 ;;
+        --help|-h)
+            echo "Usage: $0 [--fast-build] [--release] [--release-version V]"
+            exit 0 ;;
+        *) log_error "Unknown option: $1"; exit 1 ;;
     esac
 done
 
@@ -418,6 +427,15 @@ main() {
     fi
     log_info "========================================"
 
+    # Release 编排(--release):reset 净源码到超项目锁定的 gitlink commit→打目录最新 patch
+    # →建 release 分支。defconfig 由 prepare_defconfig 从超项目模板生成,reset 不影响。
+    if [[ ${RELEASE_MODE} -eq 1 ]]; then
+        source "${SCRIPT_LIB_DIR}/release.sh"
+        release_prepare "linux-mainline" "${LINUX_SRC_DIR}" \
+            "${PROJECT_ROOT}/patches/linux_mainline" "${PROJECT_ROOT}"
+        log_info "========================================"
+    fi
+
     # Pre-build checks
     check_host_dependencies
     check_toolchain
@@ -464,6 +482,11 @@ main() {
 
     # Verify build artifacts
     verify_build_artifacts || exit 1
+
+    # Release 收尾(--release):写 build_info.txt(含 `Kernel Track: mainline`,release-all Stage2 硬依赖)
+    if [[ ${RELEASE_MODE} -eq 1 ]]; then
+        release_finalize "linux-mainline" "${OUTPUT_DIR}" "${RELEASE_VERSION}"
+    fi
 
     log_info "========================================"
     log_info "Build completed successfully!"

@@ -34,9 +34,8 @@ scripts/
 │   └── clean_buildroot.sh       # buildroot 清理(D2-009)
 ├── release-all.sh         # 一键构建
 ├── patch_maker.sh         # 补丁生成
-├── lib/                   # 共享库
+├── lib/                   # 共享库(logging/progress/release)
 ├── logo_helper/           # Logo 处理
-├── release_builder/       # 发布构建
 └── server_helper/         # 服务器工具
 ```
 :::
