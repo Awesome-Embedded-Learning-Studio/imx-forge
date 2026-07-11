@@ -10,7 +10,9 @@ BR2_cortex_a7=y
 BR2_ARM_EABIHF=y
 BR2_ARM_FPU_NEON_VFPV4=y
 
-# ===== External preinstalled toolchain:Arm GNU Toolchain 15.2.rel1 (/opt/arm-gnu-toolchain)
+# ===== External preinstalled toolchain:Arm GNU Toolchain 15.2.rel1 =====
+# 路径 /opt/arm-gnu-toolchain 仅为 CI 容器默认;本地由 build-buildroot.sh 按 PATH 中 gcc
+# 位置写进 .config(sed + olddefconfig;Kconfig 不取命令行 BR2_),换机器无需改此处。
 # GCC 15.2 / glibc / kernel headers 6.6(arm-gnu-toolchain 15.2.rel1 的 sysroot headers)
 BR2_TOOLCHAIN_EXTERNAL=y
 BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y

@@ -112,6 +112,21 @@ if [[ "$CLEAN_PATH" != "$PATH" ]]; then
     export PATH="$CLEAN_PATH"
 fi
 
+# 解析外部工具链根目录(buildroot BR2_TOOLCHAIN_EXTERNAL_PATH 要绝对路径)。
+# defconfig 默认写死 /opt/arm-gnu-toolchain(CI 容器位置);本地按 PATH 里
+# arm-none-linux-gnueabihf-gcc 的真实位置反推,换机器/换工具链版本都不用改 defconfig。
+# buildroot 的 Kconfig 符号不取 `make BR2_X=Y` 命令行覆盖(conf 只读 .config),
+# 故算出 TC_ROOT 后在 Step 1c 用 sed 写进 .config + olddefconfig 规范化。
+_tc_gcc="$(command -v arm-none-linux-gnueabihf-gcc || true)"
+if [[ -n "${_tc_gcc}" ]]; then
+    TC_ROOT="$(cd "$(dirname "$(readlink -f "${_tc_gcc}")")/.." && pwd)"
+else
+    TC_ROOT="/opt/arm-gnu-toolchain"   # fallback = defconfig 默认(CI 容器)
+    log_warn "PATH 中找不到 arm-none-linux-gnueabihf-gcc,回退 ${TC_ROOT}"
+fi
+unset _tc_gcc
+
+log_info "Toolchain:    ${TC_ROOT}"
 log_info "========================================"
 log_info "Buildroot rootfs build"
 log_info "========================================"
@@ -127,6 +142,15 @@ if [[ ${CLEAN} -eq 1 || ${RECONFIGURE} -eq 1 || ! -f "${OUTPUT_DIR}/.config" ]];
     make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}" BR2_EXTERNAL="${BR2_EXTERNAL_DIR}" "${DEFCONFIG}"
 else
     log_info "Step 1: Reusing existing .config (use --reconfigure to re-apply defconfig)"
+fi
+
+# Step 1c: 工具链路径落进 .config(defconfig 默认 /opt/arm-gnu-toolchain 仅 CI 容器适用)。
+# Kconfig 不取 make 命令行 BR2_ 覆盖,故 sed 改 .config 再 olddefconfig 规范化;
+# 复用旧 .config 时也重算,换机器后路径自动正确。已是目标值则跳过(增量构建不重复)。
+if ! grep -q "^BR2_TOOLCHAIN_EXTERNAL_PATH=\"${TC_ROOT}\"$" "${OUTPUT_DIR}/.config"; then
+    log_info "Step 1c: Toolchain path → ${TC_ROOT} (from PATH)"
+    sed -i 's|^BR2_TOOLCHAIN_EXTERNAL_PATH=.*|BR2_TOOLCHAIN_EXTERNAL_PATH="'"${TC_ROOT}"'"|' "${OUTPUT_DIR}/.config"
+    make -C "${BUILDROOT_DIR}" O="${OUTPUT_DIR}" BR2_EXTERNAL="${BR2_EXTERNAL_DIR}" olddefconfig
 fi
 
 # Qt6 fragment merge(可选):Qt6 全模块编译 2-4h,默认最小 rootfs 不含;
