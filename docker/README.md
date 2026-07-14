@@ -14,7 +14,7 @@
 
 ### 方式一：直接拉取预构建镜像（推荐）
 
-我们会为正式 release 提供预构建 Docker 镜像，可以直接拉取使用。正式版本标签从 `v0.1.0` 开始；如果尚未发布对应标签，请使用本地构建方式。
+我们会为正式 release 提供预构建 Docker 镜像，可以直接拉取使用。当前最新版本为 `v1.0.0`（首个轻量可用版，已上板验证）；推荐用 `latest` 跟随最新，或锁定 `v1.0.0` 保证可复现。
 
 ```bash
 # 拉取最新版本
@@ -27,7 +27,7 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 
 使用特定版本：
 ```bash
-docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v0.1.0
+docker pull ghcr.io/awesome-embedded-learning-studio/imx-forge:v1.0.0
 ```
 
 ### 方式二：本地构建

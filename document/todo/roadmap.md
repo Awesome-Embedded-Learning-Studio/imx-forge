@@ -1,6 +1,6 @@
 # IMX-Forge 项目路线图
 
-> **最后更新**：2026-06-14（对齐实际进度）
+> **最后更新**：2026-07-14（回填 buildroot 教程/脚本、I2C/SPI 驱动完成状态）
 > **数据来源**：GitHub Issue #47 + 本地规划
 > **当前发布里程碑**：v1.0.0（首个轻量可用版本）
 
@@ -14,7 +14,7 @@
   - [D3: 示例展示](./directions/d3-examples.md) - 11项
   - [D4: 生态成熟](./directions/d4-ecosystem.md) - 18项
 - 🔗 **GitHub Issue #47**：[路线任务追踪](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/47)
-- 📦 **已完成**：v0.5 里程碑（Mainline 内核迁移 + QT6 支持）
+- 📦 **已完成**：v1.0.0（SD/eMMC 完整构建→烧录→启动闭环）；v0.5 为历史里程碑（Mainline 内核迁移 + QT6 支持）
 
 ---
 

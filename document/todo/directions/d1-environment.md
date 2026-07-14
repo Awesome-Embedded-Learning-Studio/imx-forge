@@ -1,6 +1,6 @@
 # 方向 D1：环境完善
 
-> **最后更新**：2026-06-14（对齐实际进度）
+> **最后更新**：2026-07-14（新增硬件速查/串口工具/首次上电/模块开机加载四篇 bring-up 文档）
 > **任务数量**：35项 (6工具 + 29文档)，P0 文档已完成 23/29
 
 ---
@@ -47,8 +47,8 @@
 
 | 任务 | 状态 | 实际文件 |
 |------|------|----------|
-| Board bring-up quick start / 板子上手与硬件速查 | [ ] ⚠️ | 起步引导见 [start/](../../tutorial/start/)，缺「硬件接口速查表」专篇 |
-| First boot and serial console checklist / 第一次上电与串口检查 | [ ] ⚠️ | 部分覆盖 [practical/03_boot_and_debug](../../tutorial/practical/03_boot_and_debug.md) |
+| Board bring-up quick start / 板子上手与硬件速查 | [x] | [start/03 硬件接口速查表](../../tutorial/start/03_hardware_quick_reference.md) |
+| First boot and serial console checklist / 第一次上电与串口检查 | [x] | [start/05 首次上电与串口检查](../../tutorial/start/05_first_boot_check.md)（practical/03 亦有覆盖） |
 | Boot mode and storage selection guide / 启动介质选择 | [x] | [flash/01 存储介质](../../tutorial/flash/01_storage_media_basics.md) + [flash/04 启动流程与偏移](../../tutorial/flash/04_imx6ull_boot_flow_and_offsets.md) |
 | Safe flashing guide / 安全烧录教程 | [x] | [flash/09 SD 卡烧录](../../tutorial/flash/09_sd_card_flashing.md) + [flash/10 uuu/ums emmc](../../tutorial/flash/10_uuu_ums_emmc_flashing.md) |
 | **Full build workflow from a clean clone** / 从空仓库到完整构建 | [x] | [practical/02 构建系统](../../tutorial/practical/02_build_system.md) |
@@ -71,7 +71,7 @@
 | Disk and file management / 磁盘与文件管理 | [x] | [ch18 磁盘](../../tutorial/linux-basics/04-system/ch18-disk.md) |
 | Network configuration and debugging / 网络配置与调试 | [x] | [ch21 网络配置](../../tutorial/linux-basics/05-network/ch21-netconfig.md) + [ch22 诊断](../../tutorial/linux-basics/05-network/ch22-netdiag.md) |
 | VIM quick start / VIM 快速入门 | [x] | [ch12 vim](../../tutorial/linux-basics/03-text/ch12-vim.md) |
-| Serial port tools guide / 串口工具使用 | [ ] ⚠️ | 缺：linux-basics 未含 minicom/串口工具专章 |
+| Serial port tools guide / 串口工具使用 | [x] | [start/04 串口工具 minicom](../../tutorial/start/04_serial_tools_minicom.md) |
 | Makefile basics / Makefile 基础 | [x] | [ch31 gcc 与 make](../../tutorial/linux-basics/07-devtools/ch31-gcc-make.md) |
 | Text editing in terminal / 终端文本编辑 | [x] | [ch12 vim](../../tutorial/linux-basics/03-text/ch12-vim.md) |
 
@@ -84,7 +84,7 @@
 | mdev, fstab, network and startup scripts / mdev、fstab、启动脚本 | [x] | [rootfs/04 目录结构](../../tutorial/rootfs/04_rootfs_structure.md) |
 | rootfs overlay guide / rootfs overlay 使用 | [x] | [build/03 rootfs overlay](../../tutorial/build/03_rootfs_overlay_guide.md) |
 | Kernel module deployment guide / 内核模块部署 | [x] | [driver/modules/02 构建加载](../../tutorial/driver/modules/02_module_build_and_load.md) |
-| Auto-loading kernel modules at boot / 内核模块开机加载 | [ ] ⚠️ | 缺专门篇，rootfs/03 开机脚本部分涉及 |
+| Auto-loading kernel modules at boot / 内核模块开机加载 | [x] | [rootfs/07 模块开机加载](../../tutorial/rootfs/07_module_autoload.md) |
 | Firmware and third-party library deployment / 固件与第三方库部署 | [x] | [driver/firmware_apply/firmware](../../tutorial/driver/firmware_apply/firmware.md) |
 | NFS-based development workflow / NFS 开发流 | [x] | [rootfs/05 NFS 挂载](../../tutorial/rootfs/05_nfs_wsl_troubleshoot.md) + [practical/04](../../tutorial/practical/04-nfs-experience.md) |
 | Rootfs mount failure troubleshooting / Rootfs 挂载失败排查 | [ ] ⚠️ | 部分覆盖 [rootfs/05](../../tutorial/rootfs/05_nfs_wsl_troubleshoot.md)，缺通用排查篇 |

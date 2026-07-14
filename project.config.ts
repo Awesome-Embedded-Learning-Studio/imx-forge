@@ -22,6 +22,7 @@ export default defineProject({
       { text: '架构', link: '/architecture/' },
       { text: '脚本', link: '/scripts/' },
       { text: '发布', link: '/release/' },
+      { text: '参考', link: '/reference/' },
       { text: '贡献者', link: '/team/' },
       { text: 'GitHub', link: 'https://github.com/Awesome-Embedded-Learning-Studio/imx-forge' },
     ],
@@ -40,6 +41,7 @@ export default defineProject({
       { name: 'notes', srcDir: 'notes', urlPrefix: '/notes' },
       { name: 'qa', srcDir: 'qa', urlPrefix: '/qa' },
       { name: 'todo', srcDir: 'todo', urlPrefix: '/todo' },
+      { name: 'reference', srcDir: 'reference', urlPrefix: '/reference' },
     ],
   },
 

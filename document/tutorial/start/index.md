@@ -10,6 +10,9 @@ title: 入门准备
   <ChapterLink num="00" href="00_roadmap">学习路线图 —— 嵌入式Linux是什么？</ChapterLink>
   <ChapterLink num="01" href="01_start_from_toolchain">工具链安装 —— ARM GNU Toolchain 15.2</ChapterLink>
   <ChapterLink num="02" href="02_env_init_guide">环境初始化指南</ChapterLink>
+  <ChapterLink num="03" href="03_hardware_quick_reference">板子硬件接口速查表</ChapterLink>
+  <ChapterLink num="04" href="04_serial_tools_minicom">串口工具使用（minicom）</ChapterLink>
+  <ChapterLink num="05" href="05_first_boot_check">第一次上电与串口检查</ChapterLink>
 </ChapterNav>
 
 ::: tip 欢迎

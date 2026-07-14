@@ -1,7 +1,7 @@
 # 方向 D2：工具完备
 
-> **最后更新**：2026-06-14（对齐实际进度）
-> **任务数量**：66项 (9工具 + 57文档)，文档已完成约 8 项
+> **最后更新**：2026-07-14（回填 buildroot 教程/脚本、I2C/SPI 驱动完成状态）
+> **任务数量**：66项 (9工具 + 57文档)，文档已完成约 16 项（buildroot 12 章、I2C/SPI 驱动，以各表勾选为准）
 
 ---
 
@@ -21,7 +21,7 @@
 
 | 优先级 | 工具任务 | 文档任务 | 总计 |
 |--------|----------|----------|------|
-| P1 | 6项（待办）| 49项（✅约8 / 待办约41）| 55 |
+| P1 | 6项（✅3 / 待办3）| 49项（✅约16 / 待办约33）| 55 |
 | P2 | 3项（待办）| 8项（待办）| 11 |
 | **总计** | **9** | **57** | **66** |
 
@@ -42,9 +42,9 @@
 | D2-003: select-board.sh | D1-006 | 板卡切换脚本 |
 | D2-004: 板卡接入文档 | D1-006 | 多板卡接入规范 |
 | D2-005: CI - Patch 校验 | - | 自动补丁格式检查 |
-| D2-007: build-buildroot.sh | D1-004 | Buildroot 根文件系统构建脚本 |
-| D2-008: buildroot_menuconfig.sh | D2-007 | Buildroot 配置管理工具 |
-| D2-009: clean_buildroot.sh | D2-007 | Buildroot 清理工具 |
+| D2-007: build-buildroot.sh | D1-004 | ✅ [build-buildroot.sh](../../scripts/build_helper/build-buildroot.sh.md) |
+| D2-008: buildroot_menuconfig.sh | D2-007 | ✅ [buildroot_menuconfig.sh](../../scripts/build_helper/buildroot_menuconfig.sh.md) |
+| D2-009: clean_buildroot.sh | D2-007 | ✅ [clean_buildroot.sh](../../scripts/build_helper/clean_buildroot.sh.md) |
 
 ### 文档任务 (23项)
 
@@ -101,14 +101,16 @@
 
 ##### P1-3a: Buildroot 根文件系统构建（新增）
 
-| 任务 | 相关文件 |
-|------|----------|
-| [ ] Buildroot 概述与对比分析 / Buildroot overview and comparison | `document/tutorial/build/04_buildroot_introduction.md` |
-| [ ] Buildroot 快速开始指南 / Buildroot quickstart guide | `document/tutorial/build/05_buildroot_quickstart.md` |
-| [ ] Buildroot 配置系统详解 / Buildroot config system explained | `document/tutorial/build/06_buildroot_config.md` |
-| [ ] Buildroot 定制化与包管理 / Buildroot customization and packages | `document/tutorial/build/07_buildroot_customization.md` |
-| [ ] Buildroot 故障排查手册 / Buildroot troubleshooting guide | `document/tutorial/build/08_buildroot_troubleshooting.md` |
-| [ ] Buildroot 与 QT6 集成实战 / Buildroot with QT6 integration | `document/tutorial/practical/03_buildroot_qt6.md` |
+> ✅ 已完成：实际扩展为 12 章，见 [tutorial/buildroot/](../../tutorial/buildroot/)。下表为原 6 项任务与实际章节的对应关系。
+
+| 任务 | 状态 | 实际文件 |
+|------|------|----------|
+| Buildroot 概述与对比分析 / Buildroot overview and comparison | [x] | [buildroot/01_how_buildroot_works](../../tutorial/buildroot/01_how_buildroot_works.md) |
+| Buildroot 快速开始指南 / Buildroot quickstart guide | [x] | [buildroot/02_first_build](../../tutorial/buildroot/02_first_build.md) |
+| Buildroot 配置系统详解 / Buildroot config system explained | [x] | [buildroot/04_kconfig_fragments](../../tutorial/buildroot/04_kconfig_fragments.md) |
+| Buildroot 定制化与包管理 / Buildroot customization and packages | [x] | [buildroot/06_rootfs_customization](../../tutorial/buildroot/06_rootfs_customization.md) + [07_custom_package](../../tutorial/buildroot/07_custom_package.md) |
+| Buildroot 故障排查手册 / Buildroot troubleshooting guide | [x] | [buildroot/10_debugging](../../tutorial/buildroot/10_debugging.md) |
+| Buildroot 与 QT6 集成实战 / Buildroot with QT6 integration | [x] | [buildroot/11_qt6_integration](../../tutorial/buildroot/11_qt6_integration.md) |
 
 #### P1-4: 驱动开发工具 (9项 — 已完成 2，基于旧教程 Ch 52-76)
 
@@ -116,8 +118,8 @@
 
 | 任务 | 状态 | 实际文件 |
 |------|------|----------|
-| I2C driver framework complete tutorial / I2C 驱动框架 | [ ] | 缺，见 #54 |
-| SPI driver framework complete tutorial / SPI 驱动框架 | [ ] | 缺，见 #54 |
+| I2C driver framework complete tutorial / I2C 驱动框架 | [x] | [driver/08_i2c_ap3216c](../../tutorial/driver/08_i2c_ap3216c_driver/) |
+| SPI driver framework complete tutorial / SPI 驱动框架 | [x] | [driver/09_spi_icm20608](../../tutorial/driver/09_spi_icm20608_driver/) |
 | UART driver development / UART 驱动开发 | [ ] | 缺，见 #54 |
 | Blocking/non-blocking I/O complete tutorial / 阻塞/非阻塞 I/O | [x] | [core-functional/09 阻塞 IO](../../tutorial/kernel/core-functional/09_blocking_io.md) + [10 非阻塞 IO](../../tutorial/kernel/core-functional/10_nonblocking_io.md) |
 | Async notification (fasync) / 异步通知 | [x] | [core-functional/11 异步通知](../../tutorial/kernel/core-functional/11_async_notification.md) |
