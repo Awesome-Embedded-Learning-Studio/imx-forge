@@ -13,6 +13,7 @@ title: 根文件系统
   <ChapterLink num="04" href="04_rootfs_structure">目录结构</ChapterLink>
   <ChapterLink num="05" href="05_nfs_wsl_troubleshoot">NFS 挂载</ChapterLink>
   <ChapterLink num="06" href="06_apps_integration">应用集成</ChapterLink>
+  <ChapterLink num="07" href="07_module_autoload">内核模块开机加载</ChapterLink>
 </ChapterNav>
 
 ::: tip 学习目标

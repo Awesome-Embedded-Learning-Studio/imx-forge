@@ -1,7 +1,7 @@
 # 方向 D4：生态成熟
 
-> **最后更新**：2026-06-14（对齐实际进度）
-> **任务数量**：18项 (7工具 + 11文档)，P3-2 发布策略 8 项已完成（release/ + ci/ 已落地）
+> **最后更新**：2026-07-14（回填 buildroot/rootfs/CI 状态；新增 reference 参考资源索引）
+> **任务数量**：18项 (7工具 + 11文档)，P3-2 发布策略 8 项已完成；D4-001 Buildroot Rootfs 已落地（rootfs/buildroot/ + 12 章教程）
 
 ---
 
@@ -58,21 +58,21 @@
 
 #### P3-0: 参考资源索引 (11项)
 
-> **2026-06-14 对齐**：`document/reference/` 目录未建立，11 项整体待办。
+> ✅ 已完成：[document/reference/index.md](../../reference/index.md) 综合索引页，11 类资源全覆盖。
 
-| 任务 | 相关文件 |
-|------|----------|
-| [ ] NXP official documentation index / NXP 官方文档索引 | `document/reference/` |
-| [ ] i.MX6ULL reference manual links / i.MX6ULL 手册链接 | `document/reference/` |
-| [ ] NXP Linux BSP links / NXP Linux BSP 链接 | `document/reference/` |
-| [ ] U-Boot documentation links / U-Boot 文档索引 | `document/reference/` |
-| [ ] Linux Kernel Documentation links / Linux Kernel Documentation 索引 | `document/reference/` |
-| [ ] Device Tree documentation links / 设备树文档索引 | `document/reference/` |
-| [ ] Buildroot documentation links / Buildroot 文档索引 | `document/reference/` |
-| [ ] Yocto documentation links / Yocto 文档索引 | `document/reference/` |
-| [ ] Qt documentation links / Qt 文档索引 | `document/reference/` |
-| [ ] ARM GCC toolchain links / ARM GCC 工具链文档索引 | `document/reference/` |
-| [ ] Community and forum links / 社区与论坛索引 | `document/reference/` |
+| 任务 | 状态 | 实际文件 |
+|------|------|----------|
+| NXP official documentation index / NXP 官方文档索引 | [x] | [reference/](../../reference/index.md) §一 |
+| i.MX6ULL reference manual links / i.MX6ULL 手册链接 | [x] | [reference/](../../reference/index.md) §二 |
+| NXP Linux BSP links / NXP Linux BSP 链接 | [x] | [reference/](../../reference/index.md) §三 |
+| U-Boot documentation links / U-Boot 文档索引 | [x] | [reference/](../../reference/index.md) §四 |
+| Linux Kernel Documentation links / Linux Kernel Documentation 索引 | [x] | [reference/](../../reference/index.md) §五 |
+| Device Tree documentation links / 设备树文档索引 | [x] | [reference/](../../reference/index.md) §六 |
+| Buildroot documentation links / Buildroot 文档索引 | [x] | [reference/](../../reference/index.md) §七 |
+| Yocto documentation links / Yocto 文档索引 | [x] | [reference/](../../reference/index.md) §八 |
+| Qt documentation links / Qt 文档索引 | [x] | [reference/](../../reference/index.md) §九 |
+| ARM GCC toolchain links / ARM GCC 工具链文档索引 | [x] | [reference/](../../reference/index.md) §十 |
+| Community and forum links / 社区与论坛索引 | [x] | [reference/](../../reference/index.md) §十一 |
 
 #### P3-2: 版本号与发布策略 (8项 — 已完成 8)
 
@@ -98,13 +98,13 @@
 **优先级**：P2
 
 **验收标准**：
-- [ ] 可以成功构建
-- [ ] 包含常用工具
-- [ ] 有配置文档
-- [ ] 有构建脚本
-- [ ] 在开发板上运行正常
+- [x] 可以成功构建
+- [x] 包含常用工具
+- [x] 有配置文档
+- [x] 有构建脚本
+- [x] 在开发板上运行正常
 
-**相关文件**：`rootfs/buildroot/`（未建；对应 D2 P1-3a `build/04–08` Buildroot 教程亦待办）
+**相关文件**：`rootfs/buildroot/`（已落地；教程见 [tutorial/buildroot/](../../tutorial/buildroot/) 12 章；构建脚本 [build-buildroot.sh](../../scripts/build_helper/build-buildroot.sh.md)）
 
 ---
 
@@ -114,11 +114,11 @@
 **推荐基础**：D2-005, D2-006
 
 **验收标准**：
-- [ ] CI 自动运行
+- [x] CI 自动运行
 - [ ] 测试覆盖主要功能
-- [ ] 构建产物可用
+- [x] 构建产物可用
 - [ ] （可选）自动发布
-- [ ] 有 CI 文档
+- [x] 有 CI 文档
 
 **相关文件**：`.github/workflows/*.yml`（CI 已落地，见 [ci/](../../ci/)）
 
