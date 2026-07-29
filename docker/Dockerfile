@@ -52,6 +52,8 @@ ENV LC_ALL=C.UTF-8
 
 WORKDIR /workspace
 
+# fdisk 包提供 sfdisk：Stage 5 镜像脚本 build_imx6ull_image.sh 用它写 MBR 分区表；
+# Ubuntu 已将 sfdisk 从 util-linux 拆到独立的 fdisk 包（非 Essential），故需显式声明
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     bc \
@@ -73,6 +75,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rsync \
     file \
     u-boot-tools \
+    fdisk \
     picocom \
     imagemagick \
     libts-dev \

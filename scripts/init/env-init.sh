@@ -36,6 +36,7 @@ ALL_PKGS=(
     "libssl-dev"
     "libgnutls28-dev"
     "libncurses-dev"
+    "fdisk"
 )
 
 # 按构建目标划分的依赖包
@@ -69,6 +70,12 @@ LINUX_PKGS=(
 BUSYBOX_PKGS=(
     "build-essential"
     "libncurses-dev"
+)
+
+# 镜像生成（Stage 5）：build_imx6ull_image.sh 用 sfdisk 写 MBR 分区表
+# 注意 Ubuntu 已将 sfdisk 从 util-linux 拆到独立的 fdisk 包
+IMAGE_PKGS=(
+    "fdisk"
 )
 
 # 检查单个命令是否存在
@@ -162,6 +169,9 @@ check_dependencies() {
                 ;;
             imagemagick)
                 check_cmd convert imagemagick || true
+                ;;
+            fdisk)
+                check_cmd sfdisk fdisk || true
                 ;;
             libssl-dev)
                 if dpkg -s libssl-dev &> /dev/null; then
@@ -273,6 +283,11 @@ check_busybox_dependencies() {
     check_dependencies BUSYBOX_PKGS "BusyBox"
 }
 
+# 检查镜像生成依赖包（Stage 5）
+check_image_dependencies() {
+    check_dependencies IMAGE_PKGS "镜像生成"
+}
+
 # 显示帮助信息
 show_help() {
     cat << EOF
@@ -281,10 +296,11 @@ Usage: $(basename "$0") [OPTIONS]
 检查主机依赖包并可选安装缺失的依赖。
 
 OPTIONS:
-    --stage <1|2|3>      检查特定构建阶段的依赖包
+    --stage <1|2|3|5>    检查特定构建阶段的依赖包
                          1 = U-Boot依赖
                          2 = Linux依赖（NXP BSP & Mainline）
                          3 = BusyBox依赖
+                         5 = 镜像生成依赖（sfdisk 等）
     -h, --help           显示此帮助信息
 
 EXAMPLES:
@@ -315,14 +331,18 @@ if [[ "$(basename "$0")" == "env-init.sh" ]]; then
                 log_info "检查 Stage 3 (BusyBox) 依赖包..."
                 check_busybox_dependencies
                 ;;
+            5)
+                log_info "检查 Stage 5 (镜像生成) 依赖包..."
+                check_image_dependencies
+                ;;
             *)
-                echo "Usage: $0 [--stage 1|2|3]"
+                echo "Usage: $0 [--stage 1|2|3|5]"
                 echo "Use '$0 --help' for more information"
                 exit 1
                 ;;
         esac
     else
-        echo "Usage: $0 [--stage 1|2|3]"
+        echo "Usage: $0 [--stage 1|2|3|5]"
         echo "Use '$0 --help' for more information"
         exit 1
     fi
