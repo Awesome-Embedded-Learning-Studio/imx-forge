@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "ui/chart_view.h"
-#include "mocked/mockedsensor.h"
+#include "sensor.h"
 
 QT_BEGIN_NAMESPACE
 class QCheckBox;
@@ -62,7 +62,7 @@ class MainWindow : public QMainWindow {
     static constexpr int    kScreenOffMs    = 10000;   // 无接近 10s → 息屏
     static constexpr int    kMaxHistory     = 18000;   // CSV 历史上限(~1h @5Hz), 防 OOM
 
-    std::unique_ptr<MockedSensor> m_sensor;
+    std::unique_ptr<Sensor> m_sensor;
 
     ChartView  *m_chart          = nullptr;
     QTimer     *m_sampleTimer    = nullptr;   // 200ms 周期采样

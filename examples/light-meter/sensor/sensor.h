@@ -36,6 +36,11 @@ class Sensor {
      * @return sensor data we read, in windows, it is the mocked data
      */
     virtual std::expected<SensorData, QueryError> query_once() = 0;
+
+    /// 测试数据注入(Mock 用);真机后端忽略(no-op)。
+    /// 留在基类以便 UI 层无差别调用 —— 切换后端时不需改 MainWindow 的调用点。
+    virtual void set_phase(double /*phase*/) {}
+    virtual void set_held(bool /*is_held*/) {}
 };
 
 #endif // SENSOR_H

@@ -1,6 +1,12 @@
 #include "mainwindow.h"
 #include "ui/breathing_overlay.h"
 
+#ifdef USE_REAL_SENSOR
+#include "ap3216c/ap3216c_sensor.h"
+#else
+#include "mocked/mockedsensor.h"
+#endif
+
 #include <QCheckBox>
 #include <QDateTime>
 #include <QDir>
@@ -46,8 +52,13 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(QStringLiteral("桌面照度 · light-meter"));
     resize(1024, 600);
 
-    // 数据源(用户实现的 pull 模型): 先 init, 之后由 200ms 定时器 query_once。
+    // 数据源(pull 模型): 先 init, 之后由 200ms 定时器 query_once。
+    // 后端由编译开关切换: MockedSensor(主机) / Ap3216cSensor(板子, /dev/ap3216c)。
+#ifdef USE_REAL_SENSOR
+    m_sensor = std::make_unique<Ap3216cSensor>();
+#else
     m_sensor = std::make_unique<MockedSensor>();
+#endif
     m_sensor->init(false);   // 注: override 不继承基类默认参数, 显式传 false
 
     buildUi();

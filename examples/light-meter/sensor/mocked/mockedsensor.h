@@ -21,8 +21,8 @@ class MockedSensor : public Sensor {
     std::expected<SensorData, QueryError> query_once() override;
 
     /* Interfaces using mocked datas */
-    void set_held(bool is_held);
-    void set_phase(double phase);
+    void set_held(bool is_held) override;
+    void set_phase(double phase) override;
   private:
     std::unique_ptr<LuxSource, LuxSourceDeleter> lux_source;
     std::unique_ptr<PsSource, PsSourceDeleter> ps_source;

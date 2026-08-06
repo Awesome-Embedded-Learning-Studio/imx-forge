@@ -22,6 +22,17 @@ qt_add_executable(light-meter
 
 target_include_directories(light-meter PUBLIC sensor/)
 
+# 真机后端(可选): /dev/ap3216c 桥接, 仅 Linux/板子(POSIX)。默认 OFF = Mock 后端。
+option(USE_REAL_SENSOR "真机后端 /dev/ap3216c(仅 Linux/板子)" OFF)
+if(USE_REAL_SENSOR)
+    if(WIN32 OR NOT UNIX)
+        message(FATAL_ERROR "USE_REAL_SENSOR 仅 Linux/板子可用(POSIX open/read/close)")
+    endif()
+    target_sources(light-meter PRIVATE
+        sensor/ap3216c/ap3216c_sensor.h sensor/ap3216c/ap3216c_sensor.cpp)
+    target_compile_definitions(light-meter PRIVATE USE_REAL_SENSOR=1)
+endif()
+
 # 源文件为 UTF-8(无 BOM), 含中文; 告知 MSVC 以 UTF-8 解释源与执行字符集。
 if(MSVC)
     target_compile_options(light-meter PRIVATE /utf-8)
