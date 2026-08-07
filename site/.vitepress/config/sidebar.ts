@@ -34,6 +34,7 @@ const LEARNING_ORDER = [
   'buildroot',
   'driver',
   'practical',
+  'project',
   'flash',
   'commands',
   'build',

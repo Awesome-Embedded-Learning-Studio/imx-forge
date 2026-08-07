@@ -105,6 +105,12 @@ export default defineConfig({
       compilerOptions: {
         isCustomElement: (tag: string) => tag.includes('-') || tag.includes('.'),
       },
+      // <video>/<source> 引 public/ 里的媒体时,别让 Vue 把 src/poster 当打包资源去 import:
+      // 它们是运行时 public 路径(已含 base),交给浏览器直接请求即可。
+      transformAssetUrls: {
+        video: [],
+        source: [],
+      },
     },
   },
 

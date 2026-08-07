@@ -11,10 +11,15 @@ const props = withDefaults(defineProps<{
 
 const navVariant = inject<'main' | 'sub'>('chapterNavVariant', 'main')
 const effectiveVariant = computed(() => props.variant ?? navVariant)
+
+// 源文件里 <ChapterLink href="xxx.md"> 普遍带了 .md 后缀,浏览器跳过去会被 dev server
+// 当 text/markdown 原文返回(不渲染,看起来就是 404)。统一在这里剥掉结尾的 .md(保留
+// #hash),让链接落到真正的页面路由;不带 .md 的 href 不受影响。
+const resolvedHref = computed(() => props.href.replace(/\.md(?=#|$)/, ''))
 </script>
 
 <template>
-  <a :href="href" class="chapter-link" :class="[`chapter-link--${effectiveVariant}`]">
+  <a :href="resolvedHref" class="chapter-link" :class="[`chapter-link--${effectiveVariant}`]">
     <span v-if="effectiveVariant === 'main' && num !== undefined" class="chapter-badge">
       {{ String(num).padStart(2, '0') }}
     </span>

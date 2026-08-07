@@ -89,6 +89,12 @@ export default defineProject({
       desc: '上电即见 —— Bootloader 阶段就把 7 寸屏幕点亮',
     },
     {
+      src: '/light-meter/mock-light.png',
+      href: '/tutorial/project/light-meter/',
+      title: 'light-meter 照度摆件',
+      desc: '从桌面 Mock 到板子真机 —— 一个嵌入式 Qt 工程的完整造法',
+    },
+    {
       src: '/linux7.png',
       href: '/tutorial/kernel/',
       title: '主线 Linux 7 运行',
