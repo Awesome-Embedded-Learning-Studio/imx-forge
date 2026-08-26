@@ -24,8 +24,14 @@
 # Boot path: direct kernel boot (-kernel zImage -dtb). This is the upstream-
 # documented path that works on stock QEMU (>= 5.x, tested with 8.2.2): no
 # boot-ROM/SPL emulation exists for this machine, so U-Boot images with IVT
-# headers (u-boot-dtb.imx) cannot be booted via -bios. Full U-Boot chain needs
-# QEMU >= 11.1 (2026-08 Bin Meng series) and is not used here.
+# headers (u-boot-dtb.imx) cannot be booted via -bios. The U-Boot chain
+# enablement series (Bin Meng, 2026-08) is still under upstream review and
+# NOT part of any release yet; revisit with QEMU >= 11.2 (~2026-12).
+#
+# QEMU binary selection: the self-built 11.1 (scripts/build_helper/
+# build-qemu.sh — eLCDIF display model, FlexCAN, MMDC/OCOTP/QSPI/USBMISC
+# stubs) is used when present; otherwise the system qemu-system-arm
+# (8.2 on Ubuntu 24.04: no LCDIF, several address holes) with a warning.
 #
 # The SD card is attached to USDHC2 (if=sd,index=1) => guest /dev/mmcblk1.
 # The rootfs image has no partition table, so root=/dev/mmcblk1 (whole card).
@@ -163,7 +169,16 @@ if [[ "${NO_BUILD}" -eq 0 ]]; then
     [[ "${ROOTFS_SET}" -eq 0 ]] && rebuild_rootfs_if_stale
 fi
 
-command -v qemu-system-arm >/dev/null || die "qemu-system-arm not found (apt install qemu-system-arm)"
+QEMU_BIN=""
+SELF_BUILT="${PROJECT_ROOT}/out/qemu/build/qemu-system-arm"
+if [[ -x "${SELF_BUILT}" ]]; then
+    QEMU_BIN="${SELF_BUILT}"
+elif command -v qemu-system-arm >/dev/null; then
+    QEMU_BIN="$(command -v qemu-system-arm)"
+    log "WARNING: system ${QEMU_BIN} ($(${QEMU_BIN} --version | head -1 | awk '{print $4}')): no eLCDIF model, MMDC/OCOTP/QSPI/USBMISC are address holes — run scripts/build_helper/build-qemu.sh for the full experience"
+else
+    die "qemu-system-arm not found (apt install qemu-system-arm, or run build-qemu.sh)"
+fi
 
 [[ -f "${KERNEL}" ]]     || die "kernel not found: ${KERNEL} (run build-mainline-linux.sh)"
 [[ -f "${DTB}" ]]        || die "dtb not found: ${DTB}"
@@ -190,7 +205,7 @@ if [[ "${SMOKE}" -eq 0 ]]; then
     log "starting QEMU (interactive, Ctrl-A X to quit)"
     log "machine: mcimx6ul-evk  memory: 512M  console: ttymxc0"
     log "bootargs: ${BOOTARGS}"
-    exec qemu-system-arm "${QEMU_ARGS[@]}" -nographic
+    exec "${QEMU_BIN}" "${QEMU_ARGS[@]}" -nographic
 fi
 
 # --- smoke test --------------------------------------------------------------
@@ -202,7 +217,7 @@ mkdir -p "$(dirname "${LOG_PATH}")"
 
 log "smoke test: timeout ${TIMEOUT}s, expecting: ${EXPECTS[*]}"
 set +e
-timeout --foreground "${TIMEOUT}" qemu-system-arm "${QEMU_ARGS[@]}" \
+timeout --foreground "${TIMEOUT}" "${QEMU_BIN}" "${QEMU_ARGS[@]}" \
     -nographic -no-reboot >"${LOG_PATH}" 2>&1
 QEMU_RC=$?
 set -e

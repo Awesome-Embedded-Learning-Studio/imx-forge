@@ -2,38 +2,30 @@
 //
 // QEMU variant of the AES board device tree.
 //
-// Boots on the stock QEMU "mcimx6ul-evk" machine (verified with QEMU 8.2.2,
-// the Ubuntu 24.04 apt version). The upstream i.MX6UL SoC model implements
-// UART/I2C/ECSPI/USDHC/FEC/GPIO/GPT/EPIT/WDOG/SNVS/LCDIF-on-11.1+ only;
-// everything else is either an unimplemented-device stub (reads 0) or, on
-// QEMU < 11.1, a raw address hole. Drivers that touch a hole take an
-// external abort and kill the kernel during of_platform_populate.
-//
-// This DTS disables exactly the AES-board nodes that fall into holes on
-// stock QEMU 8.2.2. Everything else (our LED/beep/key, i2c sensors, ecspi3,
-// usdhc, fec, can1, sai2...) is inherited from imx6ull-aes.dtsi unchanged —
-// those drivers either find a real QEMU model or fail softly (-ETIMEDOUT /
-// -ENXIO) without taking the kernel down.
-//
-// Nodes disabled here (address holes on QEMU 8.2.2, all get stubs on
-// master/11.1 where noted):
-//   memory-controller@21b0000 (mmdc)      - stub only on master (Bin Meng
-//                                           2026-08 series); hole on 8.2.2
-//   crypto@2280000 (dcp)                  - CAAM region, hole on 8.2.2
-//   rng@2284000 (rngb)                    - CAAM region, hole on 8.2.2
-//   spi@21e0000 (qspi)                    - stub on master, hole on 8.2.2
-//   lcdif@21c8000                         - REAL model on 11.1+; hole on
-//                                           8.2.2 (revisit when we ship
-//                                           QEMU >= 11.1: drop this override)
+// Baseline: self-built QEMU v11.1.0 (scripts/build_helper/build-qemu.sh,
+// third_party/qemu submodule). On 11.1 the SoC model gives us: real models
+// for UART/I2C/ECSPI/USDHC/FEC/GPIO/GPT/EPIT/WDOG/SNVS/eLCDIF, plus
+// unimplemented stubs (reads 0, soft-fail) for MMDC/OCOTP/QSPI/USBMISC.
+// The nodes below stay disabled because they are still raw address holes
+// on 11.1 — a driver touching them takes an external abort during
+// of_platform_populate and kills PID 1:
+//   crypto@2280000 (dcp)                  - CAAM/AIPS3 region, hole on 11.1
+//   rng@2284000 (rngb)                    - CAAM region, hole on 11.1
 //   pxp@21cc000                           - hole (no model even on master)
 //   csi@21c4000                           - hole (no model even on master)
 //   touchscreen@2040000 (imx6ul_tsc)      - hole (no model even on master)
-//   efuse@21bc000 (ocotp)                 - stub on master, hole on 8.2.2
-//   usb@2184000/@2184200/@2184800 (usbmisc) - usbmisc hole on 8.2.2, stub on
-//                                           master
 //
-// Disabling these costs nothing on real hardware (they are unused there or
-// soft-fail the same way), so a single device tree serves both targets.
+// Everything else (our LED/beep/key, i2c sensors, ecspi3, usdhc, both fec,
+// can1, sai2, lcdif, usb...) is inherited from imx6ull-aes.dtsi unchanged —
+// those drivers either find a real QEMU model or fail softly on a stub.
+//
+// Two QEMU-vs-real-boot differences are papered over here:
+//   1. local-mac-address: on hardware U-Boot fixups the MAC into the fec
+//      nodes before bootz; a direct-boot QEMU has no U-Boot, and without
+//      this property of_get_mac_address() falls into the nvmem path, waits
+//      forever for a cell and both FECs sit in deferred-prove limbo.
+//   2. The disabled nodes above: unused or soft-failing on real hardware
+//      too, so a single tree still serves both targets.
 //
 // Build with the kernel's dtc:  see scripts/qemu_helper/make-qemu-dtb.sh
 
@@ -52,24 +44,12 @@
  * arm_load_kernel time, so no memory override is needed here.
  */
 
-/* address holes on stock QEMU (see header comment) */
-&{/soc/bus@2100000/memory-controller@21b0000} {
-	status = "disabled";
-};
-
+/* still raw address holes on QEMU 11.1 (see header) */
 &dcp {
 	status = "disabled";
 };
 
 &rngb {
-	status = "disabled";
-};
-
-&qspi {
-	status = "disabled";
-};
-
-&lcdif {
 	status = "disabled";
 };
 
@@ -85,25 +65,11 @@
 	status = "disabled";
 };
 
-&ocotp {
-	status = "disabled";
+/* no U-Boot to fixup the MAC before direct boot (see header) */
+&fec1 {
+	local-mac-address = [00 11 22 33 44 01];
 };
 
-&usbotg1 {
-	status = "disabled";
-};
-
-&usbotg2 {
-	status = "disabled";
-};
-
-&usbmisc {
-	status = "disabled";
-};
-
-&usdhc2 {
-	/* eMMC controller exists in QEMU but our board DT wires 8-bit eMMC
-	 * on usdhc2 while QEMU's SD card sits on usdhc2 — keep it enabled
-	 * but non-removable so it can be revisited for eMMC images. */
-	status = "okay";
+&fec2 {
+	local-mac-address = [00 11 22 33 44 02];
 };
