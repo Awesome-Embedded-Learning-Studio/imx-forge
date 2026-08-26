@@ -10,7 +10,12 @@
 - **裁剪加速**:`--disable-tools --disable-docs`(不要 qemu-img/Sphinx 文档),CI 友好
 - **slirp 用户网络**:`--enable-slirp` 让 meson 走 subproject 自建 libslirp,宿主机不需要 `libslirp-dev`;没有它 `-nic user` 直接报错
 - **meson 自举**:QEMU 的 configure 用自带 mkvenv 在 build 目录建 pyvenv 装合适版本 meson(系统 1.3 太老也没关系,需要 `python3-venv`)
-- **幂等**:build 目录已配置过则直接增量 ninja,`--reconfigure` 强制重配
+- **patch 序列应用**:构建前自动把 `patches/qemu/*.patch` 按文件名序全量应用到 pinned v11.1.0 上(submodule HEAD 在 pin 上时;若在 dev 分支则原样构建)。**qemu 组件豁免仓库「单 rolled patch」约定**——此规模的补丁序列 squash 后无法 rebase,百问网 fork 即死于此
+- **幂等**:build 目录已配置过则直接增量 ninja,`--reconfigure` 强制重配;patch 应用前 `git checkout -- .` 清残留,可反复运行
+
+### 开发流程(dev 分支工作法)
+
+在 submodule 里开发新器件模型:`cd third_party/qemu && git checkout aes-dev` → 改码 → commit → `git format-patch v11.1.0 -o ../patches/qemu/` 导出 → 主仓提交 patch 文件。CI 和新 clone 永远走「干净 pin + apply patch 序列」路径,不依赖 dev 分支的存在。
 
 ### 一次性宿主依赖(需要 sudo)
 

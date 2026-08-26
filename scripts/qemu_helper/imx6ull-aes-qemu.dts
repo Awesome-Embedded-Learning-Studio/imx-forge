@@ -1,31 +1,27 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 //
-// QEMU variant of the AES board device tree.
+// QEMU variant of the AES board device tree — FULL node parity with the
+// real board tree. Every node enabled by imx6ull-aes.dts/.dtsi is enabled
+// here too; nothing is disabled anymore:
 //
-// Baseline: self-built QEMU v11.1.0 (scripts/build_helper/build-qemu.sh,
-// third_party/qemu submodule). On 11.1 the SoC model gives us: real models
-// for UART/I2C/ECSPI/USDHC/FEC/GPIO/GPT/EPIT/WDOG/SNVS/eLCDIF, plus
-// unimplemented stubs (reads 0, soft-fail) for MMDC/OCOTP/QSPI/USBMISC.
-// The nodes below stay disabled because they are still raw address holes
-// on 11.1 — a driver touching them takes an external abort during
-// of_platform_populate and kills PID 1:
-//   crypto@2280000 (dcp)                  - CAAM/AIPS3 region, hole on 11.1
-//   rng@2284000 (rngb)                    - CAAM region, hole on 11.1
-//   pxp@21cc000                           - hole (no model even on master)
-//   csi@21c4000                           - hole (no model even on master)
-//   touchscreen@2040000 (imx6ul_tsc)      - hole (no model even on master)
+//   - real QEMU models: uart/usdhc/gpio/i2c/ecspi/fec(×2)/gpt/epit/wdt/
+//     ccm/snvs/usbphy/chipidea/eLCDIF(display)/flexcan(wired by our patch
+//     0110, both controllers share one internal can-bus)
+//   - unimplemented stubs (reads 0 → drivers soft-fail): mmdc/ocotp/qspi/
+//     usbmisc/sai/asrc/sdma/iomuxc + dcp/rngb/pxp/csi/tsc (stubbed by our
+//     patch 0100; stock 11.1 leaves those as address holes)
 //
-// Everything else (our LED/beep/key, i2c sensors, ecspi3, usdhc, both fec,
-// can1, sai2, lcdif, usb...) is inherited from imx6ull-aes.dtsi unchanged —
-// those drivers either find a real QEMU model or fail softly on a stub.
+// Requires the self-built QEMU (scripts/build_helper/build-qemu.sh +
+// patches/qemu/). On stock 8.2/11.1 the dcp/rngb/pxp/csi/tsc nodes would
+// still hit holes — this tree no longer guards against that, run-qemu.sh
+// warns when only the system QEMU is available.
 //
-// Two QEMU-vs-real-boot differences are papered over here:
-//   1. local-mac-address: on hardware U-Boot fixups the MAC into the fec
-//      nodes before bootz; a direct-boot QEMU has no U-Boot, and without
-//      this property of_get_mac_address() falls into the nvmem path, waits
-//      forever for a cell and both FECs sit in deferred-prove limbo.
-//   2. The disabled nodes above: unused or soft-failing on real hardware
-//      too, so a single tree still serves both targets.
+// The only deltas vs the real tree:
+//   1. model/compatible: cosmetic marker "(QEMU mcimx6ul-evk)"
+//   2. local-mac-address on both fec: hardware U-Boot fixups the MAC in
+//      before bootz; direct-boot QEMU has no U-Boot, and without this
+//      property of_get_mac_address() waits forever on an nvmem cell and
+//      both FECs sit in deferred-probe limbo.
 //
 // Build with the kernel's dtc:  see scripts/qemu_helper/make-qemu-dtb.sh
 
@@ -43,27 +39,6 @@
  * QEMU sizes DRAM from the -m flag and rewrites the memory node at
  * arm_load_kernel time, so no memory override is needed here.
  */
-
-/* still raw address holes on QEMU 11.1 (see header) */
-&dcp {
-	status = "disabled";
-};
-
-&rngb {
-	status = "disabled";
-};
-
-&pxp {
-	status = "disabled";
-};
-
-&csi {
-	status = "disabled";
-};
-
-&tsc {
-	status = "disabled";
-};
 
 /* no U-Boot to fixup the MAC before direct boot (see header) */
 &fec1 {

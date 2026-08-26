@@ -71,6 +71,23 @@ command -v ninja >/dev/null || die "ninja not found (sudo apt-get install ninja-
 pkg-config --exists glib-2.0 || die "glib-2.0 dev not found (sudo apt-get install libglib2.0-dev)"
 pkg-config --exists pixman-1 || die "pixman dev not found (sudo apt-get install libpixman-1-dev) — required by the eLCDIF display model"
 
+# --- apply our patch series (numbered, applied in order — the qemu component
+# is exempt from the repo's one-rolled-patch convention; squashed patch series
+# of this size cannot be rebased, see the 100askTeam/qemu cautionary tale) ---
+PATCH_DIR="${PROJECT_ROOT}/patches/qemu"
+PIN_COMMIT="$(git -C "${QEMU_SRC}" rev-parse 'v11.1.0^{commit}' 2>/dev/null || true)"
+if [[ -n "${PIN_COMMIT}" && "$(git -C "${QEMU_SRC}" rev-parse HEAD)" == "${PIN_COMMIT}" ]]; then
+    # submodule sits on the clean pin: (re)apply our series
+    git -C "${QEMU_SRC}" checkout -- . 2>/dev/null || true
+    for p in "${PATCH_DIR}"/*.patch; do
+        [[ -e "$p" ]] || { log "no patches in ${PATCH_DIR}, building stock v11.1.0"; break; }
+        log "applying $(basename "$p")"
+        git -C "${QEMU_SRC}" apply "$p" || die "failed to apply $p (patch/base drift?)"
+    done
+else
+    log "submodule HEAD is not the v11.1.0 pin (dev branch?) — building as-is"
+fi
+
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 
