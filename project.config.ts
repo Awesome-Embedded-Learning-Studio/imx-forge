@@ -31,6 +31,7 @@ export default defineProject({
   sidebar: {
     volumes: [
       { name: 'tutorial', srcDir: 'tutorial', urlPrefix: '/tutorial' },
+      { name: 'emu', srcDir: 'tutorial/emu', urlPrefix: '/tutorial/emu' },
       { name: 'architecture', srcDir: 'architecture', urlPrefix: '/architecture' },
       { name: 'ci', srcDir: 'ci', urlPrefix: '/ci' },
       { name: 'scripts', srcDir: 'scripts', urlPrefix: '/scripts' },

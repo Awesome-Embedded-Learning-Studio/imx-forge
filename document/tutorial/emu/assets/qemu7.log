@@ -1,0 +1,245 @@
+qemu-system-arm: warning: nic imx.enet.1 has no peer
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 7.1.0-dirty (charliechen@Charliechen) (arm-none-linux-gnueabihf-gcc (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 15.2.1 20251203, GNU ld (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203) #1 Wed Jul  8 17:35:29 CST 2026
+[    0.000000] CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c53c7d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: Awesome Embedded Studio IMX6ULL (i.mx NXP)
+[    0.000000] Memory policy: Data cache writeback
+[    0.000000] Reserved memory: created CMA memory pool at 0x96000000, size 160 MiB
+[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x96000000..0x9fffffff (163840 KiB) map reusable linux,cma
+[    0.000000] psci: probing for conduit method from DT.
+[    0.000000] psci: PSCIv1.1 detected in firmware.
+[    0.000000] psci: Using standard PSCI v0.2 function IDs
+[    0.000000] psci: Trusted OS migration not required
+[    0.000000] psci: SMC Calling Convention v1.0
+[    0.000000] CPU: All CPU(s) started in HYP mode.
+[    0.000000] CPU: Virtualization extensions available.
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000]   HighMem  empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Kernel command line: console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw
+[    0.000000] printk: log buffer data + meta data: 262144 + 819200 = 1081344 bytes
+[    0.000000] Dentry cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 32768 (order: 5, 131072 bytes, linear)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 131072
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] GIC: Using split EOI/Deactivate mode
+[    0.000000] Switching to timer-based delay loop, resolution 41ns
+[    0.000157] sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+[    0.001090] clocksource: mxc_timer1: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.009636] Console: colour dummy device 80x30
+[    0.011615] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.011842] CPU: Testing write buffer coherency: ok
+[    0.012563] pid_max: default: 32768 minimum: 301
+[    0.024167] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.024264] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.040039] VFS: Finished mounting rootfs on nullfs
+[    0.078973] Setting up static identity map for 0x80100000 - 0x80100078
+[    0.087846] Memory: 333580K/524288K available (13312K kernel code, 1244K rwdata, 3844K rodata, 1024K init, 379K bss, 26132K reserved, 163840K cma-reserved, 0K highmem)
+[    0.100934] devtmpfs: initialized
+[    0.120964] VFP support v0.3: implementor 41 architecture 2 part 30 variant 7 rev 5
+[    0.144479] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.145278] posixtimers hash table entries: 512 (order: 0, 2048 bytes, linear)
+[    0.145498] futex hash table entries: 256 (4096 bytes on 1 NUMA nodes, total 4 KiB, linear).
+[    0.172944] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.205450] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    0.209902] thermal_sys: Registered thermal governor 'step_wise'
+[    0.210106] cpuidle: using governor menu
+[    0.210477] CPU identified as i.MX6UL, silicon rev 1.0
+[    0.233405] /soc/interrupt-controller@a01000: Fixed dependency cycle(s) with /soc/interrupt-controller@a01000
+[    0.235266] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.235588] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.236339] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.236652] /soc/bus@2100000/csi@21c4000: Fixed dependency cycle(s) with /soc/bus@2100000/i2c@21a4000/ov5640@3c
+[    0.247984] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.256915] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.269659] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.273670] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.274313] /soc/bus@2100000/csi@21c4000: Fixed dependency cycle(s) with /soc/bus@2100000/i2c@21a4000/ov5640@3c
+[    0.276981] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.277596] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.277783] /soc/bus@2100000/csi@21c4000: Fixed dependency cycle(s) with /soc/bus@2100000/i2c@21a4000/ov5640@3c
+[    0.289966] No ATAGs?
+[    0.290852] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    0.291539] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    0.296967] imx6ul-pinctrl 20e0000.pinctrl: initialized IMX pinctrl driver
+[    0.300430] imx6ul-pinctrl 2290000.pinctrl: no groups defined in /soc/bus@2200000/pinctrl@2290000
+[    0.300569] imx6ul-pinctrl 2290000.pinctrl: initialized IMX pinctrl driver
+[    0.307139] kprobes: kprobe jump-optimization is enabled. All kprobes are optimized if possible.
+[    0.333901] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.355070] gpio gpiochip1: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.362900] gpio gpiochip2: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.371040] gpio gpiochip3: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.374635] gpio gpiochip4: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.384197] SCSI subsystem initialized
+[    0.387099] usbcore: registered new interface driver usbfs
+[    0.387487] usbcore: registered new interface driver hub
+[    0.387652] usbcore: registered new device driver usb
+[    0.398028] i2c i2c-0: IMX I2C adapter registered
+[    0.403737] /soc/bus@2100000/csi@21c4000: Fixed dependency cycle(s) with /soc/bus@2100000/i2c@21a4000/ov5640@3c
+[    0.404134] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.404815] i2c i2c-1: IMX I2C adapter registered
+[    0.409853] mc: Linux media interface: v0.10
+[    0.411772] videodev: Linux video capture interface: v2.00
+[    0.412630] pps_core: LinuxPPS API ver. 1 registered
+[    0.412668] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.412742] PTP clock support registered
+[    0.414497] Advanced Linux Sound Architecture Driver Initialized.
+[    0.429934] Bluetooth: Core ver 2.22
+[    0.430236] NET: Registered PF_BLUETOOTH protocol family
+[    0.430260] Bluetooth: HCI device and connection manager initialized
+[    0.430420] Bluetooth: HCI socket layer initialized
+[    0.430509] Bluetooth: L2CAP socket layer initialized
+[    0.430598] Bluetooth: SCO socket layer initialized
+[    0.437314] clocksource: Switched to clocksource mxc_timer1
+[    0.439656] VFS: Disk quotas dquot_6.6.0
+[    0.439788] VFS: Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+[    0.467561] NET: Registered PF_INET protocol family
+[    0.470256] IP idents hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    0.475243] tcp_listen_portaddr_hash hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.475353] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.475533] TCP established hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.475804] TCP bind hash table entries: 4096 (order: 3, 32768 bytes, linear)
+[    0.476543] TCP: Hash tables configured (established 4096 bind 4096)
+[    0.478380] UDP hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    0.479724] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.483183] RPC: Registered named UNIX socket transport module.
+[    0.483242] RPC: Registered udp transport module.
+[    0.483252] RPC: Registered tcp transport module.
+[    0.483260] RPC: Registered tcp-with-tls transport module.
+[    0.483269] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.495542] Initialise system trusted keyrings
+[    0.496881] workingset: timestamp_bits=30 (anon: 26) max_order=17 bucket_order=0 (anon: 0)
+[    0.503810] NFS: Registering the id_resolver key type
+[    0.504265] Key type id_resolver registered
+[    0.504338] Key type id_legacy registered
+[    0.504650] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    0.504762] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    0.505285] jffs2: version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+[    0.506592] fuse: init (API version 7.45)
+[    0.510360] Key type asymmetric registered
+[    0.510592] Asymmetric key parser 'x509' registered
+[    0.511008] io scheduler mq-deadline registered
+[    0.511157] io scheduler kyber registered
+[    0.511476] io scheduler bfq registered
+[    0.541265] stmp_reset_block((ptrval)): module reset timeout
+[    0.541618] mxs-dma 1804000.dma-controller: probe with driver mxs-dma failed with error -110
+[    0.542802] imx_soc_device_init: failed to find fsl,imx6ul-ocotp regmap!
+[    0.548918] imx-sdma 20ec000.dma-controller: external firmware not found, using ROM firmware
+[    0.559755] 2020000.serial: ttymxc0 at MMIO 0x2020000 (irq = 191, base_baud = 5000000) is a IMX
+[    0.562844] printk: console [ttymxc0] enabled
+[    0.616883] panel-simple panel-dpi: Specify missing bus_format
+[    0.617454] panel-simple panel-dpi: Expected bpc in {6,8} but got: 0
+[    0.623894] cacheinfo: Unable to detect cache hierarchy for CPU 0
+[    0.658147] brd: module loaded
+[    0.671611] loop: module loaded
+[    0.691293] spi_imx 2010000.spi: error -ENODEV: can't get the TX DMA channel!
+[    0.696882] CAN device driver interface
+[    0.699941] usbcore: registered new device driver r8152-cfgselector
+[    0.700272] usbcore: registered new interface driver r8152
+[    0.700535] usbcore: registered new interface driver lan78xx
+[    0.700698] usbcore: registered new interface driver asix
+[    0.700777] usbcore: registered new interface driver ax88179_178a
+[    0.700871] usbcore: registered new interface driver cdc_ether
+[    0.701026] usbcore: registered new interface driver smsc95xx
+[    0.701351] usbcore: registered new interface driver net1080
+[    0.701525] usbcore: registered new interface driver cdc_subset
+[    0.701627] usbcore: registered new interface driver zaurus
+[    0.701713] usbcore: registered new interface driver MOSCHIP usb-ethernet driver
+[    0.701774] usbcore: registered new interface driver cdc_ncm
+[    0.701832] usbcore: registered new interface driver r8153_ecm
+[    0.702302] usbcore: registered new interface driver usb-storage
+[    0.702759] usbcore: registered new device driver onboard-usb-dev
+[    0.712105] imx_usb 2184000.usb: No over current polarity defined
+[    0.718367] input: 20cc000.snvs:snvs-powerkey as /devices/platform/soc/2000000.bus/20cc000.snvs/20cc000.snvs:snvs-powerkey/input/input0
+[    0.722903] imx6ul-tsc 2040000.touchscreen: failed to request GPIO tsc_X- (xnur): -2
+[    0.722970] imx6ul-tsc 2040000.touchscreen: probe with driver imx6ul-tsc failed with error -2
+[    0.728844] snvs_rtc 20cc000.snvs:snvs-rtc-lp: failed to enable rtc -110
+[    0.728940] snvs_rtc 20cc000.snvs:snvs-rtc-lp: probe with driver snvs_rtc failed with error -110
+[    0.731341] i2c_dev: i2c /dev entries driver
+[    0.735328] 8<--- cut here ---
+[    0.735375] Unhandled fault: external abort on non-linefetch (0x808) at 0xe0a68008
+[    0.735488] [e0a68008] *pgd=823da811, *pte=021cc653, *ppte=021cc453
+[    0.736209] Internal error: : 808 [#1] ARM
+[    0.737781] Modules linked in:
+[    0.738437] CPU: 0 UID: 0 PID: 1 Comm: swapper/0 Not tainted 7.1.0-dirty #1 VOLUNTARY 
+[    0.738866] Hardware name: Freescale i.MX6 Ultralite (Device Tree)
+[    0.739191] PC is at regmap_mmio_write32le+0x34/0x40
+[    0.739926] LR is at regmap_mmio_write32le+0x20/0x40
+[    0.740095] pc : [<c0784788>]    lr : [<c0784774>]    psr: 60000093
+[    0.740277] sp : e083dd98  ip : 0000001e  fp : c136e6c4
+[    0.740489] r10: c2136400  r9 : c1147b48  r8 : c2136410
+[    0.740696] r7 : 00000000  r6 : c24c92c0  r5 : 80000000  r4 : c24c9200
+[    0.740917] r3 : e0a68008  r2 : 80000000  r1 : 00000008  r0 : c24c9200
+[    0.741269] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment none
+[    0.741594] Control: 10c53c7d  Table: 80004059  DAC: 00000051
+[    0.741895] Register r0 information: slab kmalloc-64 start c24c9200 pointer offset 0 size 64
+[    0.742486] Register r1 information: non-paged memory
+[    0.742732] Register r2 information: non-paged memory
+[    0.742890] Register r3 information: 0-page vmalloc region starting at 0xe0a68000 allocated at __devm_ioremap_resource+0x1a8/0x1e8
+[    0.743333] Register r4 information: slab kmalloc-64 start c24c9200 pointer offset 0 size 64
+[    0.743719] Register r5 information: non-paged memory
+[    0.744103] Register r6 information: slab kmalloc-64 start c24c92c0 pointer offset 0 size 64
+[    0.744494] Register r7 information: NULL pointer
+[    0.744666] Register r8 information: slab kmalloc-1k start c2136400 pointer offset 16 size 1024
+[    0.745721] Register r9 information: non-slab/vmalloc memory
+[    0.746161] Register r10 information: slab kmalloc-1k start c2136400 pointer offset 0 size 1024
+[    0.746574] Register r11 information: non-slab/vmalloc memory
+[    0.746774] Register r12 information: non-paged memory
+[    0.747054] Process swapper/0 (pid: 1, stack limit = 0x(ptrval))
+[    0.747474] Stack: (0xe083dd98 to 0xe083e000)
+[    0.747724] dd80:                                                       00200000 80000000
+[    0.747976] dda0: 00000008 c24c9200 000000c3 c0784c50 f03ffc3f c20375c0 c23f8c00 c077e518
+[    0.748209] ddc0: 00000008 00000008 c2033cc0 c23f8c00 c21ac040 c077ef6c 00000008 80000000
+[    0.748444] dde0: c1147b48 00000000 c21ac040 c099b730 00200000 c2122480 c21ac040 c2136410
+[    0.748675] de00: 00000000 9371550b 00000000 c2136410 c15146f0 c15146f0 00000000 00000000
+[    0.748910] de20: c1147b48 00000006 c136e6c4 c0764e34 c2136410 00000000 c15146f0 c0762460
+[    0.749204] de40: c2136410 c15146f0 c15146f0 c2136410 00000000 c07626fc 00000006 c0a2ccb8
+[    0.749448] de60: c158d24c c158d254 c15146f0 c2136410 00000000 c0762904 c2136410 c15146f0
+[    0.749681] de80: c15146f0 c0762b10 c1539000 c0762bac 00000000 c2136458 c2042300 00000000
+[    0.749968] dea0: c2042300 c0760234 c2042300 c2042348 c2016cb0 9371550b c15146f0 c24bcf00
+[    0.750198] dec0: 00000000 c15146f0 c2042300 c0761664 c10aa414 00000000 c15146f0 c133be74
+[    0.750421] dee0: 00000000 c1539000 c1539000 c07639bc c2076900 c133be74 c2076900 c01161ac
+[    0.750639] df00: 00000000 c11c0928 c210a969 00000000 00000000 00000000 00000000 00000000
+[    0.750861] df20: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    0.751334] df40: 00000000 00000000 00000000 9371550b 00000117 c210a940 c1352854 c1352834
+[    0.751885] df60: c1539000 c1147b48 00000006 c1301354 00000006 00000006 00000000 c13004d8
+[    0.752226] df80: c2076900 c1403180 c0ddb614 00000000 00000000 00000000 00000000 00000000
+[    0.752708] dfa0: 00000000 c0ddb628 00000000 c010016c 00000000 00000000 00000000 00000000
+[    0.752990] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    0.753231] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+[    0.753586] Call trace: 
+[    0.754192]  regmap_mmio_write32le from regmap_mmio_write+0x38/0x54
+[    0.754704]  regmap_mmio_write from _regmap_bus_reg_write+0x84/0xbc
+[    0.754980]  _regmap_bus_reg_write from regmap_write+0x38/0x5c
+[    0.755249]  regmap_write from pxp_probe+0x150/0x4c0
+[    0.755438]  pxp_probe from platform_probe+0x58/0x90
+[    0.755604]  platform_probe from really_probe+0xc4/0x2d0
+[    0.755779]  really_probe from __driver_probe_device+0x90/0x1c8
+[    0.755972]  __driver_probe_device from driver_probe_device+0x34/0x118
+[    0.756178]  driver_probe_device from __driver_attach+0x9c/0x1a0
+[    0.756366]  __driver_attach from bus_for_each_dev+0x7c/0xcc
+[    0.756545]  bus_for_each_dev from bus_add_driver+0xc0/0x1e8
+[    0.756722]  bus_add_driver from driver_register+0x84/0x138
+[    0.756924]  driver_register from do_one_initcall+0x54/0x240
+[    0.757123]  do_one_initcall from kernel_init_freeable+0x190/0x244
+[    0.757500]  kernel_init_freeable from kernel_init+0x14/0x12c
+[    0.757721]  kernel_init from ret_from_fork+0x14/0x28
+[    0.757946] Exception stack(0xe083dfb0 to 0xe083dff8)
+[    0.758115] dfa0:                                     00000000 00000000 00000000 00000000
+[    0.758346] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    0.758571] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
+[    0.758894] Code: e59d1008 e59d2004 e5903000 e0833001 (e5832000) 
+[    0.759505] ---[ end trace 0000000000000000 ]---
+[    0.759822] note: swapper/0[1] exited with irqs disabled
+[    0.761351] Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
+[    0.761927] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b ]---
+qemu-system-arm: terminating on signal 15 from pid 167463 (timeout)
