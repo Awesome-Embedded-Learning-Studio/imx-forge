@@ -17,6 +17,23 @@ cmake --build . -j$(nproc)
 
 生成的二进制文件位于 `build/bin/` 目录。
 
+### 2. 部署到 QEMU 模拟板（无板开发）
+
+模拟板经 slirp 内置 TFTP 与宿主共享部署目录（`scripts/driver_helper/driver_helper.conf` 的 `TFTP_DIR`，默认 `~/tftp`）——与真机 netboot 共用同一目录：
+
+```bash
+cp build/bin/icm20608_app ~/tftp/
+cp ../..//out/driver_artifacts/21_tutorial_icm20608_spi/alpha-board/*.ko ~/tftp/
+
+scripts/qemu_helper/run-qemu.sh        # 启动模拟板，root/root 登录
+# guest 内：
+#   udhcpc -i eth1
+#   tftp -g -r 21_tutorial_icm20608_spi_driver.ko 10.0.2.2 && insmod 21_tutorial_icm20608_spi_driver.ko
+#   tftp -g -r icm20608_app 10.0.2.2 && chmod +x icm20608_app && ./icm20608_app
+```
+
+改完代码重编 `cmake --build build` 后重投 `~/tftp` 即可，秒级迭代。
+
 ### 2. 部署到 rootfs
 
 ```bash
