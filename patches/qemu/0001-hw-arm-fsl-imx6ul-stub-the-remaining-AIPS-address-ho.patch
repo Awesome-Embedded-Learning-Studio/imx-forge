@@ -1,7 +1,7 @@
 From 559056642bef4c1f0b14b43b1fd23cd6f939fc07 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Wed, 26 Aug 2026 22:47:47 +0800
-Subject: [PATCH 1/6] hw/arm: fsl-imx6ul: stub the remaining AIPS address holes
+Subject: [PATCH 1/7] hw/arm: fsl-imx6ul: stub the remaining AIPS address holes
  (dcp/rngb/pxp/csi/tsc)
 
 Boards derived from the i.MX6ULL 14x14 EVK enable DCP, RNGB, CSI, PXP and

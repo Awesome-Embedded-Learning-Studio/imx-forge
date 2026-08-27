@@ -1,0 +1,231 @@
+From a2be3894b0a94802d433c385522951422affd68c Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Thu, 27 Aug 2026 22:21:57 +0800
+Subject: [PATCH 7/7] hw/sensor: per-read noise + stable QOM paths for the
+ teaching sensors
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+How sensor data gets fed, three layers:
+ 1. static defaults (plausible indoor/stationary baselines)
+ 2. exact injection: qom-set <path> als 4660 — the QOM values are the
+    clean baseline and qom-set writes are never polluted
+ 3. life: a 'noise' bool property (default true) adds ±2% per-read
+    jitter on the data registers, so repeated reads look like a real
+    sensor instead of a constant table
+
+Device naming: i2c/ssi devices created with dev->id set land as
+child[N] links on their bus, giving stable paths
+  /machine/soc/i2c1/i2c-bus.0/child[0]   (ap3216c @0x1e)
+  /machine/soc/spi2/spi/child[0]         (icm20608)
+Note the SoC I2C children are named i2c1..i2c4 (the eCSPI/GPIO ones
+count from zero — qtree never lies, check it first).
+
+Verified: qom-set als 4660 → guest i2cget reads 0x1235/0x123e (exact
+baseline 0x1234 with ±2% jitter); default reads hover around 0x0120.
+---
+ hw/arm/mcimx6ul-evk.c        | 12 +++++++--
+ hw/sensor/ap3216c.c          | 47 +++++++++++++++++++++++++++++-------
+ hw/sensor/icm20608.c         | 30 ++++++++++++++++++++++-
+ include/hw/sensor/ap3216c.h  |  1 +
+ include/hw/sensor/icm20608.h |  1 +
+ 5 files changed, 79 insertions(+), 12 deletions(-)
+
+diff --git a/hw/arm/mcimx6ul-evk.c b/hw/arm/mcimx6ul-evk.c
+index 0d0d1f8..45993bb 100644
+--- a/hw/arm/mcimx6ul-evk.c
++++ b/hw/arm/mcimx6ul-evk.c
+@@ -71,9 +71,17 @@ static void mcimx6ul_evk_init(MachineState *machine)
+      * bus name "i2c-bus.0" is the first I2C bus created machine-wide.
+      */
+     {
+-        i2c_slave_create_simple(s->i2c[0].bus, TYPE_AP3216C, 0x1e);
++        /* Naming the devices gives stable QOM paths for qom-set/get:
++         *   /machine/soc/i2c0/i2c-bus.0/ap3216c
++         *   /machine/soc/spi2/spi/icm20608 */
++        I2CSlave *als = i2c_slave_new(TYPE_AP3216C, 0x1e);
++        DEVICE(als)->id = g_strdup("ap3216c");
++        i2c_slave_realize_and_unref(als, s->i2c[0].bus, &error_fatal);
++
+         /* ecspi3 (SoC child spi[2]) carries the icm20608 IMU on CS0 */
+-        ssi_create_peripheral(s->spi[2].bus, TYPE_ICM20608);
++        DeviceState *imu = qdev_new(TYPE_ICM20608);
++        imu->id = g_strdup("icm20608");
++        ssi_realize_and_unref(imu, s->spi[2].bus, &error_fatal);
+     }
+ 
+     memory_region_add_subregion(get_system_memory(), FSL_IMX6UL_MMDC_ADDR,
+diff --git a/hw/sensor/ap3216c.c b/hw/sensor/ap3216c.c
+index 1d69f71..7016c23 100644
+--- a/hw/sensor/ap3216c.c
++++ b/hw/sensor/ap3216c.c
+@@ -16,6 +16,20 @@
+ #include "hw/sensor/ap3216c.h"
+ #include "qemu/module.h"
+ #include "qom/object.h"
++#include "glib.h"
++
++/* per-read jitter so the sensor feels alive; the QOM ir/als/ps values
++ * stay the clean baseline — qom-set writes are not polluted */
++static uint16_t ap3216c_jitter(AP3216CState *s, uint16_t base)
++{
++    int amp;
++
++    if (!s->noise) {
++        return base;
++    }
++    amp = base / 50 + 1;      /* ±2% */
++    return (uint16_t)(base + g_random_int_range(-amp, amp + 1));
++}
+ 
+ static uint8_t ap3216c_read_reg(AP3216CState *s, uint8_t reg)
+ {
+@@ -27,17 +41,17 @@ static uint8_t ap3216c_read_reg(AP3216CState *s, uint8_t reg)
+     case 0x02:
+         return s->int_mirror;
+     case 0x0a: /* IR_L: top two bits of IR in [1:0] */
+-        return s->ir >> 8;
++        return ap3216c_jitter(s, s->ir) >> 8;
+     case 0x0b: /* IR_H: low eight bits of IR */
+-        return s->ir & 0xff;
++        return ap3216c_jitter(s, s->ir) & 0xff;
+     case 0x0c: /* ALS_L */
+-        return s->als & 0xff;
++        return ap3216c_jitter(s, s->als) & 0xff;
+     case 0x0d: /* ALS_H */
+-        return s->als >> 8;
++        return ap3216c_jitter(s, s->als) >> 8;
+     case 0x0e: /* PS_L: top nibble of PS in [3:0] */
+-        return (s->ps >> 4) & 0x0f;
++        return (ap3216c_jitter(s, s->ps) >> 4) & 0x0f;
+     case 0x0f: /* PS_H: low six bits of PS */
+-        return s->ps & 0x3f;
++        return ap3216c_jitter(s, s->ps) & 0x3f;
+     default:
+         return 0;
+     }
+@@ -103,13 +117,28 @@ static void ap3216c_reset_hold(Object *obj, ResetType type)
+     s->ps = 0x00c8;
+ }
+ 
++static bool ap3216c_get_noise(Object *obj, Error **errp)
++{
++    return AP3216C(obj)->noise;
++}
++
++static void ap3216c_set_noise(Object *obj, bool value, Error **errp)
++{
++    AP3216C(obj)->noise = value;
++}
++
+ static void ap3216c_init(Object *obj)
+ {
+-    object_property_add_uint16_ptr(obj, "ir", &AP3216C(obj)->ir,
++    AP3216CState *s = AP3216C(obj);
++
++    object_property_add_bool(obj, "noise", ap3216c_get_noise,
++                             ap3216c_set_noise);
++    s->noise = true;
++    object_property_add_uint16_ptr(obj, "ir", &s->ir,
+                                    OBJ_PROP_FLAG_READWRITE);
+-    object_property_add_uint16_ptr(obj, "als", &AP3216C(obj)->als,
++    object_property_add_uint16_ptr(obj, "als", &s->als,
+                                    OBJ_PROP_FLAG_READWRITE);
+-    object_property_add_uint16_ptr(obj, "ps", &AP3216C(obj)->ps,
++    object_property_add_uint16_ptr(obj, "ps", &s->ps,
+                                    OBJ_PROP_FLAG_READWRITE);
+ }
+ 
+diff --git a/hw/sensor/icm20608.c b/hw/sensor/icm20608.c
+index e8532ea..a9ab1ca 100644
+--- a/hw/sensor/icm20608.c
++++ b/hw/sensor/icm20608.c
+@@ -12,12 +12,26 @@
+ #include "qemu/osdep.h"
+ #include "hw/sensor/icm20608.h"
+ #include "qemu/module.h"
++#include "glib.h"
+ 
+ #define ICM_WHO_AM_I      0x75
+ #define ICM_WHO_AM_I_VAL  0xaf
+ 
+ /* data register window 0x3b..0x48: AXH AXL AYH AYL AZH AZL TH TL
+  * GXH GXL GYH GYL GZH GZL */
++/* per-read jitter so the IMU feels alive; the QOM values stay the clean
++ * baseline — qom-set writes are not polluted */
++static uint16_t icm20608_jitter(ICM20608State *s, uint16_t base)
++{
++    int amp;
++
++    if (!s->noise) {
++        return base;
++    }
++    amp = base / 50 + 1;      /* ±2% */
++    return (uint16_t)(base + g_random_int_range(-amp, amp + 1));
++}
++
+ static uint8_t icm20608_data_reg(ICM20608State *s, uint8_t reg)
+ {
+     const uint16_t v[7] = {
+@@ -31,7 +45,8 @@ static uint8_t icm20608_data_reg(ICM20608State *s, uint8_t reg)
+         return 0;
+     }
+     /* big-endian 16-bit per sample */
+-    return (idx & 1) ? (v[idx / 2] & 0xff) : ((v[idx / 2] >> 8) & 0xff);
++    return (idx & 1) ? (icm20608_jitter(s, v[idx / 2]) & 0xff)
++                     : ((icm20608_jitter(s, v[idx / 2]) >> 8) & 0xff);
+ }
+ 
+ static uint32_t icm20608_transfer(SSIPeripheral *ss, uint32_t tx)
+@@ -100,10 +115,23 @@ static void icm20608_reset_hold(Object *obj, ResetType type)
+     s->temp = 250;
+ }
+ 
++static bool icm20608_get_noise(Object *obj, Error **errp)
++{
++    return ICM20608(obj)->noise;
++}
++
++static void icm20608_set_noise(Object *obj, bool value, Error **errp)
++{
++    ICM20608(obj)->noise = value;
++}
++
+ static void icm20608_init(Object *obj)
+ {
+     ICM20608State *s = ICM20608(obj);
+ 
++    object_property_add_bool(obj, "noise", icm20608_get_noise,
++                             icm20608_set_noise);
++    s->noise = true;
+     object_property_add_uint16_ptr(obj, "accel-x", &s->accel_x,
+                                    OBJ_PROP_FLAG_READWRITE);
+     object_property_add_uint16_ptr(obj, "accel-y", &s->accel_y,
+diff --git a/include/hw/sensor/ap3216c.h b/include/hw/sensor/ap3216c.h
+index 91c5350..c6710f0 100644
+--- a/include/hw/sensor/ap3216c.h
++++ b/include/hw/sensor/ap3216c.h
+@@ -42,6 +42,7 @@ struct AP3216CState {
+     uint16_t ir;
+     uint16_t als;
+     uint16_t ps;
++    bool noise;          /* per-read ±2% jitter on the data registers */
+ };
+ 
+ #endif /* HW_SENSOR_AP3216C_H */
+diff --git a/include/hw/sensor/icm20608.h b/include/hw/sensor/icm20608.h
+index 31b1078..0c3bed3 100644
+--- a/include/hw/sensor/icm20608.h
++++ b/include/hw/sensor/icm20608.h
+@@ -39,6 +39,7 @@ struct ICM20608State {
+     uint16_t accel_x, accel_y, accel_z;
+     uint16_t gyro_x, gyro_y, gyro_z;
+     uint16_t temp;
++    bool noise;          /* per-read ±2% jitter on the data registers */
+ };
+ 
+ #endif /* HW_SENSOR_ICM20608_H */
+-- 
+2.43.0
+
