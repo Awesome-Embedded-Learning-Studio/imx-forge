@@ -3,22 +3,28 @@
 # Targets:
 #   make            build hello_mod.ko (against the mainline kernel tree)
 #                   and a statically linked hello_app
-#   make install    drop both artifacts into ~/tftp (slirp TFTP shares this
-#                   with the guest at 10.0.2.2; the real board netboots from
-#                   the same directory)
+#   make install    drop both artifacts into the shared TFTP dir from
+#                   driver_helper.conf (slirp TFTP serves it to the guest
+#                   at 10.0.2.2; the real board netboots from it too)
 #   make clean
 #
-# The toolchain must be on PATH:
-#   export PATH=/opt/arm-gnu-toolchain/bin:$PATH
+# This module lives outside driver/ (which scripts/driver_helper manages),
+# so the kernel paths mirror scripts/lib/driver_buildlib.sh directly.
 
 KERNEL_TYPE ?= mainline
 
 PROJECT_ROOT  := $(shell realpath $(CURDIR)/../..)
+DRIVER_HELPER := $(PROJECT_ROOT)/scripts/driver_helper
 ARCH          := arm
 CROSS_COMPILE ?= arm-none-linux-gnueabihf-
 KDIR          := $(PROJECT_ROOT)/third_party/linux_$(KERNEL_TYPE)
 KOBJ          := $(PROJECT_ROOT)/out/$(KERNEL_TYPE)/linux
-TFTP_DIR      ?= $(HOME)/tftp
+
+# single source of truth for the deploy dir: driver_helper.conf
+TFTP_DIR := $(shell sed -n 's/^TFTP_DIR="\(.*\)"/\1/p' $(DRIVER_HELPER)/driver_helper.conf)
+ifeq ($(TFTP_DIR),)
+TFTP_DIR := $(HOME)/tftp
+endif
 
 obj-m := hello_mod.o
 
