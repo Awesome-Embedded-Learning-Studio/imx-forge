@@ -1,0 +1,309 @@
+From 80f0d52334d0c9e0203995f270015fee7d511191 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Thu, 27 Aug 2026 10:24:04 +0800
+Subject: [PATCH 6/6] hw/sensor: add an ICM20608 six-axis IMU model (ecspi3)
+ for the AES board
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Register-file teaching model for the TDK ICM20608 on ecspi3: bit7-of-
+address R/W framing with auto-increment, config registers as storage,
+data window 0x3b..0x48 derived from seven injectable uint16 QOM
+properties (accel-x/y/z, gyro-x/y/z, temp), WHO_AM_I answers 0xAF.
+
+Framing note: the ECSPI controller exchanges whole 32-bit FIFO words,
+so short transactions arrive padded with leading zero bytes; the state
+machine therefore keys on the address byte itself (bit7 set starts a
+read) rather than transaction boundaries — the pad bytes fall into the
+harmless write branch. SSIPeripheralClass::realize is mandatory (the
+base class calls it unconditionally) — provide a no-op.
+
+mcimx6ul-evk attaches one on the ecspi3 SSI bus (SoC child spi[2]).
+
+Verified with the imxaes teaching driver (Linux v7.1, module insmod):
+probe succeeds, and the SPI byte stream seen by the model carries the
+injected sample data exactly (az=0x0800 at +-16g = 1g, temp raw 250).
+Known issue: the guest still reads zeros through the driver because the
+imx_spi model packs the 4-byte exchange words differently than the
+kernel spi-imx driver expects — the controller-side word packing needs
+a quirk, tracked as follow-up work.
+---
+ hw/arm/Kconfig               |   1 +
+ hw/arm/mcimx6ul-evk.c        |   3 +
+ hw/sensor/Kconfig            |   4 +
+ hw/sensor/icm20608.c         | 150 +++++++++++++++++++++++++++++++++++
+ hw/sensor/meson.build        |   1 +
+ include/hw/sensor/icm20608.h |  44 ++++++++++
+ 6 files changed, 203 insertions(+)
+ create mode 100644 hw/sensor/icm20608.c
+ create mode 100644 include/hw/sensor/icm20608.h
+
+diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
+index f80cd4a..98628dd 100644
+--- a/hw/arm/Kconfig
++++ b/hw/arm/Kconfig
+@@ -672,6 +672,7 @@ config FSL_IMX6UL
+     select CAN_FLEXCAN
+     select IMX6UL_PWM
+     select AP3216C
++    select ICM20608
+     select IMX_USBPHY
+     select WDT_IMX2
+     select SDHCI
+diff --git a/hw/arm/mcimx6ul-evk.c b/hw/arm/mcimx6ul-evk.c
+index 5a5580b..0d0d1f8 100644
+--- a/hw/arm/mcimx6ul-evk.c
++++ b/hw/arm/mcimx6ul-evk.c
+@@ -15,6 +15,7 @@
+ #include "hw/arm/fsl-imx6ul.h"
+ #include "hw/i2c/i2c.h"
+ #include "hw/sensor/ap3216c.h"
++#include "hw/sensor/icm20608.h"
+ #include "hw/arm/boot.h"
+ #include "hw/arm/machines-qom.h"
+ #include "hw/core/boards.h"
+@@ -71,6 +72,8 @@ static void mcimx6ul_evk_init(MachineState *machine)
+      */
+     {
+         i2c_slave_create_simple(s->i2c[0].bus, TYPE_AP3216C, 0x1e);
++        /* ecspi3 (SoC child spi[2]) carries the icm20608 IMU on CS0 */
++        ssi_create_peripheral(s->spi[2].bus, TYPE_ICM20608);
+     }
+ 
+     memory_region_add_subregion(get_system_memory(), FSL_IMX6UL_MMDC_ADDR,
+diff --git a/hw/sensor/Kconfig b/hw/sensor/Kconfig
+index bcad55a..2ed73ba 100644
+--- a/hw/sensor/Kconfig
++++ b/hw/sensor/Kconfig
+@@ -8,6 +8,10 @@ config AP3216C
+     depends on I2C
+     default y if I2C_DEVICES
+ 
++config ICM20608
++    bool
++    depends on SSI
++
+ config TMP421
+     bool
+     depends on I2C
+diff --git a/hw/sensor/icm20608.c b/hw/sensor/icm20608.c
+new file mode 100644
+index 0000000..e8532ea
+--- /dev/null
++++ b/hw/sensor/icm20608.c
+@@ -0,0 +1,150 @@
++/*
++ * TDK InvenSense ICM20608 six-axis IMU — teaching model (see header).
++ *
++ * Framing: first byte of a CS-low transaction is the address byte,
++ * bit7 = read; subsequent bytes are data, auto-incrementing (matches
++ * spi_write_then_read / spi_write from the Linux driver).
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/sensor/icm20608.h"
++#include "qemu/module.h"
++
++#define ICM_WHO_AM_I      0x75
++#define ICM_WHO_AM_I_VAL  0xaf
++
++/* data register window 0x3b..0x48: AXH AXL AYH AYL AZH AZL TH TL
++ * GXH GXL GYH GYL GZH GZL */
++static uint8_t icm20608_data_reg(ICM20608State *s, uint8_t reg)
++{
++    const uint16_t v[7] = {
++        s->accel_x, s->accel_y, s->accel_z,
++        s->temp,
++        s->gyro_x, s->gyro_y, s->gyro_z,
++    };
++    int idx = reg - 0x3b;
++
++    if (idx < 0 || idx >= 14) {
++        return 0;
++    }
++    /* big-endian 16-bit per sample */
++    return (idx & 1) ? (v[idx / 2] & 0xff) : ((v[idx / 2] >> 8) & 0xff);
++}
++
++static uint32_t icm20608_transfer(SSIPeripheral *ss, uint32_t tx)
++{
++    ICM20608State *s = ICM20608(ss);
++    uint32_t rx = 0xff;
++
++    /* The ECSPI controller exchanges whole 32-bit FIFO words (burst = 4
++     * bytes), so short transactions arrive padded with leading zero
++     * bytes. Framing therefore keys on the address byte itself: bit7 set
++     * starts a read at that address; while a read is in flight every
++     * dummy byte returns the next data byte; bit7-clear bytes outside a
++     * read form write pairs (address, value) — the pad zero just writes
++     * register 0 harmlessly. */
++    if (tx & 0x80) {
++        s->reading = true;
++        s->addr = tx & 0x7f;
++        return 0xff;
++    }
++
++    if (s->reading) {
++        if (s->addr == ICM_WHO_AM_I) {
++            rx = ICM_WHO_AM_I_VAL;
++        } else if (s->addr >= 0x3b && s->addr <= 0x48) {
++            rx = icm20608_data_reg(s, s->addr);
++        } else {
++            rx = s->regs[s->addr];
++        }
++        s->addr = (s->addr + 1) & 0x7f;
++        return rx;
++    }
++
++    if (s->waddr_pending) {
++        if (s->waddr < 0x3b || s->waddr > 0x48) {
++            s->regs[s->waddr] = tx;
++        }
++        s->waddr_pending = false;
++    } else {
++        s->waddr = tx;
++        s->waddr_pending = true;
++    }
++
++    return rx;
++}
++
++static void icm20608_reset_hold(Object *obj, ResetType type)
++{
++    ICM20608State *s = ICM20608(obj);
++
++    memset(s->regs, 0, sizeof(s->regs));
++    s->regs[ICM_WHO_AM_I] = ICM_WHO_AM_I_VAL;
++    s->regs[0x6b] = 0x41;   /* PWR_MGMT_1: DEVICE_RESET | SLEEP on real hw */
++    s->reading = false;
++    s->addr = 0;
++    s->waddr = 0;
++    s->waddr_pending = false;
++
++    /* plausible stationary defaults: 1g on Z at +-16g (2048 LSB/g),
++     * rest ~0, 25 C (raw 250 in the driver's scaling) */
++    s->accel_x = 0;
++    s->accel_y = 0;
++    s->accel_z = 2048;
++    s->gyro_x = 0;
++    s->gyro_y = 0;
++    s->gyro_z = 0;
++    s->temp = 250;
++}
++
++static void icm20608_init(Object *obj)
++{
++    ICM20608State *s = ICM20608(obj);
++
++    object_property_add_uint16_ptr(obj, "accel-x", &s->accel_x,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "accel-y", &s->accel_y,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "accel-z", &s->accel_z,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "gyro-x", &s->gyro_x,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "gyro-y", &s->gyro_y,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "gyro-z", &s->gyro_z,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "temp", &s->temp,
++                                   OBJ_PROP_FLAG_READWRITE);
++}
++
++static void icm20608_realize(SSIPeripheral *ss, Error **errp)
++{
++}
++
++static void icm20608_class_init(ObjectClass *klass, void *data)
++{
++    SSIPeripheralClass *k = SSI_PERIPHERAL_CLASS(klass);
++    ResettableClass *rc = RESETTABLE_CLASS(klass);
++
++    k->realize = icm20608_realize;
++    k->transfer = icm20608_transfer;
++    rc->phases.hold = icm20608_reset_hold;
++}
++
++static const TypeInfo icm20608_info = {
++    .name          = TYPE_ICM20608,
++    .parent        = TYPE_SSI_PERIPHERAL,
++    .instance_size = sizeof(ICM20608State),
++    .instance_init = icm20608_init,
++    .class_init    = icm20608_class_init,
++};
++
++static void icm20608_register_types(void)
++{
++    type_register_static(&icm20608_info);
++}
++
++type_init(icm20608_register_types)
+diff --git a/hw/sensor/meson.build b/hw/sensor/meson.build
+index 1f827d1..0fa8d6a 100644
+--- a/hw/sensor/meson.build
++++ b/hw/sensor/meson.build
+@@ -1,5 +1,6 @@
+ system_ss.add(when: 'CONFIG_TMP105', if_true: files('tmp105.c'))
+ system_ss.add(when: 'CONFIG_AP3216C', if_true: files('ap3216c.c'))
++system_ss.add(when: 'CONFIG_ICM20608', if_true: files('icm20608.c'))
+ system_ss.add(when: 'CONFIG_TMP421', if_true: files('tmp421.c'))
+ system_ss.add(when: 'CONFIG_DPS310', if_true: files('dps310.c'))
+ system_ss.add(when: 'CONFIG_EMC141X', if_true: files('emc141x.c'))
+diff --git a/include/hw/sensor/icm20608.h b/include/hw/sensor/icm20608.h
+new file mode 100644
+index 0000000..31b1078
+--- /dev/null
++++ b/include/hw/sensor/icm20608.h
+@@ -0,0 +1,44 @@
++/*
++ * TDK InvenSense ICM20608 six-axis IMU (SPI).
++ *
++ * Minimal teaching model for the AES board (ecspi3):
++ * register-file semantics with bit7-of-address R/W framing, matching the
++ * Linux driver's spi_write_then_read() usage. Config registers are plain
++ * storage; the sensor data registers (0x3b..0x48, 14 bytes, big-endian
++ * 16-bit each) are derived from seven injectable QOM properties
++ * (accel-x/y/z, gyro-x/y/z, temp), so a classroom "rotate the board" is
++ * a QMP qom-set away and CI can assert readings through the real SPI
++ * path. WHO_AM_I (0x75) answers 0xAF.
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#ifndef HW_SENSOR_ICM20608_H
++#define HW_SENSOR_ICM20608_H
++
++#include "hw/ssi/ssi.h"
++#include "qom/object.h"
++
++#define TYPE_ICM20608 "icm20608"
++OBJECT_DECLARE_SIMPLE_TYPE(ICM20608State, ICM20608)
++
++struct ICM20608State {
++    /*< private >*/
++    SSIPeripheral parent_obj;
++
++    /*< public >*/
++    uint8_t regs[0x80];     /* config/status storage */
++    bool reading;           /* in a read data phase */
++    uint8_t addr;           /* current read address (auto-increment) */
++    uint8_t waddr;          /* pending write address */
++    bool waddr_pending;     /* next tx byte is a write value */
++
++    /* injectable sample data (BE 16-bit each at 0x3b..0x48); stored as
++     * sign-extended uint16 so the QOM property helpers are happy */
++    uint16_t accel_x, accel_y, accel_z;
++    uint16_t gyro_x, gyro_y, gyro_z;
++    uint16_t temp;
++};
++
++#endif /* HW_SENSOR_ICM20608_H */
+-- 
+2.43.0
+
