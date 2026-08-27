@@ -193,7 +193,9 @@ QEMU_ARGS=(
     -dtb "${DTB}"
     -append "${BOOTARGS}"
     -drive "file=${ROOTFS_IMG},if=sd,index=1,format=raw"
-    -nic user
+    # slirp's built-in TFTP server shares ~/tftp with the guest (10.0.2.2),
+    # same directory the real board netboots from (copy_to_tftp.sh)
+    -nic user,tftp="${HOME}/tftp"
 )
 if [[ -n "${QEMU_NET_EXTRA:-}" ]]; then
     # shellcheck disable=SC2206
