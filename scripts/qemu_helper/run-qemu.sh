@@ -11,6 +11,9 @@
 #   --rootfs-img=PATH ext4 rootfs image (default: out/qemu/rootfs.ext4,
 #                     rebuilt automatically when the rootfs tree changed)
 #   --append=ARGS     Extra kernel cmdline appended to the default bootargs
+#   --display=TYPE    Show the LCD in a host window instead of headless:
+#                     gtk (WSLg/desktop) or vnc. Console stays on this
+#                     terminal (Ctrl-A C still switches to the monitor).
 #   --no-build        Skip the automatic dtb/rootfs-image rebuild below
 #   --smoke           Non-interactive boot test: capture UART to log, assert
 #                     boot reaches the login prompt, exit 0/1 accordingly.
@@ -78,6 +81,7 @@ DEFAULT_ROOTFS_IMG="${PROJECT_ROOT}/out/qemu/rootfs.ext4"
 DEFAULT_LOG="${PROJECT_ROOT}/out/qemu/uart.log"
 
 KERNEL=""
+DISPLAY_TYPE=""
 DTB=""
 DTB_SET=0
 ROOTFS_IMG=""
@@ -100,6 +104,7 @@ while [[ $# -gt 0 ]]; do
         --dtb=*)         DTB="${1#*=}"; DTB_SET=1 ;;
         --rootfs-img=*)  ROOTFS_IMG="${1#*=}"; ROOTFS_SET=1 ;;
         --append=*)      EXTRA_APPEND="${EXTRA_APPEND:+${EXTRA_APPEND} }${1#*=}" ;;
+        --display=*)    DISPLAY_TYPE="${1#*=}" ;;
         --no-build)      NO_BUILD=1 ;;
         --smoke)         SMOKE=1 ;;
         --expect=*)      EXPECTS+=("${1#*=}") ;;
@@ -207,6 +212,10 @@ if [[ "${SMOKE}" -eq 0 ]]; then
     log "starting QEMU (interactive, Ctrl-A X to quit)"
     log "machine: mcimx6ul-evk  memory: 512M  console: ttymxc0"
     log "bootargs: ${BOOTARGS}"
+    if [[ -n "${DISPLAY_TYPE}" ]]; then
+        log "LCD window: -display ${DISPLAY_TYPE} (eLCDIF 1024x600 panel)"
+        exec "${QEMU_BIN}" "${QEMU_ARGS[@]}"             -display "${DISPLAY_TYPE}" -serial mon:stdio
+    fi
     exec "${QEMU_BIN}" "${QEMU_ARGS[@]}" -nographic
 fi
 
