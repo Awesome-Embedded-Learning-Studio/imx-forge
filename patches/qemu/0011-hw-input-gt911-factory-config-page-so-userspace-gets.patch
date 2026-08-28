@@ -1,7 +1,7 @@
 From 27fc250db9fee2f187f819d9e00465d37ea45525 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Fri, 28 Aug 2026 19:32:18 +0800
-Subject: [PATCH 11/11] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20factory?=
+Subject: [PATCH 11/12] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20factory?=
  =?UTF-8?q?=20config=20page=20so=20userspace=20gets=20real=20abs=20ranges?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
