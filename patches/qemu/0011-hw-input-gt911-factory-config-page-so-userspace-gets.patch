@@ -1,4 +1,4 @@
-From 6d629e74c23cb978e5e270e21362dffb795420e5 Mon Sep 17 00:00:00 2001
+From 27fc250db9fee2f187f819d9e00465d37ea45525 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Fri, 28 Aug 2026 19:32:18 +0800
 Subject: [PATCH 11/11] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20factory?=
@@ -19,12 +19,12 @@ writes from the guest update the live page (accepted, not re-verified,
 same as a real chip). Verified: 'Invalid config' message is gone from
 dmesg and the Qt lcd_button reacts to gt911_touch (fb content changes).
 ---
- hw/input/gt911.c         | 46 +++++++++++++++++++++++++++++++++++++---
+ hw/input/gt911.c         | 45 +++++++++++++++++++++++++++++++++++++---
  include/hw/input/gt911.h |  1 +
- 2 files changed, 44 insertions(+), 3 deletions(-)
+ 2 files changed, 43 insertions(+), 3 deletions(-)
 
 diff --git a/hw/input/gt911.c b/hw/input/gt911.c
-index 5c0bb9f..73845c5 100644
+index 5c0bb9f..fbb1516 100644
 --- a/hw/input/gt911.c
 +++ b/hw/input/gt911.c
 @@ -36,15 +36,49 @@ static void gt911_fill_report(GT911State *s, uint8_t *buf, int len)
@@ -93,15 +93,7 @@ index 5c0bb9f..73845c5 100644
  }
  
  static void gt911_event(I2CSlave *i2c, enum i2c_event event)
-@@ -160,6 +198,7 @@ static void gt911_input_event(DeviceState *dev, QemuConsole *src,
-         }
-         break;
-     case INPUT_EVENT_KIND_BTN:
-+                (int)evt->btn.button, (int)evt->btn.down);
-         if (evt->btn.button == INPUT_BUTTON_LEFT) {
-             if (evt->btn.down) {
-                 gt911_touch(s, s->host_x, s->host_y);
-@@ -184,6 +223,7 @@ static void gt911_reset_hold(Object *obj, ResetType type)
+@@ -184,6 +222,7 @@ static void gt911_reset_hold(Object *obj, ResetType type)
      GT911State *s = GT911(obj);
  
      memcpy(s->id, "911\0\x20\0", sizeof(s->id));   /* "911", vid 0x0020 */
