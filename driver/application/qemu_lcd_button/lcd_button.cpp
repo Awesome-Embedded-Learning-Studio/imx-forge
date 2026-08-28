@@ -8,9 +8,19 @@
  * side this doubles as the "does the LCD window show anything" check via
  * run-qemu.sh --display=gtk.
  *
- * Touch injection from the QEMU monitor:
- *   (qemu) gt911_touch 100 120   # presses whatever is at that point
- *   (qemu) gt911_release
+ * Touch input — three interchangeable channels, all through the real
+ * I2C + IRQ hardware chain:
+ *   1. host mouse: click anywhere in the LCD window (GTK frontend; the
+ *      gt911 model registers an ABS input handler, so the mouse becomes
+ *      the touchscreen — run-qemu.sh --display=gtk)
+ *   2. QEMU monitor: gt911_touch X Y / gt911_release (scripted taps)
+ *   3. QMP input-send-event (automation)
+ *
+ * IMPORTANT: the evdevtouch plugin is NOT loaded by the linuxfb platform
+ * by default — QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS alone only configures
+ * an already-loaded plugin. Pass it explicitly:
+ *
+ *   ./lcd_button -platform linuxfb -plugin evdevtouch:/dev/input/event1
  */
 
 #include <QApplication>
