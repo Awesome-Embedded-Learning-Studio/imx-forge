@@ -1,8 +1,8 @@
 From 421bdd1f8fa20cf3ea9be637a1be633795925f00 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Fri, 28 Aug 2026 08:27:56 +0800
-Subject: [PATCH 8/9] hw/input+audio: GT911 touchscreen and WM8960 codec models
- for the AES board
+Subject: [PATCH 08/10] hw/input+audio: GT911 touchscreen and WM8960 codec
+ models for the AES board
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

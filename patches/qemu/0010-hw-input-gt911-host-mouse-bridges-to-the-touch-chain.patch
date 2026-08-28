@@ -1,0 +1,211 @@
+From ce2ab9e5ec1cc449fb338cfe6d3cd53704596ffa Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Fri, 28 Aug 2026 19:01:55 +0800
+Subject: [PATCH 10/10] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20host=20mo?=
+ =?UTF-8?q?use=20bridges=20to=20the=20touch=20chain?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Register a QemuInputHandler (ABS + BTN) on the model: the GTK frontend
+detects an absolute pointer device and switches to absolute coordinate
+mode (the usb-tablet mechanism), so mouse motion over the LCD window
+arrives scaled and a click becomes a touch press through the real
+I2C + IRQ path. Axis values are converted from the 0..0x7fff host
+normalisation to the 1024x600 panel.
+
+The INT drive (high-then-low for a guaranteed falling edge, GPIO
+controller resolved by partial path) moves into the model itself —
+gt911_touch()/gt911_release() now assert INT directly, and the HMP
+commands shrink to plain calls.
+
+Verified via QMP input-send-event abs(16384,9830)+btn(left):
+/proc/interrupts gt9147 count 0 -> 2 (press + release).
+---
+ hw/input/gt911.c         | 72 ++++++++++++++++++++++++++++++++++++----
+ include/hw/input/gt911.h |  5 +++
+ monitor/hmp-cmds.c       | 23 -------------
+ 3 files changed, 71 insertions(+), 29 deletions(-)
+
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index ba06a95..5c0bb9f 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -14,6 +14,7 @@
+ #include "qemu/osdep.h"
+ #include "hw/input/gt911.h"
+ #include "qemu/module.h"
++#include "ui/input.h"
+ 
+ /* coordinate report at 0x814e, 8-byte contact format (little-endian x/y):
+  *   [0] status: bit7 buffer-ready, bit3:0 touch count
+@@ -103,24 +104,81 @@ static int gt911_send(I2CSlave *i2c, uint8_t data)
+     return 0;
+ }
+ 
+-/* --- monitor-side injection ------------------------------------------------ */
++/* --- touch injection ------------------------------------------------ */
++
++/*
++ * Drive the INT pad (GPIO1_IO9) high-then-low for a guaranteed falling
++ * edge: the pad idles low until the first touch, so a plain assert would
++ * produce no edge for the edge-triggered irq the goodix driver requests.
++ * The GPIO controller is resolved by partial path (the same resolution
++ * order the gpio_set HMP command uses), side-stepping the named-gpio-out
++ * wiring.
++ */
++static void gt911_assert_int(void)
++{
++    Object *gpio1 = object_resolve_path("gpio0", NULL);
++
++    if (gpio1) {
++        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 1);
++        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 0);
++    }
++}
+ 
+ void gt911_touch(GT911State *s, uint16_t x, uint16_t y)
+ {
+     s->touch_x = x;
+     s->touch_y = y;
+     s->pending = true;
+-    qemu_set_irq(s->int_line, 0);       /* INT asserts low */
++    gt911_assert_int();
+ }
+ 
+ void gt911_release(GT911State *s)
+ {
+-    s->pending = false;                 /* FIFO reports 0 contacts */
+-    /* keep INT asserted: the driver reads once more, sees 0 touches,
+-     * reports the release, and its 0x814e write clears INT */
+-    qemu_set_irq(s->int_line, 0);
++    s->pending = false;    /* FIFO reports 0 contacts on the next read */
++    gt911_assert_int();
++}
++
++/* --- host mouse -> touch bridge -------------------------------------------
++ *
++ * Registering an ABS-capable input handler makes the GTK/SDL frontends
++ * switch to absolute pointer mode (the usb-tablet mechanism): mouse
++ * motion over the LCD window arrives as scaled coordinates, a click
++ * becomes a touch press, and release ends it — all through the real
++ * I2C + IRQ chain. */
++static void gt911_input_event(DeviceState *dev, QemuConsole *src,
++                               QemuInputEvent *evt)
++{
++    GT911State *s = GT911(dev);
++
++    switch (evt->type) {
++    case INPUT_EVENT_KIND_ABS:
++        if (evt->abs.axis == INPUT_AXIS_X) {
++            /* 0..0x7fff host-normalised -> 0..1024 panel */
++            s->host_x = (uint32_t)evt->abs.value * 1024 / 0x8000;
++        } else {
++            s->host_y = (uint32_t)evt->abs.value * 600 / 0x8000;
++        }
++        break;
++    case INPUT_EVENT_KIND_BTN:
++        if (evt->btn.button == INPUT_BUTTON_LEFT) {
++            if (evt->btn.down) {
++                gt911_touch(s, s->host_x, s->host_y);
++            } else {
++                gt911_release(s);
++            }
++        }
++        break;
++    default:
++        break;
++    }
+ }
+ 
++static const QemuInputHandler gt911_input_handler = {
++    .name  = "QEMU GT911 TouchScreen",
++    .mask  = INPUT_EVENT_MASK_BTN | INPUT_EVENT_MASK_ABS,
++    .event = gt911_input_event,
++};
++
+ static void gt911_reset_hold(Object *obj, ResetType type)
+ {
+     GT911State *s = GT911(obj);
+@@ -140,6 +198,8 @@ static void gt911_init(Object *obj)
+     GT911State *s = GT911(obj);
+ 
+     qdev_init_gpio_out_named(DEVICE(s), &s->int_line, "gt911-int", 1);
++    s->input_handler = qemu_input_handler_register(DEVICE(s),
++                                                   &gt911_input_handler);
+ }
+ 
+ static void gt911_class_init(ObjectClass *klass, void *data)
+diff --git a/include/hw/input/gt911.h b/include/hw/input/gt911.h
+index 4b37710..da198c5 100644
+--- a/include/hw/input/gt911.h
++++ b/include/hw/input/gt911.h
+@@ -25,6 +25,7 @@
+ #define HW_INPUT_GT911_H
+ 
+ #include "hw/i2c/i2c.h"
++#include "ui/input.h"
+ #include "qom/object.h"
+ 
+ #define TYPE_GT911 "gt911"
+@@ -54,6 +55,10 @@ struct GT911State {
+     uint16_t touch_y;
+ 
+     qemu_irq int_line;      /* asserted low while a touch is pending */
++
++    /* host-mouse bridge (GTK/SDL absolute pointer) */
++    uint16_t host_x, host_y;
++    QemuInputHandlerState *input_handler;
+ };
+ 
+ /* monitor-side injection (hmp gt911_touch / gt911_release) */
+diff --git a/monitor/hmp-cmds.c b/monitor/hmp-cmds.c
+index 7efd8d4..f6bb987 100644
+--- a/monitor/hmp-cmds.c
++++ b/monitor/hmp-cmds.c
+@@ -186,26 +186,12 @@ void hmp_gt911_touch(Monitor *mon, const QDict *qdict)
+     int x = qdict_get_int(qdict, "x");
+     int y = qdict_get_int(qdict, "y");
+     Object *obj = gt911_find(object_get_objects_root());
+-    /* same resolution order that makes gpio_set work: partial path
+-     * match first, then the explicit /machine/soc walk */
+-    Object *gpio1 = object_resolve_path("gpio0", NULL);
+-    if (!gpio1) {
+-        Object *soc = object_resolve_path_component(
+-            object_get_objects_root(), "soc");
+-        gpio1 = soc ? object_resolve_path_component(soc, "gpio0") : NULL;
+-    }
+ 
+     if (!obj) {
+         monitor_printf(mon, "gt911_touch: no gt911 device found\n");
+         return;
+     }
+     gt911_touch(GT911(obj), x, y);
+-    /* edge-triggered INT: drive high first (in case the pad idled low),
+-     * then assert low — a guaranteed falling edge */
+-    if (gpio1) {
+-        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 1);
+-        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 0);
+-    }
+     monitor_printf(mon, "gt911_touch: (%d, %d) INT asserted\n", x, y);
+ }
+ 
+@@ -218,15 +204,6 @@ void hmp_gt911_release(Monitor *mon, const QDict *qdict)
+         return;
+     }
+     gt911_release(GT911(obj));
+-    {
+-        Object *soc = object_resolve_path_component(
+-            object_get_objects_root(), "soc");
+-        Object *gpio1 = soc ? object_resolve_path_component(soc, "gpio0")
+-                            : NULL;
+-        if (gpio1) {
+-            qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 0);
+-        }
+-    }
+     monitor_printf(mon, "gt911_release: INT asserted, next read clears\n");
+ }
+ 
+-- 
+2.43.0
+

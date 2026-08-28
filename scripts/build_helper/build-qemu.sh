@@ -98,7 +98,8 @@ if [[ ! -f build.ninja || "${RECONFIGURE}" -eq 1 ]]; then
         --disable-tools \
         --disable-docs \
         --disable-werror \
-        --enable-slirp 2>&1 | grep -viE '^(checking|trying|Run-time|Looking|Cloning)' | tail -5
+        --enable-slirp \
+        --enable-gtk 2>&1 | grep -viE '^(checking|trying|Run-time|Looking|Cloning)' | tail -5
 else
     log "build dir already configured (use --reconfigure to redo)"
 fi
