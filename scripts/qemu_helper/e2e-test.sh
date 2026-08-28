@@ -61,7 +61,7 @@ fi
 
 QEMU_BIN="${PROJECT_ROOT}/out/qemu/build/qemu-system-arm"
 KERNEL="${PROJECT_ROOT}/out/mainline/linux/arch/arm/boot/zImage"
-DTB="${PROJECT_ROOT}/out/qemu/imx6ull-aes-qemu.dtb"
+DTB="${PROJECT_ROOT}/out/qemu/imx6ull-aes.dtb"
 ROOTFS="${PROJECT_ROOT}/out/qemu/rootfs.ext4"
 
 for f in "${QEMU_BIN}" "${KERNEL}" "${DTB}" "${ROOTFS}"; do

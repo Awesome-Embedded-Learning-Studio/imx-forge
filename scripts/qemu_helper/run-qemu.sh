@@ -72,11 +72,10 @@ PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 
 MAINLINE_OUT="${PROJECT_ROOT}/out/mainline/linux"
 DEFAULT_KERNEL="${MAINLINE_OUT}/arch/arm/boot/zImage"
-# QEMU variant dtb: stock QEMU (8.2.x) has address holes where the AES dtb
-# enables nodes (mmdc/ocotp/qspi/dcp/rngb/lcdif/pxp/csi/tsc/usb*); those
-# drivers take external aborts and kill the kernel. The variant disables
-# exactly those nodes. Build it with make-qemu-dtb.sh.
-DEFAULT_DTB="${PROJECT_ROOT}/out/qemu/imx6ull-aes-qemu.dtb"
+# The REAL board dtb (same tree the hardware boots), compiled by
+# make-qemu-dtb.sh with U-Boot-equivalent MAC fixups applied to the blob.
+# Single-source equivalence: anything verified here holds on hardware.
+DEFAULT_DTB="${PROJECT_ROOT}/out/qemu/imx6ull-aes.dtb"
 DEFAULT_ROOTFS_IMG="${PROJECT_ROOT}/out/qemu/rootfs.ext4"
 DEFAULT_LOG="${PROJECT_ROOT}/out/qemu/uart.log"
 
@@ -129,7 +128,6 @@ die()  { echo "[run-qemu] error: $*" >&2; exit 1; }
 
 # --- auto-rebuild stale artifacts (default paths only) ----------------------
 rebuild_dtb_if_stale() {
-    local dts="${SCRIPT_DIR}/imx6ull-aes-qemu.dts"
     local imx_dtsi_dir="${PROJECT_ROOT}/third_party/linux_mainline/arch/arm/boot/dts/nxp/imx"
 
     if [[ ! -f "${DTB}" ]]; then
@@ -138,10 +136,11 @@ rebuild_dtb_if_stale() {
         return
     fi
 
-    # any dts/dtsi the variant includes (or the variant itself) newer than dtb?
+    # the real board dts or any dtsi it includes newer than our dtb?
     local newer
-    newer="$(find "${dts}" "${imx_dtsi_dir}" \
-        \( -name '*.dts' -o -name '*.dtsi' \) \
+    newer="$(find "${imx_dtsi_dir}" \
+        \( -name 'imx6ull-aes*' -o -name 'imx6ull.dtsi' -o -name 'imx6ul.dtsi' \
+        -o -name 'imx6ull-evk.dtsi' \) \
         -newer "${DTB}" -print -quit 2>/dev/null)"
     if [[ -n "${newer}" ]]; then
         log "dtb stale (newer: ${newer#"${PROJECT_ROOT}/"}), rebuilding"

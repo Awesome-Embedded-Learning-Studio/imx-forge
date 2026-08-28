@@ -1,4 +1,4 @@
-# make-qemu-dtb.sh - QEMU 变体设备树编译脚本详解
+# make-qemu-dtb.sh - QEMU 设备树编译脚本详解（真机树 + bootloader fixup）
 
 ## 脚本概述
 
