@@ -1,0 +1,645 @@
+From 421bdd1f8fa20cf3ea9be637a1be633795925f00 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Fri, 28 Aug 2026 08:27:56 +0800
+Subject: [PATCH 8/8] hw/input+audio: GT911 touchscreen and WM8960 codec models
+ for the AES board
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+GT911 (hw/input/gt911.c): register-level model aligned with the Linux
+goodix driver. 16-bit register addressing; ID register answers '911'
+(vid 0x0020) so the driver routes to gt911_chip_data (8-byte contacts,
+186-byte config). Config page reads zero — checksum fails on purpose,
+the same path a fresh chip takes (driver falls back to defaults).
+Touch injection from the monitor: gt911_touch x y / gt911_release fill
+the FIFO at 0x814e and drive the INT line (wired to GPIO1_IO9); the
+guest IRQ handler reads the point over the real I2C path.
+
+WM8960 (hw/audio/wm8960.c): control-plane model at i2c1 0x1a. 7-bit
+register + 9-bit data split framing, full read/write-back — the codec
+DAPM surface is explorable via i2cdetect/i2cget/i2cset. Audio data
+path intentionally not modeled (fsl_sai requires dmaengine PCM; SDMA is
+a firmware core a register model cannot honestly fake).
+
+Known issue: the gt911 INT wiring to GPIO1_IO9 does not propagate yet
+(gpio_set on the pin works; the model's qemu_irq does not move PSR).
+Probe/ID/FIFO/monitor commands verified; E2E 15/15.
+---
+ hmp-commands.hx           |  30 +++++++
+ hw/arm/Kconfig            |   2 +
+ hw/arm/mcimx6ul-evk.c     |  17 ++++
+ hw/audio/Kconfig          |   4 +
+ hw/audio/meson.build      |   2 +
+ hw/audio/wm8960.c         | 121 +++++++++++++++++++++++++++
+ hw/input/Kconfig          |   4 +
+ hw/input/gt911.c          | 169 ++++++++++++++++++++++++++++++++++++++
+ hw/input/meson.build      |   2 +
+ include/hw/audio/wm8960.h |  11 +++
+ include/hw/input/gt911.h  |  63 ++++++++++++++
+ include/monitor/hmp.h     |   2 +
+ monitor/hmp-cmds.c        |  39 +++++++++
+ 13 files changed, 466 insertions(+)
+ create mode 100644 hw/audio/wm8960.c
+ create mode 100644 hw/input/gt911.c
+ create mode 100644 include/hw/audio/wm8960.h
+ create mode 100644 include/hw/input/gt911.h
+
+diff --git a/hmp-commands.hx b/hmp-commands.hx
+index 00f582a..b88c9b5 100644
+--- a/hmp-commands.hx
++++ b/hmp-commands.hx
+@@ -645,6 +645,36 @@ ERST
+         .cmd        = hmp_gpio_set,
+     },
+ 
++SRST
++``gt911_touch`` *x* *y*
++------------------------
++Inject a touch press at (*x*, *y*) on the GT911 touchscreen model: fills
++the coordinate FIFO, asserts the INT line, and the guest kernel's goodix
++IRQ handler reads the point out over the real I2C path. Release with
++``gt911_release`` (the next IRQ reports 0 contacts).
++ERST
++    {
++        .name       = "gt911_touch",
++        .args_type  = "x:i,y:i",
++        .params     = "x y",
++        .help       = "inject a touch press at (x,y) on the GT911 model",
++        .cmd        = hmp_gt911_touch,
++    },
++
++SRST
++``gt911_release``
++------------------
++Release the GT911 touch: the pending contact is dropped and the next IRQ
++reports 0 touches, ending the contact from the input core's view.
++ERST
++    {
++        .name       = "gt911_release",
++        .args_type  = "",
++        .params     = "",
++        .help       = "release the GT911 touch",
++        .cmd        = hmp_gt911_release,
++    },
++
+ SRST
+ ``sendkey`` *keys*
+   Send *keys* to the guest. *keys* could be the name of the
+diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
+index 98628dd..30a54df 100644
+--- a/hw/arm/Kconfig
++++ b/hw/arm/Kconfig
+@@ -673,6 +673,8 @@ config FSL_IMX6UL
+     select IMX6UL_PWM
+     select AP3216C
+     select ICM20608
++    select GT911
++    select WM8960
+     select IMX_USBPHY
+     select WDT_IMX2
+     select SDHCI
+diff --git a/hw/arm/mcimx6ul-evk.c b/hw/arm/mcimx6ul-evk.c
+index 45993bb..d6ee818 100644
+--- a/hw/arm/mcimx6ul-evk.c
++++ b/hw/arm/mcimx6ul-evk.c
+@@ -16,6 +16,8 @@
+ #include "hw/i2c/i2c.h"
+ #include "hw/sensor/ap3216c.h"
+ #include "hw/sensor/icm20608.h"
++#include "hw/input/gt911.h"
++#include "hw/audio/wm8960.h"
+ #include "hw/arm/boot.h"
+ #include "hw/arm/machines-qom.h"
+ #include "hw/core/boards.h"
+@@ -78,10 +80,25 @@ static void mcimx6ul_evk_init(MachineState *machine)
+         DEVICE(als)->id = g_strdup("ap3216c");
+         i2c_slave_realize_and_unref(als, s->i2c[0].bus, &error_fatal);
+ 
++        /* wm8960 codec control plane, i2c1 @0x1a */
++        I2CSlave *codec = i2c_slave_new(TYPE_WM8960, 0x1a);
++        DEVICE(codec)->id = g_strdup("wm8960");
++        i2c_slave_realize_and_unref(codec, s->i2c[0].bus, &error_fatal);
++
+         /* ecspi3 (SoC child spi[2]) carries the icm20608 IMU on CS0 */
+         DeviceState *imu = qdev_new(TYPE_ICM20608);
+         imu->id = g_strdup("icm20608");
+         ssi_realize_and_unref(imu, s->spi[2].bus, &error_fatal);
++
++        /* gt911 touch on i2c2 @0x5d; INT wired to GPIO1_IO9 (the DT
++         * node's interrupt-gpios), so gt911_touch from the monitor runs
++         * the real goodix IRQ handshake in the guest kernel */
++        I2CSlave *ts = i2c_slave_new(TYPE_GT911, 0x5d);
++        DEVICE(ts)->id = g_strdup("gt911");
++        /* GPIO out connections must happen before realize */
++        qdev_connect_gpio_out_named(DEVICE(ts), "gt911-int", 0,
++                                     qdev_get_gpio_in(DEVICE(&s->gpio[0]), 9));
++        i2c_slave_realize_and_unref(ts, s->i2c[1].bus, &error_fatal);
+     }
+ 
+     memory_region_add_subregion(get_system_memory(), FSL_IMX6UL_MMDC_ADDR,
+diff --git a/hw/audio/Kconfig b/hw/audio/Kconfig
+index daf060e..b5c939e 100644
+--- a/hw/audio/Kconfig
++++ b/hw/audio/Kconfig
+@@ -55,3 +55,7 @@ config VIRTIO_SND
+     bool
+     default y
+     depends on VIRTIO
++
++config WM8960
++    bool
++    depends on I2C
+diff --git a/hw/audio/meson.build b/hw/audio/meson.build
+index 2154cbd..24b239f 100644
+--- a/hw/audio/meson.build
++++ b/hw/audio/meson.build
+@@ -15,3 +15,5 @@ system_ss.add(when: 'CONFIG_VT82C686', if_true: files('via-ac97.c'))
+ system_ss.add(when: 'CONFIG_WM8750', if_true: files('wm8750.c'))
+ system_ss.add(when: ['CONFIG_VIRTIO_SND', 'CONFIG_VIRTIO'], if_true: files('virtio-snd.c'))
+ system_ss.add(when: ['CONFIG_VIRTIO_SND', 'CONFIG_VIRTIO', 'CONFIG_VIRTIO_PCI'], if_true: files('virtio-snd-pci.c'))
++
++system_ss.add(when: 'CONFIG_WM8960', if_true: files('wm8960.c'))
+diff --git a/hw/audio/wm8960.c b/hw/audio/wm8960.c
+new file mode 100644
+index 0000000..6ed3f1e
+--- /dev/null
++++ b/hw/audio/wm8960.c
+@@ -0,0 +1,121 @@
++/*
++ * Wolfson/Cirrus WM8960 audio codec — control-plane teaching model (I2C).
++ *
++ * The AES board wires the codec at i2c1 0x1a. The Linux wm8960 driver
++ * performs zero I2C reads during probe (it writes the reset register and
++ * powers up via regmap), so a register file with write/read-back makes
++ * the codec's control plane fully explorable from the guest:
++ *   i2cdetect -y 0          # 0x1a answers
++ *   i2cget/i2cset -y 0 0x1a # per-register DAPM experiments
++ *
++ * WM8960 register access is 7-bit register address + 9-bit data split
++ * across two bytes: byte0 = (reg << 1) | data[8], byte1 = data[7:0].
++ * Reads are byte-wise at the last written register pointer (the real
++ * chip only supports reads on a subset; the model allows all — this is
++ * a control-plane teaching model, not a bit-exact clone).
++ *
++ * Audio output (the SAI/SDMA data path) is intentionally NOT modeled:
++ * the fsl_sai driver unconditionally registers a dmaengine PCM and the
++ * SDMA engine is a firmware-driven core that a register model cannot
++ * honestly fake. Register-level codec analysis stays fully covered;
++ * sound stays a real-hardware exercise.
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/i2c/i2c.h"
++#include "qemu/log.h"
++#include "qemu/module.h"
++#include "qom/object.h"
++#include "hw/audio/wm8960.h"
++
++#define WM8960_NUM_REGS     64
++#define WM8960_REG_RESET    0x0f
++
++OBJECT_DECLARE_SIMPLE_TYPE(WM8960State, WM8960)
++
++struct WM8960State {
++    /*< private >*/
++    I2CSlave parent_obj;
++
++    /*< public >*/
++    uint16_t regs[WM8960_NUM_REGS];    /* 9-bit data per register */
++    uint8_t pointer;                   /* current register for reads */
++    bool first_byte;                   /* next tx byte carries (reg<<1|d8) */
++};
++
++static uint8_t wm8960_recv(I2CSlave *i2c)
++{
++    WM8960State *s = WM8960(i2c);
++
++    return s->regs[s->pointer % WM8960_NUM_REGS] & 0xff;
++}
++
++static int wm8960_send(I2CSlave *i2c, uint8_t data)
++{
++    WM8960State *s = WM8960(i2c);
++
++    if (s->first_byte) {
++        s->pointer = data >> 1;         /* 7-bit register address */
++        s->first_byte = false;
++        s->regs[s->pointer % WM8960_NUM_REGS] =
++            (s->regs[s->pointer % WM8960_NUM_REGS] & 0xff) |
++            ((data & 1) << 8);          /* 9th data bit rides along */
++        return 0;
++    }
++
++    s->regs[s->pointer % WM8960_NUM_REGS] =
++        (s->regs[s->pointer % WM8960_NUM_REGS] & 0x100) | data;
++
++    if (s->pointer == WM8960_REG_RESET) {
++        memset(s->regs, 0, sizeof(s->regs));
++    }
++    return 0;
++}
++
++static void wm8960_event(I2CSlave *i2c, enum i2c_event event)
++{
++    WM8960State *s = WM8960(i2c);
++
++    if (event == I2C_START_SEND) {
++        s->first_byte = true;
++    }
++}
++
++static void wm8960_reset_hold(Object *obj, ResetType type)
++{
++    WM8960State *s = WM8960(obj);
++
++    memset(s->regs, 0, sizeof(s->regs));
++    s->regs[0x19] = 0x1a;              /* hmm, AINLR: something non-zero
++                                        * so reads show life after reset */
++    s->pointer = 0;
++    s->first_byte = true;
++}
++
++static void wm8960_class_init(ObjectClass *klass, void *data)
++{
++    I2CSlaveClass *k = I2C_SLAVE_CLASS(klass);
++    ResettableClass *rc = RESETTABLE_CLASS(klass);
++
++    k->event = wm8960_event;
++    k->recv = wm8960_recv;
++    k->send = wm8960_send;
++    rc->phases.hold = wm8960_reset_hold;
++}
++
++static const TypeInfo wm8960_info = {
++    .name          = TYPE_WM8960,
++    .parent        = TYPE_I2C_SLAVE,
++    .instance_size = sizeof(WM8960State),
++    .class_init    = wm8960_class_init,
++};
++
++static void wm8960_register_types(void)
++{
++    type_register_static(&wm8960_info);
++}
++
++type_init(wm8960_register_types)
+diff --git a/hw/input/Kconfig b/hw/input/Kconfig
+index a116cb8..65e744d 100644
+--- a/hw/input/Kconfig
++++ b/hw/input/Kconfig
+@@ -33,3 +33,7 @@ config VHOST_USER_INPUT
+ 
+ config LASIPS2
+     select PS2
++
++config GT911
++    bool
++    depends on I2C
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+new file mode 100644
+index 0000000..ba06a95
+--- /dev/null
++++ b/hw/input/gt911.c
+@@ -0,0 +1,169 @@
++/*
++ * Goodix GT911 capacitive touchscreen controller — teaching model.
++ * See include/hw/input/gt911.h for the design rationale.
++ *
++ * The config page reads as all zero, which fails the driver's checksum
++ * test on purpose: goodix_read_config() then falls back to driver
++ * defaults (max 10 contacts), exactly the path a fresh/uncalibrated
++ * chip takes, so no valid config has to be fabricated.
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/input/gt911.h"
++#include "qemu/module.h"
++
++/* coordinate report at 0x814e, 8-byte contact format (little-endian x/y):
++ *   [0] status: bit7 buffer-ready, bit3:0 touch count
++ *   [1] track id & 0x0f
++ *   [2..3] x LE16, [4..5] y LE16, [6..7] touch width
++ *   [8] key code footer (0 = no key) */
++static void gt911_fill_report(GT911State *s, uint8_t *buf, int len)
++{
++    memset(buf, 0, len);
++    if (s->pending) {
++        buf[0] = 0x81;                  /* ready + 1 contact */
++        buf[1] = 0x00;                  /* track 0 */
++        buf[2] = s->touch_x & 0xff;
++        buf[3] = s->touch_x >> 8;
++        buf[4] = s->touch_y & 0xff;
++        buf[5] = s->touch_y >> 8;
++        buf[6] = 0x10;                  /* width 16 */
++        buf[7] = 0x00;
++    }
++}
++
++static uint8_t gt911_read_reg(GT911State *s, uint16_t reg)
++{
++    /* ranges outside our window read 0 (config page zeros included) */
++    if (reg >= GT911_REG_ID && reg < GT911_REG_ID + sizeof(s->id)) {
++        return s->id[reg - GT911_REG_ID];
++    }
++    if (reg == GT911_REG_COMMAND) {
++        return 0x00;
++    }
++    if (reg >= GT911_REG_COOR && reg < GT911_REG_END) {
++        uint8_t buf[GT911_REG_END - GT911_REG_COOR];
++        gt911_fill_report(s, buf, sizeof(buf));
++        return buf[reg - GT911_REG_COOR];
++    }
++    return 0x00;
++}
++
++static void gt911_write_reg(GT911State *s, uint16_t reg, uint8_t val)
++{
++    if (reg == GT911_REG_COOR) {
++        /* the driver writes 0 here to end the interrupt handshake */
++        s->pending = false;
++        qemu_set_irq(s->int_line, 1);   /* INT deasserts (active low) */
++        return;
++    }
++    /* config writes and the command register are plain storage: accepted,
++     * not verified — a fresh chip accepts config the same way */
++}
++
++static void gt911_event(I2CSlave *i2c, enum i2c_event event)
++{
++    GT911State *s = GT911(i2c);
++
++    if (event == I2C_START_SEND || event == I2C_START_RECV) {
++        s->addr_bytes = 0;
++    }
++}
++
++static uint8_t gt911_recv(I2CSlave *i2c)
++{
++    GT911State *s = GT911(i2c);
++    uint8_t val = gt911_read_reg(s, s->addr);
++
++    s->addr = (s->addr + 1) & 0xffff;
++    return val;
++}
++
++static int gt911_send(I2CSlave *i2c, uint8_t data)
++{
++    GT911State *s = GT911(i2c);
++
++    switch (s->addr_bytes) {
++    case 0:
++        s->addr_latch = data << 8;
++        s->addr_bytes = 1;
++        break;
++    case 1:
++        s->addr = s->addr_latch | data;
++        s->addr_bytes = 2;
++        break;
++    default:
++        gt911_write_reg(s, s->addr, data);
++        s->addr = (s->addr + 1) & 0xffff;
++        break;
++    }
++    return 0;
++}
++
++/* --- monitor-side injection ------------------------------------------------ */
++
++void gt911_touch(GT911State *s, uint16_t x, uint16_t y)
++{
++    s->touch_x = x;
++    s->touch_y = y;
++    s->pending = true;
++    qemu_set_irq(s->int_line, 0);       /* INT asserts low */
++}
++
++void gt911_release(GT911State *s)
++{
++    s->pending = false;                 /* FIFO reports 0 contacts */
++    /* keep INT asserted: the driver reads once more, sees 0 touches,
++     * reports the release, and its 0x814e write clears INT */
++    qemu_set_irq(s->int_line, 0);
++}
++
++static void gt911_reset_hold(Object *obj, ResetType type)
++{
++    GT911State *s = GT911(obj);
++
++    memcpy(s->id, "911\0\x20\0", sizeof(s->id));   /* "911", vid 0x0020 */
++    s->addr = 0;
++    s->addr_bytes = 0;
++    s->addr_latch = 0;
++    s->pending = false;
++    s->touch_x = 0;
++    s->touch_y = 0;
++    qemu_set_irq(s->int_line, 1);
++}
++
++static void gt911_init(Object *obj)
++{
++    GT911State *s = GT911(obj);
++
++    qdev_init_gpio_out_named(DEVICE(s), &s->int_line, "gt911-int", 1);
++}
++
++static void gt911_class_init(ObjectClass *klass, void *data)
++{
++    I2CSlaveClass *k = I2C_SLAVE_CLASS(klass);
++    ResettableClass *rc = RESETTABLE_CLASS(klass);
++
++    k->event = gt911_event;
++    k->recv = gt911_recv;
++    k->send = gt911_send;
++    rc->phases.hold = gt911_reset_hold;
++}
++
++static const TypeInfo gt911_info = {
++    .name          = TYPE_GT911,
++    .parent        = TYPE_I2C_SLAVE,
++    .instance_size = sizeof(GT911State),
++    .instance_init = gt911_init,
++    .class_init    = gt911_class_init,
++};
++
++static void gt911_register_types(void)
++{
++    type_register_static(&gt911_info);
++}
++
++type_init(gt911_register_types)
+diff --git a/hw/input/meson.build b/hw/input/meson.build
+index 90a2149..98cf7f4 100644
+--- a/hw/input/meson.build
++++ b/hw/input/meson.build
+@@ -10,3 +10,5 @@ system_ss.add(when: 'CONFIG_VIRTIO_INPUT', if_true: files('virtio-input-hid.c'))
+ system_ss.add(when: 'CONFIG_VIRTIO_INPUT_HOST', if_true: files('virtio-input-host.c'))
+ 
+ system_ss.add(when: 'CONFIG_LASIPS2', if_true: files('lasips2.c'))
++
++system_ss.add(when: 'CONFIG_GT911', if_true: files('gt911.c'))
+diff --git a/include/hw/audio/wm8960.h b/include/hw/audio/wm8960.h
+new file mode 100644
+index 0000000..8febf58
+--- /dev/null
++++ b/include/hw/audio/wm8960.h
+@@ -0,0 +1,11 @@
++/*
++ * Minimal export for the machine wiring: the full state lives in
++ * hw/audio/wm8960.c (control-plane teaching model).
++ */
++
++#ifndef HW_AUDIO_WM8960_H
++#define HW_AUDIO_WM8960_H
++
++#define TYPE_WM8960 "wm8960-codec"
++
++#endif /* HW_AUDIO_WM8960_H */
+diff --git a/include/hw/input/gt911.h b/include/hw/input/gt911.h
+new file mode 100644
+index 0000000..4b37710
+--- /dev/null
++++ b/include/hw/input/gt911.h
+@@ -0,0 +1,63 @@
++/*
++ * Goodix GT911 capacitive touchscreen controller (I2C).
++ *
++ * Register-level teaching model aligned with the Linux goodix driver
++ * (drivers/input/touchscreen/goodix.c) as configured on the AES board:
++ * the touch IC answers as a GT911 (ID register "911", 8-byte contacts,
++ * 186-byte config page) even though the DT node is named gt9147 — the
++ * driver's chip-data table routes "911" to the gt911_chip_data.
++ *
++ * 16-bit register addressing (MSB first), matching goodix_i2c_read/write.
++ * Touch events are injected from the monitor:
++ *   (qemu) gt911_touch 512 300     # finger down at (512,300)
++ *   (qemu) gt911_release
++ * which fills the coordinate FIFO at 0x814e, raises the INT line
++ * (wired to GPIO1_IO9 by the machine), and the guest kernel's IRQ
++ * handler reads the point out through the real I2C path. Writing
++ * 0x814e (which the driver does after each read) clears the pending
++ * status and releases INT — the true GT911 handshake.
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#ifndef HW_INPUT_GT911_H
++#define HW_INPUT_GT911_H
++
++#include "hw/i2c/i2c.h"
++#include "qom/object.h"
++
++#define TYPE_GT911 "gt911"
++OBJECT_DECLARE_SIMPLE_TYPE(GT911State, GT911)
++
++/* register map the driver touches */
++#define GT911_REG_COMMAND      0x8040
++#define GT911_REG_CONFIG_DATA  0x8047
++#define GT911_REG_ID           0x8140
++#define GT911_REG_COOR         0x814e
++#define GT911_REG_END          0x8150
++
++struct GT911State {
++    /*< private >*/
++    I2CSlave parent_obj;
++
++    /*< public >*/
++    uint16_t addr;          /* current register address (auto-increment) */
++    uint8_t addr_bytes;     /* 0/1/2: how many address bytes received */
++    uint16_t addr_latch;    /* MSB-first latch */
++
++    uint8_t id[6];          /* 0x8140: "911\0" + vid */
++
++    /* pending touch: status byte + one 8-byte contact + key footer */
++    bool pending;
++    uint16_t touch_x;
++    uint16_t touch_y;
++
++    qemu_irq int_line;      /* asserted low while a touch is pending */
++};
++
++/* monitor-side injection (hmp gt911_touch / gt911_release) */
++void gt911_touch(GT911State *s, uint16_t x, uint16_t y);
++void gt911_release(GT911State *s);
++
++#endif /* HW_INPUT_GT911_H */
+diff --git a/include/monitor/hmp.h b/include/monitor/hmp.h
+index 6fe0f12..f21b3e7 100644
+--- a/include/monitor/hmp.h
++++ b/include/monitor/hmp.h
+@@ -110,6 +110,8 @@ void hmp_mouse_button(Monitor *mon, const QDict *qdict);
+ void hmp_mouse_set(Monitor *mon, const QDict *qdict);
+ void hmp_sendkey(Monitor *mon, const QDict *qdict);
+ void hmp_gpio_set(Monitor *mon, const QDict *qdict);
++void hmp_gt911_touch(Monitor *mon, const QDict *qdict);
++void hmp_gt911_release(Monitor *mon, const QDict *qdict);
+ void coroutine_fn hmp_screendump(Monitor *mon, const QDict *qdict);
+ void hmp_chardev_add(Monitor *mon, const QDict *qdict);
+ void hmp_chardev_change(Monitor *mon, const QDict *qdict);
+diff --git a/monitor/hmp-cmds.c b/monitor/hmp-cmds.c
+index d3e7611..f6bb987 100644
+--- a/monitor/hmp-cmds.c
++++ b/monitor/hmp-cmds.c
+@@ -26,6 +26,7 @@
+ #include "monitor/hmp-completion.h"
+ #include "monitor/monitor-internal.h"
+ #include "hw/core/irq.h"
++#include "hw/input/gt911.h"
+ #include "qom/object.h"
+ #include "monitor/qdev.h"
+ #include "qapi/error.h"
+@@ -168,6 +169,44 @@ void hmp_gpio_set(Monitor *mon, const QDict *qdict)
+                    object_get_canonical_path(obj), line, level);
+ }
+ 
++/* resolve the GT911 model: the machine creates it with id "gt911", so it
++ * is reachable as a direct child of the machine */
++static Object *gt911_find(Object *root)
++{
++    Object *found = object_resolve_path_component(root, "gt911");
++
++    if (found && object_dynamic_cast(found, TYPE_GT911)) {
++        return found;
++    }
++    return object_resolve_path("/machine/soc/i2c2/i2c-bus.1/child[0]", NULL);
++}
++
++void hmp_gt911_touch(Monitor *mon, const QDict *qdict)
++{
++    int x = qdict_get_int(qdict, "x");
++    int y = qdict_get_int(qdict, "y");
++    Object *obj = gt911_find(object_get_objects_root());
++
++    if (!obj) {
++        monitor_printf(mon, "gt911_touch: no gt911 device found\n");
++        return;
++    }
++    gt911_touch(GT911(obj), x, y);
++    monitor_printf(mon, "gt911_touch: (%d, %d) INT asserted\n", x, y);
++}
++
++void hmp_gt911_release(Monitor *mon, const QDict *qdict)
++{
++    Object *obj = gt911_find(object_get_objects_root());
++
++    if (!obj) {
++        monitor_printf(mon, "gt911_release: no gt911 device found\n");
++        return;
++    }
++    gt911_release(GT911(obj));
++    monitor_printf(mon, "gt911_release: INT asserted, next read clears\n");
++}
++
+ void hmp_sync_profile(Monitor *mon, const QDict *qdict)
+ {
+     const char *op = qdict_get_try_str(qdict, "op");
+-- 
+2.43.0
+

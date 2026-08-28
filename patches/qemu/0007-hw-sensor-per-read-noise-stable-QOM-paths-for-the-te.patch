@@ -1,7 +1,7 @@
 From a2be3894b0a94802d433c385522951422affd68c Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Thu, 27 Aug 2026 22:21:57 +0800
-Subject: [PATCH 7/7] hw/sensor: per-read noise + stable QOM paths for the
+Subject: [PATCH 7/8] hw/sensor: per-read noise + stable QOM paths for the
  teaching sensors
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

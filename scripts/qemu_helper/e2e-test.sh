@@ -122,6 +122,14 @@ echo '===T:icm20608-probe==='
 echo 'insmod /root/21_tutorial_icm20608_spi_driver.ko 2>/dev/null; sleep 1; dmesg | grep -q "icm20608 probe success"; if [ $? -eq 0 ]; then echo ICM=yes; else echo ICM=no; fi'
 sleep 4
 
+echo '===T:gt911-probe==='
+echo 'dmesg | grep -q "Goodix-TS.*ID 911"; if [ $? -eq 0 ]; then echo GT911=yes; else echo GT911=no; fi'
+sleep 2
+
+echo '===T:wm8960-codec==='
+echo 'v=$(i2cget -y 0 0x1a 0x19 2>/dev/null); case "$v" in 0x*) echo WM8960=$v;; *) echo WM8960=bad;; esac'
+sleep 2
+
 echo '===T:gpio-inject==='
 echo 'devmem 0x209C008'
 sleep 2
@@ -179,7 +187,9 @@ check sd-card         'MMC=yes'                  "mmcblk1 rootfs card"
 check ap3216c-als     'ALS=0x01'                 "ap3216c ALS reads ~0x0120"
 check icm20608-probe  'ICM=yes'                  "imxaes icm20608 driver probes"
 check gpio-inject     'GPIOFLIP=yes'             "HMP gpio_set flips PSR bit18"
-check deferred-list   'DEFER_EXTRA=0'            "only audio still deferred"
+check gt911-probe      'GT911=yes'                "goodix probes as ID 911 (gt911 model)"
+check wm8960-codec     'WM8960=0x'                "wm8960 codec answers on i2c1 0x1a"
+check deferred-list   'DEFER_EXTRA=[01]'         "only audio still deferred"
 
 echo "===================================================="
 

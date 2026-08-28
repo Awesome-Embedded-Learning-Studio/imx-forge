@@ -1,7 +1,7 @@
 From c72a98dc7aeeecdd90933c861a7537c0fc048d52 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Wed, 26 Aug 2026 22:48:57 +0800
-Subject: [PATCH 2/7] hw/arm: fsl-imx6ul: wire the FlexCAN2 controllers to the
+Subject: [PATCH 2/8] hw/arm: fsl-imx6ul: wire the FlexCAN2 controllers to the
  SoC
 
 The FlexCAN device model (hw/net/can/flexcan.c) exists and is wired to

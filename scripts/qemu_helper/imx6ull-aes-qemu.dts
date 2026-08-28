@@ -48,3 +48,16 @@
 &fec2 {
 	local-mac-address = [00 11 22 33 44 02];
 };
+
+/*
+ * GPIO1_IO09 is wired twice in the real dtsi: as the SD-card power enable
+ * (reg_sd1_vmmc) and as the gt9147/touch INT line. On hardware the pad
+ * ends up an output held high and the touch IRQ arrives via the DT
+ * interrupts property anyway; QEMU's GPIO model stays input-only for
+ * IRQs, so the shared pad would swallow the touch INT. Drop the
+ * regulator here — the emulated SD card needs no power switch — and
+ * give the pin to the touch controller alone.
+ */
+&reg_sd1_vmmc {
+	status = "disabled";
+};
