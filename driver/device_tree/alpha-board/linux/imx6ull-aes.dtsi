@@ -227,7 +227,7 @@
 		interrupt-parent = <&gpio1>;
 		interrupts = <9 0>;
 		reset-gpios = <&gpio1 5 GPIO_ACTIVE_LOW>;
-		interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
+		irq-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
 		status = "okay";
 		vdd-supply = <&reg_vddio>;
 		avdd-supply = <&reg_avdd28>;

@@ -101,7 +101,7 @@ index 000000000000..19da037bb224
 +};
 diff --git a/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
 new file mode 100644
-index 000000000000..6dda611759a5
+index 000000000000..cb06c255911d
 --- /dev/null
 +++ b/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
 @@ -0,0 +1,886 @@
@@ -334,7 +334,7 @@ index 000000000000..6dda611759a5
 +		interrupt-parent = <&gpio1>;
 +		interrupts = <9 0>;
 +		reset-gpios = <&gpio1 5 GPIO_ACTIVE_LOW>;
-+		interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
++		irq-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
 +		status = "okay";
 +		vdd-supply = <&reg_vddio>;
 +		avdd-supply = <&reg_avdd28>;
@@ -1572,5 +1572,5 @@ index 000000000000..9c1cbd5a7757
 +CONFIG_AHCI_IMX=y
 +CONFIG_PATA_IMX=y
 +CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
-+CONFIG_EXTRA_FIRMWARE_DIR="${FIRMWARE_DIR}"
++CONFIG_EXTRA_FIRMWARE_DIR="/home/charliechen/imx-forge/driver/firmwares"
 \ No newline at end of file
