@@ -1,7 +1,7 @@
 From 95204dc1367c2538005c1cb3be9f907d4fdc89db Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Fri, 28 Aug 2026 20:41:40 +0800
-Subject: [PATCH 12/15] =?UTF-8?q?gpio+input:=20INT=20release=20semantics?=
+Subject: [PATCH 12/16] =?UTF-8?q?gpio+input:=20INT=20release=20semantics?=
  =?UTF-8?q?=20=E2=80=94=20deassert=20on=20status=20read,=20no=20re-assert?=
  =?UTF-8?q?=20on=20ack?=
 MIME-Version: 1.0

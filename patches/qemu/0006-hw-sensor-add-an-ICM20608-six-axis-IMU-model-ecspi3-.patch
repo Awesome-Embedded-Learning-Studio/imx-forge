@@ -1,7 +1,7 @@
 From 80f0d52334d0c9e0203995f270015fee7d511191 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Thu, 27 Aug 2026 10:24:04 +0800
-Subject: [PATCH 06/15] hw/sensor: add an ICM20608 six-axis IMU model (ecspi3)
+Subject: [PATCH 06/16] hw/sensor: add an ICM20608 six-axis IMU model (ecspi3)
  for the AES board
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

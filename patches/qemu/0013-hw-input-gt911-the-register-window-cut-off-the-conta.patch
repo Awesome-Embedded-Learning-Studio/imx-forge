@@ -1,7 +1,7 @@
 From 43bb4964215783b7140ff6455a247bcf7c8746bc Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Sat, 29 Aug 2026 09:54:39 +0800
-Subject: [PATCH 13/15] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20the=20reg?=
+Subject: [PATCH 13/16] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20the=20reg?=
  =?UTF-8?q?ister=20window=20cut=20off=20the=20contact=20bytes?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
