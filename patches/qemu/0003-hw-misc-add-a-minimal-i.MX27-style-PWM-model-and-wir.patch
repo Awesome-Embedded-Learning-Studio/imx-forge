@@ -1,7 +1,7 @@
 From a1f2edf87ba730f5edf6858afedf33d4a99207a5 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Wed, 26 Aug 2026 22:57:48 +0800
-Subject: [PATCH 03/12] hw/misc: add a minimal i.MX27-style PWM model and wire
+Subject: [PATCH 03/13] hw/misc: add a minimal i.MX27-style PWM model and wire
  it into the 6UL SoC
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
