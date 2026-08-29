@@ -1,0 +1,304 @@
+From 7ea9c8387213317a2ad58551518b85a60632221c Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Thu, 27 Aug 2026 09:55:32 +0800
+Subject: [PATCH 05/16] hw/sensor: add an AP3216C ambient light / proximity /
+ IR sensor model
+
+Minimal teaching model for boards carrying an AP3216C on i2c1 @ 0x1e
+(the AES i.MX6ULL board). Register-index + auto-increment access
+following the datasheet; the six read-only data registers (0x0a..0x0f)
+are derived from three injectable ir/als/ps uint16 QOM properties, so a
+classroom 'flashlight' is a QMP qom-set away. Bit layout matches the
+Linux driver's parsing: IR 10-bit with IR_L[1:0] holding the top two
+bits, ALS plain 16-bit LE, PS 10-bit with PS_L[3:0] holding the top
+nibble. The overflow/invalid flag bits are never set.
+
+The mcimx6ul-evk machine attaches one at 0x1e on i2c1 by default
+(via the SoC's s->i2c[0].bus, since QEMU 11's qdev_get_child_bus no
+longer accepts NULL for 'first bus').
+
+Verified on mcimx6ul-evk + Linux v7.1: i2cget -y 0 0x1e 0x0c w returns
+the injected ALS value 0x0120.
+---
+ hw/arm/Kconfig              |   1 +
+ hw/arm/mcimx6ul-evk.c       |  14 ++++
+ hw/sensor/Kconfig           |   5 ++
+ hw/sensor/ap3216c.c         | 140 ++++++++++++++++++++++++++++++++++++
+ hw/sensor/meson.build       |   1 +
+ include/hw/sensor/ap3216c.h |  47 ++++++++++++
+ 6 files changed, 208 insertions(+)
+ create mode 100644 hw/sensor/ap3216c.c
+ create mode 100644 include/hw/sensor/ap3216c.h
+
+diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
+index 9b07671..f80cd4a 100644
+--- a/hw/arm/Kconfig
++++ b/hw/arm/Kconfig
+@@ -671,6 +671,7 @@ config FSL_IMX6UL
+     select IMX_I2C
+     select CAN_FLEXCAN
+     select IMX6UL_PWM
++    select AP3216C
+     select IMX_USBPHY
+     select WDT_IMX2
+     select SDHCI
+diff --git a/hw/arm/mcimx6ul-evk.c b/hw/arm/mcimx6ul-evk.c
+index 295d094..5a5580b 100644
+--- a/hw/arm/mcimx6ul-evk.c
++++ b/hw/arm/mcimx6ul-evk.c
+@@ -13,6 +13,8 @@
+ #include "qemu/osdep.h"
+ #include "qapi/error.h"
+ #include "hw/arm/fsl-imx6ul.h"
++#include "hw/i2c/i2c.h"
++#include "hw/sensor/ap3216c.h"
+ #include "hw/arm/boot.h"
+ #include "hw/arm/machines-qom.h"
+ #include "hw/core/boards.h"
+@@ -59,6 +61,18 @@ static void mcimx6ul_evk_init(MachineState *machine)
+     }
+     qdev_realize(DEVICE(s), NULL, &error_fatal);
+ 
++    /*
++     * AES board I2C sensors, attached by default so the teaching tree
++     * (i2c1: ap3216c@0x1e, wm8960@0x1a; i2c2: gt9147@0x5d) finds its
++     * devices with zero CLI wiring. Runtime-attachable too:
++     *   -device ap3216c,address=0x1e,bus=i2c-bus.0
++     * SoC child names count from zero (i2c0 = hardware i2c1) and the
++     * bus name "i2c-bus.0" is the first I2C bus created machine-wide.
++     */
++    {
++        i2c_slave_create_simple(s->i2c[0].bus, TYPE_AP3216C, 0x1e);
++    }
++
+     memory_region_add_subregion(get_system_memory(), FSL_IMX6UL_MMDC_ADDR,
+                                 machine->ram);
+ 
+diff --git a/hw/sensor/Kconfig b/hw/sensor/Kconfig
+index bc6331b..bcad55a 100644
+--- a/hw/sensor/Kconfig
++++ b/hw/sensor/Kconfig
+@@ -3,6 +3,11 @@ config TMP105
+     depends on I2C
+     default y if I2C_DEVICES
+ 
++config AP3216C
++    bool
++    depends on I2C
++    default y if I2C_DEVICES
++
+ config TMP421
+     bool
+     depends on I2C
+diff --git a/hw/sensor/ap3216c.c b/hw/sensor/ap3216c.c
+new file mode 100644
+index 0000000..1d69f71
+--- /dev/null
++++ b/hw/sensor/ap3216c.c
+@@ -0,0 +1,140 @@
++/*
++ * AP3216C ambient light / proximity / IR sensor — teaching model.
++ *
++ * See include/hw/sensor/ap3216c.h for the design rationale. Register
++ * access follows the datasheet: the master writes a register index,
++ * then reads (auto-incrementing) or writes data. All registers are
++ * single-byte. Values for the six read-only data registers (0x0a..0x0f)
++ * are derived from the injectable ir/als/ps properties; everything else
++ * is plain storage.
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/sensor/ap3216c.h"
++#include "qemu/module.h"
++#include "qom/object.h"
++
++static uint8_t ap3216c_read_reg(AP3216CState *s, uint8_t reg)
++{
++    switch (reg) {
++    case 0x00:
++        return s->sysc;
++    case 0x01:
++        return s->int_status;
++    case 0x02:
++        return s->int_mirror;
++    case 0x0a: /* IR_L: top two bits of IR in [1:0] */
++        return s->ir >> 8;
++    case 0x0b: /* IR_H: low eight bits of IR */
++        return s->ir & 0xff;
++    case 0x0c: /* ALS_L */
++        return s->als & 0xff;
++    case 0x0d: /* ALS_H */
++        return s->als >> 8;
++    case 0x0e: /* PS_L: top nibble of PS in [3:0] */
++        return (s->ps >> 4) & 0x0f;
++    case 0x0f: /* PS_H: low six bits of PS */
++        return s->ps & 0x3f;
++    default:
++        return 0;
++    }
++}
++
++static void ap3216c_event(I2CSlave *i2c, enum i2c_event event)
++{
++    AP3216CState *s = AP3216C(i2c);
++
++    if (event == I2C_START_SEND) {
++        s->first_byte = true;
++    }
++}
++
++static uint8_t ap3216c_recv(I2CSlave *i2c)
++{
++    AP3216CState *s = AP3216C(i2c);
++
++    return ap3216c_read_reg(s, s->pointer++);
++}
++
++static int ap3216c_send(I2CSlave *i2c, uint8_t data)
++{
++    AP3216CState *s = AP3216C(i2c);
++
++    if (s->first_byte) {
++        s->pointer = data;
++        s->first_byte = false;
++        return 0;
++    }
++
++    switch (s->pointer) {
++    case 0x00:
++        s->sysc = data;
++        break;
++    case 0x01: /* INT_STATUS is clear-on-write */
++        s->int_status &= ~data;
++        break;
++    case 0x02:
++        s->int_mirror = data;
++        break;
++    default:
++        /* data registers are read-only; rest is R/O factory area */
++        break;
++    }
++    s->pointer++;
++    return 0;
++}
++
++static void ap3216c_reset_hold(Object *obj, ResetType type)
++{
++    AP3216CState *s = AP3216C(obj);
++
++    s->pointer = 0;
++    s->first_byte = true;
++    s->sysc = 0;
++    s->int_status = 0;
++    s->int_mirror = 0;
++
++    /* plausible indoor defaults; override via QMP qom-set ir/als/ps */
++    s->ir = 0x0150;
++    s->als = 0x0120;
++    s->ps = 0x00c8;
++}
++
++static void ap3216c_init(Object *obj)
++{
++    object_property_add_uint16_ptr(obj, "ir", &AP3216C(obj)->ir,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "als", &AP3216C(obj)->als,
++                                   OBJ_PROP_FLAG_READWRITE);
++    object_property_add_uint16_ptr(obj, "ps", &AP3216C(obj)->ps,
++                                   OBJ_PROP_FLAG_READWRITE);
++}
++
++static void ap3216c_class_init(ObjectClass *klass, void *data)
++{
++    I2CSlaveClass *k = I2C_SLAVE_CLASS(klass);
++    ResettableClass *rc = RESETTABLE_CLASS(klass);
++
++    k->event = ap3216c_event;
++    k->recv = ap3216c_recv;
++    k->send = ap3216c_send;
++    rc->phases.hold = ap3216c_reset_hold;
++}
++
++static const TypeInfo ap3216c_info = {
++    .name          = TYPE_AP3216C,
++    .parent        = TYPE_I2C_SLAVE,
++    .instance_size = sizeof(AP3216CState),
++    .instance_init = ap3216c_init,
++    .class_init    = ap3216c_class_init,
++};
++
++static void ap3216c_register_types(void)
++{
++    type_register_static(&ap3216c_info);
++}
++
++type_init(ap3216c_register_types)
+diff --git a/hw/sensor/meson.build b/hw/sensor/meson.build
+index 420fdc3..1f827d1 100644
+--- a/hw/sensor/meson.build
++++ b/hw/sensor/meson.build
+@@ -1,4 +1,5 @@
+ system_ss.add(when: 'CONFIG_TMP105', if_true: files('tmp105.c'))
++system_ss.add(when: 'CONFIG_AP3216C', if_true: files('ap3216c.c'))
+ system_ss.add(when: 'CONFIG_TMP421', if_true: files('tmp421.c'))
+ system_ss.add(when: 'CONFIG_DPS310', if_true: files('dps310.c'))
+ system_ss.add(when: 'CONFIG_EMC141X', if_true: files('emc141x.c'))
+diff --git a/include/hw/sensor/ap3216c.h b/include/hw/sensor/ap3216c.h
+new file mode 100644
+index 0000000..91c5350
+--- /dev/null
++++ b/include/hw/sensor/ap3216c.h
+@@ -0,0 +1,47 @@
++/*
++ * AP3216C ambient light / proximity / IR sensor.
++ *
++ * Minimal teaching model for the AES board (i2c1 @ 0x1e): register
++ * storage plus three injectable sample values (ir/als/ps) exposed as
++ * writable QOM properties, so a classroom or CI test can "shine a
++ * flashlight" at the sensor via QMP qom-set and watch the guest driver
++ * read it back through the real I2C path.
++ *
++ * Data register layout follows the datasheet as parsed by the Linux
++ * driver (drivers/misc/ap3216c on vendor trees; our imxaes teaching
++ * driver): IR is 10-bit (IR_H low 8 bits, IR_L low 2 bits hold the top
++ * two), ALS is plain 16-bit LE, PS is 10-bit (PS_H low 6 bits hold the
++ * top six, PS_L low 4 bits). The overflow/invalid flag bits are never
++ * set by this model.
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2 or
++ * later. See the COPYING file in the top-level directory.
++ */
++
++#ifndef HW_SENSOR_AP3216C_H
++#define HW_SENSOR_AP3216C_H
++
++#include "hw/i2c/i2c.h"
++#include "qom/object.h"
++
++#define TYPE_AP3216C "ap3216c"
++OBJECT_DECLARE_SIMPLE_TYPE(AP3216CState, AP3216C)
++
++struct AP3216CState {
++    /*< private >*/
++    I2CSlave parent_obj;
++
++    /*< public >*/
++    uint8_t pointer;    /* current register index */
++    bool first_byte;    /* next tx byte is the register index */
++    uint8_t sysc;       /* 0x00 SYSTEMCONFIGURE */
++    uint8_t int_status; /* 0x01 INT STATUS */
++    uint8_t int_mirror; /* 0x02 INT MIRROR */
++
++    /* injectable sample data */
++    uint16_t ir;
++    uint16_t als;
++    uint16_t ps;
++};
++
++#endif /* HW_SENSOR_AP3216C_H */
+-- 
+2.43.0
+

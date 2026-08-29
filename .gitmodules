@@ -22,3 +22,8 @@
 	path = third_party/buildmeter
 	url = https://github.com/Awesome-Embedded-Learning-Studio/buildmeter
 	ignore = dirty
+[submodule "third_party/qemu"]
+	path = third_party/qemu
+	url = https://github.com/qemu/qemu.git
+	shallow = true
+	ignore = dirty

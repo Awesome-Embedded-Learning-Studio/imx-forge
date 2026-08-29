@@ -1,0 +1,316 @@
+From a1f2edf87ba730f5edf6858afedf33d4a99207a5 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Wed, 26 Aug 2026 22:57:48 +0800
+Subject: [PATCH 03/16] hw/misc: add a minimal i.MX27-style PWM model and wire
+ it into the 6UL SoC
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The i.MX6UL instantiates eight independent i.MX27-style single-channel
+PWM blocks (pwm1..pwm8). Up to now they were unimplemented stubs, so the
+Linux pwm-imx27 driver (and the pwm-backlight consumer on our board tree)
+wrote settings into a void.
+
+Add a minimal teaching model: plain register storage for
+PWMCR/PWMSR/PWMSAR/PWMPR/PWMCNR plus computed enabled/duty/period
+properties so the last applied setting is observable via QMP qom-get —
+that is how CI and the classroom verify 'backlight at N%' without a
+waveform framework (QEMU has no PWM consumer). pwm-imx27 applies a
+setting by writing SAR/PR/CR and never reads back for verification, so
+storage alone makes probe and apply succeed.
+
+Wire eight instances into fsl-imx6ul, replacing the stubs.
+---
+ hw/arm/Kconfig               |   1 +
+ hw/arm/fsl-imx6ul.c          |  11 ++-
+ hw/misc/Kconfig              |   3 +
+ hw/misc/imx6ul_pwm.c         | 140 +++++++++++++++++++++++++++++++++++
+ hw/misc/meson.build          |   1 +
+ include/hw/arm/fsl-imx6ul.h  |   2 +
+ include/hw/misc/imx6ul_pwm.h |  39 ++++++++++
+ 7 files changed, 194 insertions(+), 3 deletions(-)
+ create mode 100644 hw/misc/imx6ul_pwm.c
+ create mode 100644 include/hw/misc/imx6ul_pwm.h
+
+diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
+index 5359cda..9b07671 100644
+--- a/hw/arm/Kconfig
++++ b/hw/arm/Kconfig
+@@ -670,6 +670,7 @@ config FSL_IMX6UL
+     select IMX_FEC
+     select IMX_I2C
+     select CAN_FLEXCAN
++    select IMX6UL_PWM
+     select IMX_USBPHY
+     select WDT_IMX2
+     select SDHCI
+diff --git a/hw/arm/fsl-imx6ul.c b/hw/arm/fsl-imx6ul.c
+index a698f70..c320b2e 100644
+--- a/hw/arm/fsl-imx6ul.c
++++ b/hw/arm/fsl-imx6ul.c
+@@ -70,6 +70,11 @@ static void fsl_imx6ul_init(Object *obj)
+         object_initialize_child(obj, name, &s->flexcan[i], TYPE_CAN_FLEXCAN2);
+     }
+ 
++    for (i = 0; i < FSL_IMX6UL_NUM_PWMS; i++) {
++        snprintf(name, NAME_SIZE, "pwm%d", i + 1);
++        object_initialize_child(obj, name, &s->pwm[i], TYPE_IMX6UL_PWM);
++    }
++
+     /*
+      * GPIOs
+      */
+@@ -619,9 +624,9 @@ static void fsl_imx6ul_realize(DeviceState *dev, Error **errp)
+             FSL_IMX6UL_PWM8_ADDR,
+         };
+ 
+-        snprintf(name, NAME_SIZE, "pwm%d", i);
+-        create_unimplemented_device(name, FSL_IMX6UL_PWMn_ADDR[i],
+-                                    FSL_IMX6UL_PWMn_SIZE);
++        sysbus_realize(SYS_BUS_DEVICE(&s->pwm[i]), &error_abort);
++        sysbus_mmio_map(SYS_BUS_DEVICE(&s->pwm[i]), 0,
++                        FSL_IMX6UL_PWMn_ADDR[i]);
+     }
+ 
+     /*
+diff --git a/hw/misc/Kconfig b/hw/misc/Kconfig
+index 1543ee6..fdbd367 100644
+--- a/hw/misc/Kconfig
++++ b/hw/misc/Kconfig
+@@ -95,6 +95,9 @@ config IMX
+     select SSI
+     select USB_EHCI_SYSBUS
+ 
++config IMX6UL_PWM
++    bool
++
+ config FSL_IMX8MP_ANALOG
+     bool
+ 
+diff --git a/hw/misc/imx6ul_pwm.c b/hw/misc/imx6ul_pwm.c
+new file mode 100644
+index 0000000..61c63a4
+--- /dev/null
++++ b/hw/misc/imx6ul_pwm.c
+@@ -0,0 +1,140 @@
++/*
++ * i.MX27-style PWM block, as instantiated on i.MX6UL/6ULL (eight
++ * independent single-channel blocks with a 16-bit counter each).
++ *
++ * Minimal teaching model:
++ *  - plain register storage (the Linux pwm-imx27 driver applies a setting
++ *    by writing SAR/PR/CR and never reads back for verification, so
++ *    storage alone makes probe/apply succeed)
++ *  - computed "duty" / "period" / "enabled" properties expose the last
++ *    applied setting to QMP/HMP (qom-get), which is how tests and the
++ *    classroom observe "backlight at 60%" without a waveform framework
++ *
++ * Copyright (c) 2026 imx-forge contributors
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#include "qemu/osdep.h"
++#include "hw/misc/imx6ul_pwm.h"
++#include "qemu/log.h"
++#include "qemu/module.h"
++
++static uint64_t imx6ul_pwm_read(void *opaque, hwaddr offset, unsigned size)
++{
++    IMX6ULPWMState *s = IMX6UL_PWM(opaque);
++
++    switch (offset) {
++    case 0x00:      /* PWMCR */
++        return s->pwmcr;
++    case 0x04:      /* PWMSR */
++        return s->pwmsr;
++    case 0x0c:      /* PWMSAR */
++        return s->pwmsar & 0xffff;
++    case 0x10:      /* PWMPR */
++        return s->pwmpr & 0xffff;
++    case 0x14:      /* PWMCNR — running counter not modeled, reads 0 */
++        return s->pwmcnr;
++    default:
++        qemu_log_mask(LOG_GUEST_ERROR,
++                      "%s: read at bad offset 0x%" HWADDR_PRIx "\n",
++                      __func__, offset);
++        return 0;
++    }
++}
++
++static void imx6ul_pwm_write(void *opaque, hwaddr offset, uint64_t value,
++                             unsigned size)
++{
++    IMX6ULPWMState *s = IMX6UL_PWM(opaque);
++
++    switch (offset) {
++    case 0x00:      /* PWMCR */
++        s->pwmcr = value;
++        break;
++    case 0x04:      /* PWMSR: FE/FWE/COMP/ROV are W1C status bits */
++        s->pwmsr &= ~value;
++        break;
++    case 0x0c:      /* PWMSAR */
++        s->pwmsar = value;
++        break;
++    case 0x10:      /* PWMPR */
++        s->pwmpr = value;
++        break;
++    case 0x14:      /* PWMCNR is read-only */
++    default:
++        qemu_log_mask(LOG_GUEST_ERROR,
++                      "%s: write at bad offset 0x%" HWADDR_PRIx "\n",
++                      __func__, offset);
++    }
++}
++
++static const MemoryRegionOps imx6ul_pwm_ops = {
++    .read = imx6ul_pwm_read,
++    .write = imx6ul_pwm_write,
++    .impl = {
++        .min_access_size = 4,
++        .max_access_size = 4,
++    },
++    .endianness = DEVICE_NATIVE_ENDIAN,
++};
++
++/* --- observable state for QMP/HMP -------------------------------------- */
++
++static bool imx6ul_pwm_get_enabled(Object *obj, Error **errp)
++{
++    return IMX6UL_PWM(obj)->pwmcr & 1;
++}
++
++static void imx6ul_pwm_reset_hold(Object *obj, ResetType type)
++{
++    IMX6ULPWMState *s = IMX6UL_PWM(obj);
++
++    s->pwmcr = 0;
++    s->pwmsr = 0;
++    s->pwmsar = 0;
++    s->pwmpr = 0x2;
++    s->pwmcnr = 0;
++}
++
++static void imx6ul_pwm_init(Object *obj)
++{
++    SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
++    IMX6ULPWMState *s = IMX6UL_PWM(obj);
++
++    memory_region_init_io(&s->iomem, OBJECT(s), &imx6ul_pwm_ops, s,
++                          TYPE_IMX6UL_PWM, 0x18);
++    sysbus_init_mmio(sbd, &s->iomem);
++
++    object_property_add_bool(obj, "enabled", imx6ul_pwm_get_enabled, NULL);
++    object_property_add_uint16_ptr(obj, "duty", &s->pwmsar, OBJ_PROP_FLAG_READ);
++    object_property_add_uint16_ptr(obj, "period", &s->pwmpr, OBJ_PROP_FLAG_READ);
++}
++
++static void imx6ul_pwm_class_init(ObjectClass *klass, void *data)
++{
++    DeviceClass *dc = DEVICE_CLASS(klass);
++    ResettableClass *rc = RESETTABLE_CLASS(klass);
++
++    rc->phases.hold = imx6ul_pwm_reset_hold;
++    dc->desc = "i.MX27-style PWM block (teaching model)";
++    dc->vmsd = NULL;
++}
++
++static const TypeInfo imx6ul_pwm_info = {
++    .name          = TYPE_IMX6UL_PWM,
++    .parent        = TYPE_SYS_BUS_DEVICE,
++    .instance_size = sizeof(IMX6ULPWMState),
++    .instance_init = imx6ul_pwm_init,
++    .class_init    = imx6ul_pwm_class_init,
++};
++
++static void imx6ul_pwm_register(void)
++{
++    type_register_static(&imx6ul_pwm_info);
++}
++
++type_init(imx6ul_pwm_register)
+diff --git a/hw/misc/meson.build b/hw/misc/meson.build
+index 23265f6..3ecd634 100644
+--- a/hw/misc/meson.build
++++ b/hw/misc/meson.build
+@@ -69,6 +69,7 @@ system_ss.add(when: 'CONFIG_IMX', if_true: files(
+   'imx7_src.c',
+   'imx7_gpr.c',
+   'imx7_snvs.c',
++  'imx6ul_pwm.c',
+   'imx_ccm.c',
+   'imx_rngc.c',
+ ))
+diff --git a/include/hw/arm/fsl-imx6ul.h b/include/hw/arm/fsl-imx6ul.h
+index 80948a2..3084f15 100644
+--- a/include/hw/arm/fsl-imx6ul.h
++++ b/include/hw/arm/fsl-imx6ul.h
+@@ -24,6 +24,7 @@
+ #include "hw/intc/imx_gpcv2.h"
+ #include "hw/watchdog/wdt_imx2.h"
+ #include "hw/gpio/imx_gpio.h"
++#include "hw/misc/imx6ul_pwm.h"
+ #include "hw/net/flexcan.h"
+ #include "hw/char/imx_serial.h"
+ #include "hw/timer/imx_gpt.h"
+@@ -97,6 +98,7 @@ struct FslIMX6ULState {
+ 
+     FlexcanState       flexcan[FSL_IMX6UL_NUM_CANS];
+     CanBusState        *canbus[FSL_IMX6UL_NUM_CANS];
++    IMX6ULPWMState     pwm[FSL_IMX6UL_NUM_PWMS];
+ };
+ 
+ enum FslIMX6ULMemoryMap {
+diff --git a/include/hw/misc/imx6ul_pwm.h b/include/hw/misc/imx6ul_pwm.h
+new file mode 100644
+index 0000000..085b59b
+--- /dev/null
++++ b/include/hw/misc/imx6ul_pwm.h
+@@ -0,0 +1,39 @@
++/*
++ * i.MX27-style PWM block, as instantiated on i.MX6UL/6ULL (eight
++ * independent single-channel blocks).
++ *
++ * Minimal teaching model: register storage plus computed duty-cycle and
++ * period properties (in guest-visible PWM counter ticks), so a guest
++ * pwm_apply is observable from QMP (qom-get on duty / period / enabled).
++ * No waveform is generated — QEMU has no PWM consumer framework.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef IMX6UL_PWM_H
++#define IMX6UL_PWM_H
++
++#include "hw/core/sysbus.h"
++#include "qom/object.h"
++
++#define TYPE_IMX6UL_PWM "imx6ul-pwm"
++OBJECT_DECLARE_SIMPLE_TYPE(IMX6ULPWMState, IMX6UL_PWM)
++
++struct IMX6ULPWMState {
++    /*< private >*/
++    SysBusDevice parent_obj;
++
++    /*< public >*/
++    MemoryRegion iomem;
++
++    uint16_t pwmsar;   /* sample = duty counter ticks */
++    uint16_t pwmpr;    /* period counter ticks */
++    uint32_t pwmcr;    /* control: bit0 EN */
++    uint32_t pwmsr;    /* status (RO, mostly 0) */
++    uint32_t pwmcnr;   /* counter (RO) */
++};
++
++#endif /* IMX6UL_PWM_H */
+-- 
+2.43.0
+

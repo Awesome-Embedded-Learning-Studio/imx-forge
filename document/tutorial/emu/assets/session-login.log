@@ -1,0 +1,241 @@
+[run-qemu] starting QEMU (interactive, Ctrl-A X to quit)
+[run-qemu] machine: mcimx6ul-evk  memory: 512M  console: ttymxc0
+[run-qemu] bootargs: console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw 
+qemu-system-arm: warning: nic imx.enet.1 has no peer
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 7.1.0-dirty (charliechen@Charliechen) (arm-none-linux-gnueabihf-gcc (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 15.2.1 20251203, GNU ld (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203) #1 Wed Jul  8 17:35:29 CST 2026
+[    0.000000] CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c53c7d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: Awesome Embedded Studio IMX6ULL (QEMU mcimx6ul-evk)
+[    0.000000] Memory policy: Data cache writeback
+[    0.000000] Reserved memory: created CMA memory pool at 0x96000000, size 160 MiB
+[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x96000000..0x9fffffff (163840 KiB) map reusable linux,cma
+[    0.000000] psci: probing for conduit method from DT.
+[    0.000000] psci: PSCIv1.1 detected in firmware.
+[    0.000000] psci: Using standard PSCI v0.2 function IDs
+[    0.000000] psci: Trusted OS migration not required
+[    0.000000] psci: SMC Calling Convention v1.0
+[    0.000000] CPU: All CPU(s) started in HYP mode.
+[    0.000000] CPU: Virtualization extensions available.
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000]   HighMem  empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Kernel command line: console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw 
+[    0.000000] printk: log buffer data + meta data: 262144 + 819200 = 1081344 bytes
+[    0.000000] Dentry cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 32768 (order: 5, 131072 bytes, linear)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 131072
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] GIC: Using split EOI/Deactivate mode
+[    0.000000] Switching to timer-based delay loop, resolution 41ns
+[    0.000077] sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+[    0.000320] clocksource: mxc_timer1: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.004238] Console: colour dummy device 80x30
+[    0.004987] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.005051] CPU: Testing write buffer coherency: ok
+[    0.005382] pid_max: default: 32768 minimum: 301
+[    0.006911] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.006934] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.010503] VFS: Finished mounting rootfs on nullfs
+[    0.022722] Setting up static identity map for 0x80100000 - 0x80100078
+[    0.026420] Memory: 333544K/524288K available (13312K kernel code, 1244K rwdata, 3844K rodata, 1024K init, 379K bss, 26168K reserved, 163840K cma-reserved, 0K highmem)
+[    0.030873] devtmpfs: initialized
+[    0.038640] VFP support v0.3: implementor 41 architecture 2 part 30 variant 7 rev 5
+[    0.049322] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.049941] posixtimers hash table entries: 512 (order: 0, 2048 bytes, linear)
+[    0.050044] futex hash table entries: 256 (4096 bytes on 1 NUMA nodes, total 4 KiB, linear).
+[    0.061447] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.069204] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    0.071206] thermal_sys: Registered thermal governor 'step_wise'
+[    0.071307] cpuidle: using governor menu
+[    0.071468] CPU identified as i.MX6UL, silicon rev 1.0
+[    0.078088] /soc/interrupt-controller@a01000: Fixed dependency cycle(s) with /soc/interrupt-controller@a01000
+[    0.078526] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.078613] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.082405] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.082494] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.086626] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.091799] No ATAGs?
+[    0.092145] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    0.092174] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    0.095940] imx6ul-pinctrl 20e0000.pinctrl: initialized IMX pinctrl driver
+[    0.097230] imx6ul-pinctrl 2290000.pinctrl: no groups defined in /soc/bus@2200000/pinctrl@2290000
+[    0.097260] imx6ul-pinctrl 2290000.pinctrl: initialized IMX pinctrl driver
+[    0.099409] kprobes: kprobe jump-optimization is enabled. All kprobes are optimized if possible.
+[    0.108099] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.116066] gpio gpiochip1: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.118518] gpio gpiochip2: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.119707] gpio gpiochip3: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.120868] gpio gpiochip4: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.124852] SCSI subsystem initialized
+[    0.126047] usbcore: registered new interface driver usbfs
+[    0.126185] usbcore: registered new interface driver hub
+[    0.126323] usbcore: registered new device driver usb
+[    0.130612] i2c i2c-0: IMX I2C adapter registered
+[    0.131438] i2c i2c-1: IMX I2C adapter registered
+[    0.132727] mc: Linux media interface: v0.10
+[    0.132802] videodev: Linux video capture interface: v2.00
+[    0.133010] pps_core: LinuxPPS API ver. 1 registered
+[    0.133017] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.133043] PTP clock support registered
+[    0.133599] Advanced Linux Sound Architecture Driver Initialized.
+[    0.138903] Bluetooth: Core ver 2.22
+[    0.138993] NET: Registered PF_BLUETOOTH protocol family
+[    0.139001] Bluetooth: HCI device and connection manager initialized
+[    0.139097] Bluetooth: HCI socket layer initialized
+[    0.139141] Bluetooth: L2CAP socket layer initialized
+[    0.139223] Bluetooth: SCO socket layer initialized
+[    0.142471] clocksource: Switched to clocksource mxc_timer1
+[    0.143047] VFS: Disk quotas dquot_6.6.0
+[    0.143086] VFS: Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+[    0.152879] NET: Registered PF_INET protocol family
+[    0.153655] IP idents hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    0.155085] tcp_listen_portaddr_hash hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.155129] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.155159] TCP established hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.155237] TCP bind hash table entries: 4096 (order: 3, 32768 bytes, linear)
+[    0.155324] TCP: Hash tables configured (established 4096 bind 4096)
+[    0.155968] UDP hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    0.156554] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.157812] RPC: Registered named UNIX socket transport module.
+[    0.157832] RPC: Registered udp transport module.
+[    0.157837] RPC: Registered tcp transport module.
+[    0.157841] RPC: Registered tcp-with-tls transport module.
+[    0.157846] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.162607] Initialise system trusted keyrings
+[    0.163227] workingset: timestamp_bits=30 (anon: 26) max_order=17 bucket_order=0 (anon: 0)
+[    0.165247] NFS: Registering the id_resolver key type
+[    0.165429] Key type id_resolver registered
+[    0.165449] Key type id_legacy registered
+[    0.165583] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    0.165615] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    0.165772] jffs2: version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+[    0.166180] fuse: init (API version 7.45)
+[    0.168040] Key type asymmetric registered
+[    0.168069] Asymmetric key parser 'x509' registered
+[    0.168209] io scheduler mq-deadline registered
+[    0.168239] io scheduler kyber registered
+[    0.168290] io scheduler bfq registered
+[    0.179739] imx-sdma 20ec000.dma-controller: external firmware not found, using ROM firmware
+[    0.180320] stmp_reset_block((ptrval)): module reset timeout
+[    0.180434] mxs-dma 1804000.dma-controller: probe with driver mxs-dma failed with error -110
+[    0.181131] imx_soc_device_init: failed to find fsl,imx6ul-ocotp regmap!
+[    0.185817] 2020000.serial: ttymxc0 at MMIO 0x2020000 (irq = 191, base_baud = 5000000) is a IMX
+[    0.187480] printk: console [ttymxc0] enabled
+[    0.191973] panel-simple panel-dpi: Specify missing bus_format
+[    0.191996] panel-simple panel-dpi: Expected bpc in {6,8} but got: 0
+[    0.212309] cacheinfo: Unable to detect cache hierarchy for CPU 0
+[    0.224210] brd: module loaded
+[    0.229135] loop: module loaded
+[    0.236982] spi_imx 2010000.spi: error -ENODEV: can't get the TX DMA channel!
+[    0.239418] CAN device driver interface
+[    0.240066] usbcore: registered new device driver r8152-cfgselector
+[    0.240111] usbcore: registered new interface driver r8152
+[    0.240148] usbcore: registered new interface driver lan78xx
+[    0.240184] usbcore: registered new interface driver asix
+[    0.240212] usbcore: registered new interface driver ax88179_178a
+[    0.240240] usbcore: registered new interface driver cdc_ether
+[    0.240268] usbcore: registered new interface driver smsc95xx
+[    0.240295] usbcore: registered new interface driver net1080
+[    0.240322] usbcore: registered new interface driver cdc_subset
+[    0.240355] usbcore: registered new interface driver zaurus
+[    0.240384] usbcore: registered new interface driver MOSCHIP usb-ethernet driver
+[    0.240414] usbcore: registered new interface driver cdc_ncm
+[    0.240441] usbcore: registered new interface driver r8153_ecm
+[    0.240560] usbcore: registered new interface driver usb-storage
+[    0.240726] usbcore: registered new device driver onboard-usb-dev
+[    0.246377] input: 20cc000.snvs:snvs-powerkey as /devices/platform/soc/2000000.bus/20cc000.snvs/20cc000.snvs:snvs-powerkey/input/input0
+[    0.249585] snvs_rtc 20cc000.snvs:snvs-rtc-lp: failed to enable rtc -110
+[    0.249605] snvs_rtc 20cc000.snvs:snvs-rtc-lp: probe with driver snvs_rtc failed with error -110
+[    0.249773] i2c_dev: i2c /dev entries driver
+[    0.254164] Bluetooth: HCI UART driver ver 2.3
+[    0.254207] Bluetooth: HCI UART protocol H4 registered
+[    0.254259] Bluetooth: HCI UART protocol LL registered
+[    0.254387] Bluetooth: HCI UART protocol Broadcom registered
+[    0.258757] usbcore: registered new interface driver usbhid
+[    0.258772] usbhid: USB HID core driver
+[    0.260595] hw perfevents: enabled with armv7_cortex_a7 PMU driver, 5 (8000000f) counters available
+[    0.303523] mmc1: SDHCI controller on 2194000.mmc [2194000.mmc] using ADMA
+[    0.318842] mmc1: host does not support reading read-only switch, assuming write-enable
+[    0.319330] mmc1: new high speed SD card at address 4567
+[    0.321116] mmcblk1: mmc1:4567 QEMU! 256 MiB
+[    0.473057] i2c i2c-0: <i2c_imx_read> read timedout
+[    0.783117] i2c i2c-0: <i2c_imx_write> write timedout
+[    0.783207] wm8960 0-001a: Failed to issue reset
+[    0.783973] wm8960 0-001a: probe with driver wm8960 failed with error -110
+[    0.796686] NET: Registered PF_INET6 protocol family
+[    0.800073] Segment Routing with IPv6
+[    0.800201] In-situ OAM (IOAM) with IPv6
+[    0.800464] NET: Registered PF_PACKET protocol family
+[    0.800485] can: controller area network core
+[    0.800634] NET: Registered PF_CAN protocol family
+[    0.800658] can: raw protocol
+[    0.800717] can: broadcast manager protocol
+[    0.800774] can: netlink gateway - max_hops=1
+[    0.801160] Key type dns_resolver registered
+[    0.809482] Loading compiled-in X.509 certificates
+[    0.828070] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    0.835456] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    0.836625] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    0.836741] clk: Disabling unused clocks
+[    0.841948] PM: genpd: Disabling unused power domains
+[    0.842144] ALSA device list:
+[    0.842173]   #0: ASRC-M2M
+[    0.904538] EXT4-fs (mmcblk1): mounted filesystem 4ba5d818-3c36-4e8b-99f4-9bd8c608bd31 r/w with ordered data mode. Quota mode: none.
+[    0.905521] VFS: Mounted root (ext4 filesystem) on device 179:0.
+[    0.907735] devtmpfs: mounted
+[    0.908498] VFS: Pivoted into new rootfs
+[    0.925247] Freeing unused kernel image (initmem) memory: 1024K
+[    0.927651] Run /sbin/init as init process
+[    1.284231] EXT4-fs (mmcblk1): re-mounted 4ba5d818-3c36-4e8b-99f4-9bd8c608bd31.
+Seeding 256 bits and crediting
+Saving 256 bits of creditable seed for next boot
+[    1.630444] random: crng init done
+Starting syslogd: OK
+Starting klogd: OK
+Running sysctl: OK
+Starting udevd: OK
+[    2.154990] udevd[81]: starting version 3.2.14
+[    2.247456] udevd[81]: specified group 'input' unknown
+[    2.248132] udevd[81]: specified group 'sgx' unknown
+[    2.250071] udevd[81]: specified group 'kvm' unknown
+[    2.350004] udevd[81]: starting eudev-3.2.14
+Starting network: OK
+Starting ifplugd for eth0: OK
+Starting crond: OK
+Starting dropbear sshd: OK
+Starting telnetd: OK
+
+Welcome to Buildroot
+buildroot login: [   11.378196] flexcan 2090000.can: registering netdev failed
+[   11.378491] flexcan 2090000.can: probe with driver flexcan failed with error -110
+[   11.732827] i2c i2c-1: <i2c_imx_write> write timedout
+[   11.732963] Goodix-TS 1-005d: Error reading 1 bytes from 0x8140: -110
+[   12.073232] i2c i2c-1: <i2c_imx_write> write timedout
+[   12.073312] Goodix-TS 1-005d: Error reading 1 bytes from 0x8140: -110
+[   12.102990] Goodix-TS 1-005d: I2C communication failure: -110
+[   12.103368] Goodix-TS 1-005d: probe with driver Goodix-TS failed with error -110
+[   12.106908] sdhci-esdhc-imx 2190000.mmc: Got CD GPIO
+[   12.110381] platform 20b4000.ethernet: deferred probe pending: (reason unknown)
+[   12.110425] platform 2188000.ethernet: deferred probe pending: (reason unknown)
+[   12.110433] platform 20c8000.anatop:tempmon: deferred probe pending: imx_thermal: failed to init from nvmem
+[   12.110440] platform sound-wm8960: deferred probe pending: fsl-asoc-card: snd_soc_register_card failed
+[   12.151861] mmc0: SDHCI controller on 2190000.mmc [2190000.mmc] using ADMA
+root
+Password: 
+# uname -a
+Linux buildroot 7.1.0-dirty #1 Wed Jul  8 17:35:29 CST 2026 armv7l GNU/Linux
+# cat /proc/cpuinfo | grep -E "model|MHz" | head -3
+model name	: ARMv7 Processor rev 5 (v7l)
+# ls /dev/mmc*
+[1;35m/dev/mmcblk1[m
+# poweroff -f
+[   44.515451] reboot: Power down

@@ -1,0 +1,118 @@
+From 27fc250db9fee2f187f819d9e00465d37ea45525 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Fri, 28 Aug 2026 19:32:18 +0800
+Subject: [PATCH 11/16] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20factory?=
+ =?UTF-8?q?=20config=20page=20so=20userspace=20gets=20real=20abs=20ranges?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The all-zero config page made goodix_read_config() fail its checksum
+(fine, driver falls back) but also left ABS_MT_POSITION_X/Y without
+maxima from config[1..4] — and Qt's evdev touch plugin maps raw touch
+values through those maxima, so every tap mapped to a broken point and
+the app never saw a usable press.
+
+Carry a factory default instead: 1024x600 resolution, 5 contacts,
+trigger 0x3f, checksum byte so the driver's sum==0 check passes; config
+writes from the guest update the live page (accepted, not re-verified,
+same as a real chip). Verified: 'Invalid config' message is gone from
+dmesg and the Qt lcd_button reacts to gt911_touch (fb content changes).
+---
+ hw/input/gt911.c         | 45 +++++++++++++++++++++++++++++++++++++---
+ include/hw/input/gt911.h |  1 +
+ 2 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index 5c0bb9f..fbb1516 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -36,15 +36,49 @@ static void gt911_fill_report(GT911State *s, uint8_t *buf, int len)
+     }
+ }
+ 
++/* factory config page at GT911_REG_CONFIG_DATA, GOODIX_CONFIG_911_LENGTH
++ * (186) bytes; checksum byte last so the driver's sum==0 check passes */
++#define GT911_CONFIG_LEN 186
++#define GT911_CFG_X_RES_LO   1
++#define GT911_CFG_Y_RES_LO   3
++#define GT911_CFG_MAX_TOUCH  5
++#define GT911_CFG_TRIGGER    6
++#define GT911_CFG_CHECKSUM  (GT911_CONFIG_LEN - 1)
++
++static void gt911_config_factory(GT911State *s)
++{
++    uint8_t cfg[GT911_CONFIG_LEN];
++    int i, sum = 0;
++
++    memset(cfg, 0, sizeof(cfg));
++    cfg[GT911_CFG_X_RES_LO]     = 1024 & 0xff;         /* x res LE */
++    cfg[GT911_CFG_X_RES_LO + 1] = 1024 >> 8;
++    cfg[GT911_CFG_Y_RES_LO]     = 600 & 0xff;          /* y res LE */
++    cfg[GT911_CFG_Y_RES_LO + 1] = 600 >> 8;
++    cfg[GT911_CFG_MAX_TOUCH]    = 5;
++    cfg[GT911_CFG_TRIGGER]      = 0x3f;
++
++    for (i = 0; i < GT911_CFG_CHECKSUM; i++) {
++        sum += cfg[i];
++    }
++    cfg[GT911_CFG_CHECKSUM] = (0x100 - sum) & 0xff;
++
++    memcpy(s->config, cfg, sizeof(cfg));
++}
++
+ static uint8_t gt911_read_reg(GT911State *s, uint16_t reg)
+ {
+-    /* ranges outside our window read 0 (config page zeros included) */
++    /* ranges outside our window read 0 */
+     if (reg >= GT911_REG_ID && reg < GT911_REG_ID + sizeof(s->id)) {
+         return s->id[reg - GT911_REG_ID];
+     }
+     if (reg == GT911_REG_COMMAND) {
+         return 0x00;
+     }
++    if (reg >= GT911_REG_CONFIG_DATA &&
++        reg < GT911_REG_CONFIG_DATA + GT911_CONFIG_LEN) {
++        return s->config[reg - GT911_REG_CONFIG_DATA];
++    }
+     if (reg >= GT911_REG_COOR && reg < GT911_REG_END) {
+         uint8_t buf[GT911_REG_END - GT911_REG_COOR];
+         gt911_fill_report(s, buf, sizeof(buf));
+@@ -61,8 +95,12 @@ static void gt911_write_reg(GT911State *s, uint16_t reg, uint8_t val)
+         qemu_set_irq(s->int_line, 1);   /* INT deasserts (active low) */
+         return;
+     }
+-    /* config writes and the command register are plain storage: accepted,
+-     * not verified — a fresh chip accepts config the same way */
++    if (reg >= GT911_REG_CONFIG_DATA &&
++        reg < GT911_REG_CONFIG_DATA + GT911_CONFIG_LEN) {
++        s->config[reg - GT911_REG_CONFIG_DATA] = val;
++        return;
++    }
++    /* the command register is plain storage: accepted, not verified */
+ }
+ 
+ static void gt911_event(I2CSlave *i2c, enum i2c_event event)
+@@ -184,6 +222,7 @@ static void gt911_reset_hold(Object *obj, ResetType type)
+     GT911State *s = GT911(obj);
+ 
+     memcpy(s->id, "911\0\x20\0", sizeof(s->id));   /* "911", vid 0x0020 */
++    gt911_config_factory(s);
+     s->addr = 0;
+     s->addr_bytes = 0;
+     s->addr_latch = 0;
+diff --git a/include/hw/input/gt911.h b/include/hw/input/gt911.h
+index da198c5..4c0daae 100644
+--- a/include/hw/input/gt911.h
++++ b/include/hw/input/gt911.h
+@@ -48,6 +48,7 @@ struct GT911State {
+     uint16_t addr_latch;    /* MSB-first latch */
+ 
+     uint8_t id[6];          /* 0x8140: "911\0" + vid */
++    uint8_t config[186];    /* 0x8047: factory default, see gt911.c */
+ 
+     /* pending touch: status byte + one 8-byte contact + key footer */
+     bool pending;
+-- 
+2.43.0
+

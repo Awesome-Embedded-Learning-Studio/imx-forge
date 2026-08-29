@@ -1,0 +1,40 @@
+From bf3454824a85aa90cd80c1dda249e63244bf22db Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Sat, 29 Aug 2026 10:43:36 +0800
+Subject: [PATCH 16/16] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20document?=
+ =?UTF-8?q?=20the=20level-vs-edge=20INT=20experiment?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Tried pure level semantics (pull low and hold until the guest reads):
+does NOT fire — the pad is demonstrably LOW at idle (the poll-mode
+retry loop's reads do not leave it high as assumed), so there is no
+transition to trigger on. Reverted to the working high-then-low assert.
+Known cosmetic artifact stays: each press produces a duplicate Begin
+under dual-edge irq setups, and the release occasionally drops when
+the edge pair races the poll loop — the root cause is where the INT
+line idles between polls; next batch instruments gt911_set_int to
+settle it.
+---
+ hw/input/gt911.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index 322909d..14e0690 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -104,7 +104,9 @@ static void gt911_set_int(int level)
+ static void gt911_assert_int(void)
+ {
+     /* high first (the pad can idle low between the poll-mode retries),
+-     * then assert — a guaranteed falling edge */
++     * then assert — a guaranteed falling edge. Pure level semantics
++     * (hold low until read) was tried and does NOT fire: the pad is
++     * demonstrably low at idle, leaving no transition to trigger on. */
+     gt911_set_int(1);
+     gt911_set_int(0);
+ }
+-- 
+2.43.0
+

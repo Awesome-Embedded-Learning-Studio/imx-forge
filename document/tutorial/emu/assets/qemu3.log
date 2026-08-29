@@ -1,0 +1,164 @@
+qemu-system-arm: warning: nic imx.enet.0 has no peer
+qemu-system-arm: warning: nic imx.enet.1 has no peer
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 7.1.0-dirty (charliechen@Charliechen) (arm-none-linux-gnueabihf-gcc (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 15.2.1 20251203, GNU ld (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203) #1 Wed Jul  8 17:35:29 CST 2026
+[    0.000000] CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c53c7d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: Awesome Embedded Studio IMX6ULL (i.mx NXP)
+[    0.000000] earlycon: ec_imx6q0 at MMIO 0x02020000 (options '')
+[    0.000000] printk: legacy bootconsole [ec_imx6q0] enabled
+[    0.000000] Memory policy: Data cache writeback
+[    0.000000] Reserved memory: created CMA memory pool at 0x96000000, size 160 MiB
+[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x96000000..0x9fffffff (163840 KiB) map reusable linux,cma
+[    0.000000] psci: probing for conduit method from DT.
+[    0.000000] psci: PSCIv1.1 detected in firmware.
+[    0.000000] psci: Using standard PSCI v0.2 function IDs
+[    0.000000] psci: Trusted OS migration not required
+[    0.000000] psci: SMC Calling Convention v1.0
+[    0.000000] CPU: All CPU(s) started in HYP mode.
+[    0.000000] CPU: Virtualization extensions available.
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000]   HighMem  empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Kernel command line: console=ttymxc0,115200 earlycon
+[    0.000000] printk: log buffer data + meta data: 262144 + 819200 = 1081344 bytes
+[    0.000000] Dentry cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 32768 (order: 5, 131072 bytes, linear)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 131072
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] GIC: Using split EOI/Deactivate mode
+[    0.000000] Switching to timer-based delay loop, resolution 41ns
+[    0.000372] sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+[    0.001515] clocksource: mxc_timer1: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.018802] Console: colour dummy device 80x30
+[    0.021630] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.022090] CPU: Testing write buffer coherency: ok
+[    0.023177] pid_max: default: 32768 minimum: 301
+[    0.030196] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.030657] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.043682] VFS: Finished mounting rootfs on nullfs
+[    0.082741] Setting up static identity map for 0x80100000 - 0x80100078
+[    0.101348] Memory: 333580K/524288K available (13312K kernel code, 1244K rwdata, 3844K rodata, 1024K init, 379K bss, 26132K reserved, 163840K cma-reserved, 0K highmem)
+[    0.113988] devtmpfs: initialized
+[    0.135820] VFP support v0.3: implementor 41 architecture 2 part 30 variant 7 rev 5
+[    0.165287] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.166798] posixtimers hash table entries: 512 (order: 0, 2048 bytes, linear)
+[    0.167364] futex hash table entries: 256 (4096 bytes on 1 NUMA nodes, total 4 KiB, linear).
+[    0.205281] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.228526] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    0.236488] thermal_sys: Registered thermal governor 'step_wise'
+[    0.236759] cpuidle: using governor menu
+[    0.237524] CPU identified as i.MX6UL, silicon rev 1.0
+[    0.262253] /soc/interrupt-controller@a01000: Fixed dependency cycle(s) with /soc/interrupt-controller@a01000
+[    0.265753] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.266417] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.267210] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.267746] /soc/bus@2100000/csi@21c4000: Fixed dependency cycle(s) with /soc/bus@2100000/i2c@21a4000/ov5640@3c
+[    0.277503] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.278096] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.292801] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.295199] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.295712] /soc/bus@2100000/csi@21c4000: Fixed dependency cycle(s) with /soc/bus@2100000/i2c@21a4000/ov5640@3c
+[    0.298121] /soc/bus@2100000/i2c@21a4000/ov5640@3c: Fixed dependency cycle(s) with /soc/bus@2100000/csi@21c4000
+[    0.300597] 8<--- cut here ---
+[    0.300767] Unhandled fault: external abort on non-linefetch (0x008) at 0xe0870018
+[    0.301051] [e0870018] *pgd=8201d811, *pte=021b0653, *ppte=021b0453
+[    0.301968] Internal error: : 8 [#1] ARM
+[    0.302348] Modules linked in:
+[    0.302928] CPU: 0 UID: 0 PID: 1 Comm: swapper/0 Not tainted 7.1.0-dirty #1 VOLUNTARY 
+[    0.303354] Hardware name: Freescale i.MX6 Ultralite (Device Tree)
+[    0.303615] PC is at imx_mmdc_probe+0x80/0x31c
+[    0.304301] LR is at set_ptes+0x40/0x6c
+[    0.304460] pc : [<c012c6c8>]    lr : [<c01275c0>]    psr: a0000053
+[    0.304887] sp : e083dc20  ip : 003821c0  fp : c213a010
+[    0.305162] r10: c2137010  r9 : 00000000  r8 : c2137000
+[    0.305413] r7 : 00000000  r6 : c2135880  r5 : e0870000  r4 : d5fa44c4
+[    0.305835] r3 : 00000000  r2 : c0007828  r1 : 00004000  r0 : e0870000
+[    0.306202] Flags: NzCv  IRQs on  FIQs off  Mode SVC_32  ISA ARM  Segment none
+[    0.306414] Control: 10c53c7d  Table: 80004059  DAC: 00000051
+[    0.306726] Register r0 information: 0-page vmalloc region starting at 0xe0870000 allocated at imx_mmdc_probe+0x78/0x31c
+[    0.307548] Register r1 information: non-paged memory
+[    0.308012] Register r2 information: non-slab/vmalloc memory
+[    0.308564] Register r3 information: NULL pointer
+[    0.308949] Register r4 information: non-slab/vmalloc memory
+[    0.309308] Register r5 information: 0-page vmalloc region starting at 0xe0870000 allocated at imx_mmdc_probe+0x78/0x31c
+[    0.309807] Register r6 information: slab kmalloc-64 start c2135880 pointer offset 0 size 64
+[    0.310567] Register r7 information: NULL pointer
+[    0.310853] Register r8 information: slab kmalloc-1k start c2137000 pointer offset 0 size 1024
+[    0.311380] Register r9 information: NULL pointer
+[    0.311560] Register r10 information: slab kmalloc-1k start c2137000 pointer offset 16 size 1024
+[    0.311931] Register r11 information: slab kmalloc-1k start c213a000 pointer offset 16 size 1024
+[    0.312280] Register r12 information: non-paged memory
+[    0.312474] Process swapper/0 (pid: 1, stack limit = 0x(ptrval))
+[    0.313029] Stack: (0xe083dc20 to 0xe083e000)
+[    0.313249] dc20: 00000000 c2137010 c140931c c140931c 00000000 c2137010 c140931c c140931c
+[    0.313502] dc40: 00000000 00000000 00000000 c0ef9d20 c213a010 c0764e34 c2137010 00000000
+[    0.313804] dc60: c140931c c0762460 c2137010 c140931c c2137010 c2137010 00000000 c07626fc
+[    0.314043] dc80: c0ef9d20 c0a2ccb8 c158d24c c158d254 c2137010 c2137010 00000000 c0762904
+[    0.314288] dca0: c140931c e083dd04 c2137010 c07629e8 00000000 c0762a88 00000000 00000000
+[    0.314516] dcc0: 00000000 c2042300 e083dd04 c0760500 c2042300 c2042358 c210aeb4 7f684b04
+[    0.314751] dce0: c213a010 c2137010 c2042300 00000001 c2042300 c0762de4 00000000 c07694e4
+[    0.315043] dd00: 00000000 c2137010 00000001 7f684b04 c2137010 c2042300 c2137010 c0763038
+[    0.315285] dd20: c2076900 c2042300 c2137010 c07613e4 c2137010 00000000 c213a010 00000000
+[    0.315545] dd40: 00000000 c075e088 c2137058 00000000 00000000 00000000 00000000 00000000
+[    0.315788] dd60: 00000000 7f684b04 d5fa44c4 c213a010 00000000 00000000 00000000 c0a302e8
+[    0.316031] dd80: c2137000 c2137000 00000000 d5fa44c4 00000000 00000000 00000001 c0a304e8
+[    0.316273] dda0: 00000000 c075dc08 c213a058 00000000 00000000 00000000 00000000 00000000
+[    0.316515] ddc0: 00000000 00000000 00000000 00000000 00000000 7f684b04 a0000053 00000000
+[    0.316749] dde0: d5fa44c4 d5fa1934 00000001 c213a010 00000000 c0ef9d20 c2021010 c0a30540
+[    0.317026] de00: 00000001 c075dc08 c2021058 00000000 00000000 00000000 00000000 00000000
+[    0.317291] de20: 00000000 00000000 00000000 00000000 00000000 7f684b04 a0000053 00000000
+[    0.317570] de40: d5fa1934 d5f95ec8 00000001 c2021010 00000000 c0ef9d20 00000000 c0a30540
+[    0.317842] de60: 00000001 7f684b04 0000002a 00000001 c2076900 00000000 00000000 00000000
+[    0.318078] de80: 00000000 00000000 00000000 00000000 00000000 7f684b04 00010000 d5f95ec8
+[    0.318303] dea0: d5f9437c c0ef9d20 00000000 00000000 00000001 00000003 c136dd54 c0a306d4
+[    0.318532] dec0: 00000001 00000000 00000000 c0102afc e083dee4 c1055de4 c1303dc4 00000000
+[    0.318767] dee0: c1539000 c1539000 c1147b48 c130a004 c2076900 c1303de0 c2076900 c01161ac
+[    0.318995] df00: 00000000 c11c0928 c210d9c0 00000000 00000000 00000000 00000000 00000000
+[    0.319251] df20: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    0.319496] df40: 00000000 00000000 00000000 7f684b04 00000117 c210d9c0 c1352848 c1352828
+[    0.319734] df60: c1539000 c1147b48 00000003 c1301354 00000003 00000003 00000000 c13004d8
+[    0.319995] df80: c2076900 c1403180 c0ddb614 00000000 00000000 00000000 00000000 00000000
+[    0.320231] dfa0: 00000000 c0ddb628 00000000 c010016c 00000000 00000000 00000000 00000000
+[    0.320463] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    0.320701] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+[    0.321039] Call trace: 
+[    0.321539]  imx_mmdc_probe from platform_probe+0x58/0x90
+[    0.321984]  platform_probe from really_probe+0xc4/0x2d0
+[    0.322166]  really_probe from __driver_probe_device+0x90/0x1c8
+[    0.322339]  __driver_probe_device from driver_probe_device+0x34/0x118
+[    0.322527]  driver_probe_device from __device_attach_driver+0xa0/0x128
+[    0.322725]  __device_attach_driver from bus_for_each_drv+0x90/0xe4
+[    0.322934]  bus_for_each_drv from __device_attach+0xa0/0x1b0
+[    0.323143]  __device_attach from device_initial_probe+0x48/0x64
+[    0.323351]  device_initial_probe from bus_probe_device+0x24/0x78
+[    0.323560]  bus_probe_device from device_add+0x5bc/0x7e0
+[    0.323773]  device_add from of_platform_device_create_pdata+0xcc/0x110
+[    0.323983]  of_platform_device_create_pdata from of_platform_bus_create+0x1b0/0x260
+[    0.324198]  of_platform_bus_create from of_platform_bus_create+0x208/0x260
+[    0.324436]  of_platform_bus_create from of_platform_bus_create+0x208/0x260
+[    0.324685]  of_platform_bus_create from of_platform_populate+0x68/0xc4
+[    0.324882]  of_platform_populate from imx6ul_init_machine+0x3c/0x54
+[    0.325216]  imx6ul_init_machine from customize_machine+0x1c/0x30
+[    0.325403]  customize_machine from do_one_initcall+0x54/0x240
+[    0.325598]  do_one_initcall from kernel_init_freeable+0x190/0x244
+[    0.325904]  kernel_init_freeable from kernel_init+0x14/0x12c
+[    0.326088]  kernel_init from ret_from_fork+0x14/0x28
+[    0.326291] Exception stack(0xe083dfb0 to 0xe083dff8)
+[    0.326480] dfa0:                                     00000000 00000000 00000000 00000000
+[    0.326738] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[    0.326982] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
+[    0.327490] Code: e1a00004 eb2425ca e2505000 0a000083 (e5953018) 
+[    0.328659] ---[ end trace 0000000000000000 ]---
+[    0.329285] note: swapper/0[1] exited with irqs disabled
+[    0.330844] Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
+[    0.332077] ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b ]---
+qemu-system-arm: terminating on signal 15 from pid 165032 (timeout)

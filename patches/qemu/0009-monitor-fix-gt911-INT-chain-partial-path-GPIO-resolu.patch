@@ -1,0 +1,97 @@
+From 6a4edb0ce3e04ab0c18d85d8d98635ed029c0387 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Fri, 28 Aug 2026 09:28:35 +0800
+Subject: [PATCH 09/16] =?UTF-8?q?monitor:=20fix=20gt911=20INT=20chain=20?=
+ =?UTF-8?q?=E2=80=94=20partial-path=20GPIO=20resolution=20+=20edge=20pair?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The gt911_touch/release handlers failed to find the GPIO controller
+(object_resolve_path_component under /machine/soc returned NULL for
+'gpio0' — the gpio_set command works because object_resolve_path()
+partial matching finds it; reuse that resolution order). With the
+controller resolved, drive GPIO1_IO9 high-then-low to guarantee a
+falling edge (the pad idles low until the first touch, so a plain
+assert would produce no edge for the edge-triggered irq the goodix
+driver requested).
+
+Verified end to end on the real board dtb: gt911_touch 512 300 →
+/proc/interrupts '29: gpio-mxc 9 Edge gt9147' counts up → the goodix
+handler reads the FIFO over I2C → /dev/input reports BTN_TOUCH=1 with
+ABS_MT_SLOT 0. Also fixes the icm20608 jitter to sample once per
+16-bit reading (high/low bytes were independently jittered, producing
+wrap-around garbage like 0xff for a 0 baseline).
+---
+ hw/sensor/icm20608.c |  7 ++++---
+ monitor/hmp-cmds.c   | 23 +++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/hw/sensor/icm20608.c b/hw/sensor/icm20608.c
+index a9ab1ca..e3a794c 100644
+--- a/hw/sensor/icm20608.c
++++ b/hw/sensor/icm20608.c
+@@ -44,9 +44,10 @@ static uint8_t icm20608_data_reg(ICM20608State *s, uint8_t reg)
+     if (idx < 0 || idx >= 14) {
+         return 0;
+     }
+-    /* big-endian 16-bit per sample */
+-    return (idx & 1) ? (icm20608_jitter(s, v[idx / 2]) & 0xff)
+-                     : ((icm20608_jitter(s, v[idx / 2]) >> 8) & 0xff);
++    /* big-endian 16-bit per sample; jitter ONCE per sample so the two
++     * bytes always belong to the same reading */
++    uint16_t sample = icm20608_jitter(s, v[idx / 2]);
++    return (idx & 1) ? (sample & 0xff) : ((sample >> 8) & 0xff);
+ }
+ 
+ static uint32_t icm20608_transfer(SSIPeripheral *ss, uint32_t tx)
+diff --git a/monitor/hmp-cmds.c b/monitor/hmp-cmds.c
+index f6bb987..7efd8d4 100644
+--- a/monitor/hmp-cmds.c
++++ b/monitor/hmp-cmds.c
+@@ -186,12 +186,26 @@ void hmp_gt911_touch(Monitor *mon, const QDict *qdict)
+     int x = qdict_get_int(qdict, "x");
+     int y = qdict_get_int(qdict, "y");
+     Object *obj = gt911_find(object_get_objects_root());
++    /* same resolution order that makes gpio_set work: partial path
++     * match first, then the explicit /machine/soc walk */
++    Object *gpio1 = object_resolve_path("gpio0", NULL);
++    if (!gpio1) {
++        Object *soc = object_resolve_path_component(
++            object_get_objects_root(), "soc");
++        gpio1 = soc ? object_resolve_path_component(soc, "gpio0") : NULL;
++    }
+ 
+     if (!obj) {
+         monitor_printf(mon, "gt911_touch: no gt911 device found\n");
+         return;
+     }
+     gt911_touch(GT911(obj), x, y);
++    /* edge-triggered INT: drive high first (in case the pad idled low),
++     * then assert low — a guaranteed falling edge */
++    if (gpio1) {
++        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 1);
++        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 0);
++    }
+     monitor_printf(mon, "gt911_touch: (%d, %d) INT asserted\n", x, y);
+ }
+ 
+@@ -204,6 +218,15 @@ void hmp_gt911_release(Monitor *mon, const QDict *qdict)
+         return;
+     }
+     gt911_release(GT911(obj));
++    {
++        Object *soc = object_resolve_path_component(
++            object_get_objects_root(), "soc");
++        Object *gpio1 = soc ? object_resolve_path_component(soc, "gpio0")
++                            : NULL;
++        if (gpio1) {
++            qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 0);
++        }
++    }
+     monitor_printf(mon, "gt911_release: INT asserted, next read clears\n");
+ }
+ 
+-- 
+2.43.0
+

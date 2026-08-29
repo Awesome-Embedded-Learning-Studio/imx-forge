@@ -1,0 +1,117 @@
+From 9f45889e104db0f74d0569fa724c7afe8204df03 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Thu, 27 Aug 2026 09:38:37 +0800
+Subject: [PATCH 04/16] monitor: add a gpio_set HMP command for driving GPIO
+ input lines
+
+Board-emulation teaching aid: assert/deassert any device's GPIO input
+from the monitor so key/switch/sensor-IRQ drivers can be exercised
+without hardware.
+
+    (qemu) gpio_set <device> <line> <level>
+
+<device> is a QOM path or a component name resolved under /machine/soc.
+For the i.MX6UL SoC the child names are gpio0..gpio4 mapping to the
+hardware GPIO1..GPIO5 blocks, so the AES board key on GPIO1_IO18 is:
+
+    (qemu) gpio_set gpio0 18 0    # press (active low)
+    (qemu) gpio_set gpio0 18 1    # release
+
+Verified on mcimx6ul-evk + Linux v7.1: devmem of GPIO1 PSR
+(0x0209C008) flips 0x00000000 -> 0x00040000 -> 0x00000000 around the
+two injections.
+---
+ hmp-commands.hx       | 18 ++++++++++++++++++
+ include/monitor/hmp.h |  1 +
+ monitor/hmp-cmds.c    | 27 +++++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+)
+
+diff --git a/hmp-commands.hx b/hmp-commands.hx
+index 7ae2468..00f582a 100644
+--- a/hmp-commands.hx
++++ b/hmp-commands.hx
+@@ -627,6 +627,24 @@ ERST
+         .command_completion = sendkey_completion,
+     },
+ 
++SRST
++``gpio_set`` *device* *line* *level*
++------------------------------------
++Drive a GPIO input line of *device* to *level* (0/1).  *device* is a QOM
++path, or a component name resolved under ``/machine/soc``.  Teaching aid
++for board emulation, e.g. press/release the AES board key on GPIO1_IO18::
++
++    (qemu) gpio_set gpio1 18 0
++    (qemu) gpio_set gpio1 18 1
++ERST
++    {
++        .name       = "gpio_set",
++        .args_type  = "device:s,line:i,level:i",
++        .params     = "device line level",
++        .help       = "drive a GPIO input line (device QOM path or /machine/soc child name)",
++        .cmd        = hmp_gpio_set,
++    },
++
+ SRST
+ ``sendkey`` *keys*
+   Send *keys* to the guest. *keys* could be the name of the
+diff --git a/include/monitor/hmp.h b/include/monitor/hmp.h
+index 9258a04..6fe0f12 100644
+--- a/include/monitor/hmp.h
++++ b/include/monitor/hmp.h
+@@ -109,6 +109,7 @@ void hmp_mouse_move(Monitor *mon, const QDict *qdict);
+ void hmp_mouse_button(Monitor *mon, const QDict *qdict);
+ void hmp_mouse_set(Monitor *mon, const QDict *qdict);
+ void hmp_sendkey(Monitor *mon, const QDict *qdict);
++void hmp_gpio_set(Monitor *mon, const QDict *qdict);
+ void coroutine_fn hmp_screendump(Monitor *mon, const QDict *qdict);
+ void hmp_chardev_add(Monitor *mon, const QDict *qdict);
+ void hmp_chardev_change(Monitor *mon, const QDict *qdict);
+diff --git a/monitor/hmp-cmds.c b/monitor/hmp-cmds.c
+index e9fb8d8..d3e7611 100644
+--- a/monitor/hmp-cmds.c
++++ b/monitor/hmp-cmds.c
+@@ -25,6 +25,8 @@
+ #include "monitor/hmp.h"
+ #include "monitor/hmp-completion.h"
+ #include "monitor/monitor-internal.h"
++#include "hw/core/irq.h"
++#include "qom/object.h"
+ #include "monitor/qdev.h"
+ #include "qapi/error.h"
+ #include "qapi/qapi-commands-control.h"
+@@ -141,6 +143,31 @@ void hmp_stop(Monitor *mon, const QDict *qdict)
+     qmp_stop(NULL);
+ }
+ 
++void hmp_gpio_set(Monitor *mon, const QDict *qdict)
++{
++    const char *dev = qdict_get_str(qdict, "device");
++    int line = qdict_get_int(qdict, "line");
++    int level = qdict_get_int(qdict, "level");
++    Object *obj;
++
++    obj = object_resolve_path(dev, NULL);
++    if (!obj) {
++        Object *soc = object_resolve_path_component(object_get_objects_root(),
++                                                    "soc");
++        if (soc) {
++            obj = object_resolve_path_component(soc, dev);
++        }
++    }
++    if (!obj) {
++        monitor_printf(mon, "gpio_set: device '%s' not found\n", dev);
++        return;
++    }
++
++    qemu_set_irq(qdev_get_gpio_in(DEVICE(obj), line), level);
++    monitor_printf(mon, "gpio_set: %s line %d -> %d\n",
++                   object_get_canonical_path(obj), line, level);
++}
++
+ void hmp_sync_profile(Monitor *mon, const QDict *qdict)
+ {
+     const char *op = qdict_get_try_str(qdict, "op");
+-- 
+2.43.0
+

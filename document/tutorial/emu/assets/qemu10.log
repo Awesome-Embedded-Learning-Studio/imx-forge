@@ -1,0 +1,300 @@
+qemu-system-arm: warning: nic imx.enet.1 has no peer
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 7.1.0-dirty (charliechen@Charliechen) (arm-none-linux-gnueabihf-gcc (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 15.2.1 20251203, GNU ld (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203) #1 Wed Jul  8 17:35:29 CST 2026
+[    0.000000] CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c53c7d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: Awesome Embedded Studio IMX6ULL (i.mx NXP)
+[    0.000000] Memory policy: Data cache writeback
+[    0.000000] Reserved memory: created CMA memory pool at 0x96000000, size 160 MiB
+[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x96000000..0x9fffffff (163840 KiB) map reusable linux,cma
+[    0.000000] psci: probing for conduit method from DT.
+[    0.000000] psci: PSCIv1.1 detected in firmware.
+[    0.000000] psci: Using standard PSCI v0.2 function IDs
+[    0.000000] psci: Trusted OS migration not required
+[    0.000000] psci: SMC Calling Convention v1.0
+[    0.000000] CPU: All CPU(s) started in HYP mode.
+[    0.000000] CPU: Virtualization extensions available.
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000]   HighMem  empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080000000-0x000000009fffffff]
+[    0.000000] Kernel command line: console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw
+[    0.000000] printk: log buffer data + meta data: 262144 + 819200 = 1081344 bytes
+[    0.000000] Dentry cache hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 32768 (order: 5, 131072 bytes, linear)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 131072
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] GIC: Using split EOI/Deactivate mode
+[    0.000000] Switching to timer-based delay loop, resolution 41ns
+[    0.000144] sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+[    0.000495] clocksource: mxc_timer1: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.009582] Console: colour dummy device 80x30
+[    0.010930] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.011059] CPU: Testing write buffer coherency: ok
+[    0.016830] pid_max: default: 32768 minimum: 301
+[    0.020412] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.020500] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.029114] VFS: Finished mounting rootfs on nullfs
+[    0.058972] Setting up static identity map for 0x80100000 - 0x80100078
+[    0.068170] Memory: 333580K/524288K available (13312K kernel code, 1244K rwdata, 3844K rodata, 1024K init, 379K bss, 26132K reserved, 163840K cma-reserved, 0K highmem)
+[    0.076376] devtmpfs: initialized
+[    0.096831] VFP support v0.3: implementor 41 architecture 2 part 30 variant 7 rev 5
+[    0.117358] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.118491] posixtimers hash table entries: 512 (order: 0, 2048 bytes, linear)
+[    0.118859] futex hash table entries: 256 (4096 bytes on 1 NUMA nodes, total 4 KiB, linear).
+[    0.150040] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.167107] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    0.172753] thermal_sys: Registered thermal governor 'step_wise'
+[    0.173064] cpuidle: using governor menu
+[    0.173466] CPU identified as i.MX6UL, silicon rev 1.0
+[    0.197778] /soc/interrupt-controller@a01000: Fixed dependency cycle(s) with /soc/interrupt-controller@a01000
+[    0.198174] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.198174] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.211222] /soc/bus@2000000/clock-controller@20c4000: Fixed dependency cycle(s) with /soc/bus@2000000/gpc@20dc000
+[    0.211463] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.226984] /soc/bus@2000000/gpc@20dc000: Fixed dependency cycle(s) with /soc/bus@2000000/clock-controller@20c4000
+[    0.239979] No ATAGs?
+[    0.241897] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    0.242003] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    0.249435] imx6ul-pinctrl 20e0000.pinctrl: initialized IMX pinctrl driver
+[    0.253159] imx6ul-pinctrl 2290000.pinctrl: no groups defined in /soc/bus@2200000/pinctrl@2290000
+[    0.253282] imx6ul-pinctrl 2290000.pinctrl: initialized IMX pinctrl driver
+[    0.258535] kprobes: kprobe jump-optimization is enabled. All kprobes are optimized if possible.
+[    0.278886] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.300876] gpio gpiochip1: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.306080] gpio gpiochip2: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.311228] gpio gpiochip3: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.316473] gpio gpiochip4: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    0.322988] SCSI subsystem initialized
+[    0.325852] usbcore: registered new interface driver usbfs
+[    0.326115] usbcore: registered new interface driver hub
+[    0.326259] usbcore: registered new device driver usb
+[    0.339501] i2c i2c-0: IMX I2C adapter registered
+[    0.342522] i2c i2c-1: IMX I2C adapter registered
+[    0.347289] mc: Linux media interface: v0.10
+[    0.347995] videodev: Linux video capture interface: v2.00
+[    0.349077] pps_core: LinuxPPS API ver. 1 registered
+[    0.349110] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.349226] PTP clock support registered
+[    0.350054] Advanced Linux Sound Architecture Driver Initialized.
+[    0.359310] Bluetooth: Core ver 2.22
+[    0.359662] NET: Registered PF_BLUETOOTH protocol family
+[    0.359693] Bluetooth: HCI device and connection manager initialized
+[    0.359862] Bluetooth: HCI socket layer initialized
+[    0.359924] Bluetooth: L2CAP socket layer initialized
+[    0.360063] Bluetooth: SCO socket layer initialized
+[    0.365561] clocksource: Switched to clocksource mxc_timer1
+[    0.367483] VFS: Disk quotas dquot_6.6.0
+[    0.367607] VFS: Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+[    0.384595] NET: Registered PF_INET protocol family
+[    0.388911] IP idents hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    0.392655] tcp_listen_portaddr_hash hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.392793] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.392872] TCP established hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.393103] TCP bind hash table entries: 4096 (order: 3, 32768 bytes, linear)
+[    0.393474] TCP: Hash tables configured (established 4096 bind 4096)
+[    0.396523] UDP hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    0.397887] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.401932] RPC: Registered named UNIX socket transport module.
+[    0.401989] RPC: Registered udp transport module.
+[    0.402000] RPC: Registered tcp transport module.
+[    0.402009] RPC: Registered tcp-with-tls transport module.
+[    0.402018] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.413481] Initialise system trusted keyrings
+[    0.418074] workingset: timestamp_bits=30 (anon: 26) max_order=17 bucket_order=0 (anon: 0)
+[    0.424373] NFS: Registering the id_resolver key type
+[    0.424595] Key type id_resolver registered
+[    0.424595] Key type id_legacy registered
+[    0.424595] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    0.424986] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    0.425530] jffs2: version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+[    0.426636] fuse: init (API version 7.45)
+[    0.428945] Key type asymmetric registered
+[    0.429020] Asymmetric key parser 'x509' registered
+[    0.429301] io scheduler mq-deadline registered
+[    0.429357] io scheduler kyber registered
+[    0.429516] io scheduler bfq registered
+[    0.453598] imx-sdma 20ec000.dma-controller: external firmware not found, using ROM firmware
+[    0.455225] stmp_reset_block((ptrval)): module reset timeout
+[    0.456752] mxs-dma 1804000.dma-controller: probe with driver mxs-dma failed with error -110
+[    0.459640] imx_soc_device_init: failed to find fsl,imx6ul-ocotp regmap!
+[    0.472163] 2020000.serial: ttymxc0 at MMIO 0x2020000 (irq = 191, base_baud = 5000000) is a IMX
+[    0.476449] printk: console [ttymxc0] enabled
+[    0.519741] panel-simple panel-dpi: Specify missing bus_format
+[    0.519802] panel-simple panel-dpi: Expected bpc in {6,8} but got: 0
+[    0.526310] cacheinfo: Unable to detect cache hierarchy for CPU 0
+[    0.555585] brd: module loaded
+[    0.568894] loop: module loaded
+[    0.586168] spi_imx 2010000.spi: error -ENODEV: can't get the TX DMA channel!
+[    0.591346] CAN device driver interface
+[    0.592499] usbcore: registered new device driver r8152-cfgselector
+[    0.592675] usbcore: registered new interface driver r8152
+[    0.592790] usbcore: registered new interface driver lan78xx
+[    0.592875] usbcore: registered new interface driver asix
+[    0.592987] usbcore: registered new interface driver ax88179_178a
+[    0.593096] usbcore: registered new interface driver cdc_ether
+[    0.593344] usbcore: registered new interface driver smsc95xx
+[    0.593485] usbcore: registered new interface driver net1080
+[    0.593627] usbcore: registered new interface driver cdc_subset
+[    0.593721] usbcore: registered new interface driver zaurus
+[    0.593868] usbcore: registered new interface driver MOSCHIP usb-ethernet driver
+[    0.594594] usbcore: registered new interface driver cdc_ncm
+[    0.594594] usbcore: registered new interface driver r8153_ecm
+[    0.601704] usbcore: registered new interface driver usb-storage
+[    0.602598] usbcore: registered new device driver onboard-usb-dev
+[    0.607373] imx_usb 2184000.usb: No over current polarity defined
+[    0.617926] input: 20cc000.snvs:snvs-powerkey as /devices/platform/soc/2000000.bus/20cc000.snvs/20cc000.snvs:snvs-powerkey/input/input0
+[    0.624595] snvs_rtc 20cc000.snvs:snvs-rtc-lp: failed to enable rtc -110
+[    0.624644] snvs_rtc 20cc000.snvs:snvs-rtc-lp: probe with driver snvs_rtc failed with error -110
+[    0.626572] i2c_dev: i2c /dev entries driver
+[    0.638500] Bluetooth: HCI UART driver ver 2.3
+[    0.638602] Bluetooth: HCI UART protocol H4 registered
+[    0.638691] Bluetooth: HCI UART protocol LL registered
+[    0.638776] Bluetooth: HCI UART protocol Broadcom registered
+[    0.649113] usbcore: registered new interface driver usbhid
+[    0.649185] usbhid: USB HID core driver
+[    0.653644] hw perfevents: enabled with armv7_cortex_a7 PMU driver, 5 (8000000f) counters available
+[    0.709523] mmc1: SDHCI controller on 2194000.mmc [2194000.mmc] using ADMA
+[    0.733822] mmc1: host does not support reading read-only switch, assuming write-enable
+[    0.734593] mmc1: new high speed SD card at address 4567
+[    0.739399] mmcblk1: mmc1:4567 QEMU! 256 MiB
+[    0.895395] i2c i2c-0: <i2c_imx_read> read timedout
+[    1.205342] i2c i2c-0: <i2c_imx_write> write timedout
+[    1.205504] wm8960 0-001a: Failed to issue reset
+[    1.207550] wm8960 0-001a: probe with driver wm8960 failed with error -110
+[    1.234641] NET: Registered PF_INET6 protocol family
+[    1.243411] Segment Routing with IPv6
+[    1.244255] In-situ OAM (IOAM) with IPv6
+[    1.244595] NET: Registered PF_PACKET protocol family
+[    1.244595] can: controller area network core
+[    1.245983] NET: Registered PF_CAN protocol family
+[    1.246056] can: raw protocol
+[    1.246162] can: broadcast manager protocol
+[    1.246447] can: netlink gateway - max_hops=1
+[    1.247425] Key type dns_resolver registered
+[    1.264279] Loading compiled-in X.509 certificates
+[    1.294203] imx_usb 2184000.usb: No over current polarity defined
+[    1.298864] imx_usb 2184000.usb: No over current polarity defined
+[    1.305110] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    1.327180] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    1.329555] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    1.329869] clk: Disabling unused clocks
+[    1.336669] PM: genpd: Disabling unused power domains
+[    1.338506] ALSA device list:
+[    1.338588]   #0: ASRC-M2M
+[    1.448674] EXT4-fs (mmcblk1): mounted filesystem 18f15aaa-2050-498f-b629-db70417b1feb r/w with ordered data mode. Quota mode: none.
+[    1.451722] VFS: Mounted root (ext4 filesystem) on device 179:0.
+[    1.458235] devtmpfs: mounted
+[    1.460114] VFS: Pivoted into new rootfs
+[    1.492814] Freeing unused kernel image (initmem) memory: 1024K
+[    1.497944] Run /sbin/init as init process
+[    2.086295] EXT4-fs (mmcblk1): re-mounted 18f15aaa-2050-498f-b629-db70417b1feb.
+Seeding 256 bits and crediting
+[    2.963740] random: crng init done
+Saving 256 bits of creditable seed for next boot
+Starting syslogd: OK
+Starting klogd: OK
+Running sysctl: OK
+Starting udevd: OK
+[    4.155979] udevd[80]: starting version 3.2.14
+[    4.330118] udevd[80]: specified group 'input' unknown
+[    4.333543] udevd[80]: specified group 'sgx' unknown
+[    4.365504] udevd[80]: specified group 'kvm' unknown
+[    4.571846] udevd[80]: starting eudev-3.2.14
+Starting network: OK
+Starting ifplugd for eth0: OK
+Starting crond: OK
+Starting dropbear sshd: OK
+Starting telnetd: OK
+[   11.404743] flexcan 2090000.can: registering netdev failed
+[   11.425570] flexcan 2090000.can: probe with driver flexcan failed with error -110
+[   11.652190] imx_usb 2184000.usb: No over current polarity defined
+[   11.652877] 8<--- cut here ---
+[   11.652943] Unhandled fault: external abort on non-linefetch (0x008) at 0xe0879800
+[   11.653032] [e0879800] *pgd=8201d811, *pte=02184653, *ppte=02184453
+[   11.654849] Internal error: : 8 [#1] ARM
+[   11.657015] Modules linked in:
+[   11.657817] CPU: 0 UID: 0 PID: 35 Comm: kworker/u4:2 Not tainted 7.1.0-dirty #1 VOLUNTARY 
+[   11.658142] Hardware name: Freescale i.MX6 Ultralite (Device Tree)
+[   11.658725] Workqueue: events_unbound deferred_probe_work_func
+[   11.659893] PC is at usbmisc_imx6q_init+0x2c/0x138
+[   11.660230] LR is at usbmisc_imx6sx_init+0x18/0xf8
+[   11.660454] pc : [<c08d9ce0>]    lr : [<c08d9e04>]    psr: 800f0193
+[   11.660793] sp : e0a79d30  ip : 00000001  fp : 00000000
+[   11.661026] r10: c24d2330  r9 : d5fa1a4c  r8 : 00000000
+[   11.661220] r7 : 800f0113  r6 : c24b57c0  r5 : c24b57c0  r4 : c29d9640
+[   11.661532] r3 : e0879800  r2 : 00000000  r1 : 00000200  r0 : c29d9640
+[   11.662062] Flags: Nzcv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment none
+[   11.663176] Control: 10c53c7d  Table: 82864059  DAC: 00000051
+[   11.664071] Register r0 information: slab kmalloc-128 start c29d9600 pointer offset 64 size 128
+[   11.664794] Register r1 information: non-paged memory
+[   11.665111] Register r2 information: NULL pointer
+[   11.665369] Register r3 information: 0-page vmalloc region starting at 0xe0879000 allocated at __devm_ioremap_resource+0x1a8/0x1e8
+[   11.666024] Register r4 information: slab kmalloc-128 start c29d9600 pointer offset 64 size 128
+[   11.667233] Register r5 information: slab kmalloc-128 start c24b5780 pointer offset 64 size 128
+[   11.667580] Register r6 information: slab kmalloc-128 start c24b5780 pointer offset 64 size 128
+[   11.667915] Register r7 information: non-paged memory
+[   11.668155] Register r8 information: NULL pointer
+[   11.668342] Register r9 information: non-slab/vmalloc memory
+[   11.668646] Register r10 information: slab kmalloc-128 start c24d2300 pointer offset 48 size 128
+[   11.669274] Register r11 information: NULL pointer
+[   11.669442] Register r12 information: non-paged memory
+[   11.669647] Process kworker/u4:2 (pid: 35, stack limit = 0x1bffdf87)
+[   11.670683] Stack: (0xe0a79d30 to 0xe0a7a000)
+[   11.670933] 9d20:                                     c29d9640 c24b57c0 c23b1580 c2139c10
+[   11.671288] 9d40: 00000000 c08d9e04 c23b1580 c2139c10 00000000 c2139c00 00000000 c2139c00
+[   11.671526] 9d60: 00000000 c08dbe30 00000000 00000000 00000008 d5fa1a4c c2141600 00000100
+[   11.671786] 9d80: 00000000 00000000 c25ffa40 00000000 00080086 00000000 c08db1c8 00000000
+[   11.672095] 9da0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[   11.672340] 9dc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[   11.672574] 9de0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[   11.672797] 9e00: 00000000 297a9fb3 c14f87fc c2139c10 c14f87fc c14f87fc 00000000 00000005
+[   11.673056] 9e20: c14ee324 c0764e34 c2139c10 00000000 c14f87fc c0762460 c2139c10 c14f87fc
+[   11.673295] 9e40: c2139c10 c2139c10 00000005 c07626fc c24d2330 c0a2ccb8 c158d24c c158d254
+[   11.673531] 9e60: c2139c10 c2139c10 00000005 c0762904 c14f87fc e0a79ed4 c2139c10 c07629e8
+[   11.673830] 9e80: c2017f05 c0762a88 00000000 00000000 00000000 c2042300 e0a79ed4 c0760500
+[   11.674148] 9ea0: c2042300 c2042358 c24b55b4 297a9fb3 00000000 c2139c10 c2042300 00000001
+[   11.674442] 9ec0: c2042300 c0762de4 c29f9c00 c2139c10 c14ee174 c2139c10 00000001 297a9fb3
+[   11.674737] 9ee0: c2139c10 c2042300 c2139c10 c0763038 00000000 c2042300 c2139c10 c07613e4
+[   11.674997] 9f00: c2139c10 c14ee2fc 00000000 00800000 c2017f05 c076194c c24d2300 c14ee320
+[   11.675357] 9f20: c2017f00 c0149e04 00000000 c2302300 c2009800 c14d5bd0 c200981c c2302300
+[   11.675631] 9f40: 00000402 c24d2300 c2009800 c14d5bd0 c200981c c2302300 00000402 c014a754
+[   11.675872] 9f60: c014a5f0 c24d2300 e08e5ec8 c24cecc0 c2302300 c24d2200 c014a5f0 c24d2300
+[   11.676107] 9f80: e08e5ec8 00000000 00000000 c0153404 c24cecc0 c0153328 00000000 00000000
+[   11.676364] 9fa0: 00000000 00000000 00000000 c010016c 00000000 00000000 00000000 00000000
+[   11.676628] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[   11.676904] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+[   11.677305] Call trace: 
+[   11.678099]  usbmisc_imx6q_init from usbmisc_imx6sx_init+0x18/0xf8
+[   11.679043]  usbmisc_imx6sx_init from ci_hdrc_imx_probe+0x3d4/0x730
+[   11.679335]  ci_hdrc_imx_probe from platform_probe+0x58/0x90
+[   11.679571]  platform_probe from really_probe+0xc4/0x2d0
+[   11.679768]  really_probe from __driver_probe_device+0x90/0x1c8
+[   11.679976]  __driver_probe_device from driver_probe_device+0x34/0x118
+[   11.680215]  driver_probe_device from __device_attach_driver+0xa0/0x128
+[   11.680446]  __device_attach_driver from bus_for_each_drv+0x90/0xe4
+[   11.680655]  bus_for_each_drv from __device_attach+0xa0/0x1b0
+[   11.680854]  __device_attach from device_initial_probe+0x48/0x64
+[   11.681069]  device_initial_probe from bus_probe_device+0x24/0x78
+[   11.681284]  bus_probe_device from deferred_probe_work_func+0x70/0xa0
+[   11.681508]  deferred_probe_work_func from process_one_work+0x138/0x2dc
+[   11.681788]  process_one_work from worker_thread+0x164/0x2f8
+[   11.681993]  worker_thread from kthread+0xdc/0x104
+[   11.682159]  kthread from ret_from_fork+0x14/0x28
+[   11.682428] Exception stack(0xe0a79fb0 to 0xe0a79ff8)
+[   11.682620] 9fa0:                                     00000000 00000000 00000000 00000000
+[   11.682888] 9fc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[   11.683128] 9fe0: 00000000 00000000 00000000 00000000 00000013 00000000
+[   11.683550] Code: f10c0080 e5902004 e5963000 e0833102 (e5932000) 
+[   11.684047] ---[ end trace 0000000000000000 ]---
+[   11.684519] note: kworker/u4:2[35] exited with irqs disabled
+
+Welcome to Buildroot
+buildroot login: qemu-system-arm: terminating on signal 15 from pid 169956 (timeout)

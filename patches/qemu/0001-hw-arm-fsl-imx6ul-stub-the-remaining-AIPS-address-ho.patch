@@ -1,0 +1,48 @@
+From 559056642bef4c1f0b14b43b1fd23cd6f939fc07 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Wed, 26 Aug 2026 22:47:47 +0800
+Subject: [PATCH 01/16] hw/arm: fsl-imx6ul: stub the remaining AIPS address
+ holes (dcp/rngb/pxp/csi/tsc)
+
+Boards derived from the i.MX6ULL 14x14 EVK enable DCP, RNGB, CSI, PXP and
+the resistive TSC in their device trees. Upstream leaves those addresses
+unmapped, so the matching drivers take external aborts during
+of_platform_populate and kill PID 1 before the serial console comes up.
+
+Stub all five so the drivers probe-fail softly instead. PXP and CSI reuse
+the address constants already defined in the memory map enum; DCP/RNGB/TSC
+have none, hence the literals.
+
+For the AES teaching board this closes the last raw holes in its tree.
+---
+ hw/arm/fsl-imx6ul.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/hw/arm/fsl-imx6ul.c b/hw/arm/fsl-imx6ul.c
+index 1863558..89cdd53 100644
+--- a/hw/arm/fsl-imx6ul.c
++++ b/hw/arm/fsl-imx6ul.c
+@@ -659,6 +659,20 @@ static void fsl_imx6ul_realize(DeviceState *dev, Error **errp)
+                                     FSL_IMX6UL_ADCn_SIZE);
+     }
+ 
++    /*
++     * Devices left as raw address holes upstream but enabled by real board
++     * trees (e.g. i.MX6ULL EVK derivatives with DCP/RNGB/CSI/PXP). Stub
++     * them so their drivers soft-fail instead of taking external aborts.
++     * dcp/rngb/tsc have no address constants defined, hence the literals.
++     */
++    create_unimplemented_device("a7mpcore-dcp", 0x02280000, 4 * KiB);
++    create_unimplemented_device("a7mpcore-rngb", 0x02284000, 4 * KiB);
++    create_unimplemented_device("a7mpcore-pxp", FSL_IMX6UL_PXP_ADDR,
++                                FSL_IMX6UL_PXP_SIZE);
++    create_unimplemented_device("a7mpcore-csi", FSL_IMX6UL_CSI_ADDR,
++                                FSL_IMX6UL_CSI_SIZE);
++    create_unimplemented_device("a7mpcore-tsc", 0x02040000, 4 * KiB);
++
+     /*
+      * LCD
+      */
+-- 
+2.43.0
+

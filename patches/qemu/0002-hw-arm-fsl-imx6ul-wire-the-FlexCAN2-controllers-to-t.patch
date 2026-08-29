@@ -1,0 +1,168 @@
+From c72a98dc7aeeecdd90933c861a7537c0fc048d52 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Wed, 26 Aug 2026 22:48:57 +0800
+Subject: [PATCH 02/16] hw/arm: fsl-imx6ul: wire the FlexCAN2 controllers to
+ the SoC
+
+The FlexCAN device model (hw/net/can/flexcan.c) exists and is wired to
+FSL_IMX6 (Sabrelite) and FSL_IMX8MP, but the 6UL SoC still creates
+unimplemented stubs for CAN1/CAN2. Wire two TYPE_CAN_FLEXCAN2 instances
+to the existing CAN1/CAN2 MMIO windows and IRQs 110/111, following the
+fsl-imx6.c pattern.
+
+Also:
+- expose canbus0/canbus1 link properties on the SoC (same as fsl-imx6)
+- mcimx6ul-evk: create one internal can-bus shared by both controllers,
+  so a guest can loop frames between can0 and can1 with no CLI wiring
+- imx6ul_ccm: answer the CLK_CAN query with the IPG rate (the CSCMR2
+  CAN clock tree is not modeled; this keeps bit-timing sane)
+
+Verified on the mcimx6ul-evk machine with Linux v7.1 + a 6ULL EVK-derived
+board tree: flexcan registers netdev can0 and comes up to 'bit-timing not
+yet defined' instead of probing into a stub.
+---
+ hw/arm/Kconfig              |  1 +
+ hw/arm/fsl-imx6ul.c         | 33 +++++++++++++++++++++++++++------
+ hw/arm/mcimx6ul-evk.c       | 12 ++++++++++++
+ hw/misc/imx6ul_ccm.c        |  7 +++++++
+ include/hw/arm/fsl-imx6ul.h |  4 ++++
+ 5 files changed, 51 insertions(+), 6 deletions(-)
+
+diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
+index 82e0bc2..5359cda 100644
+--- a/hw/arm/Kconfig
++++ b/hw/arm/Kconfig
+@@ -669,6 +669,7 @@ config FSL_IMX6UL
+     select IMX6UL_LCDIF
+     select IMX_FEC
+     select IMX_I2C
++    select CAN_FLEXCAN
+     select IMX_USBPHY
+     select WDT_IMX2
+     select SDHCI
+diff --git a/hw/arm/fsl-imx6ul.c b/hw/arm/fsl-imx6ul.c
+index 89cdd53..a698f70 100644
+--- a/hw/arm/fsl-imx6ul.c
++++ b/hw/arm/fsl-imx6ul.c
+@@ -65,6 +65,11 @@ static void fsl_imx6ul_init(Object *obj)
+      */
+     object_initialize_child(obj, "snvs", &s->snvs, TYPE_IMX7_SNVS);
+ 
++    for (i = 0; i < FSL_IMX6UL_NUM_CANS; i++) {
++        snprintf(name, NAME_SIZE, "flexcan%d", i + 1);
++        object_initialize_child(obj, name, &s->flexcan[i], TYPE_CAN_FLEXCAN2);
++    }
++
+     /*
+      * GPIOs
+      */
+@@ -629,14 +634,26 @@ static void fsl_imx6ul_realize(DeviceState *dev, Error **errp)
+      * CANs
+      */
+     for (i = 0; i < FSL_IMX6UL_NUM_CANS; i++) {
+-        static const hwaddr FSL_IMX6UL_CANn_ADDR[FSL_IMX6UL_NUM_CANS] = {
+-            FSL_IMX6UL_CAN1_ADDR,
+-            FSL_IMX6UL_CAN2_ADDR,
++        static const struct {
++            hwaddr addr;
++            unsigned int irq;
++        } flexcan_table[FSL_IMX6UL_NUM_CANS] = {
++            { FSL_IMX6UL_CAN1_ADDR, FSL_IMX6UL_CAN1_IRQ },
++            { FSL_IMX6UL_CAN2_ADDR, FSL_IMX6UL_CAN2_IRQ },
+         };
+ 
+-        snprintf(name, NAME_SIZE, "can%d", i);
+-        create_unimplemented_device(name, FSL_IMX6UL_CANn_ADDR[i],
+-                                    FSL_IMX6UL_CANn_SIZE);
++        object_property_set_link(OBJECT(&s->flexcan[i]),
++                                 "clock-control-module",
++                                 OBJECT(&s->ccm), &error_abort);
++        object_property_set_link(OBJECT(&s->flexcan[i]), "canbus",
++                                 OBJECT(s->canbus[i]), &error_abort);
++
++        sysbus_realize(SYS_BUS_DEVICE(&s->flexcan[i]), &error_abort);
++
++        sysbus_mmio_map(SYS_BUS_DEVICE(&s->flexcan[i]), 0,
++                        flexcan_table[i].addr);
++        sysbus_connect_irq(SYS_BUS_DEVICE(&s->flexcan[i]), 0,
++                           qdev_get_gpio_in(gic, flexcan_table[i].irq));
+     }
+ 
+     /*
+@@ -735,6 +752,10 @@ static const Property fsl_imx6ul_properties[] = {
+                      true),
+     DEFINE_PROP_BOOL("fec2-phy-connected", FslIMX6ULState, phy_connected[1],
+                      true),
++    DEFINE_PROP_LINK("canbus0", FslIMX6ULState, canbus[0], TYPE_CAN_BUS,
++                     CanBusState *),
++    DEFINE_PROP_LINK("canbus1", FslIMX6ULState, canbus[1], TYPE_CAN_BUS,
++                     CanBusState *),
+ };
+ 
+ static void fsl_imx6ul_class_init(ObjectClass *oc, const void *data)
+diff --git a/hw/arm/mcimx6ul-evk.c b/hw/arm/mcimx6ul-evk.c
+index 6e9d92b..295d094 100644
+--- a/hw/arm/mcimx6ul-evk.c
++++ b/hw/arm/mcimx6ul-evk.c
+@@ -45,6 +45,18 @@ static void mcimx6ul_evk_init(MachineState *machine)
+     object_property_set_uint(OBJECT(s), "fec2-phy-num", 1, &error_fatal);
+     object_property_set_bool(OBJECT(s), "fec1-phy-connected", false,
+                              &error_fatal);
++    /*
++     * Both FlexCAN controllers share one internal CAN bus, so the guest can
++     * loop frames between can0 and can1 without CLI wiring. To bridge the
++     * bus to the outside world (vcan/socketcan) override soc.canbus0/canbus1
++     * with -object can-bus from a machine variant.
++     */
++    {
++        Object *canbus = object_new(TYPE_CAN_BUS);
++        object_property_add_child(OBJECT(machine), "can-bus", canbus);
++        object_property_set_link(OBJECT(s), "canbus0", canbus, &error_fatal);
++        object_property_set_link(OBJECT(s), "canbus1", canbus, &error_fatal);
++    }
+     qdev_realize(DEVICE(s), NULL, &error_fatal);
+ 
+     memory_region_add_subregion(get_system_memory(), FSL_IMX6UL_MMDC_ADDR,
+diff --git a/hw/misc/imx6ul_ccm.c b/hw/misc/imx6ul_ccm.c
+index c4f6e37..026e6b1 100644
+--- a/hw/misc/imx6ul_ccm.c
++++ b/hw/misc/imx6ul_ccm.c
+@@ -522,6 +522,13 @@ static uint32_t imx6ul_ccm_get_clock_frequency(IMXCCMState *dev, IMXClk clock)
+     case CLK_32k:
+         freq = CKIL_FREQ;
+         break;
++    case CLK_CAN:
++        /*
++         * The CSCMR2 CAN clock tree is not modeled; the IPG rate keeps the
++         * FlexCAN model's bit-timing arithmetic sane.
++         */
++        freq = imx6ul_ccm_get_ipg_clk(s);
++        break;
+     default:
+         qemu_log_mask(LOG_GUEST_ERROR, "[%s]%s: unsupported clock %d\n",
+                       TYPE_IMX6UL_CCM, __func__, clock);
+diff --git a/include/hw/arm/fsl-imx6ul.h b/include/hw/arm/fsl-imx6ul.h
+index 6205fe6..80948a2 100644
+--- a/include/hw/arm/fsl-imx6ul.h
++++ b/include/hw/arm/fsl-imx6ul.h
+@@ -24,6 +24,7 @@
+ #include "hw/intc/imx_gpcv2.h"
+ #include "hw/watchdog/wdt_imx2.h"
+ #include "hw/gpio/imx_gpio.h"
++#include "hw/net/flexcan.h"
+ #include "hw/char/imx_serial.h"
+ #include "hw/timer/imx_gpt.h"
+ #include "hw/timer/imx_epit.h"
+@@ -93,6 +94,9 @@ struct FslIMX6ULState {
+ 
+     uint32_t           phy_num[FSL_IMX6UL_NUM_ETHS];
+     bool               phy_connected[FSL_IMX6UL_NUM_ETHS];
++
++    FlexcanState       flexcan[FSL_IMX6UL_NUM_CANS];
++    CanBusState        *canbus[FSL_IMX6UL_NUM_CANS];
+ };
+ 
+ enum FslIMX6ULMemoryMap {
+-- 
+2.43.0
+

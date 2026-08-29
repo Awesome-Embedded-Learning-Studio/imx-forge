@@ -32,6 +32,7 @@ const LEARNING_ORDER = [
   'kernel',
   'rootfs',
   'buildroot',
+  'emu',
   'driver',
   'practical',
   'project',

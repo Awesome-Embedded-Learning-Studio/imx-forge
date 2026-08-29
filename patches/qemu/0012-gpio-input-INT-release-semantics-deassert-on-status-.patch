@@ -1,0 +1,146 @@
+From 95204dc1367c2538005c1cb3be9f907d4fdc89db Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Fri, 28 Aug 2026 20:41:40 +0800
+Subject: [PATCH 12/16] =?UTF-8?q?gpio+input:=20INT=20release=20semantics?=
+ =?UTF-8?q?=20=E2=80=94=20deassert=20on=20status=20read,=20no=20re-assert?=
+ =?UTF-8?q?=20on=20ack?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- gt911: real silicon deasserts INT once the status byte at 0x814e is
+  READ (not when the driver writes the clear); the model does the same
+  on recv, and the 0x814e write drives the GPIO pad high through the
+  same direct path (the named-gpio-out wiring never propagated).
+- imx_gpio: after the guest acks the ISR, do not re-run
+  set_all_int_lines() — on silicon a still-matching level input
+  re-asserts only after the ISR work physically lifted the source;
+  under TCG that window is a thousand times wider than the re-assert
+  loop, storming the bank IRQ between ack and the threaded handler's
+  first I2C read.
+
+Known remaining: guest input stream lacks ABS_MT_POSITION events (only
+SLOT + BTN_TOUCH appear) so userspace cannot locate the tap; next batch
+traces input_mt_init_slots / axis registration.
+---
+ hw/gpio/imx_gpio.c | 15 ++++++++++++++-
+ hw/input/gt911.c   | 45 ++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 46 insertions(+), 14 deletions(-)
+
+diff --git a/hw/gpio/imx_gpio.c b/hw/gpio/imx_gpio.c
+index 5abf208..9ea9bb3 100644
+--- a/hw/gpio/imx_gpio.c
++++ b/hw/gpio/imx_gpio.c
+@@ -238,7 +238,20 @@ static void imx_gpio_write(void *opaque, hwaddr offset, uint64_t value,
+ 
+     case ISR_ADDR:
+         s->isr &= ~value;
+-        imx_gpio_set_all_int_lines(s);
++        /*
++         * Do NOT re-run imx_gpio_set_all_int_lines() here. On real
++         * silicon a level-triggered input that still matches after the
++         * guest's ack re-asserts the line, but only after the ISR work
++         * has had physical time to lift the source (an I2C read on a
++         * touchscreen, say). Under TCG that "physical time" is a
++         * thousand times wider than the re-assert loop, so the GPIO
++         * bank IRQ storms for hundreds of spurious iterations between
++         * the guest's ack and the threaded handler's first I2C read —
++         * burying the input core in synthetic (0,0) releases. The line
++         * is re-evaluated on the next actual input level change
++         * (imx_gpio_set), which is exactly when the source has moved.
++         */
++        imx_gpio_update_int(s);
+         break;
+ 
+     case EDGE_SEL_ADDR:
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index fbb1516..4eae1ef 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -87,12 +87,31 @@ static uint8_t gt911_read_reg(GT911State *s, uint16_t reg)
+     return 0x00;
+ }
+ 
++static void gt911_set_int(int level)
++{
++    Object *gpio1 = object_resolve_path("gpio0", NULL);
++
++    if (gpio1) {
++        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), level);
++    }
++}
++
++static void gt911_assert_int(void)
++{
++    /* high first (in case the pad idled low), then assert — a guaranteed
++     * falling edge, and a low LEVEL for level-triggered irq setups */
++    gt911_set_int(1);
++    gt911_set_int(0);
++}
++
+ static void gt911_write_reg(GT911State *s, uint16_t reg, uint8_t val)
+ {
+     if (reg == GT911_REG_COOR) {
+-        /* the driver writes 0 here to end the interrupt handshake */
++        /* the driver writes 0 here to end the interrupt handshake;
++         * the INT pad must actually go high or a level-triggered irq
++         * storms forever and buries userspace in release events */
+         s->pending = false;
+-        qemu_set_irq(s->int_line, 1);   /* INT deasserts (active low) */
++        gt911_set_int(1);
+         return;
+     }
+     if (reg >= GT911_REG_CONFIG_DATA &&
+@@ -117,6 +136,14 @@ static uint8_t gt911_recv(I2CSlave *i2c)
+     GT911State *s = GT911(i2c);
+     uint8_t val = gt911_read_reg(s, s->addr);
+ 
++    /* Real silicon deasserts INT once the status byte at 0x814e is READ
++     * (not when the driver writes the clear) — otherwise a level-triggered
++     * GPIO bank irq storms between the guest's read and the trailing write
++     * and buries userspace in synthetic release events. */
++    if (s->addr == GT911_REG_COOR) {
++        gt911_set_int(1);
++    }
++
+     s->addr = (s->addr + 1) & 0xffff;
+     return val;
+ }
+@@ -152,16 +179,6 @@ static int gt911_send(I2CSlave *i2c, uint8_t data)
+  * order the gpio_set HMP command uses), side-stepping the named-gpio-out
+  * wiring.
+  */
+-static void gt911_assert_int(void)
+-{
+-    Object *gpio1 = object_resolve_path("gpio0", NULL);
+-
+-    if (gpio1) {
+-        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 1);
+-        qemu_set_irq(qdev_get_gpio_in(DEVICE(gpio1), 9), 0);
+-    }
+-}
+-
+ void gt911_touch(GT911State *s, uint16_t x, uint16_t y)
+ {
+     s->touch_x = x;
+@@ -198,6 +215,8 @@ static void gt911_input_event(DeviceState *dev, QemuConsole *src,
+         }
+         break;
+     case INPUT_EVENT_KIND_BTN:
++                (int)evt->btn.button, (int)evt->btn.down,
++                s->host_x, s->host_y);
+         if (evt->btn.button == INPUT_BUTTON_LEFT) {
+             if (evt->btn.down) {
+                 gt911_touch(s, s->host_x, s->host_y);
+@@ -229,7 +248,7 @@ static void gt911_reset_hold(Object *obj, ResetType type)
+     s->pending = false;
+     s->touch_x = 0;
+     s->touch_y = 0;
+-    qemu_set_irq(s->int_line, 1);
++    gt911_set_int(1);
+ }
+ 
+ static void gt911_init(Object *obj)
+-- 
+2.43.0
+

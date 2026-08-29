@@ -1,0 +1,54 @@
+From 43bb4964215783b7140ff6455a247bcf7c8746bc Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Sat, 29 Aug 2026 09:54:39 +0800
+Subject: [PATCH 13/16] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20the=20reg?=
+ =?UTF-8?q?ister=20window=20cut=20off=20the=20contact=20bytes?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+GT911_REG_END was 0x8150, i.e. only TWO bytes past the 0x814e status
+register — the 8-byte contact (track id, x, y, width) never made it
+into gt911_read_reg's bounce buffer, so the driver saw a valid status
+byte (0x81, 1 contact) followed by nine zeros and reported every touch
+at (0,0). Extend the window to 0x8158 (status + 8-byte contact + key
+footer, matching GOODIX_MAX_CONTACT_SIZE).
+
+Verified end to end: gt911_touch 512 300 → evdev stream now carries
+ABS_MT_POSITION_X=512 / ABS_MT_POSITION_Y=300 (hexdump), and the Qt
+lcd_button probe logs TouchBegin pos=(512,300) with MousePress landing
+on the QPushButton itself.
+---
+ hw/input/gt911.c         | 2 --
+ include/hw/input/gt911.h | 2 +-
+ 2 files changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index 4eae1ef..dedbd13 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -215,8 +215,6 @@ static void gt911_input_event(DeviceState *dev, QemuConsole *src,
+         }
+         break;
+     case INPUT_EVENT_KIND_BTN:
+-                (int)evt->btn.button, (int)evt->btn.down,
+-                s->host_x, s->host_y);
+         if (evt->btn.button == INPUT_BUTTON_LEFT) {
+             if (evt->btn.down) {
+                 gt911_touch(s, s->host_x, s->host_y);
+diff --git a/include/hw/input/gt911.h b/include/hw/input/gt911.h
+index 4c0daae..a09137b 100644
+--- a/include/hw/input/gt911.h
++++ b/include/hw/input/gt911.h
+@@ -36,7 +36,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(GT911State, GT911)
+ #define GT911_REG_CONFIG_DATA  0x8047
+ #define GT911_REG_ID           0x8140
+ #define GT911_REG_COOR         0x814e
+-#define GT911_REG_END          0x8150
++#define GT911_REG_END          0x8158
+ 
+ struct GT911State {
+     /*< private >*/
+-- 
+2.43.0
+
