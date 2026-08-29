@@ -1,7 +1,7 @@
 From 7ea9c8387213317a2ad58551518b85a60632221c Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Thu, 27 Aug 2026 09:55:32 +0800
-Subject: [PATCH 05/13] hw/sensor: add an AP3216C ambient light / proximity /
+Subject: [PATCH 05/14] hw/sensor: add an AP3216C ambient light / proximity /
  IR sensor model
 
 Minimal teaching model for boards carrying an AP3216C on i2c1 @ 0x1e
