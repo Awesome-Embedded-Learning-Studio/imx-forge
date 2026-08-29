@@ -18,6 +18,9 @@ title: QEMU 板级模拟
   <ChapterLink num="03" href="03_rootfs_image.md">rootfs 变 SD 卡:一张会被当场拒收的镜像</ChapterLink>
   <ChapterLink num="04" href="04_whack_a_mole.md">打地鼠八连:从串口死寂到 buildroot login</ChapterLink>
   <ChapterLink num="05" href="05_toolchain.md">三件套封装:run-qemu.sh 与防陈旧的自动重建</ChapterLink>
+  <ChapterLink num="06" href="06_peripheral_models.md">外设模型群:从传感器到触摸屏的自建之路</ChapterLink>
+  <ChapterLink num="07" href="07_gt911_debug.md">gt911 触摸排查实录:四个真 bug 的定位之旅</ChapterLink>
+  <ChapterLink num="08" href="08_equivalence.md">等价性原则:为什么真机和 QEMU 用同一份设备树</ChapterLink>
 </ChapterNav>
 
 ::: tip 学习目标
@@ -30,7 +33,7 @@ title: QEMU 板级模拟
 
 ## 路线图:后面还有什么
 
-本卷五章覆盖的是「直启链路」——内核 + dtb + rootfs 直接进 QEMU,用发行版自带的 QEMU 8.2 就能全链路跑通的部分。再往前还有两级,素材落地后继续补章:一级是 CI 冒烟,把 `run-qemu.sh --smoke` 挂进 GitHub Actions,让每次内核提交自动回答「能不能开机」;另一级是外设深潜,给 ap3216c、icm20608 这些教学传感器写 QEMU 器件模型,让驱动章节的 `.ko` 也能在模拟器里真跑。那是另一场折腾,笔者的手已经痒了。
+01-05 章覆盖「直启链路」,06-08 章覆盖 2026-08 下旬的「外设模型 + 等价性」阶段:自建 QEMU v11.1(16 个 patch 序列)、七个教学外设模型(PWM/gpio_set/ap3216c/icm20608/gt911/wm8960/FlexCAN)、gt911 触摸的四个真 bug 排查(REG_END 窗口截断/释放语义/手指-报告状态混淆/INT 电平)、以及消灭变体设备树回到真机单源。CI 冒烟(e2e-test.sh 15 项断言)已落地为脚本,教程章待补。触摸链路至发稿时可用(按下/松开/拖动全配对),剩余一个双 Begin 装饰性伪影待修——根因(poll 间隙 INT idle 电平)已定位。
 
 ::: info 配套产物
 本卷所有脚本已进仓库 `scripts/qemu_helper/`(三个脚本的用法详解见 [run-qemu.sh 文档](../../scripts/qemu_helper/run-qemu.sh.md)、[make-rootfs-img.sh 文档](../../scripts/qemu_helper/make-rootfs-img.sh.md) 与 [make-qemu-dtb.sh 文档](../../scripts/qemu_helper/make-qemu-dtb.sh.md));选型调研的完整证据链(四路调研、版本时间线、外设覆盖矩阵)见开发笔记 [QEMU 板级模拟调研](../../notes/2026-08-25-qemu-board-emulation-research)。
