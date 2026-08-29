@@ -1,0 +1,40 @@
+From d4707168aaadd804bcd5de4db7d26d1be0923be4 Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Sat, 29 Aug 2026 10:03:05 +0800
+Subject: [PATCH 14/14] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20a=20relea?=
+ =?UTF-8?q?se=20IS=20a=20report=20(status=200x80,=20not=20not-ready)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+fill_report returned an all-zero status byte when no touch was pending,
+i.e. 'buffer not ready' — the driver then retried for 20ms, timed out
+with -ETIME and never reported anything, so TouchEnd never reached
+userspace: the pressed button stayed down and the occupied slot killed
+all further interaction. A real GT911 reports buffer-ready with ZERO
+contacts on release; do the same (0x80) so the driver's zero-contact
+path emits the proper release.
+---
+ hw/input/gt911.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index dedbd13..a301c00 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -24,6 +24,12 @@
+ static void gt911_fill_report(GT911State *s, uint8_t *buf, int len)
+ {
+     memset(buf, 0, len);
++    buf[0] = 0x80;                      /* buffer-ready + 0 contacts: a
++                                        * release IS a report — with 0x00
++                                        * the driver retries for 20ms and
++                                        * gives up without ever sending
++                                        * TouchEnd, leaving the button
++                                        * stuck down */
+     if (s->pending) {
+         buf[0] = 0x81;                  /* ready + 1 contact */
+         buf[1] = 0x00;                  /* track 0 */
+-- 
+2.43.0
+
