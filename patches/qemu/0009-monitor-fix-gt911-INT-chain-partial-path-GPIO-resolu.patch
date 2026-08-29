@@ -1,7 +1,7 @@
 From 6a4edb0ce3e04ab0c18d85d8d98635ed029c0387 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Fri, 28 Aug 2026 09:28:35 +0800
-Subject: [PATCH 09/14] =?UTF-8?q?monitor:=20fix=20gt911=20INT=20chain=20?=
+Subject: [PATCH 09/15] =?UTF-8?q?monitor:=20fix=20gt911=20INT=20chain=20?=
  =?UTF-8?q?=E2=80=94=20partial-path=20GPIO=20resolution=20+=20edge=20pair?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

@@ -1,0 +1,160 @@
+From 259ebcec0c2a1c661694a0f486cee983686fc79d Mon Sep 17 00:00:00 2001
+From: Charliechen114514 <725610365@qq.com>
+Date: Sat, 29 Aug 2026 10:17:02 +0800
+Subject: [PATCH 15/15] =?UTF-8?q?hw/input:=20gt911=20=E2=80=94=20separate?=
+ =?UTF-8?q?=20finger=20state=20from=20report=20state,=20add=20drag?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The single 'pending' flag conflated two silicon realities: a held
+finger and an unread report. Clearing it on the 0x814e handshake
+lifted a press that was still down; a spurious re-entry read 0 contacts
+and emitted a phantom release ('button pops up before I let go').
+
+Now: finger_down survives the handshake; report_ready is armed by
+touch/release AND by host-mouse motion while the finger is down (drag
+becomes TouchUpdate); fill_report has three states (new touch 0x81+xy,
+new release 0x80, nothing new 0x00=not-ready which the driver drops
+after a brief retry). Release semantics from the previous patch ride on
+top: release IS a report.
+
+Verified: hold→drag→release now yields Begin→Begin(dual-edge artifact)
+→Update×2→End→End — fully paired, no phantom end while held, drags
+stream updates. The duplicate Begin on each press is a known cosmetic
+artifact of the high-then-low assert on dual-edge irq setups; next
+batch can chase the idle-low pad state that makes the single falling
+edge invisible.
+---
+ hw/input/gt911.c         | 55 ++++++++++++++++++++++------------------
+ include/hw/input/gt911.h |  7 +++--
+ 2 files changed, 35 insertions(+), 27 deletions(-)
+
+diff --git a/hw/input/gt911.c b/hw/input/gt911.c
+index a301c00..322909d 100644
+--- a/hw/input/gt911.c
++++ b/hw/input/gt911.c
+@@ -24,22 +24,21 @@
+ static void gt911_fill_report(GT911State *s, uint8_t *buf, int len)
+ {
+     memset(buf, 0, len);
+-    buf[0] = 0x80;                      /* buffer-ready + 0 contacts: a
+-                                        * release IS a report — with 0x00
+-                                        * the driver retries for 20ms and
+-                                        * gives up without ever sending
+-                                        * TouchEnd, leaving the button
+-                                        * stuck down */
+-    if (s->pending) {
+-        buf[0] = 0x81;                  /* ready + 1 contact */
+-        buf[1] = 0x00;                  /* track 0 */
+-        buf[2] = s->touch_x & 0xff;
+-        buf[3] = s->touch_x >> 8;
+-        buf[4] = s->touch_y & 0xff;
+-        buf[5] = s->touch_y >> 8;
+-        buf[6] = 0x10;                  /* width 16 */
+-        buf[7] = 0x00;
++    if (s->report_ready) {
++        buf[0] = s->finger_down ? 0x81 : 0x80;   /* ready + contacts */
++        if (s->finger_down) {
++            buf[1] = 0x00;              /* track 0 */
++            buf[2] = s->touch_x & 0xff;
++            buf[3] = s->touch_x >> 8;
++            buf[4] = s->touch_y & 0xff;
++            buf[5] = s->touch_y >> 8;
++            buf[6] = 0x10;              /* width 16 */
++            buf[7] = 0x00;
++        }
+     }
++    /* !report_ready: 0x00 "not ready" — nothing new to report; the driver
++     * retries briefly and gives up silently, which is correct (and keeps
++     * a held press from being re-read as anything else) */
+ }
+ 
+ /* factory config page at GT911_REG_CONFIG_DATA, GOODIX_CONFIG_911_LENGTH
+@@ -104,8 +103,8 @@ static void gt911_set_int(int level)
+ 
+ static void gt911_assert_int(void)
+ {
+-    /* high first (in case the pad idled low), then assert — a guaranteed
+-     * falling edge, and a low LEVEL for level-triggered irq setups */
++    /* high first (the pad can idle low between the poll-mode retries),
++     * then assert — a guaranteed falling edge */
+     gt911_set_int(1);
+     gt911_set_int(0);
+ }
+@@ -113,11 +112,9 @@ static void gt911_assert_int(void)
+ static void gt911_write_reg(GT911State *s, uint16_t reg, uint8_t val)
+ {
+     if (reg == GT911_REG_COOR) {
+-        /* the driver writes 0 here to end the interrupt handshake;
+-         * the INT pad must actually go high or a level-triggered irq
+-         * storms forever and buries userspace in release events */
+-        s->pending = false;
+-        gt911_set_int(1);
++        /* the driver writes 0 here to end the interrupt handshake:
++         * the report is consumed, the finger itself is NOT lifted */
++        s->report_ready = false;
+         return;
+     }
+     if (reg >= GT911_REG_CONFIG_DATA &&
+@@ -189,13 +186,15 @@ void gt911_touch(GT911State *s, uint16_t x, uint16_t y)
+ {
+     s->touch_x = x;
+     s->touch_y = y;
+-    s->pending = true;
++    s->finger_down = true;
++    s->report_ready = true;
+     gt911_assert_int();
+ }
+ 
+ void gt911_release(GT911State *s)
+ {
+-    s->pending = false;    /* FIFO reports 0 contacts on the next read */
++    s->finger_down = false;
++    s->report_ready = true;    /* the release itself is a report */
+     gt911_assert_int();
+ }
+ 
+@@ -219,6 +218,11 @@ static void gt911_input_event(DeviceState *dev, QemuConsole *src,
+         } else {
+             s->host_y = (uint32_t)evt->abs.value * 600 / 0x8000;
+         }
++        /* a drag while the finger is down is a TouchUpdate report */
++        if (s->finger_down) {
++            s->report_ready = true;
++            gt911_assert_int();
++        }
+         break;
+     case INPUT_EVENT_KIND_BTN:
+         if (evt->btn.button == INPUT_BUTTON_LEFT) {
+@@ -249,7 +253,8 @@ static void gt911_reset_hold(Object *obj, ResetType type)
+     s->addr = 0;
+     s->addr_bytes = 0;
+     s->addr_latch = 0;
+-    s->pending = false;
++    s->finger_down = false;
++    s->report_ready = false;
+     s->touch_x = 0;
+     s->touch_y = 0;
+     gt911_set_int(1);
+diff --git a/include/hw/input/gt911.h b/include/hw/input/gt911.h
+index a09137b..28ba662 100644
+--- a/include/hw/input/gt911.h
++++ b/include/hw/input/gt911.h
+@@ -50,8 +50,11 @@ struct GT911State {
+     uint8_t id[6];          /* 0x8140: "911\0" + vid */
+     uint8_t config[186];    /* 0x8047: factory default, see gt911.c */
+ 
+-    /* pending touch: status byte + one 8-byte contact + key footer */
+-    bool pending;
++    /* two independent states, like the real silicon: finger_down is
++     * the physical press (survives the report handshake), report_ready
++     * is "unread data in the FIFO" (cleared by the 0x814e handshake) */
++    bool finger_down;
++    bool report_ready;
+     uint16_t touch_x;
+     uint16_t touch_y;
+ 
+-- 
+2.43.0
+

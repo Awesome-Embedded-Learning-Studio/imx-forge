@@ -1,7 +1,7 @@
 From 9f45889e104db0f74d0569fa724c7afe8204df03 Mon Sep 17 00:00:00 2001
 From: Charliechen114514 <725610365@qq.com>
 Date: Thu, 27 Aug 2026 09:38:37 +0800
-Subject: [PATCH 04/14] monitor: add a gpio_set HMP command for driving GPIO
+Subject: [PATCH 04/15] monitor: add a gpio_set HMP command for driving GPIO
  input lines
 
 Board-emulation teaching aid: assert/deassert any device's GPIO input
