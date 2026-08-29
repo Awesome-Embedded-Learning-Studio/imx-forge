@@ -24,10 +24,87 @@
  */
 
 #include <QApplication>
+#include <QEvent>
+#include <QTouchEvent>
+#include <QScreen>
 #include <QLabel>
 #include <QPushButton>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <cstdio>
+
+/*
+ * EventFilter: logs EVERY input-related event reaching the application,
+ * so a single run pinpoints which layer swallowed the touch (none reach
+ * the app / events arrive with broken coordinates / taps land but
+ * buttons do not react). Filter is installed on the QApplication — it
+ * sees events for all widgets before they are dispatched.
+ */
+class InputProbe : public QObject
+{
+public:
+    explicit InputProbe(QLabel *status) : m_status(status) {}
+
+    bool eventFilter(QObject *obj, QEvent *ev) override
+    {
+        switch (ev->type()) {
+        case QEvent::TouchBegin: {
+            QTouchEvent *te = static_cast<QTouchEvent *>(ev);
+            QPointF tp = te->points().isEmpty() ? QPointF(-1, -1)
+                                                : te->points().first().globalPosition();
+            printf("[probe] TouchBegin obj=%s pos=(%.0f,%.0f)\n",
+                   obj->metaObject()->className(), tp.x(), tp.y());
+            fflush(stdout);
+            m_touched = true;
+            break;
+        }
+        case QEvent::TouchUpdate:
+            logEvent(obj, ev, "TouchUpdate");
+            break;
+        case QEvent::TouchEnd:
+            logEvent(obj, ev, "TouchEnd");
+            m_touched = false;
+            break;
+        case QEvent::MouseButtonPress:
+            logEvent(obj, ev, "MousePress");
+            m_touched = true;
+            break;
+        case QEvent::MouseButtonRelease:
+            logEvent(obj, ev, "MouseRelease");
+            m_touched = false;
+            break;
+        default:
+            break;
+        }
+        if (m_status) {
+            m_status->setText(m_touched ? QStringLiteral("INPUT SEEN") : name);
+        }
+        return QObject::eventFilter(obj, ev);
+    }
+
+    void announce() const
+    {
+        QScreen *sc = QGuiApplication::primaryScreen();
+        printf("[probe] installed; screen=%dx%d\n",
+               sc ? sc->size().width() : -1,
+               sc ? sc->size().height() : -1);
+        fflush(stdout);
+    }
+
+private:
+    void logEvent(QObject *obj, QEvent *ev, const char *kind)
+    {
+        printf("[probe] %s obj=%s\n", kind, obj->metaObject()->className());
+        fflush(stdout);
+        Q_UNUSED(ev);
+    }
+
+    QLabel *m_status = nullptr;
+    bool m_touched = false;
+    static const char *name;
+};
+const char *InputProbe::name = "waiting for input...";
 
 int main(int argc, char *argv[])
 {
@@ -37,7 +114,7 @@ int main(int argc, char *argv[])
     window.setWindowTitle("AES LCD + touch");
     QVBoxLayout *layout = new QVBoxLayout(&window);
 
-    QLabel *status = new QLabel("touch me (monitor: gt911_touch X Y)");
+    QLabel *status = new QLabel("waiting for input...");
     status->setAlignment(Qt::AlignCenter);
     layout->addWidget(status);
 
@@ -52,5 +129,10 @@ int main(int argc, char *argv[])
     }
 
     window.showFullScreen();
+
+    InputProbe probe(status);
+    app.installEventFilter(&probe);
+    probe.announce();
+
     return app.exec();
 }
