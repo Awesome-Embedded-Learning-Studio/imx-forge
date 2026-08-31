@@ -17,6 +17,8 @@
 | sd-card | `/proc/partitions` 含 mmcblk1 | USDHC2 + SD 卡模型 |
 | ap3216c-als | `i2cget` 读 ALS 值在 0x01xx 段 | ap3216c 模型(patch 0005) |
 | icm20608-probe | insmod 教学驱动后 dmesg probe success | icm20608 模型(patch 0006) |
+| gt911-probe | dmesg 出现 goodix ID 911 | gt911 触摸模型(0008-0016 系列) |
+| wm8960-codec | `i2cget` 0x1a 有寄存器应答 | wm8960 控制面模型 |
 | gpio-inject | monitor `gpio_set` 后 PSR bit18 翻转 | gpio_set HMP 命令(patch 0004) |
 | deferred-list | defer 列表仅剩 sound-wm8960 | 整体启动健康度 |
 

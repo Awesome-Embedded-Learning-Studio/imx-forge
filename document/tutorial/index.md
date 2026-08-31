@@ -15,6 +15,7 @@ title: 教程
     <ChapterLink num="01" href="docker/" variant="sub">Docker 环境搭建</ChapterLink>
     <ChapterLink num="02" href="start/01_start_from_toolchain" variant="sub">工具链安装</ChapterLink>
     <ChapterLink num="03" href="start/02_env_init_guide" variant="sub">环境初始化</ChapterLink>
+    <ChapterLink num="04" href="workflow/" variant="sub">开发工作流（WSL2/clangd/tasks）</ChapterLink>
   </RoadMapPhase>
 
   <RoadMapPhase icon="🚀" title="引导加载" subtitle="Bootloader" time="~3 天" :difficulty="2" :num="2">
@@ -40,6 +41,7 @@ title: 教程
     <ChapterLink num="02" href="rootfs/02_busybox_compile" variant="sub">BusyBox 编译</ChapterLink>
     <ChapterLink num="03" href="rootfs/03_inittab_init" variant="sub">inittab 与 init</ChapterLink>
     <ChapterLink num="04" href="rootfs/05_nfs_wsl_troubleshoot" variant="sub">NFS 挂载</ChapterLink>
+    <ChapterLink num="05" href="buildroot/" variant="sub">Buildroot 现代构建（12 章）</ChapterLink>
   </RoadMapPhase>
 
   <RoadMapPhase icon="🔗" title="系统启动" subtitle="System Boot" time="~2 天" :difficulty="2" :num="5">
@@ -47,6 +49,7 @@ title: 教程
     <ChapterLink num="02" href="practical/02_build_system" variant="sub">构建系统</ChapterLink>
     <ChapterLink num="03" href="practical/03_boot_and_debug" variant="sub">启动与调试</ChapterLink>
     <ChapterLink num="04" href="flash/" variant="sub">镜像构建</ChapterLink>
+    <ChapterLink num="05" href="emu/" variant="sub">没有板子？QEMU 板级模拟直启</ChapterLink>
   </RoadMapPhase>
 
   <RoadMapPhase icon="⚙️" title="驱动开发" subtitle="Driver Dev" time="~15 天" :difficulty="4" :num="6">
@@ -61,6 +64,7 @@ title: 教程
     <ChapterLink num="01" href="kernel/mainline/" variant="sub">主线内核移植</ChapterLink>
     <ChapterLink num="02" href="kernel/core-functional/" variant="sub">内核并发机制</ChapterLink>
     <ChapterLink num="03" href="uboot/bonus_qa" variant="sub">U-Boot Q&A</ChapterLink>
+    <ChapterLink num="04" href="project/light-meter/" variant="sub">工程实战：light-meter 照度摆件</ChapterLink>
   </RoadMapPhase>
 </RoadMap>
 
@@ -77,6 +81,14 @@ title: 教程
 <ChapterNav>
   <ChapterLink num="01" href="start/01_start_from_toolchain">工具链安装</ChapterLink>
   <ChapterLink num="02" href="start/02_env_init_guide">环境初始化指南</ChapterLink>
+</ChapterNav>
+
+### 开发工作流
+
+<ChapterNav>
+  <ChapterLink num="01" href="workflow/01_wsl2_notes">WSL2 开发注意事项</ChapterLink>
+  <ChapterLink num="02" href="workflow/02_clangd_cross_compile">clangd 交叉编译配置</ChapterLink>
+  <ChapterLink num="03" href="workflow/03_tasks_json_templates">VSCode tasks.json 模板</ChapterLink>
 </ChapterNav>
 
 ### U-Boot 教程
@@ -116,6 +128,25 @@ title: 教程
   <ChapterLink num="04" href="rootfs/04_rootfs_structure">目录结构</ChapterLink>
   <ChapterLink num="05" href="rootfs/05_nfs_wsl_troubleshoot">NFS 挂载</ChapterLink>
   <ChapterLink num="06" href="rootfs/06_apps_integration">应用集成</ChapterLink>
+  <ChapterLink num="07" href="rootfs/07_module_autoload">模块自动加载</ChapterLink>
+</ChapterNav>
+
+### Buildroot 构建（现行 rootfs 方案）
+
+<ChapterNav>
+  <ChapterLink num="★" href="buildroot/">Buildroot 专栏总览（12 章）</ChapterLink>
+  <ChapterLink num="01" href="buildroot/01_how_buildroot_works">Buildroot 工作原理</ChapterLink>
+  <ChapterLink num="02" href="buildroot/02_first_build">第一次构建</ChapterLink>
+  <ChapterLink num="03" href="buildroot/03_external_toolchain">外部工具链</ChapterLink>
+  <ChapterLink num="04" href="buildroot/04_kconfig_fragments">Kconfig fragment</ChapterLink>
+  <ChapterLink num="05" href="buildroot/05_br2_external_tree">br2-external 树</ChapterLink>
+  <ChapterLink num="06" href="buildroot/06_rootfs_customization">rootfs 定制</ChapterLink>
+  <ChapterLink num="07" href="buildroot/07_custom_package">自定义软件包</ChapterLink>
+  <ChapterLink num="08" href="buildroot/08_init_system">init 系统</ChapterLink>
+  <ChapterLink num="09" href="buildroot/09_ccache_rebuild">ccache 与重建</ChapterLink>
+  <ChapterLink num="10" href="buildroot/10_debugging">调试</ChapterLink>
+  <ChapterLink num="11" href="buildroot/11_qt6_integration">Qt6 集成</ChapterLink>
+  <ChapterLink num="12" href="buildroot/12_migration_guide">从手搓 rootfs 迁移</ChapterLink>
 </ChapterNav>
 
 ### 驱动开发
@@ -127,9 +158,29 @@ title: 教程
   <ChapterLink num="04" href="driver/03_platform_led_driver/">Platform LED 驱动</ChapterLink>
   <ChapterLink num="05" href="driver/04_beep_driver/">蜂鸣器驱动</ChapterLink>
   <ChapterLink num="06" href="driver/05_gpio_key_driver/">GPIO 按键驱动</ChapterLink>
-  <ChapterLink num="07" href="driver/07_input_subsystem_key/">Input 子系统按键</ChapterLink>
-  <ChapterLink num="08" href="driver/modules/">模块开发</ChapterLink>
-  <ChapterLink num="09" href="driver/firmware_apply/">固件应用</ChapterLink>
+  <ChapterLink num="07" href="driver/06_debounced_key_driver/">按键消抖驱动</ChapterLink>
+  <ChapterLink num="08" href="driver/07_input_subsystem_key/">Input 子系统按键</ChapterLink>
+  <ChapterLink num="09" href="driver/08_i2c_ap3216c_driver/">AP3216C I2C 驱动</ChapterLink>
+  <ChapterLink num="10" href="driver/09_spi_icm20608_driver/">ICM-20608 SPI 驱动</ChapterLink>
+  <ChapterLink num="11" href="driver/10_rtc_snvs_driver/">RTC 驱动（SNVS 分析型）</ChapterLink>
+  <ChapterLink num="12" href="driver/11_goodix_touchscreen_driver/">电容触摸驱动（goodix 分析型）</ChapterLink>
+  <ChapterLink num="13" href="driver/12_wm8960_audio_driver/">WM8960 音频驱动（ASoC 分析型）</ChapterLink>
+  <ChapterLink num="14" href="driver/modules/">模块开发</ChapterLink>
+  <ChapterLink num="15" href="driver/firmware_apply/">固件应用</ChapterLink>
+</ChapterNav>
+
+### QEMU 板级模拟（无板可学）
+
+<ChapterNav>
+  <ChapterLink num="★" href="emu/">模拟器卷总览（8 章）</ChapterLink>
+  <ChapterLink num="01" href="emu/01_why_emulation">为什么做板级模拟</ChapterLink>
+  <ChapterLink num="02" href="emu/02_machine_model">机器模型</ChapterLink>
+  <ChapterLink num="03" href="emu/03_rootfs_image">rootfs 镜像</ChapterLink>
+  <ChapterLink num="04" href="emu/04_whack_a_mole">打地鼠：日志链验证</ChapterLink>
+  <ChapterLink num="05" href="emu/05_toolchain">工具链</ChapterLink>
+  <ChapterLink num="06" href="emu/06_peripheral_models">外设模型</ChapterLink>
+  <ChapterLink num="07" href="emu/07_gt911_debug">gt911 排查实录</ChapterLink>
+  <ChapterLink num="08" href="emu/08_equivalence">真机等价性原则</ChapterLink>
 </ChapterNav>
 
 ### 实战演练
@@ -139,6 +190,13 @@ title: 教程
   <ChapterLink num="02" href="practical/02_build_system">构建系统</ChapterLink>
   <ChapterLink num="03" href="practical/03_boot_and_debug">启动与调试</ChapterLink>
   <ChapterLink num="04" href="practical/04-nfs-experience">NFS 体验</ChapterLink>
+</ChapterNav>
+
+### 工程实战项目（工程终点）
+
+<ChapterNav>
+  <ChapterLink num="★" href="project/">项目卷总览</ChapterLink>
+  <ChapterLink num="01" href="project/light-meter/">light-meter 照度护眼摆件（11 章）</ChapterLink>
 </ChapterNav>
 
 ### 镜像构建与烧录准备

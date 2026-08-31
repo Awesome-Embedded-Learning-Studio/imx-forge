@@ -1,5 +1,9 @@
 # RootFS Overlay 使用指南
 
+::: warning 本章脚本已退役，保留作概念教学
+本章介绍的 `merge_overlay_rootfs.sh` 手动合并脚本已经退役——rootfs 自 buildroot 接管后，overlay 合并在构建时由 `BR2_ROOTFS_OVERLAY` 自动完成（见 `scripts/release-all.sh` 中的退役说明）。本文保留 overlay 的概念讲解与手动合并思路作参考；**现行做法请直接看 [Buildroot 卷 · rootfs 定制](../buildroot/06_rootfs_customization.md)**。
+:::
+
 ## 前言：同一个 Rootfs，多种环境
 
 做项目时经常会遇到这种场景：同一套代码，要适配不同环境。开发环境需要调试工具和日志，生产环境要精简和监控，测试环境可能又要别的配置。

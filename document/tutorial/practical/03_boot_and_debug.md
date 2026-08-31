@@ -313,11 +313,10 @@ Starting kernel ...
 [    0.000018] CPU: Testing write coherency: ok
 [    0.000025] CPU0: thread -1, cpu 0, socket 0
 [    0.000036] smp: Bringing up secondary CPUs ...
-[    0.000048] CPU1: thread -1, cpu 1, socket 0
-[    0.000060] smp: Brought up 1 node, 2 CPUs
+[    0.000060] smp: Brought up 1 node, 1 CPU
 ```
 
-i.MX6ULL 是双核 Cortex-A7，这里显示两个 CPU 都启动了。
+i.MX6ULL 是单核 Cortex-A7，日志里只会看到 CPU0；`Bringing up secondary CPUs ...` 之后没有别的 CPU 出现、最后计入的是 1 个 CPU，都是正常现象。如果你的日志里出现 CPU1，那才说明跑的不是 6ULL（比如 i.MX6DL/6QP 这类双核型号）。
 
 ### 早期控制台
 
@@ -615,18 +614,13 @@ setenv bootargs "console=ttymxc0,115200 dyndbg=+p"
 
 ### 技巧 6：QEMU 模拟
 
-在没有硬件的情况下，可以用 QEMU 模拟：
+在没有硬件的情况下，可以用 QEMU 跑**本仓库自己的板级模拟**（`-M mcimx6ul-evk` + 自建 QEMU 外设模型补丁）：内核、设备树、rootfs 与真板同一份源，登录、联网、屏幕、触摸、传感器都有对应模型。完整教程见 [QEMU 板级模拟卷](../emu/)，最快的一条命令是开机冒烟：
 
 ```bash
-qemu-system-arm -M vexpress-a9 \
-  -kernel zImage \
-  -dtb vexpress-v2p-ca9.dtb \
-  -drive if=sd,file=rootfs.ext4,format=raw \
-  -serial mon:stdio \
-  -append "console=ttymxc0,115200 root=/dev/mmcblk0 rootwait"
+scripts/qemu_helper/run-qemu.sh --smoke
 ```
 
-虽然不能完全替代真实硬件，但能快速验证某些问题。
+> 早期版本这里写过一段 `vexpress-a9` 玩具机的命令——那块板子和 i.MX6ULL 没有关系（`console=ttymxc0` 配 vexpress 也是错配），已删除，别再用它排查本板问题。
 
 ## 成功启动后的验证——确认系统真的可用
 
