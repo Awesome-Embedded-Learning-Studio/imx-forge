@@ -6,7 +6,8 @@
 #
 # Options:
 #   --kernel=PATH     zImage (default: out/mainline/linux/arch/arm/boot/zImage)
-#   --dtb=PATH        Device tree blob (default: out/qemu/imx6ull-aes-qemu.dtb,
+#   --dtb=PATH        Device tree blob (default: out/qemu/imx6ull-aes.dtb —
+#                     the REAL board dtb with U-Boot-equivalent MAC fixups;
 #                     rebuilt automatically, see --no-build)
 #   --rootfs-img=PATH ext4 rootfs image (default: out/qemu/rootfs.ext4,
 #                     rebuilt automatically when the rootfs tree changed)
@@ -43,8 +44,8 @@
 # classic footgun here — editing imx6ull-aes.dtsi or re-running the buildroot
 # build silently boots the old dtb/rootfs. Before starting QEMU this script
 # refreshes, in dependency order:
-#   1. dtb:          recompiles whenever the variant dts or any dtsi it
-#                    includes is newer than out/qemu/imx6ull-aes-qemu.dtb
+#   1. dtb:          recompiles whenever the real board dts or any dtsi it
+#                    includes is newer than out/qemu/imx6ull-aes.dtb
 #   2. rootfs image: rebuilds whenever the rootfs tree changed after the
 #                    image was created (find -newer, content changes only —
 #                    mtimes inside the tree are compared, not just the dir)

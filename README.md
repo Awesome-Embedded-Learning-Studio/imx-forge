@@ -75,12 +75,16 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 |------|------|------|------|
 | 🌱 | [Linux 基础预备营](document/tutorial/linux-basics) | 35 章 Ubuntu 实用教程，补齐嵌入式必备功课 | ✅ 新增 |
 | 0️⃣ | [Docker 基础](document/tutorial/docker) | Docker 基础知识与 IMX-Forge 开发指南 | ✅ |
+| 🛠️ | [开发工作流](document/tutorial/workflow) | WSL2、clangd 交叉索引、VSCode tasks 模板 | ✅ |
 | 1️⃣ | [工具链](document/tutorial/start) | ARM GNU Toolchain 15.2 安装与配置 | ✅ |
 | 2️⃣ | [U-Boot](document/tutorial/uboot) | U-Boot 原理、编译、移植、Logo 定制 | ✅ |
 | 3️⃣ | [内核开发](document/tutorial/kernel) | 设备树、内核配置、驱动开发、网络启动 | ✅ |
 | 4️⃣ | [Rootfs](document/tutorial/rootfs) | BusyBox、inittab、NFS 挂载、应用集成 | ✅ |
+| 🏗️ | [Buildroot 构建](document/tutorial/buildroot) | 现行 rootfs 方案：br2-external、自定义包、Qt6 集成 | ✅ |
 | 5️⃣ | [驱动开发](document/tutorial/driver) | 字符设备、设备树、pinctrl/gpio、platform、input 子系统 | ✅ 持续扩展 |
+| 🖥️ | [QEMU 板级模拟](document/tutorial/emu) | 没有板子也能跑：外设模型 + e2e 断言体检 | ✅ 新增 |
 | 6️⃣ | [实战演练](document/tutorial/practical) | 完整系统构建与调试 | ✅ |
+| 🏁 | [工程实战](document/tutorial/project) | light-meter：从空 CMakeLists 到真板产品 | ✅ 新增 |
 
 当前完整支持 **正点原子阿尔法 i.MX6ULL**；其它板卡（野火等）欢迎提交 PR。项目规划见 [todo](document/todo/todo.md)。
 
