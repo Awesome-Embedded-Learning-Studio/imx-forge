@@ -241,18 +241,19 @@ jobs:
       - name: 制作 QEMU 启动资产（真板同源 dtb + MAC fixup）
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends device-tree-compiler
-          mkdir -p out/qemu
-          cp out/mainline/linux/arch/arm/boot/zImage out/qemu/zImage
-          scripts/qemu_helper/make-qemu-dtb.sh
-          ls -lh out/qemu/
+          # out/ 由 docker 内 root 构建,runner 用户不可写;资产产出到独立目录 qemu-assets/
+          mkdir -p qemu-assets
+          cp out/mainline/linux/arch/arm/boot/zImage qemu-assets/zImage
+          scripts/qemu_helper/make-qemu-dtb.sh --output=qemu-assets/imx6ull-aes.dtb
+          ls -lh qemu-assets/
 
       - name: 上传 QEMU 内核产物
         uses: actions/upload-artifact@v4
         with:
           name: qemu-kernel
           path: |
-            out/qemu/zImage
-            out/qemu/imx6ull-aes.dtb
+            qemu-assets/zImage
+            qemu-assets/imx6ull-aes.dtb
           retention-days: 7
           if-no-files-found: error
 
@@ -330,20 +331,22 @@ jobs:
       - name: 制作 QEMU rootfs 镜像（ext4 整卡，按树大小动态定容）
         run: |
           command -v mke2fs >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq e2fsprogs; }
+          # out/ 由 docker 内 root 构建,runner 用户不可写;镜像产出到独立目录 qemu-assets/
           # QEMU SD 模型只认 2 的幂容量；按实际树大小 x2 向上取 2 的幂，最小 128MiB、封顶 4096
           TREE_MB=$(du -sm --apparent-size out/release-latest/rootfs | cut -f1)
           NEED=$(( TREE_MB * 2 )); [ "${NEED}" -lt 128 ] && NEED=128
           SIZE_MB=1
           while [ "${SIZE_MB}" -lt "${NEED}" ] && [ "${SIZE_MB}" -lt 4096 ]; do SIZE_MB=$(( SIZE_MB * 2 )); done
           echo "rootfs tree: ${TREE_MB}MiB -> image: ${SIZE_MB}MiB"
-          scripts/qemu_helper/make-rootfs-img.sh --size-mb="${SIZE_MB}"
-          ls -lh out/qemu/
+          mkdir -p qemu-assets
+          scripts/qemu_helper/make-rootfs-img.sh --output=qemu-assets/rootfs.ext4 --size-mb="${SIZE_MB}"
+          ls -lh qemu-assets/
 
       - name: 上传 QEMU rootfs 镜像
         uses: actions/upload-artifact@v4
         with:
           name: qemu-rootfs
-          path: out/qemu/rootfs.ext4
+          path: qemu-assets/rootfs.ext4
           retention-days: 7
           if-no-files-found: error
 
@@ -366,25 +369,25 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: qemu-*
-          path: out/qemu
+          path: qemu-assets
           merge-multiple: true
 
       - name: 开机冒烟（启动到登录提示符才算过）
         run: |
-          ls -lh out/qemu/
+          ls -lh qemu-assets/
           scripts/qemu_helper/run-qemu.sh --smoke --no-build \
-            --kernel=out/qemu/zImage \
-            --dtb=out/qemu/imx6ull-aes.dtb \
-            --rootfs-img=out/qemu/rootfs.ext4 \
+            --kernel=qemu-assets/zImage \
+            --dtb=qemu-assets/imx6ull-aes.dtb \
+            --rootfs-img=qemu-assets/rootfs.ext4 \
             --timeout=300 \
-            --log=out/qemu/uart.log
+            --log=qemu-assets/uart.log
 
       - name: 上传启动日志（开机证据）
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: qemu-boot-log
-          path: out/qemu/uart.log
+          path: qemu-assets/uart.log
           retention-days: 30
           if-no-files-found: warn
 
