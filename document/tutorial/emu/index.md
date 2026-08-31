@@ -33,7 +33,7 @@ title: QEMU 板级模拟
 
 ## 路线图:后面还有什么
 
-01-05 章覆盖「直启链路」,06-08 章覆盖 2026-08 下旬的「外设模型 + 等价性」阶段:自建 QEMU v11.1(16 个 patch 序列)、七个教学外设模型(PWM/gpio_set/ap3216c/icm20608/gt911/wm8960/FlexCAN)、gt911 触摸的四个真 bug 排查(REG_END 窗口截断/释放语义/手指-报告状态混淆/INT 电平)、以及消灭变体设备树回到真机单源。CI 冒烟(e2e-test.sh 13 项断言)已落地为脚本(注意:尚未接进 CI workflow,目前需本地手动跑),教程章待补。触摸链路至发稿时可用(按下/松开/拖动全配对),剩余一个双 Begin 装饰性伪影待修——根因(poll 间隙 INT idle 电平)已定位。
+01-05 章覆盖「直启链路」,06-08 章覆盖 2026-08 下旬的「外设模型 + 等价性」阶段:自建 QEMU v11.1(16 个 patch 序列)、七个教学外设模型(PWM/gpio_set/ap3216c/icm20608/gt911/wm8960/FlexCAN)、gt911 触摸的四个真 bug 排查(REG_END 窗口截断/释放语义/手指-报告状态混淆/INT 电平)、以及消灭变体设备树回到真机单源。开机冒烟已接进 CI(ci-full 的 QEMU Boot Smoke job,`run-qemu.sh --smoke` 验证 mainline 内核 + rootfs 能启动到登录提示符,串口日志存 qemu-boot-log artifact);全量 13 项外设断言(e2e-test.sh)仍是本地脚本,接入 CI 待后续,教程章待补。触摸链路至发稿时可用(按下/松开/拖动全配对),剩余一个双 Begin 装饰性伪影待修——根因(poll 间隙 INT idle 电平)已定位。
 
 ::: info 配套产物
 本卷所有脚本已进仓库 `scripts/qemu_helper/`(三个脚本的用法详解见 [run-qemu.sh 文档](../../scripts/qemu_helper/run-qemu.sh.md)、[make-rootfs-img.sh 文档](../../scripts/qemu_helper/make-rootfs-img.sh.md) 与 [make-qemu-dtb.sh 文档](../../scripts/qemu_helper/make-qemu-dtb.sh.md));选型调研的完整证据链(四路调研、版本时间线、外设覆盖矩阵)见开发笔记 [QEMU 板级模拟调研](../../notes/2026-08-25-qemu-board-emulation-research)。

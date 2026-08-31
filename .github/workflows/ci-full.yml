@@ -238,6 +238,24 @@ jobs:
             exit 1
           fi
 
+      - name: 制作 QEMU 启动资产（真板同源 dtb + MAC fixup）
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends device-tree-compiler
+          mkdir -p out/qemu
+          cp out/mainline/linux/arch/arm/boot/zImage out/qemu/zImage
+          scripts/qemu_helper/make-qemu-dtb.sh
+          ls -lh out/qemu/
+
+      - name: 上传 QEMU 内核产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-kernel
+          path: |
+            out/qemu/zImage
+            out/qemu/imx6ull-aes.dtb
+          retention-days: 7
+          if-no-files-found: error
+
   # Stage 3+4: BusyBox + RootFS (合并)
   stage3-4:
     name: Stage 3+4 - BusyBox & RootFS
@@ -309,11 +327,72 @@ jobs:
             exit 1
           fi
 
+      - name: 制作 QEMU rootfs 镜像（ext4 整卡，按树大小动态定容）
+        run: |
+          command -v mke2fs >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq e2fsprogs; }
+          # QEMU SD 模型只认 2 的幂容量；按实际树大小 x2 向上取 2 的幂，最小 128MiB、封顶 4096
+          TREE_MB=$(du -sm --apparent-size out/release-latest/rootfs | cut -f1)
+          NEED=$(( TREE_MB * 2 )); [ "${NEED}" -lt 128 ] && NEED=128
+          SIZE_MB=1
+          while [ "${SIZE_MB}" -lt "${NEED}" ] && [ "${SIZE_MB}" -lt 4096 ]; do SIZE_MB=$(( SIZE_MB * 2 )); done
+          echo "rootfs tree: ${TREE_MB}MiB -> image: ${SIZE_MB}MiB"
+          scripts/qemu_helper/make-rootfs-img.sh --size-mb="${SIZE_MB}"
+          ls -lh out/qemu/
+
+      - name: 上传 QEMU rootfs 镜像
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-rootfs
+          path: out/qemu/rootfs.ext4
+          retention-days: 7
+          if-no-files-found: error
+
+  # QEMU 开机冒烟：编译产物必须真的开机（「能构建」→「能启动」）
+  qemu-smoke:
+    name: QEMU Boot Smoke
+    runs-on: ubuntu-latest
+    needs: [check, stage2-mainline, stage3-4]
+    if: needs.check.outputs.should_run == 'true'
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 QEMU
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends qemu-system-arm
+
+      - name: 下载内核与 rootfs 产物
+        uses: actions/download-artifact@v4
+        with:
+          pattern: qemu-*
+          path: out/qemu
+          merge-multiple: true
+
+      - name: 开机冒烟（启动到登录提示符才算过）
+        run: |
+          ls -lh out/qemu/
+          scripts/qemu_helper/run-qemu.sh --smoke --no-build \
+            --kernel=out/qemu/zImage \
+            --dtb=out/qemu/imx6ull-aes.dtb \
+            --rootfs-img=out/qemu/rootfs.ext4 \
+            --timeout=300 \
+            --log=out/qemu/uart.log
+
+      - name: 上传启动日志（开机证据）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-boot-log
+          path: out/qemu/uart.log
+          retention-days: 30
+          if-no-files-found: warn
+
   # 最终验证和产物上传
   final:
     name: Final Validation
     runs-on: ubuntu-latest
-    needs: [check, stage1, stage2-imx, stage2-mainline, stage3-4]
+    needs: [check, stage1, stage2-imx, stage2-mainline, stage3-4, qemu-smoke]
     if: needs.check.outputs.should_run == 'true'
     timeout-minutes: 5
     steps:
@@ -328,6 +407,7 @@ jobs:
           echo "- **Linux Mainline**: 构建成功" >> $GITHUB_STEP_SUMMARY
           echo "- **BusyBox**: 构建成功" >> $GITHUB_STEP_SUMMARY
           echo "- **RootFS**: 验证通过" >> $GITHUB_STEP_SUMMARY
+          echo "- **QEMU 开机冒烟**: 通过（mainline 内核 + rootfs 在 QEMU 里真的启动到了登录提示符，见 qemu-boot-log artifact）" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 第三方组件" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ needs.check.outputs.compile_3rd_party }}" == "true" ]]; then
@@ -335,10 +415,5 @@ jobs:
           else
             echo "- **Qt6/字体**: 已跳过(最小 rootfs;添加 \`compile-support-3rd-party\` 标签启用)" >> $GITHUB_STEP_SUMMARY
           fi
-
-      - name: 上传 Release 产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-images
-          path: out/release-latest/images/
-          retention-days: 30
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> 说明：CI 不产出烧录镜像（Stage 5 仅本地 \`release-all.sh\`）；运行时验证由 QEMU 开机冒烟承担。" >> $GITHUB_STEP_SUMMARY

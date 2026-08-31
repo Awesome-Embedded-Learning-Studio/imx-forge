@@ -54,8 +54,8 @@
 ### Final - 最终验证
 
 - 验证所有产物存在
+- QEMU 开机冒烟（mainline 内核 + rootfs 真的启动到登录提示符）
 - 创建构建摘要
-- 上传 artifacts（保留 30 天）
 
 ## 预计时间
 
@@ -65,16 +65,22 @@
 | Stage 2（并行） | ~12 分钟 |
 | Stage 3 | ~5 分钟 |
 | Stage 4 | ~3 分钟 |
-| **总计** | **~25-30 分钟** |
+| QEMU Boot Smoke | ~3-5 分钟（TCG，无 KVM） |
+| **总计** | **~25-35 分钟** |
 
 ## 产物
 
 | Artifact | 内容 | 保留期 |
 |----------|------|--------|
-| release-images | `out/release-latest/images/` | 30 天 |
+| qemu-boot-log | QEMU 开机冒烟的完整串口日志（`uart.log`，运行时验证证据） | 30 天 |
+| qemu-kernel / qemu-rootfs | 冒烟用的 mainline zImage + 真板同源 dtb + rootfs ext4 镜像（供复现/调试） | 7 天 |
+
+::: info 说明
+CI 不产出烧录镜像（Stage 5 仅本地 `release-all.sh` 执行）——曾经的 `release-images` artifact 因 final job 在独立 runner 上无产物可传而长期为空，已删除，由 QEMU 开机冒烟的 `qemu-boot-log` 提供真实运行时证据。
+:::
 
 ::: info 双轨说明
-Full Build 同时验证 Linux NXP BSP 和 Linux Mainline。当前 `release-images` artifact 主要来自 `release-all.sh` 的 BSP 默认链路；Mainline 在同一次工作流中作为兼顾轨道进行构建验证。
+Full Build 同时验证 Linux NXP BSP 和 Linux Mainline。QEMU 开机冒烟跑的是 Mainline 轨产物（`out/mainline/linux` 的 zImage + 真板同源 dtb）；BSP 轨仍以构建验证为主。
 :::
 
 ## 使用场景
