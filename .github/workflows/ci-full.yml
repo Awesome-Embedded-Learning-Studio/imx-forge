@@ -242,9 +242,10 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends device-tree-compiler
           # out/ 由 docker 内 root 构建,runner 用户不可写;资产产出到独立目录 qemu-assets/
+          # release-all 的内核构建目录是 out/release-latest/linux(非 standalone 的 out/mainline/linux)
           mkdir -p qemu-assets
-          cp out/mainline/linux/arch/arm/boot/zImage qemu-assets/zImage
-          scripts/qemu_helper/make-qemu-dtb.sh --output=qemu-assets/imx6ull-aes.dtb
+          cp out/release-latest/linux/arch/arm/boot/zImage qemu-assets/zImage
+          OUT_BUILD="${PWD}/out/release-latest/linux" scripts/qemu_helper/make-qemu-dtb.sh --output=qemu-assets/imx6ull-aes.dtb
           ls -lh qemu-assets/
 
       - name: 上传 QEMU 内核产物
