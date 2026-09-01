@@ -22,9 +22,11 @@
 ```bash
 sudo apt-get install -y ninja-build flex bison libglib2.0-dev \
     libpixman-1-dev libfdt-dev zlib1g-dev python3-venv
+# 可选:交互窗口显示(没有它构建为 headless-only,--display gtk 不可用)
+sudo apt-get install -y libgtk-3-dev
 ```
 
-`libpixman-1-dev` 不能省:QEMU 11 把 pixman 从 subprojects 移除、变成硬系统依赖,而它正是 eLCDIF framebuffer 渲染的核心库。dtc(libfdt)有 meson wrap 可自动编译,但系统包更省事。
+`libpixman-1-dev` 不能省:QEMU 11 把 pixman 从 subprojects 移除、变成硬系统依赖,而它正是 eLCDIF framebuffer 渲染的核心库。dtc(libfdt)有 meson wrap 可自动编译,但系统包更省事。gtk 由脚本自动探测(`pkg-config gtk+-3.0`),装了就 `--enable-gtk`,没装就显式 `--disable-gtk`——CI 冒烟走的就是无头路径,不装也能开机验证。
 
 ### 在开发工作流中的位置
 

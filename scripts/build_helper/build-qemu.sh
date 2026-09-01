@@ -19,6 +19,9 @@
 # Host prerequisites (not auto-installed, need sudo once):
 #   sudo apt-get install -y ninja-build flex bison libglib2.0-dev \
 #       libpixman-1-dev libfdt-dev zlib1g-dev python3-venv
+#   Optional: libgtk-3-dev for the interactive gtk display window — without
+#   it the build is headless-only (--display gtk unavailable; --smoke and
+#   -nographic unaffected).
 #   (meson >= 1.5 is bootstrapped by QEMU's own mkvenv into the build dir;
 #    system meson 1.3 on Ubuntu 24.04 is too old but unused)
 #
@@ -74,9 +77,14 @@ pkg-config --exists pixman-1 || die "pixman dev not found (sudo apt-get install 
 # --- apply our patch series (numbered, applied in order — the qemu component
 # is exempt from the repo's one-rolled-patch convention; squashed patch series
 # of this size cannot be rebased, see the 100askTeam/qemu cautionary tale) ---
+# "clean pin" is judged against the gitlink RECORDED in the parent repo, not
+# by resolving the v11.1.0 tag inside the submodule — shallow clones (CI,
+# .gitmodules shallow=true) fetch the commit but no tags, and a tag-less
+# resolution would silently skip the patch series and build stock QEMU.
 PATCH_DIR="${PROJECT_ROOT}/patches/qemu"
-PIN_COMMIT="$(git -C "${QEMU_SRC}" rev-parse 'v11.1.0^{commit}' 2>/dev/null || true)"
-if [[ -n "${PIN_COMMIT}" && "$(git -C "${QEMU_SRC}" rev-parse HEAD)" == "${PIN_COMMIT}" ]]; then
+SUBMODULE_REL="third_party/qemu"
+RECORDED_PIN="$(git -C "${PROJECT_ROOT}" ls-tree HEAD "${SUBMODULE_REL}" | awk '{print $3}')"
+if [[ -n "${RECORDED_PIN}" && "$(git -C "${QEMU_SRC}" rev-parse HEAD)" == "${RECORDED_PIN}" ]]; then
     # submodule sits on the clean pin: (re)apply our series
     git -C "${QEMU_SRC}" checkout -- . 2>/dev/null || true
     for p in "${PATCH_DIR}"/*.patch; do
@@ -85,7 +93,17 @@ if [[ -n "${PIN_COMMIT}" && "$(git -C "${QEMU_SRC}" rev-parse HEAD)" == "${PIN_C
         git -C "${QEMU_SRC}" apply "$p" || die "failed to apply $p (patch/base drift?)"
     done
 else
-    log "submodule HEAD is not the v11.1.0 pin (dev branch?) — building as-is"
+    log "WARNING: submodule HEAD != recorded gitlink ${RECORDED_PIN:-?} (dev checkout?) — building as-is, patch series SKIPPED"
+fi
+
+# gtk display support is optional: needed only for the interactive window
+# (run-qemu.sh --display gtk); headless smoke/-nographic works without it.
+if pkg-config --exists gtk+-3.0 2>/dev/null; then
+    GTK_FLAG="--enable-gtk"
+    log "gtk+ dev found — gtk display enabled"
+else
+    GTK_FLAG="--disable-gtk"
+    log "gtk+ dev NOT found — building headless-only (install libgtk-3-dev for --display gtk)"
 fi
 
 mkdir -p "${BUILD_DIR}"
@@ -93,13 +111,17 @@ cd "${BUILD_DIR}"
 
 if [[ ! -f build.ninja || "${RECONFIGURE}" -eq 1 ]]; then
     log "configuring in ${BUILD_DIR}"
-    "${QEMU_SRC}/configure" \
+    if ! "${QEMU_SRC}/configure" \
         --target-list=arm-softmmu \
         --disable-tools \
         --disable-docs \
         --disable-werror \
         --enable-slirp \
-        --enable-gtk 2>&1 | grep -viE '^(checking|trying|Run-time|Looking|Cloning)' | tail -5
+        "${GTK_FLAG}" > "${BUILD_DIR}/configure.log" 2>&1; then
+        tail -40 "${BUILD_DIR}/configure.log" >&2
+        die "configure failed (full log: ${BUILD_DIR}/configure.log)"
+    fi
+    tail -3 "${BUILD_DIR}/configure.log"
 else
     log "build dir already configured (use --reconfigure to redo)"
 fi

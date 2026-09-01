@@ -57,7 +57,9 @@ scripts/qemu_helper/make-qemu-dtb.sh
   做法，`-I` 指到 `arch/arm/boot/dts/nxp/imx/`（v7.1 里 i.MX dtsi 的实际
   位置）
 - **用内核自带 dtc**：`out/mainline/linux/scripts/dtc/dtc`（与内核构建同
-  版本，避免系统 dtc 与内核 dtc 语法差异）；需要先跑过一次
-  `build-mainline-linux.sh`
+  版本，避免系统 dtc 与内核 dtc 语法差异）；需要先跑过一次内核构建。
+  构建树位置用 `OUT_BUILD` 环境变量覆盖——单跑 `build-mainline-linux.sh`
+  时是默认的 `out/mainline/linux`，走 `release-all.sh`（如 CI）时内核在
+  `out/release-latest/linux`，要 `OUT_BUILD=$PWD/out/release-latest/linux`
 - **无 label 节点的引用**：mmdc 节点在 `imx6ul.dtsi` 里没有 label，用完整
   路径引用 `&{/soc/bus@2100000/memory-controller@21b0000}`

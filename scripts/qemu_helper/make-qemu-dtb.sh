@@ -24,6 +24,11 @@
 #   PROJECT_ROOT   Project root directory (auto-detected if not set)
 #   LINUX_SRC      Kernel source tree with the board patch applied
 #                  (default: third_party/linux_mainline)
+#   OUT_BUILD      Kernel O= build tree hosting scripts/dtc/dtc
+#                  (default: out/mainline/linux — the standalone
+#                  build-mainline-linux.sh path; release-all.sh builds
+#                  live in out/release-latest/linux instead, export
+#                  OUT_BUILD accordingly there)
 
 set -eo pipefail
 
@@ -62,7 +67,7 @@ log()  { echo "[make-qemu-dtb] $*" >&2; }
 die()  { echo "[make-qemu-dtb] error: $*" >&2; exit 1; }
 
 DTS="${LINUX_SRC}/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts"
-OUT_BUILD="${PROJECT_ROOT}/out/mainline/linux"
+OUT_BUILD="${OUT_BUILD:-${PROJECT_ROOT}/out/mainline/linux}"
 DTC="${OUT_BUILD}/scripts/dtc/dtc"
 [[ -f "${DTS}" ]] || die "board dts not found: ${DTS} (is the submodule initialized + patch applied?)"
 [[ -x "${DTC}" ]] || die "kernel dtc not built at ${DTC}: run build-mainline-linux.sh once first"
