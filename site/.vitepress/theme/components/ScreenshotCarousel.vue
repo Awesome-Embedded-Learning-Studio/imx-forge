@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { withBase } from 'vitepress'
-import type { HomeScreenshot } from '../../../config/schema'
+import type { HomeScreenshot } from '../../config/schema'
 
 // 首页截图轮播(coverflow):数据来自 project.config.ts 的 homeScreenshots,
 // 由 theme/index.ts 通过 shots 注入。无 shots 时不渲染(theme/index.ts 已挡)。

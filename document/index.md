@@ -16,6 +16,9 @@ hero:
     - theme: alt
       text: GitHub
       link: https://github.com/Awesome-Embedded-Learning-Studio/imx-forge
+    - theme: alt
+      text: QQ 交流群
+      link: https://qm.qq.com/q/tEsFhL8eB2
 
 features:
   - icon: 🐧

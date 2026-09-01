@@ -238,6 +238,18 @@ export default defineProject({
     ],
   },
 
+  // 首页社区区块:QQ 交流群。留空/不设则首页不渲染(与 homeScreenshots/homeRoadmap 同开关约定)。
+  // qrCode 走 public/ 相对路径,组件内 withBase 补 base。
+  community: {
+    title: '💬 技术交流',
+    qq: {
+      group: '645248275',
+      link: 'https://qm.qq.com/q/tEsFhL8eB2',
+      qrCode: '/qq-group.svg',
+      desc: '搭建环境卡住、内核跑不起来、驱动写了没反应 —— 欢迎进群与作者和同学们一起踩坑。',
+    },
+  },
+
   favicon: '/imx-forge/Awesome-Embedded.ico',
 
   homeBanner: {

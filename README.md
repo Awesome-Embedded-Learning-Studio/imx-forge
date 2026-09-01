@@ -18,6 +18,23 @@
 [![Contributors](https://img.shields.io/github/contributors/Awesome-Embedded-Learning-Studio/imx-forge?style=flat-square)](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/graphs/contributors)
 [![Docker](https://img.shields.io/badge/Docker-supported%20%EF%83%8B-blue?style=flat-square)](docker/README.md)
 [![WSL2](https://img.shields.io/badge/WSL2-Tested%20%26%20OK-brightgreen?style=flat-square)](document/QUICK_START.md)
+[![QQ](https://img.shields.io/badge/QQ-645248275-12B7F5?style=flat-square&logo=qq&logoColor=white)](https://qm.qq.com/q/tEsFhL8eB2)
+
+</div>
+
+---
+
+## 💬 技术交流
+
+<div align="center">
+
+<img src="site/.vitepress/public/qq-group.svg" alt="IMX-Forge 技术交流 QQ 群二维码" width="180">
+
+**QQ 交流群：[645248275](https://qm.qq.com/q/tEsFhL8eB2)**
+
+搭建环境卡住、内核跑不起来、驱动写了没反应……欢迎进群与作者和同学们一起踩坑。
+
+[💬 点击加入群聊](https://qm.qq.com/q/tEsFhL8eB2) · 或手机 QQ 扫描上方二维码
 
 </div>
 
@@ -106,6 +123,6 @@ MIT —— 详见 [LICENSE](LICENSE)。若补丁源自 GPL 授权的 linux-imx �
 
 **用 🔥 和无数串口终端堆出来的工程。希望我们可以更方便地自定义自己的 i.MX6ULL 系统。**
 
-[⭐ Star](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge) · [🍴 Fork](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/fork) · [📢 Issues](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)
+[⭐ Star](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge) · [🍴 Fork](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/fork) · [💬 QQ 群](https://qm.qq.com/q/tEsFhL8eB2) · [📢 Issues](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues)
 
 </div>

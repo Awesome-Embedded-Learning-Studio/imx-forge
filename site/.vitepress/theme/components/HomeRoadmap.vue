@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress'
-import type { HomeRoadmapConfig, RoadmapStatus } from '../../../config/schema'
+import type { HomeRoadmapConfig, RoadmapStatus } from '../../config/schema'
 
 // 首页「学习路线图」:阶段卡网格 + 状态徽标 + 章数。
 // 数据来自 project.config.ts 的 homeRoadmap(由 roadmap prop 注入),纯 HTML/CSS,零运行时依赖。

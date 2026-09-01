@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData } from 'vitepress'
-import type { ProjectConfig } from '../config/schema'
+import type { ProjectConfig } from '../../config/schema'
 
 const { lang } = useData()
 
