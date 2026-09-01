@@ -59,6 +59,23 @@ export interface HomeRoadmapConfig {
   stages: RoadmapStage[]
 }
 
+/** 首页社区区块的 QQ 群信息。qrCode 走 withBase(public/ 下相对路径)。 */
+export interface CommunityQqConfig {
+  /** 群号(展示用)。 */
+  group: string
+  /** 加群链接。 */
+  link: string
+  /** 二维码图片路径(public/ 下,如 '/qq-group.svg')。 */
+  qrCode: string
+  desc?: string
+}
+
+/** 首页社区区块。留空/不设则首页不渲染。 */
+export interface CommunityConfig {
+  title?: string
+  qq: CommunityQqConfig
+}
+
 export interface ProjectConfig {
   name: string
   title: Record<string, string>
@@ -111,6 +128,9 @@ export interface ProjectConfig {
 
   /** 首页学习路线图数据。留空/不设则首页不渲染路线图。 */
   homeRoadmap?: HomeRoadmapConfig
+
+  /** 首页社区区块(QQ 交流群)数据。留空/不设则首页不渲染社区卡。 */
+  community?: CommunityConfig
 
   homeBanner?: Record<string, string>
   favicon?: string

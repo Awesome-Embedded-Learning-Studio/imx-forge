@@ -4,6 +4,7 @@ import type { Theme } from 'vitepress'
 import ImxHero from './components/ImxHero.vue'
 import ScreenshotCarousel from './components/ScreenshotCarousel.vue'
 import HomeRoadmap from './components/HomeRoadmap.vue'
+import HomeCommunity from './components/HomeCommunity.vue'
 import ChapterNav from './components/ChapterNav.vue'
 import ChapterLink from './components/ChapterLink.vue'
 import PageHeader from './components/PageHeader.vue'
@@ -21,12 +22,11 @@ import { setupMermaid } from './mermaid-client'
 import projectConfig from '../../../project.config.ts'
 import './custom.css'
 
-// 首页设计对齐 anatomy_gui:自定义 ImxHero(替换默认 VPHero)+ features + HomeRoadmap,三段式极简。
+// 首页设计对齐 anatomy_gui:自定义 ImxHero(替换默认 VPHero)+ 社区卡 + 截图轮播 + features + HomeRoadmap。
 // Layout 用 defineComponent 包,以便在 setup() 里:
 //  (1) 条件挂载 mermaid 客户端(useRouter/onMounted 必须在组件 setup 上下文调用);
-//  (2) 据 projectConfig 条件拼装 Layout 插槽 —— 阅读体验三件套 / 首页路线图走开关。
-// HomeTipBanner / HomeArchDiagram / HomeShowcase / ScreenshotCarousel 组件文件均保留(可逆),
-// 但不再挂到首页 —— 首页视觉由 ImxHero 的启动链 SVG 承担,避免堆叠。
+//  (2) 据 projectConfig 条件拼装 Layout 插槽 —— 阅读体验三件套 / 截图轮播 / 路线图 / 社区卡均走配置开关。
+// HomeTipBanner / HomeArchDiagram / HomeShowcase 组件文件保留(可逆),但不再挂到首页。
 const Layout = defineComponent({
   setup() {
     if (projectConfig.plugins.mermaid) {
@@ -45,9 +45,13 @@ const Layout = defineComponent({
         h(ScreenshotCarousel, { shots: projectConfig.homeScreenshots! })
     }
 
+    // ── 首页 hero 之后:技术交流卡(有数据才挂,紧跟 hero 首屏可见)──
+    if (projectConfig.community) {
+      slots['home-hero-after'] = () => h(HomeCommunity, { community: projectConfig.community! })
+    }
+
     // ── 首页 features 之后:学习路线图(有数据才挂)──
-    const hasRoadmap = !!(projectConfig.homeRoadmap && projectConfig.homeRoadmap.stages.length)
-    if (hasRoadmap) {
+    if (projectConfig.homeRoadmap && projectConfig.homeRoadmap.stages.length) {
       slots['home-features-after'] = () => h(HomeRoadmap, { roadmap: projectConfig.homeRoadmap! })
     }
 
