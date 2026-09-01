@@ -25,10 +25,13 @@
 #   --log=PATH        (with --smoke) UART log path (default: out/qemu/uart.log)
 #   -h, --help        Show this help message
 #
-# Boot path: direct kernel boot (-kernel zImage -dtb). This is the upstream-
-# documented path that works on stock QEMU (>= 5.x, tested with 8.2.2): no
-# boot-ROM/SPL emulation exists for this machine, so U-Boot images with IVT
-# headers (u-boot-dtb.imx) cannot be booted via -bios. The U-Boot chain
+# Boot path: direct kernel boot (-kernel zImage -dtb). No boot-ROM/SPL
+# emulation exists for this machine, so U-Boot images with IVT headers
+# (u-boot-dtb.imx) cannot be booted via -bios. NOTE: stock QEMU only booted
+# the P0-era VARIANT dtb; with the single-source REAL-board dtb it hangs
+# before the UART driver probes (zero serial output, measured on system
+# 8.2.2 in CI 2026-08-31 — MMDC/OCOTP etc. are address holes there). Boot
+# verification therefore requires the self-built QEMU below. The U-Boot chain
 # enablement series (Bin Meng, 2026-08) is still under upstream review and
 # NOT part of any release yet; revisit with QEMU >= 11.2 (~2026-12).
 #

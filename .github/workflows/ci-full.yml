@@ -357,14 +357,37 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check, stage2-mainline, stage3-4]
     if: needs.check.outputs.should_run == 'true'
-    timeout-minutes: 15
+    # 首次构建自建 QEMU(arm-softmmu 单目标)约 10-20 分钟,缓存命中后只剩开机
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
 
-      - name: 安装 QEMU
+      - name: 安装依赖（自建 QEMU 的构建与运行库）
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends qemu-system-arm
+          sudo apt-get install -y -qq --no-install-recommends \
+            ninja-build flex bison libglib2.0-dev libpixman-1-dev \
+            libfdt-dev zlib1g-dev python3-venv device-tree-compiler
+
+      - name: 恢复自建 QEMU 缓存（v11.1 + 板级补丁）
+        id: qemu-cache
+        uses: actions/cache@v4
+        with:
+          path: out/qemu/build/qemu-system-arm
+          key: qemu-arm-v11.1.0-${{ hashFiles('patches/qemu/*.patch', '.gitmodules') }}
+
+      - name: 构建自建 QEMU（仅缓存未命中时）
+        if: steps.qemu-cache.outputs.cache-hit != 'true'
+        run: |
+          git submodule update --init --depth=1 third_party/qemu
+          scripts/build_helper/build-qemu.sh
+
+      - name: 校验自建 QEMU 可用
+        run: |
+          test -x out/qemu/build/qemu-system-arm
+          out/qemu/build/qemu-system-arm --version | head -1
 
       - name: 下载内核与 rootfs 产物
         uses: actions/download-artifact@v4
@@ -381,6 +404,7 @@ jobs:
             --dtb=qemu-assets/imx6ull-aes.dtb \
             --rootfs-img=qemu-assets/rootfs.ext4 \
             --timeout=300 \
+            --append=earlycon \
             --log=qemu-assets/uart.log
 
       - name: 上传启动日志（开机证据）

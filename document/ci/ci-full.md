@@ -65,8 +65,8 @@
 | Stage 2（并行） | ~12 分钟 |
 | Stage 3 | ~5 分钟 |
 | Stage 4 | ~3 分钟 |
-| QEMU Boot Smoke | ~3-5 分钟（TCG，无 KVM） |
-| **总计** | **~25-35 分钟** |
+| QEMU Boot Smoke | 首次 ~15-25 分钟（编自建 QEMU），缓存命中后 ~5 分钟（TCG，无 KVM） |
+| **总计** | **~25-35 分钟**（缓存命中）/ **~40-50 分钟**（首次） |
 
 ## 产物
 
@@ -80,7 +80,11 @@ CI 不产出烧录镜像（Stage 5 仅本地 `release-all.sh` 执行）——曾
 :::
 
 ::: info 双轨说明
-Full Build 同时验证 Linux NXP BSP 和 Linux Mainline。QEMU 开机冒烟跑的是 Mainline 轨产物（`out/mainline/linux` 的 zImage + 真板同源 dtb）；BSP 轨仍以构建验证为主。
+Full Build 同时验证 Linux NXP BSP 和 Linux Mainline。QEMU 开机冒烟跑的是 Mainline 轨产物（`out/release-latest/linux` 的 zImage + 真板同源 dtb）；BSP 轨仍以构建验证为主。
+:::
+
+::: warning 为什么冒烟必须用自建 QEMU
+真板单源设备树在发行版自带的 QEMU（8.2.x）上**启动不了**——eLCDIF/MMDC/OCOTP 在那边是未映射的地址空洞，内核死在串口驱动初始化之前（0 字节串口输出，CI 2026-08-31 实测）。因此冒烟 job 用 `build-qemu.sh` 自建的 v11.1（16 个板级补丁），二进制按补丁内容做缓存（`actions/cache`，键含 `patches/qemu/*.patch` 哈希），补丁不变不重编。
 :::
 
 ## 使用场景
