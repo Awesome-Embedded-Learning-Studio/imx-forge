@@ -369,7 +369,11 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq --no-install-recommends \
             ninja-build flex bison libglib2.0-dev libpixman-1-dev \
-            libfdt-dev zlib1g-dev python3-venv device-tree-compiler
+            libfdt-dev zlib1g-dev python3-venv device-tree-compiler \
+            libslirp0
+          # libslirp0: 运行时库 — 自建 QEMU 动态链接 libslirp.so.0（slirp 以 wrap
+          # subproject 编成共享库，构建时的 RPATH 只指向 build 目录；缓存只存裸二进制，
+          # 恢复到新 runner 后 RPATH 失效，没有它 QEMU 起不来 rc=127，run 33701714661）
 
       - name: 恢复自建 QEMU 缓存（v11.1 + 板级补丁）
         id: qemu-cache
@@ -386,6 +390,7 @@ jobs:
 
       - name: 校验自建 QEMU 可用
         run: |
+          set -o pipefail
           test -x out/qemu/build/qemu-system-arm
           out/qemu/build/qemu-system-arm --version | head -1
 
