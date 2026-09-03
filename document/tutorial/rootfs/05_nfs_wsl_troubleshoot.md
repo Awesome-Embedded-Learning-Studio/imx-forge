@@ -523,7 +523,7 @@ IPv6Connectivity : Internet
 
 ### 原因
 
-网桥网卡被 Windows 识别为「公用网络（Public）」，而新建防火墙规则默认只对「专用网络（Private）」生效。
+网桥网卡被 Windows 识别为「公用网络（Public）」，而当时那批防火墙规则的 Profile 没有覆盖 Public，规则在 Public 类别下不生效。这里要澄清一个流传很广的误读：`New-NetFirewallRule` 的 `-Profile` 参数默认值就是 `Any`，不带 `-Profile` 建出来的规则本来就该覆盖 Domain/Private/Public 三种网络类别——「新建规则默认只对专用网络生效」与官方文档相反。真实机制是规则的 Profile 没盖住网桥当前的活动网络类别：图形界面里建的、或者照抄别处教程的规则，经常没把 Public 勾全。别依赖默认，显式写 `-Profile Any` 最稳：三种网络一次兜住，`Get-NetFirewallRule` 的 Profile 字段一眼可核对。
 
 ### 解决方法
 

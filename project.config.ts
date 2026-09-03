@@ -147,10 +147,10 @@ export default defineProject({
       },
       {
         no: '阶段 2',
-        name: '开发工作流',
+        name: '开发环境配置',
         dir: 'workflow',
-        chapters: 4,
-        desc: 'WSL2 注意事项、clangd 交叉编译索引、VSCode tasks 模板,把编辑器调教成嵌入式工作台。',
+        chapters: 7,
+        desc: 'WSL2 环境配置、VSCode Remote-SSH 远程开发、串口终端双通道、clangd 索引、tasks 模板与主机-板端传文件,把开发台一块块配齐。',
         status: 'done',
         link: '/tutorial/workflow/',
       },

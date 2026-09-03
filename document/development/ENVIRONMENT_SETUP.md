@@ -221,6 +221,17 @@ arm-none-linux-gnueabihf-objdump --version
 
 ---
 
+## VSCode 配置
+
+VSCode 的具体配置已拆到教程站的开发环境配置卷维护，这里只给入口：
+
+- 远程开发（Windows 的 VSCode 连 WSL + 串口终端双通道）：[workflow/02](../tutorial/workflow/02_vscode_remote_ssh.md)
+- 代码索引（clangd + compile_commands.json）：[workflow/04](../tutorial/workflow/04_clangd_cross_compile.md)
+- 构建任务模板（tasks.json）：[workflow/05](../tutorial/workflow/05_tasks_json.md)
+- 断点调试（gdbserver + launch.json）：[debug/01](../tutorial/debug/01_gdbserver_remote_debug.md)
+
+最小可用组合：VSCode 连进 WSL 后装 clangd 扩展、把 C/C++ 扩展的 IntelliSense 设为 disabled，再拷一份 tasks.json 模板，编译与跳转就能一键化。
+
 ## 调试环境配置
 
 ### 串口调试工具
@@ -495,7 +506,9 @@ sudo apt install qemu-system-arm qemu-user-static binfmt-support
 # 代码分析
 sudo apt install cscope global
 
-# 调试工具
+# 调试工具（宿主原生 gdb，只用于调试本机 x86 程序；
+# 交叉调试用的是工具链自带的 arm-none-linux-gnueabihf-gdb 与 rootfs 里的 gdbserver，
+# 见教程 debug/01）
 sudo apt install gdb gdbserver
 
 # 性能分析
@@ -948,6 +961,8 @@ sudo apt install -y \
 
 echo "Dependencies installed successfully!"
 ```
+
+> 注：这里的 `gdb` 是宿主原生版本，只用于调试本机 x86 程序；交叉调试用的是工具链自带的 `arm-none-linux-gnueabihf-gdb` 与 rootfs 里的 `gdbserver`，见教程 [debug/01](../tutorial/debug/01_gdbserver_remote_debug.md)。
 
 ### 环境变量模板
 

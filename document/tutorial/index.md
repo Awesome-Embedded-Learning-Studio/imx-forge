@@ -15,7 +15,7 @@ title: 教程
     <ChapterLink num="01" href="docker/" variant="sub">Docker 环境搭建</ChapterLink>
     <ChapterLink num="02" href="start/01_start_from_toolchain" variant="sub">工具链安装</ChapterLink>
     <ChapterLink num="03" href="start/02_env_init_guide" variant="sub">环境初始化</ChapterLink>
-    <ChapterLink num="04" href="workflow/" variant="sub">开发工作流（WSL2/clangd/tasks）</ChapterLink>
+    <ChapterLink num="04" href="workflow/" variant="sub">开发环境配置（WSL2/远程/串口/传输）</ChapterLink>
   </RoadMapPhase>
 
   <RoadMapPhase icon="🚀" title="引导加载" subtitle="Bootloader" time="~3 天" :difficulty="2" :num="2">
@@ -65,6 +65,7 @@ title: 教程
     <ChapterLink num="02" href="kernel/core-functional/" variant="sub">内核并发机制</ChapterLink>
     <ChapterLink num="03" href="uboot/bonus_qa" variant="sub">U-Boot Q&A</ChapterLink>
     <ChapterLink num="04" href="project/light-meter/" variant="sub">工程实战：light-meter 照度摆件</ChapterLink>
+    <ChapterLink num="05" href="debug/" variant="sub">调试与排错（gdbserver/strace/串口日志）</ChapterLink>
   </RoadMapPhase>
 </RoadMap>
 
@@ -83,12 +84,15 @@ title: 教程
   <ChapterLink num="02" href="start/02_env_init_guide">环境初始化指南</ChapterLink>
 </ChapterNav>
 
-### 开发工作流
+### 开发环境配置
 
 <ChapterNav>
-  <ChapterLink num="01" href="workflow/01_wsl2_notes">WSL2 开发注意事项</ChapterLink>
-  <ChapterLink num="02" href="workflow/02_clangd_cross_compile">clangd 交叉编译配置</ChapterLink>
-  <ChapterLink num="03" href="workflow/03_tasks_json_templates">VSCode tasks.json 模板</ChapterLink>
+  <ChapterLink num="01" href="workflow/01_wsl2_env_config">WSL2 环境配置</ChapterLink>
+  <ChapterLink num="02" href="workflow/02_vscode_remote_ssh">VSCode Remote-SSH 连 WSL</ChapterLink>
+  <ChapterLink num="03" href="workflow/03_serial_terminal">串口终端</ChapterLink>
+  <ChapterLink num="04" href="workflow/04_clangd_cross_compile">clangd 交叉编译配置</ChapterLink>
+  <ChapterLink num="05" href="workflow/05_tasks_json">VSCode tasks.json</ChapterLink>
+  <ChapterLink num="06" href="workflow/06_host_board_transfer">主机与板子传文件</ChapterLink>
 </ChapterNav>
 
 ### U-Boot 教程
@@ -190,6 +194,14 @@ title: 教程
   <ChapterLink num="02" href="practical/02_build_system">构建系统</ChapterLink>
   <ChapterLink num="03" href="practical/03_boot_and_debug">启动与调试</ChapterLink>
   <ChapterLink num="04" href="practical/04-nfs-experience">NFS 体验</ChapterLink>
+</ChapterNav>
+
+### 调试与排错
+
+<ChapterNav>
+  <ChapterLink num="01" href="debug/01_gdbserver_remote_debug">gdbserver 远程调试全链</ChapterLink>
+  <ChapterLink num="02" href="debug/02_strace_log_coredump">strace、日志与 coredump</ChapterLink>
+  <ChapterLink num="03" href="debug/03_serial_log_reading">串口日志阅读路线</ChapterLink>
 </ChapterNav>
 
 ### 工程实战项目（工程终点）
