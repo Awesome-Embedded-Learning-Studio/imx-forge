@@ -139,5 +139,5 @@ A: 首次尝试需要 2-3 天，熟悉后可缩短至 2-4 小时。
 ## 继续学习
 
 <ChapterNav variant="sub">
-  <ChapterLink href="../driver/" variant="sub">驱动开发 →</ChapterLink>
+  <ChapterLink href="../debug/" variant="sub">调试与排错 →</ChapterLink>
 </ChapterNav>

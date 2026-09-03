@@ -228,7 +228,7 @@ make BR2_INSTRUMENTATION_SCRIPTS="/path/to/timer.sh"
 
 ### 在板子上 gdb 调试
 
-手册 `using-buildroot-debugger.adoc` 讲了交叉调试的套路:调试器跑在宿主机,gdbserver 跑在板子上。因为我们用外部工具链,最省事的是开 `BR2_TOOLCHAIN_EXTERNAL_GDB_SERVER_COPY`,把工具链自带的 gdbserver 拷到 target;如果工具链没带,Buildroot 也能自己编(`BR2_PACKAGE_HOST_GDB` + `BR2_PACKAGE_GDB` + `BR2_PACKAGE_GDB_SERVER`)。
+手册 `using-buildroot-debugger.adoc` 讲了交叉调试的套路:调试器跑在宿主机,gdbserver 跑在板子上。完整的板端部署、手搓命令行与 VSCode launch.json 实战见 [调试卷 01：gdbserver 远程调试全链](../debug/01_gdbserver_remote_debug.md),那边在 QEMU 里把这条链完整实测过一遍:调试器跑在宿主机,gdbserver 跑在板子上。因为我们用外部工具链,最省事的是开 `BR2_TOOLCHAIN_EXTERNAL_GDB_SERVER_COPY`,把工具链自带的 gdbserver 拷到 target;如果工具链没带,Buildroot 也能自己编(`BR2_PACKAGE_HOST_GDB` + `BR2_PACKAGE_GDB` + `BR2_PACKAGE_GDB_SERVER`)。
 
 板子上起 gdbserver 监听端口:
 

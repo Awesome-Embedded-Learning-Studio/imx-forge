@@ -1,6 +1,6 @@
 # 方向 D2：工具完备
 
-> **最后更新**：2026-07-14（回填 buildroot 教程/脚本、I2C/SPI 驱动完成状态）
+> **最后更新**：2026-09-02（回填 debug/workflow 两卷落地项：调试与排错卷 3 章新建、开发环境配置卷扩至 6 篇并全卷重写）
 > **任务数量**：66项 (9工具 + 57文档)，文档已完成约 16 项（buildroot 12 章、I2C/SPI 驱动，以各表勾选为准）
 
 ---
@@ -33,7 +33,7 @@
 
 > 提升开发效率和调试能力的关键功能
 >
-> **2026-06-14 对齐**：P1-1 系统调试手册、P1-2 交叉调试所引用的 `tutorial/debug/`、`tutorial/workflow/`、`tutorial/tools/` 目录均尚未建立，整体待办；现有部分覆盖见 [kernel/mainline/11 常见问题](../../tutorial/kernel/mainline/11_common_issues.md)、[practical/03 启动调试](../../tutorial/practical/03_boot_and_debug.md)、[kernel/08 内核启动调试](../../tutorial/kernel/08_kernel_boot_debug.md)。
+> **2026-09-02 对齐**：`tutorial/debug/` 已建立（3 章 + index，含症状排障路标表）；`tutorial/workflow/` 已扩至 6 篇（卷名改「开发环境配置」）；`tutorial/tools/` 不建——工具内容并入 linux-basics（见 P1-3 注）。按 op_plan/04 §四「错误模式不立独立卷」，P1-1 排查类条目收敛进 debug 卷与 qa/ 机制，不逐条立篇。
 
 ### 工具任务 (6项)
 
@@ -53,27 +53,27 @@
 | 任务 | 相关文件 |
 |------|----------|
 | [ ] U-Boot common issues / U-Boot 常见问题排查 | `document/tutorial/debug/` |
-| [ ] Serial console no-output troubleshooting / 串口无输出排查 | `document/tutorial/debug/` |
+| [ ] Serial console no-output troubleshooting / 串口无输出排查 | [start/04](../../tutorial/start/04_serial_tools_minicom.md) 排障节部分覆盖；其余按上方对齐注收敛，不逐条立篇 |
 | [ ] Network boot troubleshooting / 网络启动问题排查 | `document/tutorial/debug/` |
-| [ ] Kernel panic common issues / Kernel panic 常见问题排查 | `document/tutorial/debug/` |
+| [ ] Kernel panic common issues / Kernel panic 常见问题排查 | 机制在 [kernel/08](../../tutorial/kernel/08_kernel_boot_debug.md)，读法在 [debug/03 §三](../../tutorial/debug/03_serial_log_reading.md)，不另立篇 |
 | [ ] DTB mismatch troubleshooting / DTB 不匹配问题排查 | `document/tutorial/debug/` |
 | [ ] Rootfs and init failure troubleshooting / Rootfs 与 init 失败排查 | `document/tutorial/debug/` |
-| [ ] NFS / TFTP troubleshooting / NFS / TFTP 常见问题排查 | `document/tutorial/debug/` |
+| [ ] NFS / TFTP troubleshooting / NFS / TFTP 常见问题排查 | 已由 [workflow/01](../../tutorial/workflow/01_wsl2_env_config.md) + [rootfs/05](../../tutorial/rootfs/05_nfs_wsl_troubleshoot.md) 覆盖，不另立篇 |
 | [ ] Kernel module loading failure troubleshooting / 模块加载失败排查 | `document/tutorial/debug/` |
-| [ ] Serial log reading guide / 串口日志阅读指南 | `document/tutorial/debug/` |
-| [ ] How to submit useful debug logs / 如何提交有效的问题日志 | `document/tutorial/debug/` |
+| [x] Serial log reading guide / 串口日志阅读指南 | [debug/03](../../tutorial/debug/03_serial_log_reading.md) |
+| [x] How to submit useful debug logs / 如何提交有效的问题日志 | [debug/03 §五](../../tutorial/debug/03_serial_log_reading.md)（四要素日志截法） |
 
 #### P1-2: 交叉调试与诊断 (7项)
 
 | 任务 | 相关文件 |
 |------|----------|
-| [ ] gdbserver deployment guide / gdbserver 板端部署说明 | `document/tutorial/debug/` |
-| [ ] VSCode + GDB cross-debugging setup / VSCode + GDB 交叉调试配置 | `document/tutorial/workflow/` |
-| [ ] Debugging shared libraries / 共享库调试说明 | `document/tutorial/debug/` |
-| [ ] `strace` basic usage / `strace` 基础使用 | `document/tutorial/tools/` |
-| [ ] Core dump debugging workflow / core dump 调试流程 | `document/tutorial/debug/` |
-| [ ] Basic logging workflow / 基础日志收集流程 | `document/tutorial/debug/` |
-| [ ] Basic performance inspection tools / 基础性能分析工具说明 | `document/tutorial/tools/` |
+| [x] gdbserver deployment guide / gdbserver 板端部署说明 | [debug/01 §二](../../tutorial/debug/01_gdbserver_remote_debug.md) |
+| [x] VSCode + GDB cross-debugging setup / VSCode + GDB 交叉调试配置 | [debug/01 §四](../../tutorial/debug/01_gdbserver_remote_debug.md)（全仓首个 launch.json） |
+| [x] Debugging shared libraries / 共享库调试说明 | [debug/01 §五](../../tutorial/debug/01_gdbserver_remote_debug.md) |
+| [x] `strace` basic usage / `strace` 基础使用 | [debug/02 §三](../../tutorial/debug/02_strace_log_coredump.md)（tools/ 不建） |
+| [x] Core dump debugging workflow / core dump 调试流程 | [debug/02 §四](../../tutorial/debug/02_strace_log_coredump.md) |
+| [x] Basic logging workflow / 基础日志收集流程 | [debug/02 §二](../../tutorial/debug/02_strace_log_coredump.md)（dmesg/syslogd/logread） |
+| [ ] Basic performance inspection tools / 基础性能分析工具说明 | perf/top 归 workflow 卷 P2 补篇（op_plan/04 §五④），本批不做 |
 
 #### P1-3: 构建工具 (17项 — 已完成 9，基于旧教程 Ch 3, 34, 40)
 
@@ -146,14 +146,14 @@
 
 | 任务 | 相关文件 |
 |------|----------|
-| [ ] VSCode development workflow / VSCode 开发工作流说明 | `document/tutorial/workflow/` |
-| [ ] WSL2 development notes / WSL2 开发注意事项 | `document/tutorial/workflow/` |
-| [ ] Docker development workflow / Docker 开发环境说明 | `document/tutorial/workflow/` |
-| [ ] Remote-SSH workflow / Remote-SSH 工作流说明 | `document/tutorial/workflow/` |
-| [ ] clangd cross-compilation configuration / clangd 交叉编译配置说明 | `document/tutorial/workflow/` |
-| [ ] tasks.json command templates / tasks.json 常用任务模板 | `document/tutorial/workflow/` |
-| [ ] Host and board file synchronization workflow / 主机与板端文件同步流程 | `document/tutorial/workflow/` |
-| [ ] Git workflow for third-party source patches / 第三方源码 patch 的 Git 工作流 | `document/tutorial/workflow/` |
+| [x] VSCode development workflow / VSCode 开发工作流说明 | [workflow 卷](../../tutorial/workflow/) 整卷重写为六篇制 |
+| [x] WSL2 development notes / WSL2 开发注意事项 | [workflow/01](../../tutorial/workflow/01_wsl2_env_config.md) |
+| [x] Docker development workflow / Docker 开发环境说明 | [docker 卷](../../tutorial/docker/) 已覆盖，不另立 |
+| [x] Remote-SSH workflow / Remote-SSH 工作流说明 | [workflow/02](../../tutorial/workflow/02_vscode_remote_ssh.md) |
+| [x] clangd cross-compilation configuration / clangd 交叉编译配置说明 | [workflow/04](../../tutorial/workflow/04_clangd_cross_compile.md) |
+| [x] tasks.json command templates / tasks.json 常用任务模板 | [workflow/05](../../tutorial/workflow/05_tasks_json.md) |
+| [x] Host and board file synchronization workflow / 主机与板端文件同步流程 | [workflow/06](../../tutorial/workflow/06_host_board_transfer.md) |
+| [x] Git workflow for third-party source patches / 第三方源码 patch 的 Git 工作流 | [build/02](../../tutorial/build/02_patch_workflow_practice.md) 已覆盖 |
 
 ---
 
