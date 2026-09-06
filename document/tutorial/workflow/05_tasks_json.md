@@ -6,14 +6,6 @@ title: VSCode tasks.json：把构建绑到快捷键
 
 > release-all 跑完整链路、单个组件重编、menuconfig 调选项，这些是咱们每天敲得最多的命令，路径一长就打错。本篇用 VSCode 的任务系统接管它们：`Ctrl+Shift+B` 直达默认构建，其余任务在命令面板里点一下就跑。上一篇咱们把代码跳转配置好了，这一篇把构建变成一次按键；产物怎么送到板子上，留给下一篇。
 
-::: info 您将学到
-- tasks.json 放在 `.vscode/` 下的原因，以及这个目录被 .gitignore 忽略的实际后果
-- 八个任务模板全文，七条脚本路径笔者逐一核验存在，make 生成 compile_commands.json 那条单独真跑核对过
-- label、group.isDefault、presentation.panel、problemMatcher 各自管什么
-- release-all.sh 的 `--stage N` 分阶段构建怎么绑成独立任务
-- 把板端起 gdbserver 做成一个手动触发的任务，它与调试卷那一篇怎么分工
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - 环境基础回 [WSL2 开发注意事项](01_wsl2_env_config.md)；[clangd 交叉编译配置](04_clangd_cross_compile.md) 的 settings.json 与本篇的 tasks.json 同住一个 `.vscode/`，建议您先做完那边再来
 - 本篇引用的脚本笔者都在仓库里实测过：`/home/charliechen/imx-forge/scripts/release-all.sh`（572 行）与 `/home/charliechen/imx-forge/scripts/build_helper/` 下的七个构建脚本

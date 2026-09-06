@@ -6,14 +6,6 @@ title: 主机与板子传文件：scp、rsync 与 NFS root 的三种选法
 
 > 交叉编译出来的 demo 怎么放到板子上，板上抓的日志怎么回宿主，这是咱们每天都在做的小动作，可一旦选错通道，等着您的就是连不上、被拒、传完就丢这一串坑。本篇是工作流卷的收尾篇，把 scp、rsync 与 NFS root 三种通道的适用边界讲清楚。上一篇 [tasks.json 命令模板](05_tasks_json.md) 把构建命令一键化之后，这一篇补上产物与板子之间的最后一段路；后面调试卷部署要调试的程序、抓日志，用的都是这里打通的链路。
 
-::: info 您将学到
-- 宿主工作区与板上 rootfs 两棵目录树怎么分，为什么 NFS root 形态下写文件就是部署
-- 怎么给 rootfs 开出 dropbear 拿到 ssh 与 scp，root 登录的密码现状怎么核对，推与拉各一条命令
-- 目录级同步的两条路：menuconfig 开 rsync 包走增量，或一行 tar 管道的省事选法
-- 直接改 out/release-latest/rootfs 的边界在哪里，留存的正路为什么是 overlay 与 package
-- 一条选型纪律：临时调试、可留存的配置、构建产物，各走各的通道
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - WSL2 环境的网络与文件系统差异，您回 [WSL2 开发注意事项](01_wsl2_env_config.md) 看；首次把板子跑起来、串口登录的完整流程见 [启动与调试](../practical/03_boot_and_debug.md)
 - 咱们本篇的大量结论可以在仓库里直接核实：rootfs 配置在 rootfs/buildroot/configs/imx6ull_aes_defconfig，本地构建树在 out/release-latest/buildroot，rootfs 目录在 out/release-latest/rootfs

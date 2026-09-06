@@ -6,14 +6,6 @@ title: gdbserver 远程调试全链：把断点打在实际的板子上
 
 > 程序在板子上跑飞了，printf 加到十几轮还是定位不了，咱们缺的是把断点打到实际的板子上的能力。本篇把用户态交叉调试的整条链路走通：从 Buildroot 里那颗开关开始，让 rootfs 长出 gdbserver,再用命令行与 VSCode 两条路完成 target remote;手边没板子时，QEMU 客户机能把同一条链原样跑一遍。本篇是调试卷的第一篇；宿主 gdb 的基础操作在 Linux 基础卷教过，Buildroot 侧调试选项的取舍在 Buildroot 卷讲过，这里只做整条链路的实操；内核态调试(kgdb)不在本篇范围。
 
-::: info 您将学到
-- 调试器为什么拆成宿主交叉 gdb 与板端 gdbserver 两半，中间的 RSP 协议在做什么
-- 怎么开 menuconfig 让 rootfs 长出 gdbserver,翻了开关却 0 包重做时该删哪个 stamp
-- 从 target remote 到 break、continue、print、bt 的整条命令行链路，断点命中输出咱们逐行解读
-- VSCode 的 cppdbg 怎么接管同一条链，launch.json 每个字段对应哪条 gdb 命令
-- 共享库符号、多线程、pending 断点这几个坑的机制与验证手段，您拿判据自查
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - 宿主 gdb 基础(break / run / print / bt / core 分析)您回 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md) 看，本篇从 target remote 开始接
 - 串口登录与 minicom 配置见 [串口工具使用](../start/04_serial_tools_minicom.md),首次把系统跑到板子上的流程见 [启动与调试](../practical/03_boot_and_debug.md)
