@@ -16,11 +16,11 @@ title: 入门准备
 </ChapterNav>
 
 ::: tip 欢迎
-这是嵌入式 Linux 开发之旅的第一步。完成工具链安装后，你将具备交叉编译的能力。
+这是嵌入式 Linux 开发之旅的第一步。完成工具链安装后，您就具备了交叉编译的能力。
 :::
 
 ::: info 前置要求
-已安装 Ubuntu 22.04+ 或 WSL2 · 具有 sudo 权限 · 基本的命令行操作能力
+您需要已安装 Ubuntu 22.04+ 或 WSL2、具有 sudo 权限，并会基本的命令行操作
 :::
 
 ::: details 延伸阅读
@@ -31,5 +31,6 @@ title: 入门准备
 ## 继续学习
 
 <ChapterNav variant="sub">
+  <ChapterLink href="../workflow/" variant="sub">开发环境配置 →</ChapterLink>
   <ChapterLink href="../uboot/" variant="sub">U-Boot 教程 →</ChapterLink>
 </ChapterNav>

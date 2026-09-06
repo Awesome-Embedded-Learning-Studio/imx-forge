@@ -6,14 +6,6 @@ title: 程序在板上崩了：strace、日志与 coredump 的最小够用集
 
 > 上一篇咱们把 gdbserver 的断点链路走通了，可板子上的问题十有八九轮不到上断点：内核报了一句错、程序行为说不清哪儿不对、或者干脆吐一行 Segmentation fault 就退场。本篇补上这一层的三件轻量工具，日志、strace、coredump，从开销最低的 dmesg 一路用到把事故现场搬回宿主机回溯到源码行号；全部输出来自本仓 rootfs 在 QEMU 客户机里的真跑记录，实际的板子上命令一字不改。断点能力上一篇已经备好，串口日志的完整读法留给下一篇，本篇管的是还不用上断点的排查层。
 
-::: info 您将学到
-- 排查次序为什么是日志、strace、core：三件工具的成本与信息量怎么递增，判断依据是什么
-- rootfs 里 syslogd 与 klogd 的启动形态，logread 输出为空的根因，dmesg 与 /var/log/messages 各管哪一层
-- strace 的四个用法：整程跟踪、openat 过滤、-c 统计、-f 多进程，每份输出咱们逐行读
-- coredump 完整链路：ulimit、core_pattern、触发、从 QEMU 的 ext4 镜像取回 core、交叉 gdb 读栈读到行号
-- 两个排障剧本：段错误定位与程序无声卡死的判断思路
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - menuconfig 里开软件包与 QEMU 直启这两件事，[01 gdbserver 远程调试全链](01_gdbserver_remote_debug.md) 已经走通，本篇直接沿用
 - 宿主 gdb 的基础操作（含 core 文件分析入门）回 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md)；构建侧排错与 stamp 机制看 [Buildroot 调试与排错](../buildroot/10_debugging.md)

@@ -6,14 +6,6 @@ title: clangd 交叉编译配置：让跳转又快又准
 
 > 远程会话开了，驱动源文件也开了，您按下 F12 想跳进 `copy_to_user` 的定义，迎接咱们的却是一片红色波浪线。代码没写错，是索引器压根没吃到交叉编译的命令行。本篇把 clangd 的索引链路配置通：编译数据库从哪来、仓库根那份 `.clangd` 每一段管什么、后台索引怎么提速；索引这摊归 clangd，构建一键化是下一篇 tasks.json 的事，断点调试归调试卷的 cppdbg，三块各管各的。
 
-::: info 您将学到
-- 内核树这种规模的 C 工程里，cpptools 的 IntelliSense 为什么慢且不准，clangd 靠 compile_commands.json 对上了什么
-- make compile_commands.json 这个内核原生目标怎么用，O= 那一行为什么必须写绝对路径
-- 仓库根 `.clangd` 三段配置各自的分工，Remove 的 13 个 flag 里哪些在这棵树里真的出现
-- settings.json 怎么关掉 cpptools 的索引引擎，排除目录给后台索引提速
-- clangd 与 cppdbg 调试引擎怎么共存，互不打架的边界画在哪
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - VSCode 远程开发会话的建立回 [02 VSCode Remote-SSH](02_vscode_remote_ssh.md)，本篇在会话里操作
 - 从装插件开始的 IDE 配置全流程，[driver 卷的 IDE 配置指南](../driver/00_chardev_base/06p_ide_setup.md) 有完整一份，本篇不重复装插件那几步

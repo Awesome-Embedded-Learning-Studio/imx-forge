@@ -6,14 +6,6 @@ title: VSCode Remote-SSH 连 WSL：把编辑器搬进开发环境
 
 > 咱们的源码、交叉工具链、构建产物全在 WSL 的文件系统里，VSCode 却开在 Windows 桌面上，这层别扭怎么解？本篇把编辑器搬进开发环境：WSL 侧装好并启动 sshd,Windows 侧配好 Host 别名与 ed25519 免密，Remote-SSH 一线牵通。这是工作流卷第二篇，上一篇把 WSL2 网络模式调成了 mirrored,本篇直接复用那条结论；下一篇接上串口终端，两扇窗口拼成完整的开发台。
 
-::: info 您将学到
-- 在 WSL 里安装、配置 openssh-server,分清 systemd 套接字激活、systemd 常驻服务与非 systemd 三种开机自启形态
-- Windows 侧 %USERPROFILE%\.ssh\config 的 Host 别名写法，ed25519 密钥免密的完整链路
-- Remote-SSH 打开仓库后，clangd 索引与构建任务为什么原样生效，扩展该装远端还是本地
-- Remote-SSH 与官方 WSL 扩展的机制差别，您拿什么依据做选择
-- 连不上时的排查顺序：服务在不在、端口归谁、网络模式对不对，逐项对号
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - WSL2 网络模式(mirrored 切换、防火墙放行手法)归 [01_wsl2_env_config.md](01_wsl2_env_config.md),本篇只复用其结论，配置步骤回那篇看
 - 串口侧的参数与工具(115200 8N1 无流控、minicom 用法)在 [串口工具使用](../start/04_serial_tools_minicom.md),是下一篇的储备

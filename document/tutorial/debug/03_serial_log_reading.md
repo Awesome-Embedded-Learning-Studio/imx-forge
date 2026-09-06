@@ -6,14 +6,6 @@ title: 串口日志阅读路线：从一行输出找到下一站
 
 > 调试卷前两篇的工具都默认一件事：咱们已经知道问题出在哪个程序里。gdbserver 把断点打进指定进程，strace 盯着指定命令跑；可最常见的第一现场，是串口上一行行滚动的输出。读不懂这份输出，咱们就不知道下一站该去哪。本篇是调试卷的收尾篇：教您把串口日志读成定位线索，启动分段地图、Oops 解剖、噪音过滤、截日志的规范一次讲完。Oops 的内核态深入解剖在驱动卷与内核卷已有专章，本篇只管用户视角的读法，细节放进不重写那几章。
 
-::: info 您将学到
-- 把三百多行启动日志切成五段的地图，卡在哪一段，问题就在哪个子系统
-- 从 Linux version 行与 Kernel command line 行读出环境、版本、根设备与控制台
-- Oops 与 panic 的区别，PC、LR、Call trace、寄存器现场怎么读，再用 nm 加 addr2line 把地址落回源码(含真跑整条链路与它的边界)
-- deferred probe、固件加载失败、模拟器里的桩超时这三类噪音怎么判读，单行失败与链路失败是两种世界
-- 截一段拿去提问、提 Issue 的日志，要凑齐哪四要素
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - 串口工具的装配与配置(minicom、picocom，115200 8N1 无流控)您回 [串口工具使用](../start/04_serial_tools_minicom.md) 看；首次上电流程与 tee 记日志的手法在 [启动与调试](../practical/03_boot_and_debug.md)
 - 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/08_kernel_boot_debug.md)，U-Boot 阶段的命令在 [U-Boot 调试命令](../uboot/09_debugging_commands.md)

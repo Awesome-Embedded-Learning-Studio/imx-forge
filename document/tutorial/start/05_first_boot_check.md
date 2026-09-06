@@ -4,7 +4,7 @@ title: 第一次上电与串口检查
 
 # 第一次上电与串口检查
 
-> 本篇是 bring-up 检查清单——板子第一次上电该看什么、日志卡在哪意味着什么。配合 [practical/03 启动与调试](../practical/03_boot_and_debug.md) 食用。
+> 本篇是咱们第一次给板子上电的检查清单——该看什么、日志卡在哪意味着什么。配合 [practical/03 启动与调试](../practical/03_boot_and_debug.md) 食用。
 
 ## 一、上电前检查清单
 
@@ -17,13 +17,15 @@ title: 第一次上电与串口检查
 
 ## 二、上电流程
 
-1. 打开串口工具（`minicom` 或 `picocom -b 115200 /dev/ttyUSB0`）；
+咱们按三步走：
+
+1. 您先打开串口工具（`minicom` 或 `picocom -b 115200 /dev/ttyUSB0`）；
 2. 给板子上电；
 3. 观察串口输出。
 
 ## 三、启动日志检查点
 
-正常启动会依次出现这几个阶段，卡在哪个阶段就查哪个：
+您会看到正常启动依次经过这几个阶段，卡在哪个阶段就查哪个：
 
 ### 1. U-Boot 阶段
 
@@ -67,7 +69,7 @@ Welcome to Buildroot
 imx6ull login:
 ```
 
-看到这个就成了！输入 `root`（无密码，或按 rootfs 配置）登录。
+看到这个就成了！您输入 `root`（无密码，或按 rootfs 配置）登录。
 
 ## 四、常见上电问题速查
 
@@ -81,7 +83,7 @@ imx6ull login:
 | 串口乱码 | 波特率不是 115200 |
 
 ::: tip 救命稻草：U-Boot 命令行
-启动倒计时时按 Enter 进入 U-Boot 命令行，可以 `printenv` 看环境变量、`bootd` 重新启动、手动 `tftp`/`load` 测试镜像。见 [U-Boot 教程](../uboot/)。
+咱们在启动倒计时时按 Enter 进入 U-Boot 命令行，可以 `printenv` 看环境变量、`bootd` 重新启动、手动 `tftp`/`load` 测试镜像。见 [U-Boot 教程](../uboot/)。
 :::
 
 ## 继续学习
@@ -90,3 +92,4 @@ imx6ull login:
 - 启动流程详解：[flash/04 启动流程与偏移](../flash/04_imx6ull_boot_flow_and_offsets.md)
 - 实战启动调试：[practical/03 启动与调试](../practical/03_boot_and_debug.md)
 - 启动失败排查：[kernel/mainline/11 常见问题](../kernel/mainline/11_common_issues.md)
+- 出问题了从哪篇读起：[调试与排错卷的路标表](../debug/)

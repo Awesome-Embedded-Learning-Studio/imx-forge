@@ -6,14 +6,6 @@ title: WSL2 环境配置：网络、防火墙与存储位置
 
 > 本篇是开发环境配置卷的第一篇，只管 WSL2 本身的配置：网络模式、防火墙放行、存储位置。这几块配好之后，下一篇的编辑器接入、板子的 NFS/TFTP 启动才有落脚点。边界也说清楚：编辑器接入归 02、串口归 03、clangd 与构建任务归 04/05、文件传输归 06；NFS 服务端全流程与内核侧网络启动分别在 rootfs/05 和 kernel/06，每块给到链接，细节您跳过去看。
 
-::: info 您将学到
-- 把 WSL2 切到 mirrored 网络模式，并用 WSL 侧 `ip addr` 与 Windows 侧 `ipconfig` 的地址对照验证生效
-- 给 TFTP（UDP 69）与 NFS 建带 `-Profile Any` 的 Windows 防火墙放行规则，理解规则的 Profile 覆盖与 Public 网桥的关系
-- 在 `/etc/nfs.conf` 里固定 mountd/lockd/statd 端口，并用 `rpcinfo` 核对
-- 用实测数据决定源码放哪：9P 的顺序吞吐并不慢，海量小文件慢几十倍
-- 识别内核 nfsd 失效的情形，知道 nfs-ganesha 备选路线的存在
-:::
-
 ::: tip 前置知识·环境
 - 前置：WSL2 的安装与基本操作，见 [linux-basics 专栏](../linux-basics/) 的环境篇，本篇不重复入门内容。
 - 仓库实路径：`~/imx-forge`（本机即 `/home/charliechen/imx-forge`）。

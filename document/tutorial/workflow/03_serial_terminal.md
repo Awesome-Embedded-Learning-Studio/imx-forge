@@ -6,13 +6,6 @@ title: 串口终端：开发台的第二块屏幕
 
 > 上一篇咱们把编辑器搬进了开发环境（[VSCode Remote-SSH 连 WSL](02_vscode_remote_ssh.md)）；本篇补上开发台的第二块屏幕：串口。SSH 之外为什么必须再留一条串口通道、Windows 直连与 usbipd 透进 WSL 两条通道怎么选、日志归档落在哪一侧，是本篇要解决的问题。minicom 第一次跑通的入门流程在 start/04，串口日志怎么读在 debug/03，本篇只做开发台形态下的通道选型与常驻配置。
 
-::: info 您将学到
-- 为什么 SSH 与串口要当成两条独立通道配置：一条断了，另一条还在
-- 通道一的配置要点：MobaXterm 的 COM 口识别、关流控与会话日志
-- 通道二的完整链条：usbipd 四条命令，加上 dialout 组与 udev 规则两道权限解法
-- 日志归档落在哪一侧的判断依据，以及 QEMU 场景用 run-qemu.sh --log 收串口
-:::
-
 ::: tip 前置知识 · 咱们的环境
 - minicom 首跑与串口参数表在 [串口工具使用（minicom）](../start/04_serial_tools_minicom.md)；WSL2 的网络与文件系统的坑见 [WSL2 开发注意事项](01_wsl2_env_config.md)；picocom 与 tee 的实战用法出自 [启动与调试](../practical/03_boot_and_debug.md)
 - 路径上下文：咱们的操作分两侧，Windows 侧的命令在 PowerShell 里跑（bind 要管理员窗口；usbipd-win 5.0 起 attach 不再要求提权，旧版仍要），WSL 侧在仓库根 ~/imx-forge（本机即 /home/charliechen/imx-forge）；本篇不碰源码树与交叉工具链，操作对象是设备节点 /dev/ttyUSB* 与 /etc/udev/rules.d/ 下的配置文件，串口终端用 picocom，虚拟机场景用 scripts/qemu_helper/run-qemu.sh
