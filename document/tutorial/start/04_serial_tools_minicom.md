@@ -4,11 +4,11 @@ title: 串口工具使用（minicom）
 
 # 串口工具使用（minicom）
 
-> i.MX6ULL 的 debug 口是 UART1，板载 USB 转串口。上电后所有启动日志（U-Boot → 内核 → rootfs）都从串口输出。本篇讲 minicom 的安装、配置与使用，并对比 picocom / screen。
+> i.MX6ULL 的 debug 口是 UART1，板载 USB 转串口，咱们全程靠它看板子的输出。上电后所有启动日志（U-Boot → 内核 → rootfs）都从串口输出。本篇讲 minicom 的安装、配置与使用，并对比 picocom / screen。
 
 ## 一、为什么需要串口
 
-嵌入式开发没有显示器，**串口就是眼睛**。U-Boot 启动、内核解压、驱动加载、rootfs 挂载、登录提示符——全在串口日志里。没有串口，板子起不来你都不知道卡在哪。
+嵌入式开发没有显示器，对咱们来说**串口就是眼睛**。U-Boot 启动、内核解压、驱动加载、rootfs 挂载、登录提示符——全在串口日志里。没有串口，板子起不来您都不知道卡在哪。
 
 ## 二、安装 minicom
 
@@ -18,7 +18,7 @@ sudo apt install minicom
 
 ## 三、配置串口
 
-板载 USB 转串口插上后，Linux 识别为 `/dev/ttyUSB0`（或 `ttyACM0`，用 `ls /dev/tty*` 确认）。
+板载 USB 转串口插上后，您在 Linux 侧会看到它识别为 `/dev/ttyUSB0`（或 `ttyACM0`，用 `ls /dev/tty*` 确认）。
 
 ### 串口参数
 
@@ -46,7 +46,7 @@ F - Hardware Flow Control : No
 G - Software Flow Control : No
 ```
 
-按 `A` 改设备，按 `E` 改波特率（115200），按 `F`/`G` 关流控。回车保存，选 `Save setup as dfl` 存为默认，再 `Exit` 退出。
+您按 `A` 改设备，按 `E` 改波特率（115200），按 `F`/`G` 关流控。回车保存，选 `Save setup as dfl` 存为默认，再 `Exit` 退出。
 
 ## 四、使用
 
@@ -54,7 +54,7 @@ G - Software Flow Control : No
 minicom
 ```
 
-进入串口终端。常用快捷键（先按 `Ctrl+A` 松开再按）：
+您会进入串口终端。常用快捷键（先按 `Ctrl+A` 松开再按）：
 
 | 快捷键 | 作用 |
 |--------|------|
@@ -64,7 +64,7 @@ minicom
 | Ctrl+A → C | 清屏 |
 
 ::: tip 想看启动日志就别开流控
-硬件流控（RTS/CTS）默认开启会导致板子输出显示不出来。务必把 Hardware Flow Control 设为 No。
+硬件流控（RTS/CTS）默认开启会导致板子输出显示不出来，咱们务必把它设为 No。务必把 Hardware Flow Control 设为 No。
 :::
 
 ## 五、权限问题
@@ -87,7 +87,7 @@ sudo usermod -aG dialout $USER
 | picocom | 轻量、退出干净（Ctrl+A Ctrl+X） | 无菜单，全命令行参数 |
 | screen | 系统自带、最简单 | 退出易残留会话 |
 
-picocom 一行启动（本项目 [practical/03](../practical/03_boot_and_debug.md) 即用此）：
+picocom 一行启动，咱们项目里 [practical/03](../practical/03_boot_and_debug.md) 即用此）：
 
 ```bash
 picocom -b 115200 /dev/ttyUSB0
@@ -118,3 +118,5 @@ screen /dev/ttyUSB0 115200
 - 硬件接口速查：[板子硬件接口速查表](03_hardware_quick_reference.md)
 - 首次上电流程：[第一次上电与串口检查](05_first_boot_check.md)
 - 启动日志解读：[practical/03 启动与调试](../practical/03_boot_and_debug.md)
+- 开发台串口策略：Windows 直连与 usbipd 透传怎么选，见 [串口终端：开发台的第二块屏幕](../workflow/03_serial_terminal.md)
+- 日志怎么读：[串口日志阅读路线](../debug/03_serial_log_reading.md)

@@ -4,7 +4,7 @@ title: 板子硬件接口速查表
 
 # 板子硬件接口速查表
 
-> 本篇是正点原子阿尔法 i.MX6ULL 开发板的**接口速查**，列出板载外设、用途与对应教程入口。引脚级配置见各驱动教程与 `imx6ull-aes.dtsi`。
+> 咱们用的板子是正点原子阿尔法 i.MX6ULL，本篇是它的**接口速查**：列出板载外设、用途与对应教程入口。引脚级配置见各驱动教程与 `imx6ull-aes.dtsi`。
 
 ## 板子概述
 
@@ -33,12 +33,12 @@ title: 板子硬件接口速查表
 | RTC | SNVS | 实时钟 | [driver/10 rtc](../driver/10_rtc_snvs_driver/) |
 
 ::: tip 引脚去哪查
-每个外设的具体引脚复用、电气配置在设备树源文件 `imx6ull-aes.dtsi`（NXP 轨）或主线对应 dtsi 里。修改流程见 [driver/01 板级 dts 修改](../driver/01_device_tree_base/09_board_dts_modification.md)。
+您查每个外设的具体引脚复用、电气配置，都在设备树源文件 `imx6ull-aes.dtsi`（NXP 轨）或主线对应 dtsi 里。修改流程见 [driver/01 板级 dts 修改](../driver/01_device_tree_base/09_board_dts_modification.md)。
 :::
 
 ## 启动介质选择
 
-板子通过拨码开关选择启动源，详见 [flash/04 启动流程与偏移](../flash/04_imx6ull_boot_flow_and_offsets.md)。
+板子通过拨码开关选择启动源，您动手前详见 [flash/04 启动流程与偏移](../flash/04_imx6ull_boot_flow_and_offsets.md)。
 
 | 启动方式 | 说明 |
 |----------|------|
@@ -48,7 +48,7 @@ title: 板子硬件接口速查表
 
 ## 上电前检查
 
-1. 确认电源 5V/2A，极性正确；
+咱们上电前过一遍：确认电源 5V/2A，极性正确；
 2. 确认拨码开关指向目标启动介质；
 3. 确认串口线接好（TX/RX 交叉，见下一篇）；
 4. SD/eMMC 已烧录镜像（见 [flash/](../flash/)）。
