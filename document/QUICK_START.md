@@ -900,19 +900,21 @@ ping 192.168.1.100  # 替换为开发板 IP
 
 ### 问题 6: 子模块初始化失败
 
-**症状**: git submodule update 报错。
+**症状**: git submodule update 报错，或构建时报缺少 `imx_aes_defconfig`、`imx6ull-aes.dts` 等项目自有文件。
 
 **解决方法**:
 ```bash
 # 方法一：递归初始化
 git submodule update --init --recursive
 
-# 方法二：单独初始化失败的模块
-cd third_party/linux_mainline
-git checkout master
-cd ../..
-git submodule update --remote --merge
+# 方法二：单独初始化某个模块（<name> 换成 linux-imx / linux_mainline / uboot-imx 等）
+git submodule update --init third_party/<name>
 ```
+
+> ⚠️ **不要使用 `git submodule update --remote`**：它会把子模块拉到上游最新代码，
+> 偏离本仓库锁定的 commit，导致 `patches/` 里的补丁打不上——表现就是
+> `imx_aes_defconfig`、`imx6ull-aes.dts` 这些文件"凭空消失"。
+> 如果已经执行过，用 `git submodule update third_party/<name>` 即可回到锁定的 commit。
 
 ### 问题 7: 串口设备权限被拒绝（Permission denied）
 
