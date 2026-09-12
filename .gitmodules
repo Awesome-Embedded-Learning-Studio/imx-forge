@@ -1,26 +1,32 @@
 [submodule "third_party/linux-imx"]
 	path = third_party/linux-imx
 	url = https://github.com/nxp-imx/linux-imx.git
+	shallow = true
 	ignore = dirty
 [submodule "third_party/busybox"]
 	path = third_party/busybox
 	url = https://github.com/mirror/busybox.git
+	shallow = true
 	ignore = dirty
 [submodule "third_party/uboot-imx"]
 	path = third_party/uboot-imx
 	url = https://github.com/nxp-imx/uboot-imx.git
+	shallow = true
 	ignore = dirty
 [submodule "third_party/linux_mainline"]
 	path = third_party/linux_mainline
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+	shallow = true
 	ignore = dirty
 [submodule "third_party/buildroot"]
 	path = third_party/buildroot
 	url = https://github.com/buildroot/buildroot.git
+	shallow = true
 	ignore = dirty
 [submodule "third_party/buildmeter"]
 	path = third_party/buildmeter
 	url = https://github.com/Awesome-Embedded-Learning-Studio/buildmeter
+	shallow = true
 	ignore = dirty
 [submodule "third_party/qemu"]
 	path = third_party/qemu
