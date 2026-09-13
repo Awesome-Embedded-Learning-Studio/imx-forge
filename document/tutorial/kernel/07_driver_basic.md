@@ -199,7 +199,7 @@ static void __exit hello_exit(void)
 
 ```makefile
 # 内核源码路径
-KERNEL_DIR := /path/to/linux-imx
+KERNEL_DIR := /path/to/linux
 
 # 当前模块目录
 PWD := $(shell pwd)
@@ -223,13 +223,13 @@ make
 如果一切顺利，你应该会看到类似这样的输出：
 
 ```
-make -C /path/to/linux-imx M=/home/user/hello modules
-make[1]: Entering directory '/path/to/linux-imx'
+make -C /path/to/linux M=/home/user/hello modules
+make[1]: Entering directory '/path/to/linux'
   CC [M]  /home/user/hello/hello_drv.o
   MODPOST /home/user/hello/Module.symvers
   CC [M]  /home/user/hello/hello_drv.mod.o
   LD [M]  /home/user/hello/hello_drv.ko
-make[1]: Leaving directory '/path/to/linux-imx'
+make[1]: Leaving directory '/path/to/linux'
 ```
 
 编译完成后，当前目录下会出现`hello_drv.ko`文件，这就是内核模块文件（KO = Kernel Object）。

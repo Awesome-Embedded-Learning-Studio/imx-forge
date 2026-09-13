@@ -240,12 +240,12 @@ arm-none-linux-gnueabihf-gcc --version
 
 交叉编译模块时，需要访问目标架构的内核源码或头文件。你不需要完整编译一遍内核，但至少要有内核源码树和配置好的 `.config`。
 
-假设你内核源码在 `~/linux-imx`，输出目录在 `~/linux-imx-build`：
+假设你内核源码在 `~/linux`，输出目录在 `~/linux-build`：
 
 ```bash
 # 确保内核已经配置过
-cd ~/linux-imx
-make O=~/linux-imx-build ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_defconfig
+cd ~/linux
+make O=~/linux-build ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_mainline_defconfig
 ```
 
 ### 修改 Makefile 用于交叉编译
@@ -260,10 +260,10 @@ ARCH := arm
 CROSS_COMPILE := arm-none-linux-gnueabihf-
 
 # 内核源码目录（根据你的实际路径修改）
-KDIR := ~/linux-imx
+KDIR := ~/linux
 
 # 输出目录
-MODDIR := ~/linux-imx-build
+MODDIR := ~/linux-build
 
 # 当前目录
 PWD := $(shell pwd)

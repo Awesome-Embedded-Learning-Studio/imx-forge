@@ -57,14 +57,13 @@ defconfig文件位于`arch/arm/configs/`目录：
 
 ```bash
 arch/arm/configs/
-├── imx_aes_defconfig           # IMX-Forge 自定义配置（应用补丁后）
-├── imx_v6_v7_defconfig         # NXP 官方：i.MX 6/7系列通用配置
-├── imx_v7_defconfig            # NXP 官方：i.MX 7系列配置
-├── multi_v7_defconfig          # NXP 官方：多平台v7配置
+├── imx_aes_mainline_defconfig           # IMX-Forge 自定义配置（应用补丁后）
+├── imx_v6_v7_defconfig                  # 上游主线：i.MX 6/7系列通用配置
+├── multi_v7_defconfig                   # 上游主线：多平台v7配置
 └── ...
 ```
 
-> **注意：** `imx_aes_defconfig` 是 IMX-Forge 项目自定义的配置文件，需要先应用补丁才能使用。如果你直接使用 NXP 官方的 linux-imx 仓库，请使用 `imx_v7_defconfig` 或 `imx_v6_v7_defconfig`。
+> **注意：** `imx_aes_mainline_defconfig` 是 IMX-Forge 项目自定义的配置文件，需要先应用补丁才能使用。如果不想应用项目补丁，可以直接用上游自带的 `imx_v6_v7_defconfig`。
 
 打开一个defconfig看看内容：
 
@@ -428,18 +427,18 @@ menuconfig里某个选项是灰色的，无法选择。这是因为依赖关系�
 
 ### 方法0：从官方配置创建项目配置（推荐新手）
 
-IMX-Forge 项目的 `imx_aes_defconfig` 实际上就是这么创建的！它是基于 NXP 官方的 `imx_v7_defconfig`，**可选地**添加了 WiFi 固件支持。
+IMX-Forge 项目的 `imx_aes_mainline_defconfig` 实际上就是这么创建的！它基于上游主线的 `imx_v6_v7_defconfig` 裁剪而来：去掉了和 i.MX6ULL 无关的 SoC 支持（i.MX3x/5x、i.MX7ULP、VF610 等），保留 i.MX6UL 家族配置，并内置了 WiFi 固件。
 
 #### 基础配置（适用于大多数情况）
 
-如果你不需要 WiFi 功能，直接使用官方配置即可：
+如果你想从通用基线开始，直接使用上游配置：
 
 ```bash
-cd /path/to/imx-forge/third_party/linux-imx
-make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=../../out/linux imx_v7_defconfig
+cd /path/to/imx-forge/third_party/linux_mainline
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=../../out/linux imx_v6_v7_defconfig
 ```
 
-`imx_v7_defconfig` 已经包含了 i.MX6ULL 所需的所有基本配置。
+`imx_v6_v7_defconfig` 已经包含了 i.MX6ULL 所需的所有基本配置——代价是带着一堆用不到的 SoC 选项。
 
 #### 可选：添加 WiFi 固件支持（消除启动警告）
 
@@ -452,9 +451,9 @@ cfg80211: failed to load regulatory.db
 这个警告不影响功能，但如果你想在内核中预装固件来消除警告，可以这样做：
 
 ```bash
-# 1. 创建自定义配置（基于官方配置）
-cd /path/to/imx-forge/third_party/linux-imx
-cp arch/arm/configs/imx_v7_defconfig arch/arm/configs/my_imx6ull_defconfig
+# 1. 创建自定义配置（基于上游配置）
+cd /path/to/imx-forge/third_party/linux_mainline
+cp arch/arm/configs/imx_v6_v7_defconfig arch/arm/configs/my_imx6ull_defconfig
 
 # 2. 添加固件配置（可选）
 cat >> arch/arm/configs/my_imx6ull_defconfig << EOF
@@ -490,26 +489,29 @@ grep "CONFIG_EXTRA_FIRMWARE" ../../out/linux/.config
 #### 配置对比
 
 ```bash
-# 官方配置（推荐用于大多数情况）
-imx_v7_defconfig     600 行  ← 直接使用这个
+# 上游配置（通用基线，未裁剪）
+imx_v6_v7_defconfig          481 行  ← 什么 SoC 都带，通用
 
-# IMX-Forge 自定义配置（添加了 WiFi 固件）
-imx_aes_defconfig    602 行  ← 可选，仅在需要消除 WiFi 警告时使用
-
-# 差异仅 2 行：
-# CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
-# CONFIG_EXTRA_FIRMWARE_DIR="..."
+# IMX-Forge 自定义配置（裁剪 + 板级定制）
+imx_aes_mainline_defconfig   575 行  ← i.MX6ULL 专用，内置 WiFi 固件
 ```
 
-**建议**：大多数情况下，直接使用 `imx_v7_defconfig` 就足够了。只有在看到 WiFi 固件相关警告且想消除它时，才需要添加固件配置。
+两者的差异有两类：一是**裁剪**——删掉了 i.MX6ULL 用不到的 SoC 选项（差行数反而变多是因为加了说明注释）；二是**定制**——板级选项加 WiFi 固件两行：
+
+```
+CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
+CONFIG_EXTRA_FIRMWARE_DIR="..."
+```
+
+**建议**：跟着项目学习就用 `imx_aes_mainline_defconfig`；想体验"从通用基线自己裁剪出专属配置"，就从 `imx_v6_v7_defconfig` 开始做减法。
 
 ### 方法1：基于现有defconfig修改
 
-最简单的方法是基于imx_aes_defconfig修改：
+最简单的方法是基于imx_aes_mainline_defconfig修改：
 
 ```bash
 # 加载基础配置
-make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_defconfig
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_mainline_defconfig
 
 # 用menuconfig调整
 make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux menuconfig
@@ -544,7 +546,7 @@ cp out/linux/.config arch/arm/configs/my_imx6ull_defconfig
 #!/bin/bash
 # config_my_board.sh
 
-make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_defconfig
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_mainline_defconfig
 
 # 使用scripts/config工具修改配置
 ./scripts/config --file out/linux/.config \
