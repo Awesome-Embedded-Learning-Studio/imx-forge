@@ -156,12 +156,12 @@ git worktree remove ../linux-mainline-v7.1
 
 ## 第五步——对比 BSP 内核和主线内核
 
-如果你已经有一份 NXP BSP 内核的源码（这个项目的 `third_party/linux-imx`），可以用 `diff` 对比一下差异：
+如果你手头还留有一份 NXP BSP 内核的源码（项目早期用过，仓库现已移除），可以用 `diff` 对比一下差异：
 
 ```bash
-# 对比设备树文件（示例）
+# 对比设备树文件（示例，路径按你的实际存放位置调整）
 diff ~/linux-kernel/linux-mainline/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi \
-     ~/imx-forge/third_party/linux-imx/arch/arm/boot/dts/imx6ull-xxx.dtsi
+     ~/linux-bsp/arch/arm/boot/dts/imx6ull-xxx.dtsi
 ```
 
 你会发现主线内核的设备树写法有很多不同，这就是我们下一章要讲的内容。

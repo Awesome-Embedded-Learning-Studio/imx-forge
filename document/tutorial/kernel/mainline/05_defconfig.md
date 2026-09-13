@@ -143,7 +143,7 @@ CONFIG_EXTRA_FIRMWARE_DIR="${FIRMWARE_DIR}"
 构建脚本会用实际的路径替换这个变量：
 
 ```bash
-# build-mainline-linux.sh 中的处理
+# build-linux.sh 中的处理
 FIRMWARE_DIR=$(realpath "${FIRMWARE_DIR}")
 sed "s|\${FIRMWARE_DIR}|${FIRMWARE_DIR}|g" "${TEMPLATE_FILE}" > "${TARGET_FILE}"
 ```

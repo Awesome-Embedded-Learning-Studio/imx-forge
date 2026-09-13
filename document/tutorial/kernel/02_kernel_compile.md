@@ -25,7 +25,7 @@ title: 内核编译
 平台：Ubuntu 24.04 LTS
 目标板：i.MX6ULL 14x14 EVK (512MB DDR)
 工具链：arm-none-linux-gnueabihf-gcc
-内核版本：NXP linux-imx (lf-6.12.3)（哦对了，我上机测试是6.12.49，看来打了一些patch）
+内核版本：mainline Linux 7.1（kernel.org 上游主线，项目补丁叠加在 v7.1 tag 上）
 ```
 
 环境不完全一样也没关系。Ubuntu 20.04/22.04 都可以，工具链只要是ARM硬浮点ABI的就行。内核版本主要影响配置选项，编译流程基本一致。
@@ -112,17 +112,17 @@ IMX-Forge项目的构建脚本使用固定的输出目录：`PROJECT_ROOT/out/li
 清理完成后，我们需要配置内核：
 
 ```bash
-make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_defconfig
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_mainline_defconfig
 ```
 
 这里解释一下这三个变量的作用。`ARCH=arm`告诉内核目标架构是ARM，它会在`arch/arm/`目录下找架构相关代码。`CROSS_COMPILE=arm-none-linux-gnueabihf-`指定交叉编译器前缀。`O=out/linux`指定输出目录。
 
-`imx_aes_defconfig`是IMX-Forge项目为i.MX6ULL定制的默认配置。
+`imx_aes_mainline_defconfig`是IMX-Forge项目为i.MX6ULL定制的默认配置。
 
 > **⚠️ 重要提示**
 >
-> `imx_aes_defconfig` **不是NXP官方提供的配置文件**，而是IMX-Forge项目自定义的配置。
-> 这个配置文件需要通过应用项目补丁后才会生成到linux-imx仓库中。
+> `imx_aes_mainline_defconfig` **不是上游自带的配置文件**，而是IMX-Forge项目自定义的配置。
+> 这个配置文件需要通过应用项目补丁后才会生成到主线内核树中。
 >
 > **使用方式：**
 >
@@ -133,23 +133,22 @@ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_aes_defcon
 >
 > 2. **手动操作：需要先应用补丁**
 >    ```bash
->    cd third_party/linux-imx
->    git apply ../../patches/linux-imx/linux-imx-latest.patch
->    make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=../../out/linux imx_aes_defconfig
+>    cd third_party/linux_mainline
+>    git apply ../../patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260828.patch
+>    make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=../../out/linux imx_aes_mainline_defconfig
 >    ```
 >
-> 3. **NXP官方仓库：使用官方配置**
+> 3. **不应用项目补丁：使用上游自带配置**
 >    ```bash
->    make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_v7_defconfig
+>    make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux imx_v6_v7_defconfig
 >    ```
 
-IMX-Forge项目应用补丁后，defconfig文件位于`arch/arm/configs/`目录下：
+应用项目补丁后，defconfig文件位于`arch/arm/configs/`目录下：
 
 ```bash
 arch/arm/configs/
-├── imx_aes_defconfig          # IMX-Forge 自定义配置（应用补丁后）
-├── imx_v6_v7_defconfig        # NXP 官方：i.MX 6/7系列通用配置
-├── imx_v7_defconfig           # NXP 官方：i.MX 7系列配置（推荐用于i.MX6ULL）
+├── imx_aes_mainline_defconfig          # IMX-Forge 自定义配置（应用补丁后）
+├── imx_v6_v7_defconfig                 # 上游主线：i.MX 6/7系列通用配置
 └── ...
 ```
 

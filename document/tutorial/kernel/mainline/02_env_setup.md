@@ -6,7 +6,7 @@
 
 这些报错背后的原因是：内核编译需要大量的宿主机工具和库。你把源码下载下来，直接编译大概率会失败。这篇文章的目标是帮你把环境一次性搭好，后续编译时不会再因为缺少依赖而卡住。
 
-我们参考了项目里 `scripts/build_helper/build-mainline-linux.sh` 的依赖检查逻辑，把所有需要的依赖都列出来了。跟着做一遍，你就能得到一个可以正常编译主线内核的环境。
+我们参考了项目里 `scripts/build_helper/build-linux.sh` 的依赖检查逻辑，把所有需要的依赖都列出来了。跟着做一遍，你就能得到一个可以正常编译主线内核的环境。
 
 ## 环境说明
 
@@ -131,7 +131,7 @@ Copyright (C) 2021 Free Software Foundation, Inc.
 
 ## 第三步——验证依赖完整性
 
-项目里的构建脚本 `scripts/build_helper/build-mainline-linux.sh` 有一个 `check_host_dependencies()` 函数，它会检查所有依赖是否齐全。我们可以手动运行类似的检查：
+项目里的构建脚本 `scripts/build_helper/build-linux.sh` 有一个 `check_host_dependencies()` 函数，它会检查所有依赖是否齐全。我们可以手动运行类似的检查：
 
 ```bash
 # 检查基础命令

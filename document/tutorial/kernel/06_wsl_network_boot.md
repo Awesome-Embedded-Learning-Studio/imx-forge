@@ -366,16 +366,16 @@ host 192.168.60.1 is alive
 把编译好的内核和设备树复制到 TFTP 目录：
 
 ```bash
-# 假设你的编译输出在 ~/linux-imx-build
-cp ~/linux-imx-build/arch/arm/boot/zImage ~/tftp/
-cp ~/linux-imx-build/arch/arm/boot/dts/imx6ull-14x14-evk.dtb ~/tftp/
+# 假设你的编译输出在 ~/linux-build
+cp ~/linux-build/arch/arm/boot/zImage ~/tftp/
+cp ~/linux-build/arch/arm/boot/dts/imx6ull-aes.dtb ~/tftp/
 ```
 
 确保文件权限正确：
 
 ```bash
 sudo chmod 777 ~/tftp/zImage
-sudo chmod 777 ~/tftp/imx6ull-14x14-evk.dtb
+sudo chmod 777 ~/tftp/imx6ull-aes.dtb
 ```
 
 ### 下载并启动
@@ -387,7 +387,7 @@ sudo chmod 777 ~/tftp/imx6ull-14x14-evk.dtb
 tftp 0x80800000 zImage
 
 # 下载设备树
-tftp 0x83000000 imx6ull-14x14-evk.dtb
+tftp 0x83000000 imx6ull-aes.dtb
 
 # 启动
 bootz 0x80800000 - 0x83000000
@@ -404,7 +404,7 @@ bootz 0x80800000 - 0x83000000
 每次手动敲命令太累，可以把它写成启动脚本：
 
 ```bash
-setenv bootcmd 'tftp 0x80800000 zImage; tftp 0x83000000 imx6ull-14x14-evk.dtb; bootz 0x80800000 - 0x83000000'
+setenv bootcmd 'tftp 0x80800000 zImage; tftp 0x83000000 imx6ull-aes.dtb; bootz 0x80800000 - 0x83000000'
 setenv bootdelay 3
 saveenv
 ```

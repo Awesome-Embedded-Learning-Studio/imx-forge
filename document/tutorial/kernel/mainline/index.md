@@ -2,7 +2,7 @@
 
 ## 为什么要用主线内核？
 
-| 特性 | linux-imx (NXP BSP) | mainline |
+| 特性 | NXP BSP（项目已退役） | mainline |
 |------|---------------------|----------|
 | 稳定性 | ✅ 高 | ✅ 高 |
 | 驱动支持 | ✅ 完善 | ⚠️ 需适配 |
@@ -19,12 +19,12 @@
 ::: details 构建命令
 ```bash
 # 使用主线内核构建脚本
-./scripts/build_helper/build-mainline-linux.sh
+./scripts/build_helper/build-linux.sh
 
 # 或手动构建
 cd third_party/linux_mainline
-make imx_aes_mainline_defconfig O=../../out/mainline/linux
-make -j8 O=../../out/mainline/linux
+make imx_aes_mainline_defconfig O=../../out/linux
+make -j8 O=../../out/linux
 ```
 :::
 

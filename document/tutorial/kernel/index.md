@@ -17,14 +17,15 @@ title: 内核
   <ChapterLink num="08" href="08_kernel_boot_debug">启动调试</ChapterLink>
 </ChapterNav>
 
-## 双轨内核策略
+## 内核策略：单轨主线
 
-IMX-Forge 支持两种内核：
+IMX-Forge 全线采用**上游主线内核**（Linux 7.1，项目补丁叠加在 v7.1 tag 上）：
 
-| 轨道 | 版本 | 特点 | 适用场景 |
-|------|------|------|----------|
-| **linux-imx** | NXP BSP 6.12.3 <Badge type="tip" text="推荐" /> | 稳定，驱动完善 | 生产环境、新手 |
-| **mainline** | 上游主线 <Badge type="info" text="进阶" /> | 长期维护，可贡献 | 追求最新特性 |
+| 项目 | 说明 |
+|------|------|
+| **内核源码** | `third_party/linux_mainline`（kernel.org 主线树） |
+| **版本** | 7.1，已在本板实测启动：LCD、触摸、双网口、音频全通 |
+| **BSP 轨道** | 已退役（项目早期用过 NXP BSP 6.12.x，2026-09 单轨化） |
 
 <ChapterNav variant="sub">
   <ChapterLink href="mainline/" variant="sub">Mainline 主线内核 —— 迁移指南</ChapterLink>
