@@ -179,14 +179,32 @@ arm-none-linux-gnueabihf-gcc (GNU Toolchain for the Arm Architecture 15.2.Rel1) 
 在容器内执行：
 
 ```bash
-# 一键构建所有组件
+# 一键构建所有组件（唯一编排入口；内核固定 mainline，无需任何开关）
 ./scripts/release-all.sh
 
 # 或分步构建
 ./scripts/build_helper/build-uboot.sh
 ./scripts/build_helper/build-linux.sh
 ./scripts/build_helper/build-busybox.sh
+
+# 构建驱动（内核自动用 mainline，不需要也不接受 --kernel 之类的参数）
+./scripts/driver_helper/build_driver.sh led alpha-board
+./scripts/driver_helper/build_driver.sh --list     # 看有哪些驱动
 ```
+
+### 冒烟验证（可选，无需开发板）
+
+构建产物能不能真的开机，一条命令验证——QEMU 直启到登录提示符才算过：
+
+```bash
+# 内核 + rootfs 就位后（release-all 或 --stage 2 + 3）
+scripts/qemu_helper/run-qemu.sh --smoke
+
+# 想跑完整断言体检（15 项外设/启动检查）：
+scripts/qemu_helper/e2e-test.sh
+```
+
+CI 里跑的就是同一条冒烟命令（ci-full 的 QEMU Boot Smoke job），本地与 CI 验证口径一致。
 
 ### 输出文件
 
