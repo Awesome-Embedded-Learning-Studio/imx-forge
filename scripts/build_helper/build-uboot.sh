@@ -308,7 +308,7 @@ main() {
     # Verify build artifacts
     verify_build_artifacts || exit 1
 
-    # Release 收尾(--release):写 build_info.txt(uboot 无 Kernel Track 字段)
+    # Release 收尾(--release):写 build_info.txt
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
         release_finalize "uboot" "${OUTPUT_DIR}" "${RELEASE_VERSION}"
     fi

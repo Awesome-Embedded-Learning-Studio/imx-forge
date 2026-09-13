@@ -94,7 +94,7 @@ cat /sys/module/chardev_led_v2_02_driver/parameters/
 ./scripts/driver_helper/build_driver.sh chardev_led_v2_02 alpha-board --kernel mainline
 
 # 使用NXP BSP内核
-./scripts/driver_helper/build_driver.sh chardev_led_v2_02 alpha-board --kernel imx
+./scripts/driver_helper/build_driver.sh chardev_led_v2_02 alpha-board
 ```
 
 ### 清理构建产物

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Linux kernel build script for i.MX6ULL
+# Linux kernel build script for i.MX6ULL (mainline tree, single track)
 #
 
 # -o pipefail: do_build pipes make | buildmeter; without it a failed make would
@@ -29,9 +29,6 @@ else
     log_cmd() { echo -e "${YELLOW}[CMD]${NC} $1"; }
 fi
 
-# 导入依赖检查脚本
-source "${SCRIPT_DIR}/../init/env-init.sh"
-
 # buildmeter progress bar (optional; auto-falls back to bare make if buildmeter
 # is absent or FORGE_PROGRESS_DISABLE=1). See scripts/lib/progress.sh.
 source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
@@ -39,9 +36,9 @@ source "${SCRIPT_LIB_DIR}/progress.sh" 2>/dev/null || true
 # Configuration
 ARCH=arm
 CROSS_COMPILE=arm-none-linux-gnueabihf-
-DEFCONFIG=imx_aes_defconfig
-DEFAULT_DEVICE_TREE="${DEFAULT_DEVICE_TREE:-imx6ull-aes}"
+DEFCONFIG=imx_aes_mainline_defconfig
 FAST_BUILD=0
+DEVICE_TREE="${DEFAULT_DEVICE_TREE:-imx6ull-aes}"
 
 # Parse arguments
 # --release 触发 release 编排(reset 净源码→打 patch→建 release 分支→build_info),
@@ -63,7 +60,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Directories
-LINUX_SRC_DIR="${PROJECT_ROOT}/third_party/linux-imx"
+LINUX_SRC_DIR="${PROJECT_ROOT}/third_party/linux_mainline"
 : "${OUTPUT_DIR:=${PROJECT_ROOT}/out/linux}"
 
 # Ensure output directory exists
@@ -75,7 +72,115 @@ log_info "Using ${NPROC} parallel jobs"
 
 # Check host dependencies
 check_host_dependencies() {
-    check_linux_dependencies || exit 1
+    log_info "Checking host dependencies..."
+
+    MISSING_PKGS=()
+    FOUND_PKGS=()
+
+    # Helper: check if command exists
+    check_cmd() {
+        local cmd=$1
+        local pkg=$2
+        if command -v ${cmd} &> /dev/null; then
+            FOUND_PKGS+=("${pkg}")
+            return 0
+        else
+            MISSING_PKGS+=("${pkg}")
+            return 1
+        fi
+    }
+
+    # Helper: check if dpkg package is installed
+    check_dpkg() {
+        local pkg=$1
+        if dpkg -s ${pkg} &> /dev/null; then
+            FOUND_PKGS+=("${pkg}")
+            return 0
+        else
+            MISSING_PKGS+=("${pkg}")
+            return 1
+        fi
+    }
+
+    # Helper: check if header file exists
+    check_header() {
+        local header=$1
+        local pkg=$2
+        if [ -f "${header}" ]; then
+            FOUND_PKGS+=("${pkg}")
+            return 0
+        else
+            MISSING_PKGS+=("${pkg}")
+            return 1
+        fi
+    }
+
+    # Helper: check Python module
+    check_python_module() {
+        local module=$1
+        local pkg=$2
+        if python3 -c "import ${module}" 2>/dev/null; then
+            FOUND_PKGS+=("${pkg}")
+            return 0
+        else
+            MISSING_PKGS+=("${pkg}")
+            return 1
+        fi
+    }
+
+    # Check build tools (use || true to prevent exit on set -e)
+    check_cmd gcc build-essential || true
+    check_cmd make build-essential || true
+    check_cmd bc bc || true
+    check_cmd bison bison || true
+    check_cmd flex flex || true
+    check_cmd dtc device-tree-compiler || true
+    check_cmd python3 python3 || true
+
+    # Check libssl via dpkg (more reliable than header check)
+    if dpkg -s libssl-dev &> /dev/null; then
+        FOUND_PKGS+=("libssl-dev")
+    else
+        MISSING_PKGS+=("libssl-dev")
+    fi
+
+    # Check libgnutls via dpkg or header
+    if dpkg -s libgnutls28-dev &> /dev/null || [ -f /usr/include/gnutls/gnutls.h ]; then
+        FOUND_PKGS+=("libgnutls28-dev")
+    else
+        MISSING_PKGS+=("libgnutls28-dev")
+    fi
+
+    # Check libncurses via dpkg or header
+    if dpkg -s libncurses-dev &> /dev/null || [ -f /usr/include/ncursesw/ncurses.h ] || [ -f /usr/include/ncurses/ncurses.h ]; then
+        FOUND_PKGS+=("libncurses-dev")
+    else
+        MISSING_PKGS+=("libncurses-dev")
+    fi
+
+    # Remove duplicates from FOUND_PKGS and MISSING_PKGS
+    FOUND_PKGS=($(echo "${FOUND_PKGS[@]}" | tr ' ' '\n' | sort -u))
+    MISSING_PKGS=($(echo "${MISSING_PKGS[@]}" | tr ' ' '\n' | sort -u))
+
+    # Display results
+    for pkg in "${FOUND_PKGS[@]}"; do
+        log_info "  ✓ ${pkg}"
+    done
+
+    for pkg in "${MISSING_PKGS[@]}"; do
+        log_warn "  ✗ ${pkg} (not found)"
+    done
+
+    if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+        log_error "Missing dependencies: ${MISSING_PKGS[*]}"
+        echo ""
+        log_info "Install missing packages with:"
+        echo -e "  ${YELLOW}sudo apt install ${MISSING_PKGS[*]}${NC}"
+        echo ""
+        exit 1
+    fi
+
+    log_info "All host dependencies found"
 }
 
 # Check if toolchain exists
@@ -111,13 +216,11 @@ check_defconfig() {
     DEFCONFIG_FILE="${LINUX_SRC_DIR}/arch/arm/configs/${DEFCONFIG}"
 
     if [ ! -f "${DEFCONFIG_FILE}" ]; then
-        log_warn "Defconfig file not found: ${DEFCONFIG_FILE}"
-        log_info "Will prepare defconfig from template"
-        return 1
+        log_error "Defconfig file not found: ${DEFCONFIG_FILE}"
+        exit 1
     fi
 
     log_info "Defconfig found: ${DEFCONFIG_FILE}"
-    return 0
 }
 
 # Clean build
@@ -140,7 +243,7 @@ prepare_defconfig() {
     FIRMWARE_DIR=$(realpath "${FIRMWARE_DIR}")
 
     # Template and target paths
-    TEMPLATE_FILE="${PROJECT_ROOT}/driver/device_tree/alpha-board/linux/imx_aes_defconfig.template"
+    TEMPLATE_FILE="${PROJECT_ROOT}/driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template"
     TARGET_FILE="${LINUX_SRC_DIR}/arch/arm/configs/${DEFCONFIG}"
 
     # Copy template and substitute variable
@@ -196,13 +299,18 @@ do_configure() {
 # Build Linux kernel
 do_build() {
     log_info "Building Linux kernel..."
-    # 显式 zImage dtbs:arm 默认 goal 只出 zImage 不出 dtbs,release-all Stage2 要校验 dtb。
     local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} -j${NPROC} zImage dtbs"
     echo -e "${YELLOW}[CMD]${NC} ${cmd}"
+
     if forge_progress_enabled; then
+        # clean build(FAST_BUILD=0):先 make -n -k 预扫描拿进度分母(~15s;实测欠 ~6%
+        # 因 vmlinux 链接断链 dry-run 不枚举 post-link CC,buildmeter cap 100% +
+        # finalizing 尾部兜底,不会误读 >100%)。
+        # fast-build(增量)跳过预扫描 → indeterminate(count+rate+ETA,无 %),不收 15s 税。
         local total=""
         if [[ ${FAST_BUILD} -eq 0 ]]; then
             log_info "Pre-scanning dry-run (make -n -k) for progress total (~15s)…"
+            # dry-run 在 vmlinux 链接处会非零退出(预期);2>/dev/null 吞报错,|| true 兜退出码
             total=$(${cmd} -n -k 2>/dev/null | python3 "${FORGE_PROGRESS_PY}" kernel --count-only || true)
         fi
         if [[ -n "${total}" ]]; then
@@ -213,6 +321,17 @@ do_build() {
     else
         ${cmd}
     fi
+}
+
+# Prepare the build tree for out-of-tree (driver) module builds.
+# `make zImage dtbs` does not emit scripts/module.lds, which the external
+# module link rule (scripts/Makefile.modfinal) requires; without it
+# `make M=... modules` fails with "No rule to make target '<mod>.ko'".
+do_modules_prepare() {
+    log_info "Preparing build tree for out-of-tree modules..."
+    local cmd="make -C ${LINUX_SRC_DIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} O=${OUTPUT_DIR} modules_prepare"
+    echo -e "${YELLOW}[CMD]${NC} ${cmd}"
+    ${cmd}
 }
 
 # Verify build artifacts
@@ -253,24 +372,24 @@ verify_build_artifacts() {
 
     # 2. Verify zImage (compressed kernel image)
     if [ -f "${OUTPUT_DIR}/arch/arm/boot/zImage" ]; then
-        SIZE=$(stat -c%s ${OUTPUT_DIR}/arch/arm/boot/zImage 2>/dev/null || stat -f%z ${OUTPUT_DIR}/arch/arm/boot/zImage 2>/dev/null)
+        SIZE=$(stat -c%s "${OUTPUT_DIR}/arch/arm/boot/zImage" 2>/dev/null || stat -f%z "${OUTPUT_DIR}/arch/arm/boot/zImage" 2>/dev/null)
         log_info "  ✓ zImage: ${SIZE} bytes"
     else
         log_error "  ✗ zImage: not found"
         has_error=1
     fi
 
-    # 2b. Verify device tree blob (release-all Stage2 校验 dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb)
-    local dtb_path="${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb"
+    # 3. Verify board DTB
+    local dtb_path="${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEVICE_TREE}.dtb"
     if [ -f "${dtb_path}" ]; then
         SIZE=$(stat -c%s "${dtb_path}" 2>/dev/null || stat -f%z "${dtb_path}" 2>/dev/null)
-        log_info "  ✓ ${DEFAULT_DEVICE_TREE}.dtb: ${SIZE} bytes"
+        log_info "  ✓ ${DEVICE_TREE}.dtb: ${SIZE} bytes"
     else
-        log_error "  ✗ ${DEFAULT_DEVICE_TREE}.dtb: not found (${dtb_path})"
+        log_error "  ✗ ${DEVICE_TREE}.dtb: not found"
         has_error=1
     fi
 
-    # 3. Verify .config file
+    # 4. Verify .config file
     if [ -f "${OUTPUT_DIR}/.config" ]; then
         log_info "  ✓ .config: present"
     else
@@ -278,19 +397,19 @@ verify_build_artifacts() {
         has_error=1
     fi
 
-    # 4. Check for System.map
+    # 5. Check for System.map
     if [ -f "${OUTPUT_DIR}/System.map" ]; then
         log_info "  ✓ System.map: present"
     else
         log_warn "  ! System.map: not found (optional)"
     fi
 
-    # 5. Check for modules directory
+    # 6. Check for modules directory
     if [ -d "${OUTPUT_DIR}/modules" ]; then
         log_info "  ✓ modules: directory present"
     fi
 
-    # 6. Summary
+    # 7. Summary
     if [ ${has_error} -eq 0 ]; then
         log_info "All build artifacts verified successfully"
         return 0
@@ -308,26 +427,19 @@ main() {
     fi
     log_info "========================================"
 
-    # Release 编排(--release):reset 净源码→打 patch→建 release 分支。必须在 checks 前
-    # (defconfig 由 prepare_defconfig 从超项目模板生成,reset 后会重建,不受影响)。
+    # Release 编排(--release):reset 净源码到超项目锁定的 gitlink commit→打目录最新 patch
+    # →建 release 分支。defconfig 由 prepare_defconfig 从超项目模板生成,reset 不影响。
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
         source "${SCRIPT_LIB_DIR}/release.sh"
-        release_prepare "linux-imx" "${LINUX_SRC_DIR}" \
-            "${PROJECT_ROOT}/patches/linux-imx/linux-imx-latest.patch" "${PROJECT_ROOT}"
+        release_prepare "linux" "${LINUX_SRC_DIR}" \
+            "${PROJECT_ROOT}/patches/linux_mainline" "${PROJECT_ROOT}"
         log_info "========================================"
     fi
 
     # Pre-build checks
     check_host_dependencies
     check_toolchain
-    
-    # Check defconfig and prepare if needed
-    if ! check_defconfig; then
-        prepare_defconfig || {
-            log_error "Failed to prepare defconfig"
-            exit 1
-        }
-    fi
+    # Note: check_defconfig is called after prepare_defconfig since the file is generated from template
 
     log_info "========================================"
     log_info "All checks passed, starting build..."
@@ -339,18 +451,41 @@ main() {
     else
         log_info "Skipping distclean (fast build mode)"
     fi
+
+    # Print build configuration before starting
+    log_info "Build Configuration:"
+    log_info "  Linux Source:  ${LINUX_SRC_DIR}"
+    log_info "  Output Dir:    ${OUTPUT_DIR}"
+    log_info "  Architecture:  ${ARCH}"
+    log_info "  Cross Compile: ${CROSS_COMPILE}"
+    log_info "  Defconfig:     ${DEFCONFIG}"
+    log_info "  Device Tree:   ${DEVICE_TREE}"
+    log_info "  Parallel Jobs: ${NPROC}"
+    log_info "========================================"
+
     prepare_defconfig
     do_configure
     do_build
+    do_modules_prepare
+
+    # Ensure Module.symvers exists for out-of-tree (driver) module builds.
+    # Since Linux >= 6.4, `make vmlinux`/`zImage` only emits vmlinux.symvers;
+    # Module.symvers is normally produced by `make modules`, which fast-build
+    # skips. External module builds still expect Module.symvers, so symlink it
+    # to vmlinux.symvers when missing (idempotent; safe for normal builds too).
+    if [[ ! -e "${OUTPUT_DIR}/Module.symvers" && -f "${OUTPUT_DIR}/vmlinux.symvers" ]]; then
+        ln -sf vmlinux.symvers "${OUTPUT_DIR}/Module.symvers"
+        log_info "  ✓ Module.symvers -> vmlinux.symvers (ready for out-of-tree module builds)"
+    fi
 
     log_info "========================================"
 
     # Verify build artifacts
     verify_build_artifacts || exit 1
 
-    # Release 收尾(--release):写 build_info.txt(含 `Kernel Track: imx`,release-all Stage2 硬依赖)
+    # Release 收尾(--release):写 build_info.txt
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
-        release_finalize "linux-imx" "${OUTPUT_DIR}" "${RELEASE_VERSION}"
+        release_finalize "linux" "${OUTPUT_DIR}" "${RELEASE_VERSION}"
     fi
 
     log_info "========================================"
@@ -360,7 +495,7 @@ main() {
     log_info "Kernel artifacts in ${OUTPUT_DIR}:"
     [ -f "${OUTPUT_DIR}/vmlinux" ] && log_info "  ✓ vmlinux (ELF kernel)"
     [ -f "${OUTPUT_DIR}/arch/arm/boot/zImage" ] && log_info "  ✓ arch/arm/boot/zImage (compressed kernel)"
-    [ -f "${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb" ] && log_info "  ✓ arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb (device tree)"
+    [ -f "${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEVICE_TREE}.dtb" ] && log_info "  ✓ arch/arm/boot/dts/nxp/imx/${DEVICE_TREE}.dtb (device tree)"
     [ -f "${OUTPUT_DIR}/System.map" ] && log_info "  ✓ System.map (symbol table)"
     [ -f "${OUTPUT_DIR}/.config" ] && log_info "  ✓ .config (kernel configuration)"
 

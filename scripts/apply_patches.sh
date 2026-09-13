@@ -41,7 +41,6 @@ fi
 # 同时兼容 CI 里使用的 linux_mainline/uboot-imx 写法）
 case "$COMPONENT" in
     uboot|uboot-imx)      SRC_DIR="third_party/uboot-imx" ;;
-    linux-imx)            SRC_DIR="third_party/linux-imx" ;;
     linux_mainline|linux-mainline) SRC_DIR="third_party/linux_mainline" ;;
     *)                    SRC_DIR="third_party/${COMPONENT}" ;;
 esac

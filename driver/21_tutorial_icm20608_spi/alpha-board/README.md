@@ -119,7 +119,7 @@ ECSPI3 抢 UART2_TX/RX 两个引脚。所以这个 dts 顺手把 `&uart2` 关掉
 ./scripts/driver_helper/build_driver.sh 21_tutorial_icm20608_spi alpha-board --kernel mainline
 
 # 使用NXP BSP内核
-./scripts/driver_helper/build_driver.sh 21_tutorial_icm20608_spi alpha-board --kernel imx
+./scripts/driver_helper/build_driver.sh 21_tutorial_icm20608_spi alpha-board
 ```
 
 ### 清理构建产物

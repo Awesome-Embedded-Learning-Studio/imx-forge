@@ -263,22 +263,8 @@ prompt_kernel_config() {
     log_info "=== 阶段 4: 内核配置 ==="
 
     echo ""
-    log_info "内核类型选择:"
-    echo "  1) mainline  (主线内核)"
-    echo "  2) imx       (NXP BSP内核)"
-    read -p "请选择内核类型 [默认: ${DEFAULT_KERNEL_TYPE}]: " kernel_choice
-
-    if [[ -z "$kernel_choice" ]]; then
-        KERNEL_TYPE="$DEFAULT_KERNEL_TYPE"
-    else
-        case "$kernel_choice" in
-            1) KERNEL_TYPE="mainline" ;;
-            2) KERNEL_TYPE="imx" ;;
-            *) KERNEL_TYPE="$DEFAULT_KERNEL_TYPE" ;;
-        esac
-    fi
-
-    log_info "注意: 内核类型可以在构建时通过 build_driver.sh --kernel 参数覆盖"
+    log_info "内核: mainline (主线树, 单轨)"
+    KERNEL_TYPE="mainline"
 
     return 0
 }
@@ -590,18 +576,6 @@ cat /sys/module/${DRIVER_NAME}_driver/parameters/
 1. 编辑源码文件: \`driver/${DRIVER_NAME}/${BOARD_NAME}/${DRIVER_NAME}_driver.c\`
 2. 重新编译: \`./scripts/driver_helper/build_driver.sh ${DRIVER_NAME} ${BOARD_NAME}\`
 3. 重新部署: \`./scripts/driver_helper/deploy_driver.sh ${DRIVER_NAME} ${BOARD_NAME}\`
-
-### 内核类型切换
-
-构建时可以指定内核类型：
-
-\`\`\`bash
-# 使用主线内核
-./scripts/driver_helper/build_driver.sh ${DRIVER_NAME} ${BOARD_NAME} --kernel mainline
-
-# 使用NXP BSP内核
-./scripts/driver_helper/build_driver.sh ${DRIVER_NAME} ${BOARD_NAME} --kernel imx
-\`\`\`
 
 ### 清理构建产物
 

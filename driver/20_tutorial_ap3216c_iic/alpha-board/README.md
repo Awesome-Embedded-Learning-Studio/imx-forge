@@ -113,7 +113,7 @@ rmmod 20_tutorial_ap3216c_iic_driver
 ./scripts/driver_helper/build_driver.sh 20_tutorial_ap3216c_iic alpha-board --kernel mainline
 
 # 使用NXP BSP内核
-./scripts/driver_helper/build_driver.sh 20_tutorial_ap3216c_iic alpha-board --kernel imx
+./scripts/driver_helper/build_driver.sh 20_tutorial_ap3216c_iic alpha-board
 ```
 
 ### 清理构建产物

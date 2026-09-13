@@ -12,7 +12,7 @@ CROSS_COMPILE := arm-none-linux-gnueabihf-
 
 # 内核源码路径
 KDIR := $(PROJECT_ROOT)/third_party/linux_mainline
-KOBJ := $(PROJECT_ROOT)/out/mainline/linux
+KOBJ := $(PROJECT_ROOT)/out/linux
 
 # 输出目录
 OUTPUT_DIR := $(PROJECT_ROOT)/out/driver_artifacts/atomic_demo_05/alpha-board

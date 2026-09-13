@@ -177,7 +177,7 @@ out/driver_artifacts/<驱动>/<板卡>/
 
 - `dtc` - 设备树编译器
 - `arm-none-linux-gnueabihf-gcc` - ARM交叉编译器
-- 内核源码 (third_party/linux-imx 或 linux_mainline)
+- 内核源码 (third_party/linux_mainline)
 
 ## 📚 相关文档
 
@@ -192,7 +192,7 @@ out/driver_artifacts/<驱动>/<板卡>/
 ./scripts/driver_helper/build_driver.sh --list
 
 # 2. 构建示例驱动
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx
+./scripts/driver_helper/build_driver.sh example-driver
 
 # 3. 审查构建产物
 ./scripts/driver_helper/review_driver.sh example-driver
@@ -219,7 +219,7 @@ out/driver_artifacts/<驱动>/<板卡>/
 ### 内核未编译
 ```bash
 # 完整编译内核
-cd third_party/linux-imx
+cd third_party/linux_mainline
 make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
 
 # 或快速准备（仅编译必要文件）

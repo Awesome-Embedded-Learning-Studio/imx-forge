@@ -24,15 +24,15 @@ Usage: $(basename "$0") --submodule_path=<name> [--output=<dir>]
 Generate a patch file from a submodule's branch changes.
 
 Arguments:
-  --submodule_path=<name>    Submodule name or path (e.g., linux-imx, linux_imx)
+  --submodule_path=<name>    Submodule name or path (e.g., linux_mainline)
   --output=<dir>             Output directory (default: patches/<submodule>/)
 
 Examples:
-  $(basename "$0") --submodule_path=linux-imx
-  $(basename "$0") --submodule_path=linux_imx --output=custom_output/
+  $(basename "$0") --submodule_path=linux_mainline
+  $(basename "$0") --submodule_path=linux_mainline --output=custom_output/
 
 Available submodules:
-  - linux-imx
+  - linux_mainline
   - uboot-imx
   - busybox
 EOF

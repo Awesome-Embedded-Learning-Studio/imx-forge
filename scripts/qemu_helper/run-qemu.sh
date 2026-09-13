@@ -5,7 +5,7 @@
 # Usage: run-qemu.sh [OPTIONS]
 #
 # Options:
-#   --kernel=PATH     zImage (default: out/mainline/linux/arch/arm/boot/zImage)
+#   --kernel=PATH     zImage (default: out/linux/arch/arm/boot/zImage)
 #   --dtb=PATH        Device tree blob (default: out/qemu/imx6ull-aes.dtb —
 #                     the REAL board dtb with U-Boot-equivalent MAC fixups;
 #                     rebuilt automatically, see --no-build)
@@ -74,8 +74,8 @@ set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 
-MAINLINE_OUT="${PROJECT_ROOT}/out/mainline/linux"
-DEFAULT_KERNEL="${MAINLINE_OUT}/arch/arm/boot/zImage"
+LINUX_OUT="${PROJECT_ROOT}/out/linux"
+DEFAULT_KERNEL="${LINUX_OUT}/arch/arm/boot/zImage"
 # The REAL board dtb (same tree the hardware boots), compiled by
 # make-qemu-dtb.sh with U-Boot-equivalent MAC fixups applied to the blob.
 # Single-source equivalence: anything verified here holds on hardware.
@@ -188,7 +188,7 @@ else
     die "qemu-system-arm not found (apt install qemu-system-arm, or run build-qemu.sh)"
 fi
 
-[[ -f "${KERNEL}" ]]     || die "kernel not found: ${KERNEL} (run build-mainline-linux.sh)"
+[[ -f "${KERNEL}" ]]     || die "kernel not found: ${KERNEL} (run build-linux.sh)"
 [[ -f "${DTB}" ]]        || die "dtb not found: ${DTB}"
 [[ -f "${ROOTFS_IMG}" ]] || die "rootfs image not found: ${ROOTFS_IMG} (run make-rootfs-img.sh)"
 

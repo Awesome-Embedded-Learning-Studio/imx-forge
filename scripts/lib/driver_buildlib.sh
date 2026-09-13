@@ -40,10 +40,9 @@ fi
 ARCH="${ARCH:-arm}"
 CROSS_COMPILE="${CROSS_COMPILE:-arm-none-linux-gnueabihf-}"
 
-# 内核类型配置
+# 内核类型配置（单轨：仅 mainline 树；键名保留 "mainline" 供内部函数引用）
 declare -A KERNEL_CONFIGS
-KERNEL_CONFIGS[mainline]="linux_mainline|out/mainline/linux|imx_aes_mainline_defconfig|主线内核"
-KERNEL_CONFIGS[imx]="linux-imx|out/linux|imx_aes_defconfig|NXP BSP内核"
+KERNEL_CONFIGS[mainline]="linux_mainline|out/linux|imx_aes_mainline_defconfig|主线内核"
 
 # 默认内核类型
 DEFAULT_KERNEL_TYPE="${DEFAULT_KERNEL_TYPE:-mainline}"
