@@ -43,9 +43,9 @@
 ## ✨ 为什么选择 IMX-Forge？
 
 - 🐳 **开箱即用的开发环境** — 预装 ARM GNU Toolchain 15.2.rel1 的 Docker 镜像，5 分钟就绪，无需配置工具链 PATH；WSL2 深度友好（Mirrored 网络 + USB 直通）。
-- 🔧 **双轨内核策略** — NXP BSP `6.12.3`（稳定）+ Mainline `7.1`（紧跟上游），附完整迁移对比。
+- 🔧 **主线内核单轨** — 直接基于 Mainline `7.1` 构建（linux-imx vendor 轨已移除），真板实测启动。
 - 📚 **完整的 0→1 学习路径** — 工具链 → U-Boot → 内核 → Rootfs → 驱动 → 实战，每步都有文档与示例，不再是"略去一万字"的坑人教程。
-- ✅ **CI/CD 全覆盖** — 每次提交自动验证 U-Boot、双轨 Linux 内核与 rootfs 构建，ccache 加速。
+- ✅ **CI/CD 全覆盖** — 每次提交自动验证 U-Boot、Linux 内核与 rootfs 构建，ccache 加速。
 
 🌐 **在线阅读**：https://awesome-embedded-learning-studio.github.io/imx-forge/
 
@@ -109,13 +109,13 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 
 ## 🤝 贡献
 
-欢迎 [报告 Bug](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues) · [提出功能](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues) · [提交代码](CONTRIBUTING.md)。完整指南与补丁命名规范（`[linux-imx]` / `[mainline]` / `[uboot]`）见 [CONTRIBUTING.md](CONTRIBUTING.md)。感谢 [所有贡献者](CONTRIBUTORS.md)。
+欢迎 [报告 Bug](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues) · [提出功能](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues) · [提交代码](CONTRIBUTING.md)。完整指南与补丁命名规范（`[mainline]` / `[uboot]`）见 [CONTRIBUTING.md](CONTRIBUTING.md)。感谢 [所有贡献者](CONTRIBUTORS.md)。
 
 ---
 
 ## 📄 开源协议
 
-MIT —— 详见 [LICENSE](LICENSE)。若补丁源自 GPL 授权的 linux-imx 或 NXP U-Boot，则保留其原始 GPL-2.0 许可证。
+MIT —— 详见 [LICENSE](LICENSE)。若补丁源自 GPL 授权的 NXP U-Boot，则保留其原始 GPL-2.0 许可证。
 
 ---
 
