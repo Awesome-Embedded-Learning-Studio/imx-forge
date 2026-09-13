@@ -15,7 +15,7 @@
 
 ## API
 
-调用方（`build-uboot.sh` / `build-linux.sh` / `build-mainline-linux.sh`）在 `--release` 模式下使用两个入口：
+调用方（`build-uboot.sh` / `build-linux.sh`）在 `--release` 模式下使用两个入口：
 
 ```bash
 source "${SCRIPT_LIB_DIR}/release.sh"
@@ -66,4 +66,4 @@ Commit: <sha>
 ## 相关
 
 - [release-all.sh](../release-all.sh) - 唯一 release 编排入口，Stage 1/2 经 `--release` 调用本库
-- [build-uboot.sh](../build_helper/build-uboot.sh) / [build-linux.sh](../build_helper/build-linux.sh) / [build-mainline-linux.sh](../build_helper/build-mainline-linux.sh) - `--release` 模式的调用方
+- [build-uboot.sh](../build_helper/build-uboot.sh) / [build-linux.sh](../build_helper/build-linux.sh) - `--release` 模式的调用方

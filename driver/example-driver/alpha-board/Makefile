@@ -12,7 +12,7 @@ ARCH := arm
 CROSS_COMPILE := arm-none-linux-gnueabihf-
 
 # 内核源码路径
-KDIR := $(PROJECT_ROOT)/third_party/linux-imx
+KDIR := $(PROJECT_ROOT)/third_party/linux_mainline
 KOBJ := $(PROJECT_ROOT)/out/linux
 
 # 输出目录

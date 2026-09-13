@@ -15,8 +15,7 @@ title: 构建脚本
 | 脚本 | 用途 |
 |------|------|
 | build-uboot.sh | 构建 U-Boot |
-| build-linux.sh | 构建 NXP BSP 内核 |
-| build-mainline-linux.sh | 构建主线内核 |
+| build-linux.sh | 构建主线内核（mainline 单轨） |
 | build-buildroot.sh | buildroot 构建 rootfs(D2-007) |
 | buildroot_menuconfig.sh | buildroot 配置(D2-008) |
 | clean_buildroot.sh | buildroot 清理(D2-009) |
@@ -27,8 +26,7 @@ title: 构建脚本
 scripts/
 ├── build_helper/          # 组件构建脚本
 │   ├── build-uboot.sh
-│   ├── build-linux.sh
-│   ├── build-mainline-linux.sh
+│   ├── build-linux.sh           # 主线内核（单轨）
 │   ├── build-buildroot.sh       # buildroot rootfs(D2-007)
 │   ├── buildroot_menuconfig.sh  # buildroot 配置(D2-008)
 │   └── clean_buildroot.sh       # buildroot 清理(D2-009)
@@ -51,11 +49,6 @@ scripts/
 ./scripts/build_helper/build-uboot.sh
 ./scripts/build_helper/build-linux.sh
 ./scripts/build_helper/build-buildroot.sh    # rootfs(buildroot 接管)
-```
-
-```bash
-# 单独构建主线内核
-./scripts/build_helper/build-mainline-linux.sh
 ```
 :::
 

@@ -10,13 +10,11 @@
 #   --list              列出所有可用驱动
 #   --all               构建所有驱动
 #   --board=NAME        只构建指定板卡的驱动
-#   --kernel=TYPE       选择内核类型 (mainline|imx)
 #   --help              显示帮助信息
 #
 # 示例：
 #   ./scripts/build_driver.sh --list                              # 列出所有驱动
 #   ./scripts/build_driver.sh led alpha-board                     # 构建LED驱动
-#   ./scripts/build_driver.sh framework --kernel=imx              # 使用imx内核构建
 #   ./scripts/build_driver.sh --all                               # 构建所有驱动
 #   ./scripts/build_driver.sh --all --board=alpha-board           # 构建alpha板的所有驱动
 
@@ -46,7 +44,6 @@ show_help() {
   --clean             清理构建产物（仅清理最终产物）
   --deep-clean        深度清理（清理最终产物和中间构建文件）
   --board=NAME        只构建指定板卡的驱动
-  --kernel=TYPE       选择内核类型 (mainline|imx，默认: mainline)
   --help, -h          显示此帮助信息
 
 参数:
@@ -60,9 +57,6 @@ show_help() {
   # 构建指定驱动
   $(basename "$0") led alpha-board
   $(basename "$0") example-driver
-
-  # 使用imx内核构建
-  $(basename "$0") example-driver --kernel=imx
 
   # 构建所有驱动
   $(basename "$0") --all
@@ -82,9 +76,8 @@ show_help() {
   # 深度清理所有驱动
   $(basename "$0") --deep-clean --all
 
-可用内核类型:
-  - mainline: 主线内核 (默认)
-  - imx:      NXP BSP内核
+内核:
+  mainline 主线树（单轨，不可选）
 
 产物位置:
   out/driver_artifacts/<驱动>/<板卡>/
@@ -309,10 +302,6 @@ while [[ $# -gt 0 ]]; do
             BOARD_NAME="${1#*=}"
             shift
             ;;
-        --kernel=*)
-            KERNEL_TYPE="${1#*=}"
-            shift
-            ;;
         --help|-h)
             show_help
             exit 0
@@ -332,13 +321,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-# 验证内核类型
-if [[ -z "${KERNEL_CONFIGS[$KERNEL_TYPE]}" ]]; then
-    log_error "不支持的内核类型: $KERNEL_TYPE"
-    log_info "支持的类型: mainline, imx"
-    exit 1
-fi
 
 # 执行相应的操作
 case $ACTION in

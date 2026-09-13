@@ -94,7 +94,7 @@ cat /sys/module/beep_driver/parameters/
 ./scripts/driver_helper/build_driver.sh beep alpha-board --kernel mainline
 
 # 使用NXP BSP内核
-./scripts/driver_helper/build_driver.sh beep alpha-board --kernel imx
+./scripts/driver_helper/build_driver.sh beep alpha-board
 ```
 
 ### 清理构建产物

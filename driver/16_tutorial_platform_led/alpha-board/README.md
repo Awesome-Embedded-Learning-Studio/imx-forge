@@ -94,7 +94,7 @@ cat /sys/module/platform_led_13_driver/parameters/
 ./scripts/driver_helper/build_driver.sh platform_led_13 alpha-board --kernel mainline
 
 # 使用NXP BSP内核
-./scripts/driver_helper/build_driver.sh platform_led_13 alpha-board --kernel imx
+./scripts/driver_helper/build_driver.sh platform_led_13 alpha-board
 ```
 
 ### 清理构建产物

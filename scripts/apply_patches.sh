@@ -41,7 +41,6 @@ fi
 # 同时兼容 CI 里使用的 linux_mainline/uboot-imx 写法）
 case "$COMPONENT" in
     uboot|uboot-imx)      SRC_DIR="third_party/uboot-imx" ;;
-    linux-imx)            SRC_DIR="third_party/linux-imx" ;;
     linux_mainline|linux-mainline) SRC_DIR="third_party/linux_mainline" ;;
     *)                    SRC_DIR="third_party/${COMPONENT}" ;;
 esac
@@ -89,7 +88,7 @@ if [[ ${#patch_files[@]} -gt 0 ]]; then
     else
         echo "  ✗ 失败: ${patch_name}" >&2
         echo "" >&2
-        echo "补丁没有打上，后续构建会缺 imx_aes_defconfig / imx6ull-aes.dts 这类项目自有文件。" >&2
+        echo "补丁没有打上，后续构建会缺 imx_aes_mainline_defconfig / imx6ull-aes.dts 这类项目自有文件。" >&2
         echo "常见原因：" >&2
         echo "  a) 子模块不在仓库锁定的 commit 上（patch 基准漂移）；" >&2
         echo "  b) 此前用旧方式打过补丁（文件只在工作区、未进暂存区），--3way 会拒绝重打。" >&2

@@ -56,7 +56,7 @@ jobs:
 
       - name: 检查 defconfig 存在性
         run: |
-          [ -f "driver/device_tree/alpha-board/linux/imx_aes_defconfig.template" ] || exit 1
+          [ -f "driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template" ] || exit 1
           echo "defconfig 模板存在"
 
       - name: 检查设备树文件存在性

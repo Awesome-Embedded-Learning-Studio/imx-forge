@@ -7,7 +7,6 @@
 #
 # Options:
 #   --fast-build    - Pass --fast-build to linux build (skip distclean)
-#   --mainline      - Build Linux from upstream/mainline kernel track
 #   --boot-media M  - Image boot media: emmc, sd, or both
 #   --stage N       - Run only specific stage (1-5)
 #   --help, -h      - Show this help message
@@ -55,7 +54,6 @@ CROSS_COMPILE=arm-none-linux-gnueabihf-
 FAST_BUILD=0
 CONTINUE_BUILD=0
 SPECIFIC_STAGE=""
-KERNEL_TRACK="imx"
 BOOT_MEDIA="${DEFAULT_BOOT_MEDIA:-emmc}"
 
 # Display usage
@@ -65,7 +63,6 @@ Usage: $0 [OPTIONS]
 
 Options:
   --fast-build      Pass --fast-build to linux build (skip distclean)
-  --mainline        Build Linux from upstream/mainline kernel track
   --boot-media M    Image boot media for stage 5: emmc, sd, or both
                     (default: emmc, or DEFAULT_BOOT_MEDIA)
   --continue        Continue from existing release-latest (skip completed stages)
@@ -93,8 +90,6 @@ Examples:
   $0 --continue --stage 5 --boot-media both   # Continue and build both eMMC and SD images
   $0 --fast-build                             # Build all with fast build mode
   $0 --stage 2 --fast-build                   # Build Linux with fast build mode
-  $0 --mainline --stage 2                     # Build mainline Linux into release layout
-  $0 --mainline --stage 2 --fast-build        # Build mainline Linux with fast build mode
   $0 --continue                               # Continue from existing build (skip completed stages)
   $0 --continue --stage 4                     # Continue and run only Stage 4
   DEFAULT_DEVICE_TREE=custom-dtb $0           # Use custom device tree
@@ -108,10 +103,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --fast-build)
             FAST_BUILD=1
-            shift
-            ;;
-        --mainline)
-            KERNEL_TRACK="mainline"
             shift
             ;;
         --boot-media)
@@ -201,11 +192,7 @@ ensure_submodules_initialized() {
                 required+=("third_party/uboot-imx:U-Boot")
                 ;;
             2)
-                if [[ "${KERNEL_TRACK}" == "mainline" ]]; then
-                    required+=("third_party/linux_mainline:Linux mainline")
-                else
-                    required+=("third_party/linux-imx:Linux i.MX")
-                fi
+                required+=("third_party/linux_mainline:Linux mainline")
                 ;;
             3)
                 required+=("third_party/buildroot:Buildroot")
@@ -272,18 +259,12 @@ stage_1_uboot() {
 # Stage 2: Linux
 stage_2_linux() {
     log_info "========================================="
-    log_info "Stage 2/5: Building Linux Kernel (${KERNEL_TRACK})"
+    log_info "Stage 2/5: Building Linux Kernel (mainline)"
     log_info "========================================="
 
     export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/linux"
 
     log_info "Output directory: ${OUTPUT_DIR}"
-    log_info "Kernel track: ${KERNEL_TRACK}"
-
-    local build_script="${SCRIPT_DIR}/build_helper/build-linux.sh"
-    if [[ "${KERNEL_TRACK}" == "mainline" ]]; then
-        build_script="${SCRIPT_DIR}/build_helper/build-mainline-linux.sh"
-    fi
 
     local build_args=(--release)
     if [[ ${FAST_BUILD} -eq 1 ]]; then
@@ -291,12 +272,11 @@ stage_2_linux() {
         build_args+=(--fast-build)
     fi
     echo ""
-    bash "${build_script}" "${build_args[@]}"
+    bash "${SCRIPT_DIR}/build_helper/build-linux.sh" "${build_args[@]}"
 
     # Verify key artifacts
     local zimage="${OUTPUT_DIR}/arch/arm/boot/zImage"
     local dtb="${OUTPUT_DIR}/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb"
-    local build_info="${OUTPUT_DIR}/build_info.txt"
 
     if [[ -f "${zimage}" ]]; then
         log_info "Linux build successful"
@@ -309,13 +289,6 @@ stage_2_linux() {
         log_info "DTB build successful: ${DEFAULT_DEVICE_TREE}.dtb"
     else
         log_error "Linux build failed - DTB not found: ${dtb}"
-        exit 1
-    fi
-
-    if [[ -f "${build_info}" ]] && grep -q "Kernel Track: ${KERNEL_TRACK}" "${build_info}"; then
-        log_info "Build info records kernel track: ${KERNEL_TRACK}"
-    elif [[ "${KERNEL_TRACK}" == "mainline" ]]; then
-        log_error "Linux build failed - build_info.txt does not record mainline kernel track"
         exit 1
     fi
 }
@@ -463,9 +436,7 @@ is_stage_completed() {
             ;;
         2)
             [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/zImage" ]] &&
-            [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb" ]] &&
-            [[ -f "${BUILD_OUTPUT_DIR}/linux/build_info.txt" ]] &&
-            grep -q "Kernel Track: ${KERNEL_TRACK}" "${BUILD_OUTPUT_DIR}/linux/build_info.txt"
+            [[ -f "${BUILD_OUTPUT_DIR}/linux/arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb" ]]
             ;;
         3)
             [[ -x "${BUILD_OUTPUT_DIR}/rootfs/bin/busybox" ]]
@@ -499,7 +470,6 @@ main() {
     log_info "Project root: ${PROJECT_ROOT}"
     log_info "Build output: ${BUILD_OUTPUT_DIR}"
     log_info "Cross compiler: ${CROSS_COMPILE}gcc"
-    log_info "Kernel track: ${KERNEL_TRACK}"
     log_info "Boot media: ${BOOT_MEDIA}"
     log_info "========================================="
     log_info ""

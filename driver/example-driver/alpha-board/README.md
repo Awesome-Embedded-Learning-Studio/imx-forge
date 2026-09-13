@@ -137,7 +137,7 @@ driver/device_tree/alpha-board/framework/imx6ull-aes-framework.dts
 ```bash
 # 检查内核路径
 echo $KDIR
-# 应该指向: third_party/linux-imx
+# 应该指向: third_party/linux_mainline
 
 # 检查交叉编译工具
 arm-none-linux-gnueabihf-gcc --version

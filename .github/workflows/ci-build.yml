@@ -21,8 +21,7 @@ jobs:
     timeout-minutes: 2
     outputs:
       uboot: ${{ steps.changes.outputs.uboot }}
-      linux-imx: ${{ steps.changes.outputs.linux-imx }}
-      linux-mainline: ${{ steps.changes.outputs.linux-mainline }}
+      linux: ${{ steps.changes.outputs.linux }}
       driver: ${{ steps.changes.outputs.driver }}
       scripts: ${{ steps.changes.outputs.scripts }}
     steps:
@@ -37,13 +36,9 @@ jobs:
               - 'patches/uboot/**'
               - 'patches/uboot-imx/**'
               - 'scripts/build_helper/build-uboot.sh'
-              - 'scripts/release_builder/build_release_uboot.sh'
-            linux-imx:
-              - 'patches/linux-imx/**'
-              - 'scripts/build_helper/build-linux.sh'
-            linux-mainline:
+            linux:
               - 'patches/linux_mainline/**'
-              - 'scripts/build_helper/build-mainline-linux.sh'
+              - 'scripts/build_helper/build-linux.sh'
             driver:
               - 'driver/**'
             scripts:
@@ -108,77 +103,12 @@ jobs:
           path: out/uboot/u-boot-dtb.imx
           retention-days: 7
 
-  # Linux NXP BSP 构建
-  linux-imx:
-    name: Linux (NXP BSP)
-    runs-on: ubuntu-latest
-    needs: detect
-    if: needs.detect.outputs.linux-imx == 'true' || needs.detect.outputs.scripts == 'true'
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: 初始化 linux-imx 子模块
-        run: git submodule update --init --depth=1 third_party/linux-imx
-
-      - name: 构建 Docker 镜像
-        run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
-
-      - name: 应用 Linux NXP BSP 补丁
-        run: cd third_party/linux-imx && ../../scripts/apply_patches.sh linux-imx
-
-      - name: Cache ccache for Linux NXP BSP
-        uses: actions/cache@v4
-        with:
-          path: .ccache
-          key: ${{ runner.os }}-ccache-linux-imx-${{ github.base_ref || github.ref_name }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-linux-imx-
-
-      - name: 构建 Linux NXP BSP
-        run: |
-          docker run --rm \
-            --user root \
-            -v $PWD:/workspace \
-            -w /workspace \
-            -e CCACHE_DIR=/workspace/.ccache \
-            -e CCACHE_BASEDIR=/workspace \
-            -e CCACHE_NOHASHDIR=true \
-            -e CCACHE_COMPILERCHECK=content \
-            ${{ env.DOCKER_IMAGE }} \
-            bash -c '
-              ccache -M 2G && ccache -z
-              mkdir -p /workspace/ccache-bin
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
-              export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/build_helper/build-linux.sh
-              ccache -s
-            '
-
-      - name: 验证产物
-        run: |
-          [ -f out/linux/arch/arm/boot/zImage ] || exit 1
-          file out/linux/arch/arm/boot/zImage | grep -q ARM
-
-      - name: 上传产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-imx
-          path: |
-            out/linux/arch/arm/boot/zImage
-            out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
-          retention-days: 7
-
-  # Linux Mainline 构建（与 NXP 并行）
-  linux-mainline:
+  # Linux 构建（mainline 单轨）
+  linux:
     name: Linux (Mainline)
     runs-on: ubuntu-latest
     needs: detect
-    if: needs.detect.outputs.linux-mainline == 'true' || needs.detect.outputs.scripts == 'true'
+    if: needs.detect.outputs.linux == 'true' || needs.detect.outputs.scripts == 'true'
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -202,19 +132,19 @@ jobs:
         id: kernel-cache
         uses: actions/cache@v4
         with:
-          path: out/mainline/linux
+          path: out/linux
           # 命中即跳过内核编译；key 覆盖内核源、defconfig 模板、补丁与构建脚本
-          key: linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-mainline-linux.sh', 'patches/linux_mainline/**') }}
+          key: linux-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-linux.sh', 'patches/linux_mainline/**') }}
           restore-keys: |
-            linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-
+            linux-tree-${{ steps.kernel-meta.outputs.sha }}-
 
       - name: Cache ccache for Linux Mainline
         uses: actions/cache@v4
         with:
           path: .ccache
-          key: ${{ runner.os }}-ccache-linux-mainline-${{ github.base_ref || github.ref_name }}
+          key: ${{ runner.os }}-ccache-linux-${{ github.base_ref || github.ref_name }}
           restore-keys: |
-            ${{ runner.os }}-ccache-linux-mainline-
+            ${{ runner.os }}-ccache-linux-
 
       - name: 构建 Linux Mainline
         if: steps.kernel-cache.outputs.cache-hit != 'true'
@@ -236,23 +166,23 @@ jobs:
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
               export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/build_helper/build-mainline-linux.sh
+              ./scripts/build_helper/build-linux.sh
               ccache -s
             '
 
       - name: 验证产物
         run: |
-          [ -f out/mainline/linux/arch/arm/boot/zImage ] || exit 1
-          [ -f out/mainline/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
-          file out/mainline/linux/arch/arm/boot/zImage | grep -q ARM
+          [ -f out/linux/arch/arm/boot/zImage ] || exit 1
+          [ -f out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || exit 1
+          file out/linux/arch/arm/boot/zImage | grep -q ARM
 
       - name: 上传产物
         uses: actions/upload-artifact@v4
         with:
-          name: linux-mainline
+          name: linux
           path: |
-            out/mainline/linux/arch/arm/boot/zImage
-            out/mainline/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
+            out/linux/arch/arm/boot/zImage
+            out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
           retention-days: 7
 
   # 驱动构建
@@ -281,11 +211,11 @@ jobs:
         id: kernel-cache
         uses: actions/cache@v4
         with:
-          path: out/mainline/linux
+          path: out/linux
           # 命中即跳过 16 分钟的内核编译；key 覆盖内核源、defconfig 模板、补丁与构建脚本
-          key: linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-mainline-linux.sh', 'patches/linux_mainline/**') }}
+          key: linux-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-linux.sh', 'patches/linux_mainline/**') }}
           restore-keys: |
-            linux-mainline-tree-${{ steps.kernel-meta.outputs.sha }}-
+            linux-tree-${{ steps.kernel-meta.outputs.sha }}-
 
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
@@ -294,9 +224,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ccache
-          key: ${{ runner.os }}-ccache-linux-mainline-${{ github.base_ref || github.ref_name }}
+          key: ${{ runner.os }}-ccache-linux-${{ github.base_ref || github.ref_name }}
           restore-keys: |
-            ${{ runner.os }}-ccache-linux-mainline-
+            ${{ runner.os }}-ccache-linux-
 
       - name: 验证工具链
         run: |
@@ -339,14 +269,14 @@ jobs:
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
               export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/build_helper/build-mainline-linux.sh --fast-build
+              ./scripts/build_helper/build-linux.sh --fast-build
               ccache -s
             '
 
       - name: 确保 Module.symvers（外挂模块编译需要）
         # cache 命中时构建步骤被跳过，这里兜底保证 Module.symvers 软链存在
         run: |
-          OUT=out/mainline/linux
+          OUT=out/linux
           if [ -f "$OUT/vmlinux.symvers" ] && [ ! -e "$OUT/Module.symvers" ]; then
             ln -s vmlinux.symvers "$OUT/Module.symvers"
             echo "Created Module.symvers -> vmlinux.symvers"
@@ -377,7 +307,7 @@ jobs:
 
       - name: 修复内核缓存目录权限
         if: steps.kernel-cache.outputs.cache-hit != 'true'
-        run: sudo chown -R "$USER:$USER" out/mainline/linux
+        run: sudo chown -R "$USER:$USER" out/linux
 
       - name: 验证驱动产物
         run: |

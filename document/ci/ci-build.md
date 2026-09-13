@@ -18,13 +18,10 @@
 
 | 变更路径 | 触发的构建 |
 |----------|------------|
-| `patches/uboot/**` | U-Boot |
+| `patches/uboot/**`、`patches/uboot-imx/**` | U-Boot |
 | `scripts/build_helper/build-uboot.sh` | U-Boot |
-| `patches/linux-imx/**` | Linux (NXP BSP) |
-| `scripts/build_helper/build-linux.sh` | Linux (NXP BSP) |
-| `patches/linux-mainline/**` | Linux (Mainline) |
-| `scripts/build_helper/build-mainline-linux.sh` | Linux (Mainline) |
-| `scripts/build_helper/build-busybox.sh` | BusyBox |
+| `patches/linux_mainline/**` | Linux (Mainline) |
+| `scripts/build_helper/build-linux.sh` | Linux (Mainline) |
 | `driver/**` | 驱动示例 |
 | `scripts/**` | 所有构建 |
 | `.github/workflows/**` | 所有构建 |

@@ -26,7 +26,7 @@
 
 ![i.MX6ULL 开发板 LCD 点屏实拍](/lcd-on.jpg)
 
-**主线内核 Linux 7.1 启动实测** —— 上游主线内核已在板子上跑起来（对应文中的「双轨内核策略」）：
+**主线内核 Linux 7.1 启动实测** —— 上游主线内核已在板子上跑起来（本项目现为 mainline 单轨）：
 
 ![主线内核 Linux 7 启动实拍](/linux7.png)
 
@@ -55,8 +55,8 @@
 
 IMX-Forge 是一个面向 NXP i.MX6ULL 开发板的开源构建系统，它将通常散落在各处的嵌入式开发资源整合在一起：
 
-- **补丁管理** —— 基于 `format-patch` 的双轨补丁管理（当前自动应用脚本按文件名选择最新 patch；`series` 机制属于后续增强方向）
-- **构建脚本** —— 一键构建 U-Boot、Linux NXP BSP 内核、BusyBox Rootfs；Mainline 由独立脚本和 CI 负责验证
+- **补丁管理** —— 基于 `format-patch` 的补丁管理（当前自动应用脚本按文件名选择最新 patch；`series` 机制属于后续增强方向）
+- **构建脚本** —— 一键构建 U-Boot、Mainline Linux 内核、BusyBox Rootfs（linux-imx vendor 轨已移除）
 - **教程文档** —— 从工具链到系统调试的完整学习路径
 - **第三方源码** —— Git Submodule 管理的 U-Boot、Linux、BusyBox、QT 编译流水线
 
@@ -71,9 +71,8 @@ IMX-Forge 是一个面向 NXP i.MX6ULL 开发板的开源构建系统，它将�
 │         ↓                                                     │
 │  U-Boot (NXP uboot-imx) → u-boot-dtb.imx                     │
 │         ↓                                                     │
-│  Linux Kernel (双轨支持)                                      │
-│    ├── linux-imx (NXP BSP 6.12.3，默认系统构建轨) → zImage + .dtb │
-│    └── linux_mainline (上游内核，CI 验证轨) → zImage + .dtb  │
+│  Linux Kernel (mainline 单轨)                                 │
+│    └── linux_mainline (上游内核 7.1) → zImage + .dtb          │
 │         ↓                                                     │
 │  BusyBox Rootfs → 最小文件系统                               │
 │         ↓                                                     │
@@ -84,16 +83,15 @@ IMX-Forge 是一个面向 NXP i.MX6ULL 开发板的开源构建系统，它将�
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 双轨内核策略
+### 内核策略（mainline 单轨）
 
 ```
 patches/
-├── [linux-imx]   NXP BSP 6.12.3 ← 稳定推荐
-└── [mainline]    上游内核      ← 已完成迁移
+└── linux_mainline/   上游内核 7.1（唯一内核轨）
 ```
 
-- **linux-imx**：NXP 官方 BSP，稳定可靠，驱动支持完善，是默认系统构建轨
-- **mainline**：上游主线内核，长期维护，可向上游贡献，项目通过 CI 构建验证持续兼顾
+- **mainline**：上游主线内核，长期维护，可向上游贡献；项目已在真板实测启动，CI 持续构建验证。
+- 早期的 NXP linux-imx vendor 轨已移除（历史迁移对比见教程 kernel 卷）；U-Boot 仍使用 NXP uboot-imx。
 
 ### 适合谁
 
@@ -181,14 +179,32 @@ arm-none-linux-gnueabihf-gcc (GNU Toolchain for the Arm Architecture 15.2.Rel1) 
 在容器内执行：
 
 ```bash
-# 一键构建所有组件
+# 一键构建所有组件（唯一编排入口；内核固定 mainline，无需任何开关）
 ./scripts/release-all.sh
 
 # 或分步构建
 ./scripts/build_helper/build-uboot.sh
 ./scripts/build_helper/build-linux.sh
 ./scripts/build_helper/build-busybox.sh
+
+# 构建驱动（内核自动用 mainline，不需要也不接受 --kernel 之类的参数）
+./scripts/driver_helper/build_driver.sh led alpha-board
+./scripts/driver_helper/build_driver.sh --list     # 看有哪些驱动
 ```
+
+### 冒烟验证（可选，无需开发板）
+
+构建产物能不能真的开机，一条命令验证——QEMU 直启到登录提示符才算过：
+
+```bash
+# 内核 + rootfs 就位后（release-all 或 --stage 2 + 3）
+scripts/qemu_helper/run-qemu.sh --smoke
+
+# 想跑完整断言体检（15 项外设/启动检查）：
+scripts/qemu_helper/e2e-test.sh
+```
+
+CI 里跑的就是同一条冒烟命令（ci-full 的 QEMU Boot Smoke job），本地与 CI 验证口径一致。
 
 ### 输出文件
 
@@ -321,19 +337,16 @@ imx-forge/
 ├── scripts/                # 构建脚本
 │   ├── build_helper/      # 主构建脚本
 │   │   ├── build-uboot.sh
-│   │   ├── build-linux.sh       # NXP BSP 内核
-│   │   ├── build-mainline-linux.sh  # 主线内核
+│   │   ├── build-linux.sh       # 主线内核（单轨）
 │   │   └── build-busybox.sh
 │   ├── release-all.sh      # 一键构建所有组件
 │   └── patch_maker.sh      # 补丁生成工具
 ├── third_party/            # 第三方源码（子模块）
 │   ├── uboot-imx/          # U-Boot NXP fork
-│   ├── linux-imx/          # Linux Kernel NXP BSP
 │   ├── linux_mainline/     # Linux Kernel 上游主线
 │   ├── busybox/            # BusyBox
 │   └── qt-compile-pipeline/  # QT 交叉编译流水线
-├── patches/                # 补丁文件（按轨道分目录）
-│   ├── linux-imx/          # NXP BSP 内核补丁
+├── patches/                # 补丁文件（按组件分目录）
 │   ├── linux_mainline/     # 主线内核补丁
 │   └── uboot-imx/          # U-Boot 补丁
 ├── driver/                 # 驱动源码与板级设备树
@@ -413,42 +426,15 @@ Toolchain found: arm-none-linux-gnueabihf-gcc (GNU Toolchain for the Arm Archite
 关键产物：
 - `out/uboot/u-boot-dtb.imx` —— 可烧录的 U-Boot 镜像
 
-**2. Linux 内核构建（NXP BSP）**
+**2. Linux 内核构建（mainline 单轨）**
 
 ```bash
 $ ./scripts/build_helper/build-linux.sh
 ```
 
-输出示例：
-```
-[INFO] Starting Linux kernel build for imx_aes_defconfig
-[INFO] Checking host dependencies...
-[INFO] Checking toolchain...
-...
-[INFO] Building Linux kernel...
-  Kernel: arch/arm/boot/zImage is ready
-  DTC     arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb
-...
-[INFO] Build completed successfully!
-[INFO] Kernel artifacts in /home/charliechen/imx-forge/out/linux:
-  ✓ vmlinux (ELF kernel)
-  ✓ arch/arm/boot/zImage (compressed kernel)
-  ✓ System.map (symbol table)
-```
+defconfig 为 `imx_aes_mainline_defconfig`（由脚本从模板生成），输出目录为 `out/linux/`。
 
-关键产物：
-- `out/linux/arch/arm/boot/zImage` —— 内核镜像
-- `out/linux/arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb` —— 设备树
-
-**3. Linux 内核构建（Mainline 主线）**
-
-```bash
-$ ./scripts/build_helper/build-mainline-linux.sh
-```
-
-使用主线内核时，defconfig 为 `imx_aes_mainline_defconfig`，输出目录为 `out/mainline/linux/`。
-
-**4. BusyBox Rootfs 构建**
+**3. BusyBox Rootfs 构建**
 
 ```bash
 $ ./scripts/build_helper/build-busybox.sh
@@ -487,32 +473,7 @@ make mx6ull_aes_emmc_defconfig O=../../out/uboot
 make -j8 O=../../out/uboot
 ```
 
-#### Linux 内核手动构建（NXP BSP）
-
-```bash
-# 设置环境变量
-export ARCH=arm
-export CROSS_COMPILE=arm-none-linux-gnueabihf-
-
-# 进入源码目录
-cd third_party/linux-imx
-
-# ⚠️ 应用 IMX-Forge 补丁（包含 imx_aes_defconfig）
-git apply ../../patches/linux-imx/linux-imx-latest.patch
-
-# 配置（使用 IMX-Forge 自定义的 imx_aes_defconfig）
-make imx_aes_defconfig O=../../out/linux
-
-# 如需自定义配置
-make menuconfig O=../../out/linux
-
-# 编译
-make -j8 O=../../out/linux
-```
-
-> **注意：** `imx_aes_defconfig` 是 IMX-Forge 项目自定义配置，需要先应用补丁。如果你想使用 NXP 官方配置，请改用 `imx_v7_defconfig`。
-
-#### Linux 内核手动构建（Mainline）
+#### Linux 内核手动构建（mainline）
 
 ```bash
 # 设置环境变量
@@ -522,14 +483,17 @@ export CROSS_COMPILE=arm-none-linux-gnueabihf-
 # 进入源码目录
 cd third_party/linux_mainline
 
+# ⚠️ 应用 IMX-Forge 板级补丁（提供 imx_aes_mainline_defconfig 与 imx6ull-aes 设备树）
+../../scripts/apply_patches.sh linux_mainline
+
 # 配置
-make imx_aes_mainline_defconfig O=../../out/mainline/linux
+make imx_aes_mainline_defconfig O=../../out/linux
 
 # 如需自定义配置
-make menuconfig O=../../out/mainline/linux
+make menuconfig O=../../out/linux
 
 # 编译
-make -j8 O=../../out/mainline/linux
+make -j8 O=../../out/linux
 ```
 
 #### BusyBox 手动构建
@@ -649,7 +613,7 @@ sudo mount /dev/sdX2 /mnt/imx-root
 ```bash
 # 复制内核和设备树到 boot 分区
 sudo cp out/linux/arch/arm/boot/zImage /mnt/imx-boot/
-sudo cp out/linux/arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb /mnt/imx-boot/
+sudo cp out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb /mnt/imx-boot/
 
 # 复制 rootfs 到 root 分区
 sudo cp -r rootfs/nfs/* /mnt/imx-root/
@@ -900,20 +864,20 @@ ping 192.168.1.100  # 替换为开发板 IP
 
 ### 问题 6: 子模块初始化失败
 
-**症状**: git submodule update 报错，或构建时报缺少 `imx_aes_defconfig`、`imx6ull-aes.dts` 等项目自有文件。
+**症状**: git submodule update 报错，或构建时报缺少 `imx_aes_mainline_defconfig`、`imx6ull-aes.dts` 等项目自有文件。
 
 **解决方法**:
 ```bash
 # 方法一：递归初始化
 git submodule update --init --recursive
 
-# 方法二：单独初始化某个模块（<name> 换成 linux-imx / linux_mainline / uboot-imx 等）
+# 方法二：单独初始化某个模块（<name> 换成 linux_mainline / uboot-imx 等）
 git submodule update --init third_party/<name>
 ```
 
 > ⚠️ **不要使用 `git submodule update --remote`**：它会把子模块拉到上游最新代码，
 > 偏离本仓库锁定的 commit，导致 `patches/` 里的补丁打不上——表现就是
-> `imx_aes_defconfig`、`imx6ull-aes.dts` 这些文件"凭空消失"。
+> `imx_aes_mainline_defconfig`、`imx6ull-aes.dts` 这些文件"凭空消失"。
 > 如果已经执行过，用 `git submodule update third_party/<name>` 即可回到锁定的 commit。
 
 ### 问题 7: 串口设备权限被拒绝（Permission denied）

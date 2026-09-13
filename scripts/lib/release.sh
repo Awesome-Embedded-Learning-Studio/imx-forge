@@ -5,15 +5,15 @@
 # 封装原先散在 release_builder/build_release_*.sh(已退役)的编排能力:
 #   reset 净源码 → 打 patch → 建 release 分支 → 可复现时间戳 → 生成 build_info.txt
 #
-# 调用方(build-uboot.sh / build-linux.sh / build-mainline-linux.sh)在 --release 模式下:
+# 调用方(build-uboot.sh / build-linux.sh)在 --release 模式下:
 #   source "${SCRIPT_LIB_DIR}/release.sh"
 #   release_prepare "<component>" "${SRC_DIR}" "<patch-arg>" ["${PROJECT_ROOT}"]
 #   ... # 原有 distclean/configure/build/verify 流程完全不变
 #   release_finalize "<component>" "${OUTPUT_DIR}" ["${release-version}"]
 #
-# component : uboot | linux-imx | linux-mainline
-# patch-arg : uboot/linux-imx = patch 文件路径(linux-imx 可缺);
-#             linux-mainline  = patch 目录路径(取目录内最新 *.patch)
+# component : uboot | linux
+# patch-arg : uboot = patch 文件路径(必须存在);
+#             linux = patch 目录路径(取目录内最新 *.patch)
 #
 # 设计要点:
 #   * 不改变调用方 cwd —— git 一律走 `git -C "$src"`,这样 build-*.sh 后续步骤(logo_helper /
@@ -57,15 +57,15 @@ release_prepare() {
     local project_root="${4:-}"
 
     case "$component" in
-        uboot|linux-imx|linux-mainline) ;;
+        uboot|linux) ;;
         *) log_error "release_prepare: unknown component '$component'"; exit 1 ;;
     esac
     [[ -d "$src" ]] || { log_error "release_prepare: source dir not found: $src"; exit 1; }
 
     log_step "release_prepare [${component}]: reproducible env"
     case "$component" in
-        uboot) : "${SOURCE_DATE_EPOCH:=$(date -u +%s)}" ;;             # 默认当前时间
-        linux-imx|linux-mainline) : "${SOURCE_DATE_EPOCH:=1609459200}" ;;  # 固定 2021-01-01 UTC
+        uboot) : "${SOURCE_DATE_EPOCH:=$(date -u +%s)}" ;;         # 默认当前时间
+        linux) : "${SOURCE_DATE_EPOCH:=1609459200}" ;;             # 固定 2021-01-01 UTC
     esac
     export SOURCE_DATE_EPOCH
     export LC_ALL=C
@@ -93,15 +93,14 @@ release_prepare() {
 # 组件 → 超项目内子模块路径(用于解析 gitlink commit)
 _release_submodule_path() {
     case "$1" in
-        uboot)          echo "third_party/uboot-imx" ;;
-        linux-imx)      echo "third_party/linux-imx" ;;
-        linux-mainline) echo "third_party/linux_mainline" ;;
+        uboot) echo "third_party/uboot-imx" ;;
+        linux) echo "third_party/linux_mainline" ;;
         *) return 1 ;;
     esac
 }
 
-# 锁定到 superproject gitlink commit(detached):三个组件统一走这条路径,保证可复现。
-# 早期 uboot/linux-imx 走 _release_reset_to_origin(跟 origin 滚动默认分支 + fetch),会让
+# 锁定到 superproject gitlink commit(detached):组件统一走这条路径,保证可复现。
+# 早期 uboot/linux 走 _release_reset_to_origin(跟 origin 滚动默认分支 + fetch),会让
 # patch 基于的 base 随上游漂移 → CI 上 charlies_board.patch 因 base 已更新到 lf_v2026.04 而
 # 打不上。统一锁超项目 pin 的 gitlink commit 后,base 与 patch 制作时一致,patch 才稳。
 _release_reset_to_gitlink() {
@@ -145,11 +144,7 @@ _release_create_branch() {
     local src="$1"
     local component="$2"
 
-    local prefix
-    case "$component" in
-        linux-mainline) prefix="release-mainline-build" ;;
-        *)              prefix="release-build" ;;
-    esac
+    local prefix="release-build"
     local branch_name="${prefix}-$(date +%Y%m%d)-$(git -C "$src" rev-parse --short HEAD)"
     log_info "Creating branch: ${branch_name}"
 
@@ -172,17 +167,7 @@ _release_apply_patch() {
             [[ -f "$patch_arg" ]] || { log_error "Patch file not found: $patch_arg"; exit 1; }
             patch_file="$patch_arg"
             ;;
-        linux-imx)
-            if [[ ! -f "$patch_arg" ]]; then
-                log_warn "Patch file not found: $patch_arg"
-                log_warn "Continuing build without patch..."
-                RELEASE_PATCH_NAME="None"
-                RELEASE_PATCHED_FILES=0
-                return 0
-            fi
-            patch_file="$patch_arg"
-            ;;
-        linux-mainline)
+        linux)
             if [[ ! -d "$patch_arg" ]]; then
                 log_warn "Patch directory not found: $patch_arg"
                 log_warn "Continuing build without patch..."
@@ -223,7 +208,7 @@ _release_apply_patch() {
 
 # ---------------------------------------------------------------------------
 # release_finalize <component> <output-dir> [<release-version>]
-# 写 build_info.txt。linux 两轨必须含 `Kernel Track:` 行(release-all Stage2 grep 硬依赖)。
+# 写 build_info.txt。
 # ---------------------------------------------------------------------------
 release_finalize() {
     local component="$1"
@@ -233,22 +218,15 @@ release_finalize() {
     local build_info_file="${output_dir}/build_info.txt"
     mkdir -p "$(dirname "$build_info_file")"
 
-    local header info_label track_line
+    local header info_label
     case "$component" in
         uboot)
             header="U-Boot Release Build Information"
             info_label="U-Boot"
-            track_line=""
             ;;
-        linux-imx)
+        linux)
             header="Linux Release Build Information"
             info_label="Linux"
-            track_line="Kernel Track: imx"
-            ;;
-        linux-mainline)
-            header="Linux Mainline Release Build Information"
-            info_label="Linux"
-            track_line="Kernel Track: mainline"
             ;;
         *) log_error "release_finalize: unknown component '$component'"; exit 1 ;;
     esac
@@ -264,7 +242,6 @@ release_finalize() {
         echo ""
         echo "${info_label} Information:"
         echo "-------------------"
-        [[ -n "$track_line" ]] && echo "${track_line}"
         echo "Commit: ${RELEASE_COMMIT}"
         echo "Version: ${RELEASE_DESCRIBE}"
         echo "Branch: ${RELEASE_BRANCH_REF}"

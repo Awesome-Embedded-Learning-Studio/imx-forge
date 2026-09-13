@@ -119,66 +119,8 @@ jobs:
           fi
           ls -lh ${{ env.BUILD_OUTPUT }}/uboot/
 
-  # Stage 2: 双内核并行构建
-  stage2-imx:
-    name: Stage 2 - Linux (NXP BSP)
-    runs-on: ubuntu-latest
-    needs: check
-    if: needs.check.outputs.should_run == 'true'
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: 初始化 linux-imx 子模块
-        run: git submodule update --init --depth=1 third_party/linux-imx
-
-      - name: 构建 Docker 镜像
-        run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
-
-      - name: Cache ccache for Linux NXP BSP (Stage 2)
-        uses: actions/cache@v4
-        with:
-          path: .ccache
-          key: ${{ runner.os }}-ccache-full-linux-imx-${{ github.base_ref || github.ref_name }}-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-full-linux-imx-${{ github.base_ref || github.ref_name }}-
-            ${{ runner.os }}-ccache-full-linux-imx-
-
-      - name: 构建 Linux NXP BSP (Stage 2)
-        run: |
-          docker run --rm --user root \
-            -v $PWD:/workspace \
-            -w /workspace \
-            -e CCACHE_DIR=/workspace/.ccache \
-            -e CCACHE_BASEDIR=/workspace \
-            -e CCACHE_NOHASHDIR=true \
-            -e CCACHE_COMPILERCHECK=content \
-            ${{ env.DOCKER_IMAGE }} \
-            bash -c '
-              set -e
-              git config --global --add safe.directory "*"
-              ccache -M 2G && ccache -z
-              mkdir -p /workspace/ccache-bin
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-gcc
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
-              ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
-              export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/release-all.sh --stage 2
-              ccache -s
-            '
-
-      - name: 验证产物
-        run: |
-          if [ ! -f ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/zImage ] || \
-             [ ! -f ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ]; then
-            echo "::error::Linux (NXP BSP) 产物缺失;上方「构建 Linux NXP BSP」步骤可能已失败(回看其日志)"
-            ls -lh ${{ env.BUILD_OUTPUT }}/linux/arch/arm/boot/ 2>/dev/null || echo "(目录不存在)"
-            exit 1
-          fi
-
-  stage2-mainline:
+  # Stage 2: Linux 内核（mainline 单轨）
+  stage2-linux:
     name: Stage 2 - Linux (Mainline)
     runs-on: ubuntu-latest
     needs: check
@@ -195,14 +137,14 @@ jobs:
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
 
-      - name: Cache ccache for Linux Mainline
+      - name: Cache ccache for Linux
         uses: actions/cache@v4
         with:
           path: .ccache
-          key: ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}
+          key: ${{ runner.os }}-ccache-full-linux-${{ github.base_ref || github.ref_name }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-ccache-full-linux-mainline-${{ github.base_ref || github.ref_name }}-
-            ${{ runner.os }}-ccache-full-linux-mainline-
+            ${{ runner.os }}-ccache-full-linux-${{ github.base_ref || github.ref_name }}-
+            ${{ runner.os }}-ccache-full-linux-
 
       - name: 构建 Linux Mainline
         run: |
@@ -223,18 +165,16 @@ jobs:
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-g++
               ln -sf /usr/bin/ccache /workspace/ccache-bin/arm-none-linux-gnueabihf-ar
               export PATH="/workspace/ccache-bin:${PATH}"
-              ./scripts/release-all.sh --mainline --stage 2
+              ./scripts/release-all.sh --stage 2
               ccache -s
             '
 
       - name: 验证产物
         run: |
           if [ ! -f out/release-latest/linux/arch/arm/boot/zImage ] || \
-             [ ! -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ] || \
-             ! grep -q "Kernel Track: mainline" out/release-latest/linux/build_info.txt; then
-            echo "::error::Linux (Mainline) 产物缺失或 build_info 无 Kernel Track;上方「构建 Linux Mainline」步骤可能已失败(回看其日志)"
+             [ ! -f out/release-latest/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ]; then
+            echo "::error::Linux (Mainline) 产物缺失;上方「构建 Linux Mainline」步骤可能已失败(回看其日志)"
             ls -lh out/release-latest/linux/arch/arm/boot/ 2>/dev/null || echo "(目录不存在)"
-            cat out/release-latest/linux/build_info.txt 2>/dev/null || echo "(build_info.txt 不存在)"
             exit 1
           fi
 
@@ -242,7 +182,7 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends device-tree-compiler
           # out/ 由 docker 内 root 构建,runner 用户不可写;资产产出到独立目录 qemu-assets/
-          # release-all 的内核构建目录是 out/release-latest/linux(非 standalone 的 out/mainline/linux)
+          # release-all 的内核构建目录是 out/release-latest/linux(非 standalone 的 out/linux)
           mkdir -p qemu-assets
           cp out/release-latest/linux/arch/arm/boot/zImage qemu-assets/zImage
           OUT_BUILD="${PWD}/out/release-latest/linux" scripts/qemu_helper/make-qemu-dtb.sh --output=qemu-assets/imx6ull-aes.dtb
@@ -355,7 +295,7 @@ jobs:
   qemu-smoke:
     name: QEMU Boot Smoke
     runs-on: ubuntu-latest
-    needs: [check, stage2-mainline, stage3-4]
+    needs: [check, stage2-linux, stage3-4]
     if: needs.check.outputs.should_run == 'true'
     # 首次构建自建 QEMU(arm-softmmu 单目标)约 10-20 分钟,缓存命中后只剩开机
     timeout-minutes: 40
@@ -425,7 +365,7 @@ jobs:
   final:
     name: Final Validation
     runs-on: ubuntu-latest
-    needs: [check, stage1, stage2-imx, stage2-mainline, stage3-4, qemu-smoke]
+    needs: [check, stage1, stage2-linux, stage3-4, qemu-smoke]
     if: needs.check.outputs.should_run == 'true'
     timeout-minutes: 5
     steps:
@@ -436,7 +376,6 @@ jobs:
           echo "## IMX-Forge 构建报告" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **U-Boot**: 构建成功" >> $GITHUB_STEP_SUMMARY
-          echo "- **Linux NXP BSP**: 构建成功" >> $GITHUB_STEP_SUMMARY
           echo "- **Linux Mainline**: 构建成功" >> $GITHUB_STEP_SUMMARY
           echo "- **BusyBox**: 构建成功" >> $GITHUB_STEP_SUMMARY
           echo "- **RootFS**: 验证通过" >> $GITHUB_STEP_SUMMARY

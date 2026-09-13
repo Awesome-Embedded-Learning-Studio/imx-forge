@@ -60,7 +60,7 @@ if [[ "${NO_BUILD}" -eq 0 ]]; then
 fi
 
 QEMU_BIN="${PROJECT_ROOT}/out/qemu/build/qemu-system-arm"
-KERNEL="${PROJECT_ROOT}/out/mainline/linux/arch/arm/boot/zImage"
+KERNEL="${PROJECT_ROOT}/out/linux/arch/arm/boot/zImage"
 DTB="${PROJECT_ROOT}/out/qemu/imx6ull-aes.dtb"
 ROOTFS="${PROJECT_ROOT}/out/qemu/rootfs.ext4"
 

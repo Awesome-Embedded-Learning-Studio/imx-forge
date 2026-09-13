@@ -8,14 +8,8 @@ PROJECT_ROOT  := $(shell realpath $(CURDIR)/../../..)
 ARCH          := arm
 CROSS_COMPILE := arm-none-linux-gnueabihf-
 
-KDIR_FLAG ?= mainline
-ifeq ($(KDIR_FLAG),imx)
-    KDIR := $(PROJECT_ROOT)/third_party/linux-imx
-    KOBJ := $(PROJECT_ROOT)/out/linux
-else
-    KDIR := $(PROJECT_ROOT)/third_party/linux_mainline
-    KOBJ := $(PROJECT_ROOT)/out/mainline/linux
-endif
+KDIR := $(PROJECT_ROOT)/third_party/linux_mainline
+KOBJ := $(PROJECT_ROOT)/out/linux
 
 .PHONY: all modules clean install help
 
@@ -36,6 +30,5 @@ install: modules
 help:
 	@echo "Usage:"
 	@echo "  make                  - Build module with mainline kernel"
-	@echo "  make KDIR_FLAG=imx    - Build module with IMX kernel"
 	@echo "  make clean            - Clean build artifacts"
 	@echo "  make install          - Install to rootfs/nfs/home"

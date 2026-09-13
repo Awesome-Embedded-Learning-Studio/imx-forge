@@ -32,7 +32,7 @@ out/driver_artifacts/example-driver/alpha-board/
 
 ```bash
 # 进入内核源码目录
-cd third_party/linux-imx
+cd third_party/linux_mainline
 
 # 设置架构和交叉编译工具
 export ARCH=arm
@@ -184,7 +184,7 @@ dtc -I dts -O dtb -o fake_device.dtbo imx6ull-aes-framework.dtso
 ```bash
 # 检查include路径是否正确
 dtc -I dts -O dtb -o /tmp/test.dtb \
-    -i third_party/linux-imx/arch/arm/boot/dts \
+    -i third_party/linux_mainline/arch/arm/boot/dts \
     imx6ull-aes-framework.dts
 
 # 查看详细错误信息

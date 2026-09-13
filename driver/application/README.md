@@ -57,7 +57,7 @@ scripts/qemu_helper/e2e-test.sh                        # 15 项外设 PASS/FAIL
 
 - **改过设备树**（dts/dtsi）后：`scripts/qemu_helper/make-qemu-dtb.sh` 重编 dtb（run-qemu.sh 自动检测也会触发）
 - **改过 rootfs 内容**后：直接 `run-qemu.sh`（自动重建 ext4 镜像）
-- **改过内核**后：`build-mainline-linux.sh` 重编 zImage（run-qemu.sh 消费 `out/mainline/linux/arch/arm/boot/zImage`）
+- **改过内核**后：`build-linux.sh` 重编 zImage（run-qemu.sh 消费 `out/linux/arch/arm/boot/zImage`）
 - lcd_button 的 evdevtouch 插件**必须显式 `-plugin`**（linuxfb 不默认加载，环境变量只传参不加载）
 
 ### 2. 部署到 rootfs

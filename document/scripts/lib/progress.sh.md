@@ -33,7 +33,7 @@ progress.sh
 使用方:
 
 ```
-├─ build_helper/build-mainline-linux.sh  (kernel profile)
+├─ build_helper/build-linux.sh            (kernel profile)
 ├─ build_helper/build-buildroot.sh        (buildroot profile)
 └─ build_helper/build-uboot.sh            (uboot profile)
 ```
@@ -155,7 +155,7 @@ make ... | python3 "$FORGE_PROGRESS_PY" kernel
 
 ## 相关文档
 
-- [build-mainline-linux.sh](../build_helper/build-mainline-linux.sh.md) - kernel profile 调用方
+- [build-linux.sh](../build_helper/build-linux.sh.md) - kernel profile 调用方
 - [build-buildroot.sh](../build_helper/build-buildroot.sh.md) - buildroot profile 调用方
 - [build-uboot.sh](../build_helper/build-uboot.sh.md) - uboot profile 调用方
 - [logging.sh](./logging.sh.md) - 同级共享库(日志)

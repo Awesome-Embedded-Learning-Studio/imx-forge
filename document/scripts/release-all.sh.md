@@ -35,8 +35,7 @@ release-all.sh
 ```
 release-all.sh
     ├─ scripts/build_helper/build-uboot.sh          (Stage 1)
-    ├─ scripts/build_helper/build-linux.sh          (Stage 2, NXP imx 轨)
-    ├─ scripts/build_helper/build-mainline-linux.sh (Stage 2, mainline 轨)
+    ├─ scripts/build_helper/build-linux.sh          (Stage 2, mainline 单轨)
     ├─ scripts/build_helper/build-buildroot.sh      (Stage 3)
     ├─ scripts/varified_rootfs_ok.sh                (Stage 4)
     ├─ scripts/image_builder/build_imx6ull_image.sh (Stage 5)
@@ -70,7 +69,7 @@ release-all.sh
 | 阶段 | 名称 | 调用 | 主要产物 / 校验 |
 |------|------|------|-----------------|
 | 1 | U-Boot | `build-uboot.sh --release` | `u-boot-dtb.imx` |
-| 2 | Linux | `build-linux.sh` 或 `build-mainline-linux.sh`（`--release`） | `zImage`、`*.dtb`、`build_info.txt`（含 `Kernel Track:`） |
+| 2 | Linux | `build-linux.sh`（`--release`） | `zImage`、`*.dtb`、`build_info.txt` |
 | 3 | RootFS（buildroot） | `build-buildroot.sh` | `rootfs/bin/busybox` |
 | 4 | RootFS 验证闸门 | `varified_rootfs_ok.sh` | rootfs 完整性（失败即中止） |
 | 5 | 镜像打包 | `build_imx6ull_image.sh` | `${device}-${media}.img` |
@@ -156,12 +155,10 @@ bash "${SCRIPT_DIR}/build_helper/build-uboot.sh" --release
 
 ```bash
 export OUTPUT_DIR="${BUILD_OUTPUT_DIR}/linux"
-local build_script="${SCRIPT_DIR}/build_helper/build-linux.sh"
-[[ "${KERNEL_TRACK}" == "mainline" ]] && build_script="${SCRIPT_DIR}/build_helper/build-mainline-linux.sh"
 local build_args=(--release)
 [[ ${FAST_BUILD} -eq 1 ]] && build_args+=(--fast-build)
-bash "${build_script}" "${build_args[@]}"
-# 校验:zImage + dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb + build_info.txt(含 "Kernel Track: ${KERNEL_TRACK}")
+bash "${SCRIPT_DIR}/build_helper/build-linux.sh" "${build_args[@]}"
+# 校验:zImage + dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb
 ```
 
 mainline 轨下，`build_info.txt` 缺 `Kernel Track: mainline` 会**硬退出**。
@@ -345,8 +342,7 @@ bash -x ./scripts/release-all.sh --stage 2          # 跟踪执行
 ## 相关文档
 
 - [build-uboot.sh](./build_helper/build-uboot.sh) - U-Boot 构建（`--release` 模式）
-- [build-linux.sh](./build_helper/build-linux.sh) - NXP BSP 内核构建
-- [build-mainline-linux.sh](./build_helper/build-mainline-linux.sh) - mainline 内核构建
+- [build-linux.sh](./build_helper/build-linux.sh) - mainline 内核构建（单轨）
 - [build-buildroot.sh](./build_helper/build-buildroot.sh) - buildroot rootfs 构建
 - [release.sh](./lib/release.sh) - release 编排共享库
 - [varified_rootfs_ok.sh](./varified_rootfs_ok.sh) - RootFS 验证闸门
