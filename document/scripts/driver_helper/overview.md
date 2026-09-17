@@ -179,7 +179,7 @@ IMX-Forge/
 ./scripts/driver_helper/build_driver.sh example-driver alpha-board
 
 # 使用imx内核构建
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx
+./scripts/driver_helper/build_driver.sh example-driver
 
 # 构建所有驱动
 ./scripts/driver_helper/build_driver.sh --all
@@ -480,7 +480,7 @@ KERNEL_CONFIGS[newkernel]="name|output|defconfig|description"
 <details>
 <summary><b>❓ 构建失败怎么办？</b></summary>
 
-1. 检查内核是否已编译：`ls out/mainline/linux/.config`
+1. 检查内核是否已编译：`ls out/linux/.config`
 2. 查看详细错误：运行脚本前加`DEBUG=1`
 3. 查看[错误排查指南](./troubleshooting.md)
 

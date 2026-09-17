@@ -32,7 +32,7 @@ title: 修 defconfig 与上板验证
   CONFIG_SND_SOC_WM8960=y
 ```
 
-为什么 `=m` 不行？正点原子那种「内核 + 模块」的发行版，`=m` 表示编成 `.ko`、`modules_install` 装到 `/lib/modules/`、开机 `modprobe` 加载。但 **imx-forge 的内核 build 流程不带 `modules_install`**（`build-mainline-linux.sh` 只编 `zImage` + `modules`，但不部署到 rootfs），于是 `fsl-asoc-card.ko` 压根没出现在板子上 → machine 驱动缺席 → dai_link 绑不起来 → 声卡不存在 → `aplay: no soundcards found`。
+为什么 `=m` 不行？正点原子那种「内核 + 模块」的发行版，`=m` 表示编成 `.ko`、`modules_install` 装到 `/lib/modules/`、开机 `modprobe` 加载。但 **imx-forge 的内核 build 流程不带 `modules_install`**（`build-linux.sh` 只编 `zImage` + `modules`，但不部署到 rootfs），于是 `fsl-asoc-card.ko` 压根没出现在板子上 → machine 驱动缺席 → dai_link 绑不起来 → 声卡不存在 → `aplay: no soundcards found`。
 
 而 `wm8960.c`（codec）和 `fsl_sai.c`（cpu_dai）在 defconfig 里是 `=y`、本来就在内核里。唯独 machine 驱动 `fsl-asoc-card` 漏成 `=m`——三层缺了中间的「缝纫机」，声卡就散架了。改成 `=y` 把它也编进内核，三层齐全，声卡上线。
 
@@ -55,13 +55,13 @@ ls /lib/modules/*/kernel/sound/soc/fsl/  # 空的，.ko 没部署
 defconfig 改好后，编主线内核（会自动从 template 生成 `imx_aes_mainline_defconfig`）：
 
 ```bash
-./scripts/build_helper/build-mainline-linux.sh
+./scripts/build_helper/build-linux.sh
 ```
 
-产物在 `out/mainline/linux/`：`zImage`、`imx6ull-aes.dtb`、模块。重点确认 build log 里 `fsl-asoc-card.o` / `snd-soc-wm8960.o` 被编进内核映像（而不是只生成 `.ko`）：
+产物在 `out/linux/`：`zImage`、`imx6ull-aes.dtb`、模块。重点确认 build log 里 `fsl-asoc-card.o` / `snd-soc-wm8960.o` 被编进内核映像（而不是只生成 `.ko`）：
 
 ```bash
-grep -iE "fsl-asoc-card|wm8960" out/mainline/linux/.built-in.a.cmd 2>/dev/null || true
+grep -iE "fsl-asoc-card|wm8960" out/linux/.built-in.a.cmd 2>/dev/null || true
 # 或在编完的源码树里确认：
 ls third_party/linux_mainline/sound/soc/fsl/fsl-asoc-card.o   # .o 存在说明编了
 ```

@@ -6,10 +6,9 @@ title: ICM-20608 SPI 驱动教程
 
 ## 版本说明
 
-本教程基于以下内核版本，SPI **设备驱动**的公共 API 在两边完全一致，写出来的 `.ko` 两边都能跑：
+本教程基于以下内核版本：
 
-- **linux-imx** 6.12.49 <Badge type="tip" text="推荐" />
-- **mainline** 7.1.0 <Badge type="info" text="进阶" />
+- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
 唯一要注意的差异在**控制器侧**命名：`spi_alloc_master` / `spi_register_master` 这批带 "master" 的老 API，在 6.12 还作为兼容别名存在，到了 7.1 已经被彻底删除，统一成 `spi_alloc_host` / `spi_register_controller`。我们写设备驱动用不到它们，但分析 `spi-imx.c` 时会碰到，到时候会讲清楚。
 

@@ -27,7 +27,7 @@
 ========================================
 内核类型: 主线内核 (linux_mainline)
 内核目录: /path/to/linux_mainline
-输出目录: /path/to/out/mainline/linux
+输出目录: /path/to/out/linux
 
 缺少以下文件：
   - 内核配置文件: .config
@@ -53,7 +53,7 @@ ls -la third_party/linux-mainline/
 cd third_party/linux-mainline/
 
 # 使用默认配置
-make O=../../out/mainline/linux \
+make O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   imx_aes_mainline_defconfig
@@ -62,19 +62,19 @@ make O=../../out/mainline/linux \
 make O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
-  imx_aes_defconfig
+  imx_aes_mainline_defconfig
 ```
 
 3. **准备内核模块**
 ```bash
 # 快速准备（推荐）
-make O=../../out/mainline/linux \
+make O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   modules_prepare
 
 # 或者完整编译（耗时较长）
-make O=../../out/mainline/linux \
+make O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   -j$(nproc)
@@ -198,7 +198,7 @@ static int __init fake_init(void)
 # 使用sparse进行静态检查
 cd third_party/linux-mainline/
 make C=2 CF="-D__CHECK_ENDIAN__" \
-  O=../../out/mainline/linux \
+  O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   M=../../driver/example-driver/alpha-board/ modules
@@ -494,7 +494,7 @@ modinfo fake_driver.ko | grep vermagic
 ./scripts/driver_helper/build_driver.sh example-driver --kernel=mainline
 
 # 如果目标板使用imx内核
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx
+./scripts/driver_helper/build_driver.sh example-driver
 ```
 
 3. **确保内核配置一致**
@@ -505,7 +505,7 @@ zcat /proc/config.gz > /tmp/target.config
 cat /boot/config-$(uname -r) > /tmp/target.config
 
 # 与编译用的配置比较
-diff out/mainline/linux/.config /tmp/target.config
+diff out/linux/.config /tmp/target.config
 ```
 
 **预防措施**：
@@ -545,7 +545,7 @@ cat /proc/kallsyms
 2. **检查内核配置**
 ```bash
 # 查看当前内核配置
-cat out/mainline/linux/.config | grep 相关配置项
+cat out/linux/.config | grep 相关配置项
 
 # 查看目标板内核配置
 zcat /proc/config.gz | grep 相关配置项
@@ -567,14 +567,14 @@ sudo insmod fake_driver.ko
 ```bash
 # 如果缺少内核功能，需要重新配置内核
 cd third_party/linux-mainline/
-make O=../../out/mainline/linux \
+make O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   menuconfig
 
 # 找到并启用需要的选项
 # 保存后重新编译内核
-make O=../../out/mainline/linux \
+make O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   -j$(nproc)

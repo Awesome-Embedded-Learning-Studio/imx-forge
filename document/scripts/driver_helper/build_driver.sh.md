@@ -8,7 +8,7 @@
 
 - **统一构建入口**：单个命令构建任何驱动
 - **批量构建**：支持一键构建所有驱动
-- **内核类型切换**：支持 mainline 和 imx 两种内核
+- **单轨内核**：始终基于主线内核（mainline）构建，无需选内核
 - **清理管理**：支持普通清理和深度清理
 - **自动部署提示**：构建成功后询问是否部署
 
@@ -22,7 +22,7 @@
 build_driver.sh
     ├─ scripts/lib/driver_buildlib.sh (核心构建库)
     ├─ driver/*/Makefile (各驱动的 Makefile)
-    ├─ third_party/linux-*/ (内核源码)
+    ├─ third_party/linux_mainline/ (内核源码)
     └─ scripts/driver_helper/driver_helper.conf (可选配置)
 ```
 
@@ -43,7 +43,6 @@ build_driver.sh
 | `--clean` | 清理构建产物（仅最终产物） |
 | `--deep-clean` | 深度清理（包括中间文件） |
 | `--board=NAME` | 只构建指定板卡的驱动 |
-| `--kernel=TYPE` | 选择内核类型 (mainline\|imx) |
 | `--help, -h` | 显示帮助信息 |
 
 ### 位置参数
@@ -55,10 +54,11 @@ build_driver.sh
 
 ### 内核类型
 
+只有主线内核一条（单轨，不可选），`--kernel` 参数已退役：
+
 | 类型 | 说明 | 内核源码 |
 |------|------|----------|
-| `mainline` | 主线内核 | `linux_mainline` |
-| `imx` | NXP BSP 内核 | `linux-imx` |
+| `mainline` | 主线内核（默认且唯一） | `linux_mainline` |
 
 ## 执行流程
 
@@ -68,7 +68,7 @@ build_driver.sh
 ┌─────────────────────────────────────────────────────────────┐
 │  参数解析与验证                                              │
 │  - 解析命令行选项                                           │
-│  - 验证内核类型                                             │
+│  - 验证位置参数                                             │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -220,8 +220,7 @@ PROJECT_ROOT/
 │   └── lib/
 │       └── driver_buildlib.sh       # 核心构建库
 └── third_party/
-    ├── linux_mainline/              # 主线内核
-    └── linux-imx/                   # BSP 内核
+    └── linux_mainline/              # 主线内核（单轨）
 ```
 
 ## 使用示例
@@ -240,9 +239,6 @@ PROJECT_ROOT/
 
 # 使用默认板卡
 ./scripts/driver_helper/build_driver.sh example-driver
-
-# 使用 imx 内核
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx
 ```
 
 ### 批量构建
@@ -306,7 +302,7 @@ PROJECT_ROOT/
 [ERROR] ========================================
 [ERROR] 内核类型: 主线内核 (linux_mainline)
 [ERROR] 内核目录: third_party/linux_mainline
-[ERROR] 输出目录: out/mainline/linux
+[ERROR] 输出目录: out/linux
 [ERROR]
 [ERROR] 缺少以下文件：
 [ERROR]   - Module.symvers (需要运行 modules_prepare)
@@ -314,7 +310,7 @@ PROJECT_ROOT/
 [ERROR] 💡 解决方案：
 [ERROR]    1. 完整编译内核：
 [ERROR]       cd third_party/linux_mainline
-[ERROR]       make O=out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
+[ERROR]       make O=out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
 ```
 
 ## 故障排除
@@ -361,8 +357,8 @@ ls third_party/linux_mainline
 
 ```bash
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
-ln -s vmlinux.symvers ../../out/mainline/linux/Module.symvers
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
+ln -s vmlinux.symvers ../../out/linux/Module.symvers
 ```
 
 #### 错误 4：编译失败

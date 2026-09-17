@@ -79,7 +79,7 @@ sound-wm8960 {
 ## 二、codec: wm8960@1a（codec 节点）
 
 ::: warning 踩坑：WM8960 实测在 I2C1，不是原版资料的 I2C2
-正点原子原版 patch（`patches/linux-imx`）、linux-imx BSP `imx6ull-aes.dtsi`、以及本教程早期版本**都把 `codec` 节点挂在 `&i2c2`**——但 alpha 板实测 WM8960 **接在 I2C1 @0x1a**：`i2cdetect -y 0`（I2C1）命中 `0x1a`(WM8960) + `0x1e`(AP3216C)，而 `i2cdetect -y 1`（I2C2）只有 `0x5d`(goodix)。
+正点原子原版 patch（当年的 `patches/linux-imx/`，已随 vendor 轨退役）、linux-imx BSP `imx6ull-aes.dtsi`、以及本教程早期版本**都把 `codec` 节点挂在 `&i2c2`**——但 alpha 板实测 WM8960 **接在 I2C1 @0x1a**：`i2cdetect -y 0`（I2C1）命中 `0x1a`(WM8960) + `0x1e`(AP3216C)，而 `i2cdetect -y 1`（I2C2）只有 `0x5d`(goodix)。
 
 挂 I2C2 时 codec probe 第一步 `wm8960_reset`（I2C 写 0x1a）就 NACK，dmesg 报 `wm8960 1-001a: Failed to issue reset` → `fsl-asoc-card: snd_soc_register_card failed` → `/proc/asound/cards` 只剩 `ASRC-M2M` 没声卡。把 `codec` 挪到 `&i2c1` 立刻就好（实测 `card 1: wm8960audio` 上线、`/dev/snd/pcmC1D0p` 出现）。
 

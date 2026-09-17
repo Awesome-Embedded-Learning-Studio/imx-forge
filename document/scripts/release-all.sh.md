@@ -9,7 +9,7 @@
 ### 核心功能
 
 - **分阶段构建**：将完整系统构建分为 5 个独立阶段，便于调试和增量构建
-- **双内核轨**：支持 NXP BSP（`linux-imx`，默认）与上游 mainline（`--mainline`）
+- **内核构建**：Stage 2 直接构建上游 mainline 内核（v7.1），没有内核轨开关
 - **单阶段执行**：可以只执行特定阶段（`--stage N`），方便单独重建某个组件
 - **断点续构**：`--continue` 跳过已完成的阶段
 - **快速构建**：`--fast-build` 跳过 distclean
@@ -22,7 +22,7 @@
 ```
 release-all.sh
     ├─ Stage 1: U-Boot Bootloader   ── build_helper/build-uboot.sh        --release
-    ├─ Stage 2: Linux Kernel        ── build_helper/build-{linux,mainline-linux}.sh --release [--fast-build]
+    ├─ Stage 2: Linux Kernel        ── build_helper/build-linux.sh --release [--fast-build]
     ├─ Stage 3: RootFS via buildroot── build_helper/build-buildroot.sh
     ├─ Stage 4: RootFS 验证闸门     ── varified_rootfs_ok.sh
     └─ Stage 5: SD/eMMC 镜像        ── image_builder/build_imx6ull_image.sh
@@ -43,7 +43,7 @@ release-all.sh
     ├─ scripts/lib/release.sh   (build-*.sh --release 调用的 release 编排库)
     └─ third_party/
         ├─ uboot-imx/
-        ├─ linux-imx/          (默认轨)   或  linux_mainline/  (--mainline)
+        ├─ linux_mainline/
         └─ buildroot/
 ```
 
@@ -58,7 +58,6 @@ release-all.sh
 | 选项 | 说明 | 默认值 |
 |------|------|--------|
 | `--fast-build` | 传递给 Linux 构建，跳过 distclean | 关闭 |
-| `--mainline` | Stage 2 构建上游 mainline 内核（默认走 NXP BSP `linux-imx`） | 关闭 |
 | `--boot-media M` | Stage 5 镜像介质：`emmc` / `sd` / `both` | `emmc`（或 `DEFAULT_BOOT_MEDIA`） |
 | `--continue` | 从现有 `release-latest` 继续，跳过已完成的阶段 | 关闭 |
 | `--stage N` | 仅执行指定阶段（1-5），不指定则执行所有阶段 | 全部执行 |
@@ -102,7 +101,7 @@ release-all.sh
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │  2. 子模块就绪检查                                           │
-│     ensure_submodules_initialized(按 stage/track)            │
+│     ensure_submodules_initialized(按 stage)                  │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -133,13 +132,12 @@ release-all.sh
 ./scripts/release-all.sh --stage 1                  # 仅 U-Boot
 ./scripts/release-all.sh --continue --stage 5       # 基于现有产物出镜像
 ./scripts/release-all.sh --continue --stage 5 --boot-media sd
-./scripts/release-all.sh --mainline --stage 2       # mainline 内核入 release 布局
 ./scripts/release-all.sh --stage 2 --fast-build     # 跳过 distclean
 ```
 
 #### ensure_submodules_initialized()
 
-按要跑的 stage 与内核轨，检查所需子模块是否初始化（`third_party/uboot-imx`、`linux-imx` 或 `linux_mainline`、`buildroot`）。缺失则提示 `git submodule update --init --recursive <path>` 并退出。
+按要跑的 stage，检查所需子模块是否初始化（`third_party/uboot-imx`、`third_party/linux_mainline`、`third_party/buildroot`）。缺失则提示 `git submodule update --init --recursive <path>` 并退出。
 
 #### stage_1_uboot()
 
@@ -160,8 +158,6 @@ local build_args=(--release)
 bash "${SCRIPT_DIR}/build_helper/build-linux.sh" "${build_args[@]}"
 # 校验:zImage + dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb
 ```
-
-mainline 轨下，`build_info.txt` 缺 `Kernel Track: mainline` 会**硬退出**。
 
 #### stage_3_rootfs()
 
@@ -200,7 +196,7 @@ done
 
 #### is_stage_completed()
 
-`--continue` 模式下判断各 stage 是否已完成（Stage 2 要求 `build_info.txt` 含当前 `KERNEL_TRACK`，因此切轨重跑会被正确识别为未完成）。
+`--continue` 模式下判断各 stage 是否已完成（Stage 2 检查 `arch/arm/boot/zImage` 与 `arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb` 是否存在）。
 
 #### main()
 
@@ -221,7 +217,7 @@ out/release-latest/
 │   │   └── dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb
 │   ├── vmlinux
 │   ├── System.map
-│   └── build_info.txt            # 含 Kernel Track: imx|mainline
+│   └── build_info.txt            # (--release 生成)
 ├── buildroot/                     # buildroot 构建树(rootfs 源)
 ├── rootfs/                        # 完整根文件系统
 │   ├── bin/busybox
@@ -242,10 +238,9 @@ out/release-latest/
 ### 基本用法
 
 ```bash
-./scripts/release-all.sh                           # 全量构建（NXP imx 轨）
-./scripts/release-all.sh --mainline                # 全量构建（mainline 轨）
+./scripts/release-all.sh                           # 全量构建（mainline 单轨）
 ./scripts/release-all.sh --stage 1                 # 仅 U-Boot
-./scripts/release-all.sh --mainline --stage 2      # 仅 mainline 内核
+./scripts/release-all.sh --stage 2                 # 仅 Linux 内核
 ./scripts/release-all.sh --stage 3                 # 仅 buildroot rootfs
 ./scripts/release-all.sh --continue --stage 5      # 基于现有产出打镜像
 ./scripts/release-all.sh --continue --stage 5 --boot-media both  # eMMC+SD
@@ -305,9 +300,14 @@ DEFAULT_DEVICE_TREE=custom-dtb ./scripts/release-all.sh
 git submodule update --init --recursive <path>
 ```
 
-### Stage 2 build_info / Kernel Track 校验失败
+### Stage 2 内核产物校验失败
 
-mainline 轨下 `build_info.txt` 必须含 `Kernel Track: mainline`。该字段由 `lib/release.sh` 的 `release_finalize` 写入——仅在 `--release` 模式生成。若手动绕过 release 流程会出现此错，确认通过 `release-all.sh` 或 `build-*.sh --release` 调用。
+```
+[ERROR] Linux build failed - zImage not found
+[ERROR] Linux build failed - DTB not found: <dtb 路径>
+```
+
+Stage 2 结束时检查 `out/release-latest/linux/arch/arm/boot/zImage` 和 `arch/arm/boot/dts/nxp/imx/${DEFAULT_DEVICE_TREE}.dtb`。构建失败时先单独裸跑 `./scripts/build_helper/build-linux.sh` 看具体报错，修好后再走 `./scripts/release-all.sh --stage 2`。
 
 ### Stage 4 RootFS 验证失败
 

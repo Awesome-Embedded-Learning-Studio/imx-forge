@@ -6,12 +6,11 @@ title: AP3216C I2C 驱动教程
 
 ## 版本说明
 
-本教程基于以下内核版本，两套内核的 I2C 设备驱动公共 API 完全一致，写出来的 `.ko` 在两边都能直接跑：
+本教程基于以下内核版本：
 
-- **linux-imx** 6.12.49 <Badge type="tip" text="推荐" />
-- **mainline** 7.1.0 <Badge type="info" text="进阶" />
+- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
-源码就躺在仓库的 `third_party/linux-imx` 与 `third_party/linux_mainline` 下，文中所有结构体定义、函数签名都对着这两棵树核对过，可以随时翻。
+源码就躺在仓库的 `third_party/linux_mainline` 下，文中所有结构体定义、函数签名都对着这棵树核对过，可以随时翻。
 
 ## 这一篇要解决什么问题
 

@@ -8,21 +8,20 @@ title: WM8960 音频驱动教程
 
 本教程基于以下内核版本：
 
-- **mainline** 7.1.0 <Badge type="tip" text="主轴" /> —— alpha 板日常跑的就是这条线
-- **linux-imx** 6.12.49 <Badge type="info" text="对照" />
+- **mainline** 7.1.0 —— 项目唯一内核轨，alpha 板日常跑的就是它
 
-::: warning 和前两章反过来：这里 mainline 是主轴
-[RTC](../10_rtc_snvs_driver/)、[goodix](../11_goodix_touchscreen_driver/) 两章我们都把 linux-imx 标成「推荐」、mainline 标「进阶」，因为那俩外设两条线都开箱即用。音频这章反过来：**alpha 板现在跑的是 mainline 7.x**，所以正文以 mainline 为主线（所有行号、配置、踩坑都对着 mainline 讲），linux-imx 退到对照位置。两颗驱动两边都有、代码几乎一样，差异主要在 defconfig 默认值（见下）。
+::: info 单轨说明
+RTC、goodix 两章当年曾把 linux-imx 标成推荐；2026-09 起 linux-imx 轨退役，全项目只剩 mainline，本章正文本来就是对着 mainline 写的，不受影响。
 :::
 
-源码就躺在仓库的 `third_party/linux_mainline` 与 `third_party/linux-imx` 下，涉及三个文件：
+源码就躺在仓库的 `third_party/linux_mainline` 下，涉及三个文件：
 
 - `sound/soc/fsl/fsl-asoc-card.c` —— **machine 驱动**（把 codec 和 cpu_dai 缝成一张声卡）
 - `sound/soc/codecs/wm8960.c` —— **codec 驱动**（WM8960 这颗音频芯片的寄存器/DAPM）
 - `sound/soc/fsl/fsl_sai.c` —— **cpu_dai 驱动**（i.MX6ULL 这端的 SAI2 数字音频接口）
 
 ::: tip 一个要提前知道的坑：mainline 默认不出声
-linux-imx 线的 defconfig 把 `CONFIG_SND_SOC_FSL_ASOC_CARD=y`，开箱即用；mainline 线的模板却是 `=m`，而项目的内核 build 流程不带 `modules_install`，结果 `.ko` 根本没编出来 → 声卡整机静音、`aplay: no soundcards found`。这就是 [Issue #43](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/43)。修复一行：`defconfig` 里改 `=y`，[06 节](06_build_and_test.md) 会边修边讲根因，顺手把它变成这章最生动的教材。
+NXP BSP（已退役的 linux-imx 线）的 defconfig 默认 `CONFIG_SND_SOC_FSL_ASOC_CARD=y`，当年开箱即用；mainline 线的模板却是 `=m`，而项目的内核 build 流程不带 `modules_install`，结果 `.ko` 根本没编出来 → 声卡整机静音、`aplay: no soundcards found`。这就是 [Issue #43](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/43)。修复一行：`defconfig` 里改 `=y`，[06 节](06_build_and_test.md) 会边修边讲根因，顺手把它变成这章最生动的教材。
 :::
 
 ## 这一篇要解决什么问题

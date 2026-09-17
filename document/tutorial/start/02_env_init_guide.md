@@ -18,7 +18,7 @@ title: 环境初始化：env-init.sh
 
 env-init.sh 干的就是收拢这摊子事：它把构建 U-Boot、内核、BusyBox、镜像各自需要的主机包列成清单，一次查完，缺了能当场补装。后面咱们贴的输出全部来自这个脚本的真实运行。
 
-它在构建链里的位置您也该知道。五个 build-*.sh 里，导入它的是 build-uboot.sh 和 build-linux.sh 这两个：前者第 37 行 source、第 76 行一句 `check_uboot_dependencies || exit 1`，后者的写法一模一样。所以走 U-Boot 和内核这两条分步路时，您不需要手动跑它。另外三个得分开说：build-mainline-linux.sh 不导入它，而是把同样一份清单的检查内联在自己脚本里，清单和探测方式与 env-init 的 Stage 2 一致，但缺包时它不问 y/n，打印一行 sudo apt install 提示后直接退出，不会像 env-init 那样当场交互式补装。build-buildroot.sh 没有这层 stage 式主机依赖检查，主机依赖的事留给 Buildroot 自己的构建检查。build-qemu.sh 则对 ninja、glib-2.0、pixman-1 这三个 QEMU 构建特有的主机包做了点状检查，缺了当场报错退出，提示里连 apt 包名都给好了，只是不查 env-init 那份 stage 清单——Buildroot 和 QEMU 的依赖本来就不在这张表里，这三条检查算是它自己的兜底。需要亲手跑它的场景是换了新机器、想单独验证环境，或者在排查一个来路不明的构建失败时，把依赖这层因素先排除掉。
+它在构建链里的位置您也该知道。五个 build-*.sh 里，导入它的是 build-uboot.sh 和 build-linux.sh 这两个：前者第 37 行 source、第 76 行一句 `check_uboot_dependencies || exit 1`，后者的写法一模一样。所以走 U-Boot 和内核这两条分步路时，您不需要手动跑它。另外三个得分开说：build-linux.sh 不导入它，而是把同样一份清单的检查内联在自己脚本里，清单和探测方式与 env-init 的 Stage 2 一致，但缺包时它不问 y/n，打印一行 sudo apt install 提示后直接退出，不会像 env-init 那样当场交互式补装。build-buildroot.sh 没有这层 stage 式主机依赖检查，主机依赖的事留给 Buildroot 自己的构建检查。build-qemu.sh 则对 ninja、glib-2.0、pixman-1 这三个 QEMU 构建特有的主机包做了点状检查，缺了当场报错退出，提示里连 apt 包名都给好了，只是不查 env-init 那份 stage 清单——Buildroot 和 QEMU 的依赖本来就不在这张表里，这三条检查算是它自己的兜底。需要亲手跑它的场景是换了新机器、想单独验证环境，或者在排查一个来路不明的构建失败时，把依赖这层因素先排除掉。
 
 ## 二、用法：帮助与按阶段检查
 
@@ -76,7 +76,7 @@ timeout 30 ./scripts/init/env-init.sh --stage 3
 | 3 | BusyBox | build-essential、libncurses-dev |
 | 5 | 镜像生成 | fdisk（提供 sfdisk 命令） |
 
-关于 Stage 2 咱们把话说准：项目默认走 imx 轨（NXP BSP 的内核），切主线内核靠 release-all.sh 的 `--mainline` 开关，默认值 `KERNEL_TRACK="imx"` 写在脚本第 58 行，而两轨的主机依赖完全一致，所以一张表就够用。Stage 3 的 BusyBox 表脚本里确实备着；不过要如实提醒您，rootfs 的现行方案是 Buildroot，Buildroot 自己那套依赖不在这张 stage 表里，从构建到裁剪的完整流程咱们放到 [Buildroot 根文件系统](../buildroot/) 卷去讲。至于为什么没有 Stage 4，帮助信息里的 `1|2|3|5` 就是全部答案，4 是空号，传进去只会得到一句 Usage 提示。
+关于 Stage 2 咱们把话说准：内核只有 mainline 一条轨（上游主线，当前 v7.1）——2026-09 起 NXP linux-imx 轨已退役，`--mainline` 开关和 `KERNEL_TRACK` 变量也随之删除，所以这张依赖表就够用。Stage 3 的 BusyBox 表脚本里确实备着；不过要如实提醒您，rootfs 的现行方案是 Buildroot，Buildroot 自己那套依赖不在这张 stage 表里，从构建到裁剪的完整流程咱们放到 [Buildroot 根文件系统](../buildroot/) 卷去讲。至于为什么没有 Stage 4，帮助信息里的 `1|2|3|5` 就是全部答案，4 是空号，传进去只会得到一句 Usage 提示。
 
 这张表还有个耐看的细节：脚本查的不是包记录，而是能力。build-essential 用 gcc 和 make 两条命令是否存在来判断；python3-pyelftools 靠 `python3 -c "import elftools"` 试导入；imagemagick 对应的是 convert 命令；fdisk 这个包名底下实际查的是 sfdisk——Ubuntu 把 sfdisk 从 util-linux 拆进了独立的 fdisk 包。libncurses-dev 和 libgnutls28-dev 还留了头文件兜底，dpkg 里查不到记录但 /usr/include 下有头文件的机器（比如从源码自装的）也算过。换句话说，只要您机器上真能干活，它就不闹。
 
@@ -164,14 +164,14 @@ ls scripts/build_helper/
 ```text
 build-buildroot.sh
 build-linux.sh
-build-mainline-linux.sh
+build-linux.sh
 build-qemu.sh
 build-uboot.sh
 buildroot_menuconfig.sh
 clean_buildroot.sh
 ```
 
-和依赖检查关系最近的几个脚本，咱们各配一句话：build-uboot.sh 是 U-Boot 的分步构建脚本，开场就做依赖检查；build-linux.sh 编 imx 轨（NXP BSP）内核；build-mainline-linux.sh 编主线内核；build-buildroot.sh 用 Buildroot 出 rootfs。再往上一层还有一键编排入口 scripts/release-all.sh，从依赖到镜像一条龙，注意名字是连字符，不是下划线。
+和依赖检查关系最近的几个脚本，咱们各配一句话：build-uboot.sh 是 U-Boot 的分步构建脚本，开场就做依赖检查；build-linux.sh 编 imx 轨（NXP BSP）内核；build-linux.sh 编主线内核；build-buildroot.sh 用 Buildroot 出 rootfs。再往上一层还有一键编排入口 scripts/release-all.sh，从依赖到镜像一条龙，注意名字是连字符，不是下划线。
 
 ## 继续学习
 

@@ -56,7 +56,7 @@
 ### 📝 前置条件
 
 确保已完成以下准备工作：
-- ✅ 内核已编译（`out/mainline/linux/.config`存在）
+- ✅ 内核已编译（`out/linux/.config`存在）
 - ✅ 交叉编译工具链已安装
 - ✅ 项目结构已初始化
 
@@ -138,7 +138,7 @@ obj-m += my-driver.o
 
 # 内核构建目录
 KERNEL_SRC := $(HOME)/imx-forge/third_party/linux_mainline
-BUILD_DIR := $(HOME)/imx-forge/out/mainline/linux
+BUILD_DIR := $(HOME)/imx-forge/out/linux
 
 # 构建目标
 all:
@@ -461,11 +461,11 @@ make: *** No rule to make target 'modules'
 1. **检查内核编译状态**
 ```bash
 # 检查内核配置
-ls -l out/mainline/linux/.config
+ls -l out/linux/.config
 
 # 检查关键文件
-ls -l out/mainline/linux/Module.symvers
-ls -l out/mainline/linux/include/generated/autoconf.h
+ls -l out/linux/Module.symvers
+ls -l out/linux/include/generated/autoconf.h
 ```
 
 2. **启用调试模式**
@@ -478,13 +478,13 @@ DEBUG=1 ./scripts/driver_helper/build_driver.sh my-driver
 ```bash
 # 方案A：完整编译内核
 cd third_party/linux_mainline
-make O=../../out/mainline/linux \
+make O=../../out/linux \
      ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- \
      -j$(nproc)
 
 # 方案B：快速准备（推荐）
 cd third_party/linux_mainline
-make O=../../out/mainline/linux \
+make O=../../out/linux \
      ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- \
      modules_prepare
 ```
@@ -808,7 +808,7 @@ cp ~/tftp/imx6ull-aes.dtb ~/tftp/imx6ull-aes.dtb.backup
 ./scripts/driver_helper/build_driver.sh my-driver --kernel=mainline
 
 # 使用imx内核
-./scripts/driver_helper/build_driver.sh my-driver --kernel=imx
+./scripts/driver_helper/build_driver.sh my-driver
 ```
 
 </details>

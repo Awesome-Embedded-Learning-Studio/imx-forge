@@ -33,7 +33,7 @@ IMX-Forge 项目采用 **Git Submodule + Patch** 的混合管理模式，将第�
                     ┌──────────────▼──────────────────────┐
                     │         Git Submodule 引用          │
                     │  ┌───────────────────────────────┐  │
-                    │  │ third_party/linux-imx         │  │
+                    │  │ third_party/linux_mainline     │  │
                     │  │ third_party/uboot-imx         │  │
                     │  │ third_party/busybox           │  │
                     │  └───────────────────────────────┘  │
@@ -41,7 +41,7 @@ IMX-Forge 项目采用 **Git Submodule + Patch** 的混合管理模式，将第�
                                    │
                     ┌──────────────▼──────────────────────┐
                     │       补丁应用流程 (Patch Apply)     │
-                    │  patches/linux-imx/*.patch           │
+                    │  patches/linux_mainline/*.patch       │
                     │  patches/uboot-imx/*.patch           │
                     │  patches/busybox/*.patch             │
                     └──────────────────────────────────────┘
@@ -54,7 +54,7 @@ IMX-Forge 项目采用 **Git Submodule + Patch** 的混合管理模式，将第�
 | **可追溯性** | 每个补丁都关联到具体的 Git 提交，包含完整的变更上下文 |
 | **上游同步** | 子模块可独立更新上游代码，补丁可重新应用 |
 | **版本锁定** | 通过 `.gitmodules` 锁定子模块的具体提交 |
-| **双轨并行** | 同时支持 linux-imx (NXP BSP) 和 mainline 内核两套补丁集 |
+| **单轨收敛** | 内核补丁只有 mainline 一轨（NXP linux-imx 轨已于 2026-09 退役） |
 | **自动化** | 提供脚本自动化补丁生成和应用流程 |
 
 ---
@@ -97,11 +97,11 @@ Subject: [PATCH 1/2] Patch OK
  arch/arm/boot/dts/nxp/imx/Makefile         |   1 +
  arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts  |  44 ++
  arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi | 754 +++++++++++++++++++++
- arch/arm/configs/imx_aes_defconfig         | 600 ++++++++++++++++
+ arch/arm/configs/imx_aes_mainline_defconfig | 600 ++++++++++++++++
  4 files changed, 1399 insertions(+)
  create mode 100644 arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
  create mode 100644 arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi
- create mode 100644 arch/arm/configs/imx_aes_defconfig
+ create mode 100644 arch/arm/configs/imx_aes_mainline_defconfig
 
 diff --git a/arch/arm/boot/dts/nxp/imx/Makefile b/arch/arm/boot/dts/nxp/imx/Makefile
 index 89171be84f27..b35ddc6e8ddb 100644
@@ -134,7 +134,7 @@ index 89171be84f27..b35ddc6e8ddb 100644
 #### Series 文件格式
 
 ```bash
-# patches/linux-imx/series
+# patches/linux_mainline/series
 # 格式: <patch-filename> [<options>]
 
 # 001-050: 基础平台支持
@@ -179,24 +179,24 @@ IMX-Forge 采用严格的补丁命名规范，确保可读性和可管理性。
 #### 命名示例
 
 ```
-# linux-imx 轨道补丁
-[linux-imx]-001-ethernet-fec-driver-v1.patch
-[linux-imx]-002-device-tree-imx6ull-alpha.patch
-
-# mainline 轨道补丁
+# mainline 内核轨道补丁（唯一内核轨）
 [mainline]-001-arm-dts-imx6ull-basic.patch
 [mainline]-002-clock-imx6ull-fix.patch
 
 # U-Boot 补丁
 [uboot-imx]-001-spl-board-init.patch
 [uboot-imx]-002-mmc-support.patch
+
+# 仓库中的实际文件名由 patch_maker.sh 生成，格式为
+# <子模块名>-<分支名>-<日期>.patch，例如:
+linux_mainline-feat-imx6ull_patches-20260828.patch
 ```
 
 #### 命名规范详解
 
 | 部分 | 说明 | 取值范围 | 示例 |
 |------|------|----------|------|
-| **轨道标签** | 标识补丁所属轨道 | `[linux-imx]`, `[mainline]`, `[uboot-imx]` | `[linux-imx]` |
+| **轨道标签** | 标识补丁所属轨道 | `[mainline]`, `[uboot-imx]` | `[mainline]` |
 | **序号** | 三位数字，控制应用顺序 | 001-999 | `001` |
 | **组件** | 受影响的子系统 | `ethernet`, `gpio`, `mmc`, `dts` | `ethernet` |
 | **描述** | 简短描述补丁目的 | 小写英文，用连字符连接 | `fec-driver` |
@@ -210,29 +210,15 @@ IMX-Forge 采用严格的补丁命名规范，确保可读性和可管理性。
 
 ```
 patches/
-├── .gitkeep                    # 保持空目录被 Git 跟踪
-├── busybox/                    # Busybox 补丁集
-│   ├── .gitkeep
-│   ├── series                  # 补丁序列文件
-│   └── *.patch                 # 具体补丁文件
-├── linux-imx/                  # NXP BSP 内核补丁
-│   ├── .gitkeep
-│   ├── series
-│   ├── [linux-imx]-001-*.patch
-│   └── [linux-imx]-002-*.patch
-├── linux-mainline/             # 主线内核补丁
-│   ├── .gitkeep
-│   ├── series
-│   └── [mainline]-*.patch
-├── uboot/                      # 主线 U-Boot 补丁
-│   ├── .gitkeep
-│   ├── series
-│   └── *.patch
+├── linux_mainline/             # mainline 内核补丁（唯一内核轨）
+│   └── linux_mainline-feat-imx6ull_patches-20260828.patch
+├── qemu/                       # QEMU 板级模拟补丁
+├── uboot/                      # 主线 U-Boot 补丁（预留）
 └── uboot-imx/                  # NXP U-Boot 补丁
-    ├── .gitkeep
-    ├── series
-    └── [uboot-imx]-*.patch
+    └── charlies_board.patch
 ```
+
+> 说明：目录名使用下划线写法 `linux_mainline`，与仓库实际目录和 `apply_patches.sh` 的组件名一致。当前没有 `series` 文件——每个组件一个总补丁，按文件名取最新应用；`series` 顺序管理属后续增强方向。
 
 ### 目录组织原则
 
@@ -240,11 +226,10 @@ patches/
 
 ```
 patches/
-├── linux-imx/         # NXP 官方 linux-imx 仓库
-├── linux-mainline/    # Linux 内核主线 (kernel.org)
+├── linux_mainline/    # Linux 内核主线 (torvalds 上游，git.kernel.org)
 ├── uboot-imx/         # NXP 官方 uboot-imx 仓库
-├── uboot/             # U-Boot 主线 (denx.de)
-└── busybox/           # Busybox 官方仓库
+├── uboot/             # U-Boot 主线 (denx.de，预留)
+└── qemu/              # QEMU 上游
 ```
 
 #### 2. 按功能模块分组
@@ -252,7 +237,7 @@ patches/
 对于大量补丁的情况，可在子目录内进一步分组：
 
 ```
-patches/linux-imx/
+patches/linux_mainline/
 ├── 001-base/              # 基础平台支持
 │   ├── 001-cpu.patch
 │   └── 002-clock.patch
@@ -269,7 +254,7 @@ patches/linux-imx/
 当需要维护多个版本的补丁时：
 
 ```
-patches/linux-imx/
+patches/linux_mainline/
 ├── v5.15/
 │   ├── series
 │   └── *.patch
@@ -287,8 +272,7 @@ patches/linux-imx/
 
 | 标签 | 用途 | 对应上游 | 优先级 |
 |------|------|----------|--------|
-| `[linux-imx]` | NXP BSP 内核 | github.com/nxp-imx/linux-imx | 高（当前默认） |
-| `[mainline]` | Linux 主线内核 | kernel.org | 中（长期目标） |
+| `[mainline]` | Linux 主线内核 | git.kernel.org (torvalds) | 高（唯一内核轨） |
 | `[uboot-imx]` | NXP U-Boot | github.com/nxp-imx/uboot-imx | 高（当前默认） |
 | `[uboot]` | U-Boot 主线 | denx.de/u-boot | 低（未来支持） |
 
@@ -332,7 +316,7 @@ git show <commit-hash>
 在补丁目录中维护 `CHANGELOG.md`：
 
 ```markdown
-# Linux-imx 补丁变更日志
+# Linux mainline 补丁变更日志
 
 ## [1.2.0] - 2026-03-15
 
@@ -355,43 +339,43 @@ git show <commit-hash>
 #### 场景 1: 上游代码更新后补丁失效
 
 ```bash
-# 1. 更新子模块到新版本
-cd third_party/linux-imx
+# 1. 更新子模块到新版本（项目决定升级 pin 的 tag 时）
+cd third_party/linux_mainline
 git fetch origin
-git checkout rel/imx-5.15.72-2.1.0
+git checkout v7.1
 
 # 2. 尝试应用补丁，识别冲突
-cd ../../patches/linux-imx
+cd ../../patches/linux_mainline
 git checkout 001-ethernet-driver.patch
 patch -p1 < 001-ethernet-driver.patch --dry-run
 
 # 3. 手动解决冲突后重新生成补丁
-cd ../../third_party/linux-imx
+cd ../../third_party/linux_mainline
 # ... 手动编辑解决冲突 ...
 git add -u
 git commit -m "ethernet: update for new upstream version"
 
 # 4. 使用自动化工具生成新补丁
 cd ../../
-./scripts/patch_maker.sh --submodule_path=linux-imx --output=patches/linux-imx/
+./scripts/patch_maker.sh --submodule_path=linux_mainline --output=patches/linux_mainline/
 ```
 
 #### 场景 2: 补丁内容需要修改
 
 ```bash
 # 1. 在子模块分支上进行修改
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git checkout -b my-feature-branch
 # ... 进行代码修改 ...
 git commit -am "fix: resolve memory leak"
 
 # 2. 生成新版本补丁
 cd ../../
-./scripts/patch_maker.sh --submodule_path=linux-imx
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 
-# 3. 更新 series 文件和版本号
-# 编辑 patches/linux-imx/series
-# 将 001-ethernet-driver.patch 重命名为 001-ethernet-driver-v2.patch
+# 3. 新补丁文件名自带新的日期后缀，
+#    apply_patches.sh 按文件名取最新，会自动选中它
+#    （series 顺序管理属后续增强方向）
 ```
 
 ### 冲突解决策略
@@ -400,7 +384,7 @@ cd ../../
 
 ```bash
 # 使用 git rebase 自动调整补丁基准
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git rebase origin/master
 ```
 
@@ -467,30 +451,30 @@ git commit
 ##### 示例 1: 基本用法
 
 ```bash
-# 为 linux-imx 子模块生成补丁
-./scripts/patch_maker.sh --submodule_path=linux-imx
+# 为 linux_mainline 子模块生成补丁
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 
 # 输出示例:
 # === Patch Generation Summary ===
-# Submodule:     linux-imx
+# Submodule:     linux_mainline
 # Default branch: master
-# Current branch: feature-alpha-board
-# Commits:        3
-# Output:         /home/charliechen/imx-forge/patches/linux-imx/linux-imx-feature-alpha-board-20260315.patch
+# Current branch: feat-imx6ull_patches
+# Commits:        12
+# Output:         /home/charliechen/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260828.patch
 #
 # Generating patch...
 # ✓ Patch generated successfully!
-#   File: /home/charliechen/imx-forge/patches/linux-imx/linux-imx-feature-alpha-board-20260315.patch
-#   Size: 24K
+#   File: /home/charliechen/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260828.patch
+#   Size: 40K
 ```
 
 ##### 示例 2: 指定输出目录
 
 ```bash
 # 将补丁输出到自定义目录
-./scripts/patch_maker.sh --submodule_path=linux-imx --output=custom_patches/
+./scripts/patch_maker.sh --submodule_path=linux_mainline --output=custom_patches/
 
-# 输出到 custom_patches/linux-imx-<branch>-<date>.patch
+# 输出到 custom_patches/linux_mainline-<branch>-<date>.patch
 ```
 
 ##### 示例 3: 为 U-Boot 生成补丁
@@ -564,7 +548,7 @@ git commit
 
 ### 补丁应用脚本
 
-虽然目前项目尚未提供完整的补丁应用脚本，但以下是推荐的实现方式：
+项目自带的 `scripts/apply_patches.sh` 已经落地：按组件名调用（如 `linux_mainline`），自动映射到 `third_party/` 下对应子模块，并按文件名取最新补丁应用。下面这段两参数写法是通用的参考实现：
 
 #### 推荐实现
 
@@ -603,11 +587,11 @@ fi
 #### 使用示例
 
 ```bash
-# 应用 linux-imx 补丁
-./scripts/apply_patches.sh patches/linux-imx/ third_party/linux-imx/
+# 应用 mainline 内核补丁（组件名风格，项目实际用法）
+./scripts/apply_patches.sh linux_mainline
 
 # 应用 uboot-imx 补丁
-./scripts/apply_patches.sh patches/uboot-imx/ third_party/uboot-imx/
+./scripts/apply_patches.sh uboot-imx
 ```
 
 ---
@@ -709,8 +693,8 @@ git push origin feature/my-new-patch
 - [ ] 回归测试
 
 ## 补丁信息
-- 轨道: [linux-imx] / [mainline]
-- 上游版本: rel/imx-5.15.72-2.1.0
+- 轨道: [mainline]
+- 上游版本: v7.1 (tag)
 - 补丁数量: X 个
 
 ## 相关 Issue
@@ -883,7 +867,7 @@ git submodule update --remote
 git submodule status
 
 # 在子模块中操作
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git checkout <branch>
 git pull origin <branch>
 ```

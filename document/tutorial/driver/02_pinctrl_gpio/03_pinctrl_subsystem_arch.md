@@ -258,7 +258,7 @@ struct pinconf_ops {
 
 ## 主线内核与 imx 内核的差异对比
 
-这里让我对比一下主线内核（third_party/linux_mainline）和 NXP imx 内核（third_party/linux-imx）在 pinctrl 子系统实现上的差异。
+这里对比一下主线内核（`third_party/linux_mainline`）和 NXP imx 内核在 pinctrl 子系统实现上的差异——imx 侧的内容基于已退役的 linux-imx 树写成，当成行业背景材料看；正文的源码讲解仍然全部对着主线内核。
 
 ### 文件结构
 

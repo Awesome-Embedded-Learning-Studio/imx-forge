@@ -376,7 +376,7 @@ echo "🎉 All checks passed!"
 ./scripts/driver_helper/build_driver.sh --all --board=alpha-board
 
 # 使用特定内核编译所有驱动
-./scripts/driver_helper/build_driver.sh --all --kernel=imx
+./scripts/driver_helper/build_driver.sh --all
 ```
 
 #### 批量清理
@@ -765,7 +765,7 @@ dma_unmap_single(dev, dma_handle, size, DMA_TO_DEVICE);
 # 静态分析
 cd third_party/linux-mainline/
 make C=2 CF="-D__CHECK_ENDIAN__" \
-  O=../../out/mainline/linux \
+  O=../../out/linux \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
   M=../../driver/my-driver/alpha-board/ modules

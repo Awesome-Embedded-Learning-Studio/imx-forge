@@ -28,7 +28,7 @@ title: QEMU 板级模拟
 :::
 
 ::: info 前置知识
-需要咱们已经走过 [内核构建](../kernel/) 与 [Buildroot rootfs](../buildroot/) 的章节——`out/mainline/linux/arch/arm/boot/zImage`、`imx6ull-aes.dtb` 和 `out/release-latest/rootfs/` 这三样产物在手上,本卷的内容才有地方落地。设备树的 `status` 属性、`compatible` 匹配驱动这些概念不陌生(不熟的话先翻 [驱动教程](../driver/) 相关章节)。
+需要咱们已经走过 [内核构建](../kernel/) 与 [Buildroot rootfs](../buildroot/) 的章节——`out/linux/arch/arm/boot/zImage`、`imx6ull-aes.dtb` 和 `out/release-latest/rootfs/` 这三样产物在手上,本卷的内容才有地方落地。设备树的 `status` 属性、`compatible` 匹配驱动这些概念不陌生(不熟的话先翻 [驱动教程](../driver/) 相关章节)。
 :::
 
 ## 路线图:后面还有什么

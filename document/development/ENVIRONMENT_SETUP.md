@@ -709,7 +709,7 @@ else
     check_warn "U-Boot source: not found (run git submodule update)"
 fi
 
-if [ -d "third_party/linux-imx" ]; then
+if [ -d "third_party/linux_mainline" ]; then
     check_pass "Linux source: found"
 else
     check_warn "Linux source: not found (run git submodule update)"
@@ -983,7 +983,7 @@ export ARCH="arm"
 
 # Project Shortcuts
 export UBOOT_SRC="$IMX_FORGE_ROOT/third_party/uboot-imx"
-export LINUX_SRC="$IMX_FORGE_ROOT/third_party/linux-imx"
+export LINUX_SRC="$IMX_FORGE_ROOT/third_party/linux_mainline"
 export BUSYBOX_SRC="$IMX_FORGE_ROOT/third_party/busybox"
 
 # Aliases

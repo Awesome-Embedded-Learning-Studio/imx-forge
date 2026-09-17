@@ -7,12 +7,11 @@ title: Pinctrl 与 GPIO 子系统教程
 ## 版本说明
 
 本教程基于以下内核版本：
-- **linux-imx** 6.12.49 <Badge type="tip" text="推荐" />
-- **mainline** 7.1.0 <Badge type="info" text="进阶" />
+- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
 ## 学习路径
 
-本教程从 i.MX6ULL 的 IOMUXC 硬件原理讲起，逐步拆解 pinctrl（引脚复用/电气配置）和 gpio（电平读写）两大子系统，最后落到驱动实现与 imx/mainline 双轨对比。
+本教程从 i.MX6ULL 的 IOMUXC 硬件原理讲起，逐步拆解 pinctrl（引脚复用/电气配置）和 gpio（电平读写）两大子系统，最后落到驱动实现与编译测试，另附第 9 章回顾 NXP BSP 内核与主线的实现差异（背景阅读）。
 
 ### 🎯 推荐学习路径
 

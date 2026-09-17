@@ -75,7 +75,7 @@ docker 命令在本环境未安装（which docker 查无此命令），上面的
 
 ### 编什么：一键编排与分步脚本
 
-咱们的一键入口是 `./scripts/release-all.sh`，注意是连字符不是下划线。它在仓库根按五个阶段推进：U-Boot、内核、rootfs（经 Buildroot 产出 BusyBox 加用户空间）、rootfs 验证门、SD/eMMC 整盘镜像，产物统一进 out/release-latest/。默认内核轨道是 imx（NXP BSP），要编主线内核就加 `--mainline`，两轨的依赖完全一致；嫌每次全量清理慢可以加 `--fast-build` 跳过 distclean，断点续跑还有 `--continue`。
+咱们的一键入口是 `./scripts/release-all.sh`，注意是连字符不是下划线。它在仓库根按五个阶段推进：U-Boot、内核、rootfs（经 Buildroot 产出 BusyBox 加用户空间）、rootfs 验证门、SD/eMMC 整盘镜像，产物统一进 out/release-latest/。内核直接编上游主线（mainline，v7.1），没有轨道开关——NXP linux-imx 轨 2026-09 已退役；嫌每次全量清理慢可以加 `--fast-build` 跳过 distclean，断点续跑还有 `--continue`。
 
 分步脚本在 scripts/build_helper/ 下，咱们真跑了一遍目录清单，输出原样如下：
 
@@ -88,7 +88,7 @@ ls scripts/build_helper/ scripts/driver_helper/
 scripts/build_helper/:
 build-buildroot.sh
 build-linux.sh
-build-mainline-linux.sh
+build-linux.sh
 build-qemu.sh
 build-uboot.sh
 buildroot_menuconfig.sh
@@ -111,7 +111,7 @@ template_creator.sh
 |------|------|
 | build-uboot.sh | 编 U-Boot |
 | build-linux.sh | 编 NXP BSP 轨内核 |
-| build-mainline-linux.sh | 编主线轨内核 |
+| build-linux.sh | 编主线轨内核 |
 | build-buildroot.sh | 构建 rootfs 用户空间，产物进 out/release-latest/rootfs/ |
 | buildroot_menuconfig.sh | 管 Buildroot 的配置界面 |
 | build-qemu.sh | 服务 QEMU 板级模拟 |
@@ -413,13 +413,13 @@ docker run -it --rm --network host -v $(pwd):/workspace imx-forge:latest
 
 ```bash
 # 容器内 /workspace
-./scripts/driver_helper/build_driver.sh 04_tutorial_chardev_led_v2 --kernel=imx
+./scripts/driver_helper/build_driver.sh 04_tutorial_chardev_led_v2
 ./scripts/driver_helper/review_driver.sh 04_tutorial_chardev_led_v2
 ./scripts/driver_helper/deploy_driver.sh \
   out/driver_artifacts/04_tutorial_chardev_led_v2/alpha-board --target=nfs
 ```
 
-build_driver.sh 编出 .ko，产物收在 out/driver_artifacts/<驱动>/<板卡>/；驱动在 driver/device_tree/ 下配有 dts 覆盖时还会一并编出 .dtb，比如 05_tutorial_pinctrl_gpio 配了 imx6ull-aes-05_tutorial_pinctrl_gpio.dts。咱们这个示例 04 没配 dts，产物目录里只有 chardev_led_v2_02_driver.ko 和 build_info.txt，找不到设备树是正常现象。review_driver.sh 跑 modinfo 列出模块信息（vermagic 就列在里面，肉眼跟内核对），并核对符号表与依赖关系；deploy_driver.sh 把产物送去该去的地方，脚本开头的自述就是简化的驱动部署脚本、直接复制驱动产物到目标位置。`--target` 除了 nfs 还有 tftp（目录在 driver_helper.conf 里配，本机指向 /home/charliechen/tftp）、local、remote（SSH 传远端）。`--kernel=imx` 别省：驱动脚本默认按主线内核编，而系统完整构建默认走 NXP BSP 轨，轨错了 vermagic 对不上，板子上 insmod 直接被拒。
+build_driver.sh 编出 .ko，产物收在 out/driver_artifacts/<驱动>/<板卡>/；驱动在 driver/device_tree/ 下配有 dts 覆盖时还会一并编出 .dtb，比如 05_tutorial_pinctrl_gpio 配了 imx6ull-aes-05_tutorial_pinctrl_gpio.dts。咱们这个示例 04 没配 dts，产物目录里只有 chardev_led_v2_02_driver.ko 和 build_info.txt，找不到设备树是正常现象。review_driver.sh 跑 modinfo 列出模块信息（vermagic 就列在里面，肉眼跟内核对），并核对符号表与依赖关系；deploy_driver.sh 把产物送去该去的地方，脚本开头的自述就是简化的驱动部署脚本、直接复制驱动产物到目标位置。`--target` 除了 nfs 还有 tftp（目录在 driver_helper.conf 里配，本机指向 /home/charliechen/tftp）、local、remote（SSH 传远端）。内核轨现在只剩 mainline 一条：驱动脚本和系统完整构建用的是同一棵主线内核树，vermagic 天然一致，板子上 insmod 不会被版本校验拦下。双轨时代这里得靠 `--kernel=imx` 防止轨错，该参数已随单轨化退役，不用再传。
 
 ::: warning 未实测标注
 部署完成后在实际板子上 insmod 加载、观察 dmesg 的输出，需要实体板子加串口终端，本环境没有板子无法验证；部署目标与参数以 scripts/driver_helper/README.md 和脚本 `--help` 为准，您实际部署时以板端的加载结果为准。
@@ -431,15 +431,15 @@ build-linux.sh 不收 menuconfig 这类参数，咱们看脚本 Usage 行的原�
 
 ```bash
 # 容器内 /workspace
-make -C third_party/linux-imx O=../../out/linux ARCH=arm \
+make -C third_party/linux_mainline O=../../out/linux ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- menuconfig
 ```
 
-这里有个坑要拆穿：`--fast-build` 跳过的只是 distclean，跳不过配置重放，脚本 main() 在 fast-build 模式下同样无条件执行 prepare_defconfig 加 do_configure，prepare_defconfig 每次把模板 driver/device_tree/alpha-board/linux/imx_aes_defconfig.template 灌进内核树，do_configure 再从 defconfig 重新生成 out/linux/.config。menuconfig 改完直接跑 `build-linux.sh --fast-build`，咱们的改动会被静默覆盖。想让改动活下来有两条路：一条是写回源头，menuconfig 之后用 `make ... savedefconfig` 把改动收成 defconfig，拿它更新模板 imx_aes_defconfig.template（把 CONFIG_EXTRA_FIRMWARE_DIR 的值改回 `${FIRMWARE_DIR}` 占位符，别把机器相关的绝对路径烧进共享模板），再跑 `build-linux.sh --fast-build` 增量重编，重放出来的 .config 就是咱们要的样子；另一条是绕开脚本手动增量编，.config 不会被碰：
+这里有个坑要拆穿：`--fast-build` 跳过的只是 distclean，跳不过配置重放，脚本 main() 在 fast-build 模式下同样无条件执行 prepare_defconfig 加 do_configure，prepare_defconfig 每次把模板 driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template 灌进内核树，do_configure 再从 defconfig 重新生成 out/linux/.config。menuconfig 改完直接跑 `build-linux.sh --fast-build`，咱们的改动会被静默覆盖。想让改动活下来有两条路：一条是写回源头，menuconfig 之后用 `make ... savedefconfig` 把改动收成 defconfig，拿它更新模板 imx6ull_mainline_defconfig.template（把 CONFIG_EXTRA_FIRMWARE_DIR 的值改回 `${FIRMWARE_DIR}` 占位符，别把机器相关的绝对路径烧进共享模板），再跑 `build-linux.sh --fast-build` 增量重编，重放出来的 .config 就是咱们要的样子；另一条是绕开脚本手动增量编，.config 不会被碰：
 
 ```bash
 # 容器内 /workspace（手动增量重编，不重放 .config）
-make -C third_party/linux-imx O=../../out/linux ARCH=arm \
+make -C third_party/linux_mainline O=../../out/linux ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc) zImage dtbs
 ```
 
@@ -525,7 +525,7 @@ docker system prune -a --volumes                                       # 全面�
 ./scripts/release-all.sh                        # 一键全量构建（连字符）
 ./scripts/build_helper/build-uboot.sh           # U-Boot
 ./scripts/build_helper/build-linux.sh           # NXP BSP 轨内核
-./scripts/build_helper/build-mainline-linux.sh  # 主线轨内核
+./scripts/build_helper/build-linux.sh  # 主线轨内核
 ./scripts/build_helper/build-buildroot.sh       # Buildroot rootfs
 picocom -b 115200 /dev/ttyUSB0                  # 串口终端
 ```

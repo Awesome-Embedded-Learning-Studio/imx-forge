@@ -51,7 +51,7 @@ GT9147 有个 7 位从机地址选择机制：复位时把 INT 引脚拉高，IC
 ## 先认认环境
 
 - **板子**：I.MX6U-ALPHA，GT9147 挂 I2C2（地址 `0x5d`），中断 `GPIO1_IO09`、复位 `GPIO1_IO05`
-- **内核**：`linux-imx` 6.12.49（NXP BSP）/ `mainline` 7.1.0（进阶）
+- **内核**：`mainline` 7.1.0 —— 项目唯一内核轨
 - **源码**：`third_party/linux_mainline/drivers/input/touchscreen/goodix.c`（+ 同目录 `goodix.h`）
 - **用户空间工具**：`evtest`（看原始 input 事件）、`tslib`（校准 + 多点测试 `ts_test_mt`）
 

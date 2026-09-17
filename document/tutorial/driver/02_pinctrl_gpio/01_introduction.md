@@ -201,7 +201,7 @@ gpio_set_value(led.gpio_sub_sys_nr, 0);  // 点亮
 
 在正式开始之前，我需要提醒你一点：子系统的源码量很大，pinctrl-imx.c 就有两万多行，gpio-mxc.c 也有七百多行。我们不可能逐行分析每一段代码，那样会迷失在细节里。我们的策略是：抓住主线，理解核心流程，遇到细节再看。
 
-另外，我会用主线内核（third_party/linux_mainline）和 imx 内核（third_party/linux-imx）进行对比，让你看看这两个内核在实现上的差异。这对于你以后做内核移植或者驱动兼容会很有帮助。
+另外说明一点：正文的源码讲解全部对着主线内核（`third_party/linux_mainline`）。想看 NXP BSP 内核与主线内核在实现上的差异，可以去读 [09_kernel_comparison](09_kernel_comparison.md) 的对比——那一章基于已退役的 linux-imx 树写成，当成行业背景材料看就好。
 
 准备好了吗？让我们先从硬件基础开始，搞清楚我们在操作什么。
 

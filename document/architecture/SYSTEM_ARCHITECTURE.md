@@ -16,7 +16,7 @@
 
 - [1. 整体架构概览](#1-整体架构概览)
 - [2. 启动流程架构](#2-启动流程架构)
-- [3. 双轨策略架构](#3-双轨策略架构)
+- [3. 内核轨道策略](#3-内核轨道策略)
 - [4. 模块依赖关系](#4-模块依赖关系)
 - [5. 数据流向说明](#5-数据流向说明)
 - [6. 目录结构说明](#6-目录结构说明)
@@ -47,10 +47,10 @@
 │  │Third-Party  │◀───│   Patches    │    │  - zImage           │   │
 │  │  Sources    │    │              │    │  - u-boot.bin       │   │
 │  │             │    │  ┌────────┐  │    │  - rootfs           │   │
-│  │ ┌─────────┐ │    │  │linux-  │  │    │  - DTB              │   │
-│  │ │linux-   │ │    │  │imx/    │  │    │                     │   │
-│  │ │imx      │ │    │  │mainline│  │    │                     │   │
-│  │ └─────────┘ │    │  │/uboot/ │  │    │                     │   │
+│  │ ┌─────────┐ │    │  │linux_  │  │    │  - DTB              │   │
+│  │ │linux_   │ │    │  │mainline│  │    │                     │   │
+│  │ │mainline │ │    │  │uboot-  │  │    │                     │   │
+│  │ └─────────┘ │    │  │imx/    │  │    │                     │   │
 │  │ ┌─────────┐ │    │  └────────┘  │    │                     │   │
 │  │ │uboot-   │ │    └──────────────┘    │                     │   │
 │  │ │imx      │ │           │              │                     │   │
@@ -157,8 +157,7 @@
 | 组件 | 来源分支 | 版本策略 | 状态 |
 |------|---------|---------|------|
 | U-Boot | `uboot-imx` (NXP fork) | 跟随 NXP 官方 BSP | 当前 |
-| Linux Kernel | `linux-imx` (NXP fork) | 跟随 NXP 官方 BSP | 当前 |
-| Linux Kernel | `mainline` (Torvalds) | 实验性支持 | 规划中 |
+| Linux Kernel | `linux_mainline` (Torvalds 上游) | pin v7.1 tag | 唯一内核轨 |
 | BusyBox | `mirror/busybox` | 官方稳定版 | 当前 |
 
 ### 2.3 存储介质布局
@@ -204,99 +203,54 @@
 
 ---
 
-## 3. 双轨策略架构
+## 3. 内核轨道策略
 
-### 3.1 策略总览
+### 3.1 单轨现状
 
-IMX-Forge 采用双轨并行策略，平衡稳定性与前沿性：
+内核轨只有一条：上游主线 mainline Linux。NXP linux-imx vendor 轨已于 2026-09 退役，对应的子模块、`patches/linux-imx/` 目录和 vendor defconfig 模板都已删除，CI 也没有对应 job，历史可以查 git 记录。
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
-│                         双轨策略时间轴                             │
+│                         内核轨道现状                                │
 ├───────────────────────────────────────────────────────────────────┤
 │                                                                    │
 │   ┌─────────────────────────────────────────────────────────┐     │
-│   │  v0.x  [当前阶段]                                        │     │
+│   │  mainline 轨道（唯一内核轨）                             │     │
 │   │  ┌────────────────────────────────────────────────┐     │     │
-│   │  │ linux-imx 轨道                                  │     │     │
-│   │  │ - NXP BSP 6.12.3 基线                           │     │     │
-│   │  │ - 完整驱动支持                                  │     │     │
-│   │  │ - 稳定性优先                                    │     │     │
+│   │  │ - 子模块 third_party/linux_mainline            │     │     │
+│   │  │   (Torvalds 上游，shallow，pin 在 tag v7.1)    │     │     │
+│   │  │ - 补丁目录 patches/linux_mainline/ ([mainline]) │     │     │
+│   │  │ - v7.1 已在真板实测启动，CI 持续构建验证        │     │     │
 │   │  └────────────────────────────────────────────────┘     │     │
 │   │                                                           │     │
-│   │  ┌────────────────────────────────────────────────┐     │     │
-│   │  │ mainline 轨道                                   │     │     │
-│   │  │ - 实验性探索                                    │     │     │
-│   │  │ - 差异分析记录                                  │     │     │
-│   │  └────────────────────────────────────────────────┘     │     │
-│   └─────────────────────────────────────────────────────────┘     │
-│                              │                                     │
-│                              │ 补丁向上游提交 / 移植                │
-│                              ▼                                     │
-│   ┌─────────────────────────────────────────────────────────┐     │
-│   │  v1.x  [中期目标]                                        │     │
-│   │  ┌────────────────────────────────────────────────┐     │     │
-│   │  │ linux-imx 轨道                                  │     │     │
-│   │  │ - 继续维护                                      │     │     │
-│   │  │ - 生产环境推荐                                  │     │     │
-│   │  └────────────────────────────────────────────────┘     │     │
-│   │                                                           │     │
-│   │  ┌────────────────────────────────────────────────┐     │     │
-│   │  │ mainline 轨道                                   │     │     │
-│   │  │ + 基础功能验证                                  │     │     │
-│   │  │ + 关键驱动移植                                  │     │     │
-│   │  └────────────────────────────────────────────────┘     │     │
-│   └─────────────────────────────────────────────────────────┘     │
-│                              │                                     │
-│                              │ mainline 趋于稳定                   │
-│                              ▼                                     │
-│   ┌─────────────────────────────────────────────────────────┐     │
-│   │  v2.x  [长期目标]                                        │     │
-│   │  ┌────────────────────────────────────────────────┐     │     │
-│   │  │ linux-imx 轨道                                  │     │     │
-│   │  │ - 兼容性备选                                    │     │     │
-│   │  │ - 向后兼容支持                                  │     │     │
-│   │  └────────────────────────────────────────────────┘     │     │
-│   │                                                           │     │
-│   │  ┌────────────────────────────────────────────────┐     │     │
-│   │  │ mainline 轨道                                   │     │     │
-│   │  │ + 成为推荐轨道                                  │     │     │
-│   │  │ + 全功能验证通过                                │     │     │
-│   │  │ + 补丁向上游合并                                │     │     │
-│   │  └────────────────────────────────────────────────┘     │     │
+│   │  升级方式：更新 pin 的 tag → 重做总补丁 → 全量验证       │     │
 │   └─────────────────────────────────────────────────────────┘     │
 │                                                                    │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 轨道对比
+### 3.2 为什么只保留 mainline 单轨
 
-| 特性 | linux-imx 轨道 | mainline 轨道 |
-|-----|---------------|--------------|
-| 基线来源 | NXP 官方 BSP | Torvalds 主线 |
-| 驱动完整性 | 完整支持 i.MX 系列 | 需要适配验证 |
-| 更新频率 | 跟随 NXP 发布 | 跟随内核主线 |
-| 稳定性 | 生产可用 | 实验性 |
-| 补丁标签 | `[linux-imx]` | `[mainline]` |
-| 存储位置 | `patches/linux-imx/` | `patches/linux-mainline/` |
-| 上游策略 | NXP 特有补丁本地化 | 积极向上游合并 |
+| 考虑 | 说明 |
+|-----|------|
+| 真板已验证 | v7.1 在 i.MX6ULL 真板实测启动，CI 持续构建验证 |
+| 长期维护 | 跟随 Torvalds 主线，版本演进节奏稳定 |
+| 维护成本 | 不用再维护第二份内核子模块、补丁集和 CI job |
+| 补丁去向 | 项目改动集中在 patches/linux_mainline/ 的总补丁，方向是尽量合入上游 |
 
 ### 3.3 补丁目录结构
 
 ```
 patches/
-├── linux-imx/              # NXP BSP 轨道补丁
-│   ├── series              # 补丁应用序列文件
-│   ├── 0001-xxx.patch      # [linux-imx] 标签补丁
-│   └── ...
-├── linux-mainline/         # 主线内核轨道补丁
-│   ├── series              # 补丁应用序列文件 (未来)
-│   └── ...
-├── uboot-imx/              # U-Boot NXP fork 补丁
-│   └── charlies_board.patch
-├── uboot/                  # U-Boot mainline 补丁 (未来)
-└── busybox/                # BusyBox 补丁
+├── linux_mainline/         # mainline 内核补丁（唯一内核轨）
+│   └── linux_mainline-feat-imx6ull_patches-20260828.patch
+├── qemu/                   # QEMU 板级模拟补丁
+├── uboot/                  # U-Boot mainline 补丁（预留）
+└── uboot-imx/              # U-Boot NXP fork 补丁
+    └── charlies_board.patch
 ```
+
+> 说明：当前没有 series 机制——每个组件一个总补丁，构建时按文件名取最新一个应用（详见 7.1 节）。
 
 ---
 
@@ -315,7 +269,7 @@ patches/
 │  │   └── logging.sh  ◀─────── 被所有构建脚本引用                     │
 │  │                                                                   │
 │  ├── build_helper/                                                  │
-│  │   ├── build-linux.sh  ────▶ third_party/linux-imx/              │
+│  │   ├── build-linux.sh  ────▶ third_party/linux_mainline/       │
 │  │   ├── build-uboot.sh   ────▶ third_party/uboot-imx/             │
 │  │   └── build-busybox.sh ────▶ third_party/busybox/               │
 │  │                                                                   │
@@ -330,11 +284,11 @@ patches/
 │                                   │                                   │
 │                                   ▼                                   │
 │  driver/device_tree/alpha-board/                                     │
-│  │   ├── linux/  ────▶ third_party/linux-imx/arch/arm/boot/dts/     │
+│  │   ├── linux/  ────▶ third_party/linux_mainline/arch/arm/boot/    │
 │  │   └── uboot/  ────▶ third_party/uboot-imx/arch/arm/dts/          │
 │                                                                      │
 │  patches/                                                            │
-│  │   ├── linux-imx/  ────▶ third_party/linux-imx/                   │
+│  │   ├── linux_mainline/  ────▶ third_party/linux_mainline/         │
 │  │   ├── uboot-imx/   ────▶ third_party/uboot-imx/                  │
 │  │   └── busybox/     ────▶ third_party/busybox/                    │
 │                                                                      │
@@ -364,7 +318,7 @@ patches/
 │         │        ├── 1. source scripts/lib/logging.sh               │
 │         │        ├── 2. check_host_dependencies()                   │
 │         │        ├── 3. check_toolchain()                           │
-│         │        ├── 4. apply patches/linux-imx/*.patch             │
+│         │        ├── 4. apply patches/linux_mainline/*.patch        │
 │         │        ├── 5. do_configure()                              │
 │         │        └── 6. do_build()                                  │
 │         │                                                           │
@@ -404,9 +358,10 @@ patches/
 │      url = https://github.com/nxp-imx/uboot-imx.git                 │
 │      ignore = dirty                                                 │
 │                                                                      │
-│  [submodule "third_party/linux-imx"]                                │
-│      path = third_party/linux-imx                                   │
-│      url = https://github.com/nxp-imx/linux-imx.git                 │
+│  [submodule "third_party/linux_mainline"]                           │
+│      path = third_party/linux_mainline                              │
+│      url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git │
+│      shallow = true                                                 │
 │      ignore = dirty                                                 │
 │                                                                      │
 │  [submodule "third_party/busybox"]                                  │
@@ -429,7 +384,7 @@ patches/
 │                                                                      │
 │  1. 源码修改阶段                                                    │
 │     ┌────────────────────────────────────┐                          │
-│     │ third_party/linux-imx/             │                          │
+│     │ third_party/linux_mainline/       │                          │
 │     │   └── drivers/xxx/modified_file.c  │ ← 直接修改                │
 │     └────────────────────────────────────┘                          │
 │                      │                                              │
@@ -445,12 +400,12 @@ patches/
 │                      ▼                                              │
 │     ┌────────────────────────────────────┐                          │
 │     │ scripts/patch_maker.sh             │                          │
-│     │   --submodule_path=linux-imx       │                          │
+│     │   --submodule_path=linux_mainline  │                          │
 │     └────────────────────────────────────┘                          │
 │                      │                                              │
 │                      ▼                                              │
 │     ┌────────────────────────────────────┐                          │
-│     │ patches/linux-imx/                 │                          │
+│     │ patches/linux_mainline/            │                          │
 │     │   └── new-changes.patch            │ ← 生成补丁              │
 │     └────────────────────────────────────┘                          │
 │                                                                      │
@@ -459,7 +414,7 @@ patches/
 │                      ▼                                              │
 │     ┌────────────────────────────────────┐                          │
 │     │ scripts/build_helper/build-linux.sh │                          │
-│     │   quilt import / patch -p1         │ ← 应用补丁              │
+│     │   git apply (apply_patches.sh)    │ ← 应用补丁              │
 │     └────────────────────────────────────┘                          │
 │                      │                                              │
 │                      ▼                                              │
@@ -484,20 +439,21 @@ patches/
 │  ┌────────────────────────────────────┐                             │
 │  │ boards/alpha/BOARD.yaml            │                             │
 │  │   name: "Alpha Board"              │                             │
-│  │   defconfig: "imx_aes_defconfig"   │ ──────┐                    │
+│  │   defconfig:                       │                             │
+│  │     "imx_aes_mainline_defconfig"   │ ──────┐                    │
 │  │   dtb: "imx6ull-alpha.dtb"         │       │                    │
 │  └────────────────────────────────────┘       │                    │
 │                                            解析                    │
 │  Defconfig                                 │                       │
 │  ┌────────────────────────────────────┐     │                      │
-│  │ third_party/linux-imx/             │     │                      │
+│  │ third_party/linux_mainline/       │     │                      │
 │  │   arch/arm/configs/               │     │                      │
-│  │   imx_aes_defconfig                │ ←───┘                      │
+│  │   imx_aes_mainline_defconfig      │ ←───┘                      │
 │  └────────────────────────────────────┘                             │
 │                      │                                              │
 │                      ▼                                              │
 │  ┌────────────────────────────────────┐                             │
-│  │ make imx_aes_defconfig             │                             │
+│  │ make imx_aes_mainline_defconfig   │                             │
 │  │   └──▶ .config                     │                             │
 │  └────────────────────────────────────┘                             │
 │                      │                                              │
@@ -514,7 +470,7 @@ patches/
 │  └────────────────────────────────────┘       │                    │
 │                                            复制/编译                │
 │  ┌────────────────────────────────────┐     │                      │
-│  │ third_party/linux-imx/             │     │                      │
+│  │ third_party/linux_mainline/       │     │                      │
 │  │   arch/arm/boot/dts/               │ ←───┘                      │
 │  │   imx6ull-alpha.dts                │                            │
 │  └────────────────────────────────────┘                             │
@@ -615,11 +571,10 @@ imx-forge/
 │   ├── linux/                  # Linux 内核构建产物
 │   └── uboot/                  # U-Boot 构建产物
 ├── patches/                    # 补丁管理
-│   ├── busybox/                # BusyBox 补丁
-│   ├── linux-imx/              # linux-imx 轨道补丁
-│   │   └── linux-imx-patch_test-20260314.patch
-│   ├── linux-mainline/         # mainline 轨道补丁 (未来)
-│   ├── uboot/                  # U-Boot mainline 补丁 (未来)
+│   ├── linux_mainline/         # mainline 内核轨道补丁（唯一内核轨）
+│   │   └── linux_mainline-feat-imx6ull_patches-20260828.patch
+│   ├── qemu/                   # QEMU 板级模拟补丁
+│   ├── uboot/                  # U-Boot mainline 补丁（预留）
 │   └── uboot-imx/              # U-Boot NXP fork 补丁
 │       └── charlies_board.patch
 ├── rootfs/                     # 根文件系统
@@ -658,7 +613,10 @@ imx-forge/
 │   └── varified_rootfs_ok.sh   # Rootfs 验证脚本
 ├── third_party/                # 第三方源码 (Submodule)
 │   ├── busybox/                # BusyBox 源码
-│   ├── linux-imx/              # NXP Linux 内核 fork
+│   ├── buildroot/              # Buildroot 源码
+│   ├── buildmeter/             # 构建进度条工具
+│   ├── linux_mainline/         # 上游主线 Linux 内核 (pin v7.1)
+│   ├── qemu/                   # QEMU 模拟器源码
 │   └── uboot-imx/              # NXP U-Boot fork
 ├── tools/                      # 工具集合
 │   └── third_party/            # 第三方工具
@@ -710,53 +668,49 @@ imx-forge/
 **实现**
 
 ```bash
-# 生成补丁
-git format-patch -o patches/linux-imx/ base_commit..HEAD
+# 生成补丁（推荐用项目脚本，自动对比分支并命名）
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 
-# 应用补丁
-quilt import patches/linux-imx/*.patch
-quilt push -a
+# 应用补丁（构建脚本内部就是这么调的）
+./scripts/apply_patches.sh linux_mainline
 
-# 或使用 patch 命令
-cat patches/linux-imx/series | while read patch; do
-    patch -p1 < "patches/linux-imx/$patch"
-done
+# 或使用 patch 命令手工应用总补丁
+cd third_party/linux_mainline
+cat ../../patches/linux_mainline/*.patch | patch -p1
 ```
 
-### 7.2 为什么采用双轨策略
+### 7.2 为什么内核只保留 mainline 单轨
 
 **背景**
 
-- NXP 提供的 linux-imx 分支包含大量针对 i.MX 系列的优化和驱动
-- 主线内核 (mainline) 代表 Linux 的发展方向，长期维护更佳
-- 直接切换到 mainline 需要大量适配工作，存在风险
+- 项目早期同时维护 NXP linux-imx (6.12.x BSP) 和主线 mainline 两条内核轨
+- mainline v7.1 在 i.MX6ULL 真板上实测启动、外设逐步验证通过，双轨里"vendor 轨兜底"的意义消失了
+- 双份内核子模块、双份补丁集、双份 CI job 的维护成本却一直存在
 
 **决策**
 
-采用双轨并行策略：以 linux-imx 为当前稳定轨道，同时探索 mainline 轨道。
+2026-09 起只保留 mainline 一条内核轨：linux-imx 子模块、`patches/linux-imx/` 目录、vendor defconfig 模板全部删除，历史可查 git 记录。
 
 **理由**
 
-| 稳定性 (linux-imx) | 前瞻性 (mainline) |
-|-------------------|-------------------|
-| NXP 官方支持 | 代表 Linux 未来 |
-| 驱动完整 | 代码质量更高 |
-| 立即可用 | 长期维护更佳 |
-| 适合生产环境 | 适合学习和贡献 |
+| 考虑 | 说明 |
+|------|------|
+| 真板已验证 | v7.1 在真板实测启动，CI 持续构建验证 |
+| 长期维护 | 跟随 Torvalds 主线，版本演进节奏稳定 |
+| 维护成本 | 少维护一份内核子模块、补丁集和 CI job |
+| 上游方向 | 改动收在一个总补丁里，目标是尽量合入上游 |
 
-**长期目标**
+**后续方向**
 
-1. v0.x: 完善 linux-imx 轨道，确保基础功能稳定
-2. v1.x: 开始 mainline 探索，记录差异和移植经验
-3. v2.x: mainline 功能完整，成为推荐轨道
-4. 未来: 积极向上游贡献补丁，减少本地修改
+1. 内核版本随上游演进：升级时更新 pin 的 tag，重做总补丁并全量验证
+2. 积极向上游贡献补丁，减少本地修改
 
 ### 7.3 为什么使用 Git Submodule
 
 **背景**
 
 项目需要集成多个第三方大型代码库：
-- linux-imx (~1GB+)
+- linux_mainline (~1GB+)
 - uboot-imx (~500MB+)
 - busybox (~50MB+)
 
@@ -780,9 +734,9 @@ done
 **配置策略**
 
 ```gitmodules
-[submodule "third_party/linux-imx"]
-    path = third_party/linux-imx
-    url = https://github.com/nxp-imx/linux-imx.git
+[submodule "third_party/linux_mainline"]
+    path = third_party/linux_mainline
+    url = https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
     ignore = dirty  # 忽略工作区修改，仅追踪提交
 ```
 
@@ -908,7 +862,7 @@ Rootfs 需要包含库文件、配置文件、初始化脚本等，手动维护�
 │      │        │                                                     │
 │      │        └── ${CROSS_COMPILE}gcc, objcopy, objdump...          │
 │      │                                                               │
-│      ├──▶ apply patches/linux-imx/*.patch                           │
+│      ├──▶ apply patches/linux_mainline/*.patch                      │
 │      │                                                               │
 │      ├──▶ do_configure()                                            │
 │      │        │                                                     │
@@ -938,9 +892,9 @@ Rootfs 需要包含库文件、配置文件、初始化脚本等，手动维护�
 │                                                                      │
 │  Linux 构建配置                                                      │
 │  ┌──────────────────────────────────────────────────────────────┐  │
-│  │  LINUX_SRC_DIR=${PROJECT_ROOT}/third_party/linux-imx         │  │
+│  │  LINUX_SRC_DIR=${PROJECT_ROOT}/third_party/linux_mainline    │  │
 │  │  OUTPUT_DIR=${PROJECT_ROOT}/out/linux                        │  │
-│  │  DEFCONFIG=imx_aes_defconfig                                 │  │
+│  │  DEFCONFIG=imx_aes_mainline_defconfig                        │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 │                                                                      │
 │  U-Boot 构建配置                                                     │
@@ -1063,10 +1017,10 @@ Rootfs 需要包含库文件、配置文件、初始化脚本等，手动维护�
 
 | 路径 | 说明 |
 |-----|------|
-| `third_party/linux-imx` | Linux 内核源码 |
+| `third_party/linux_mainline` | Linux 内核源码 (pin v7.1) |
 | `third_party/uboot-imx` | U-Boot 源码 |
 | `third_party/busybox` | BusyBox 源码 |
-| `patches/linux-imx` | Linux 补丁 |
+| `patches/linux_mainline` | Linux 内核补丁 |
 | `patches/uboot-imx` | U-Boot 补丁 |
 | `out/linux` | Linux 构建输出 |
 | `out/uboot` | U-Boot 构建输出 |
@@ -1090,7 +1044,7 @@ scripts/build_helper/build-busybox.sh
 scripts/varified_rootfs_ok.sh
 
 # 生成补丁
-scripts/patch_maker.sh --submodule_path=linux-imx
+scripts/patch_maker.sh --submodule_path=linux_mainline
 
 # 快速构建 (跳过 distclean)
 scripts/build_helper/build-linux.sh --fast-build
@@ -1104,14 +1058,12 @@ scripts/build_helper/build-linux.sh --fast-build
 格式: [轨道类型] 简短描述
 
 轨道类型:
-  - [linux-imx]   NXP BSP 轨道补丁
-  - [mainline]    主线内核轨道补丁
+  - [mainline]    主线内核轨道补丁（唯一内核轨）
   - [uboot-imx]   U-Boot NXP fork 补丁
   - [uboot-main]  U-Boot 主线补丁
 
 示例:
-  [linux-imx] drivers: add alpha board support
-  [mainline] net: fec: add imx6ull support
+  [mainline] arm: dts: add imx6ull aes board support
   [uboot-imx] board: enable alpha board
 ```
 

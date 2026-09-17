@@ -28,9 +28,10 @@
 
 ```bash
 declare -A KERNEL_CONFIGS
-KERNEL_CONFIGS[mainline]="linux_mainline|out/mainline/linux|imx_aes_mainline_defconfig|主线内核"
-KERNEL_CONFIGS[imx]="linux-imx|out/linux|imx_aes_defconfig|NXP BSP内核"
+KERNEL_CONFIGS[mainline]="linux_mainline|out/linux|imx_aes_mainline_defconfig|主线内核"
 ```
+
+项目已单轨化，内核配置只有 mainline 这一条（NXP BSP 内核轨已于 2026-09 移除）。
 
 **配置格式**：
 ```
@@ -161,7 +162,7 @@ check_kernel_built <kernel_type>
 ========================================
 内核类型: mainline (linux_mainline)
 内核目录: /path/to/third_party/linux_mainline
-输出目录: /path/to/out/mainline/linux
+输出目录: /path/to/out/linux
 
 缺少以下文件：
   - 内核配置文件: .config
@@ -171,11 +172,11 @@ check_kernel_built <kernel_type>
 💡 解决方案：
    1. 完整编译内核：
       cd /path/to/third_party/linux_mainline
-      make O=/path/to/out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
+      make O=/path/to/out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
 
    2. 或者使用快速编译（仅生成必要文件）：
       cd /path/to/third_party/linux_mainline
-      make O=/path/to/out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
+      make O=/path/to/out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
 
 ========================================
 ```
@@ -470,7 +471,7 @@ my_function() {
 ```bash
 # 自动配置（脚本会自动执行）
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_mainline_defconfig
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_mainline_defconfig
 ```
 
 #### 2. 内核未编译
@@ -486,10 +487,10 @@ make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf-
 ```bash
 # 快速准备
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
 
 # 或完整编译
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
 ```
 
 #### 3. 设备树编译失败

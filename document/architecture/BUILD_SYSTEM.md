@@ -192,7 +192,7 @@ verify_build_artifacts()
 |--------|-----|------|
 | ARCH | arm | 目标架构 |
 | CROSS_COMPILE | arm-none-linux-gnueabihf- | 交叉编译工具链前缀 |
-| DEFCONFIG | imx_aes_defconfig | 默认配置文件 |
+| DEFCONFIG | imx_aes_mainline_defconfig | 默认配置文件 |
 | FAST_BUILD | 0/1 | 快速构建模式（跳过 distclean） |
 
 **构建步骤**：
@@ -769,7 +769,7 @@ cd -
 
 ```bash
 # Linux 设备树
-make -C third_party/linux-imx \
+make -C third_party/linux_mainline \
     ARCH=arm \
     CROSS_COMPILE=arm-none-linux-gnueabihf- \
     O=out/linux \
@@ -1274,8 +1274,8 @@ convert document/logo/logo.png -resize 800x480! -alpha off -depth 8 bmp3:test.bm
 |------|-------------|------|
 | U-Boot | defconfig | `third_party/uboot-imx/configs/mx6ull_aes_emmc_defconfig` |
 | U-Boot | 设备树 | `third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-emmc.dts` |
-| Linux | defconfig | `third_party/linux-imx/arch/arm/configs/imx_aes_defconfig` |
-| Linux | 设备树 | `third_party/linux-imx/arch/arm/boot/dts/` |
+| Linux | defconfig | `third_party/linux_mainline/arch/arm/configs/imx_aes_mainline_defconfig` |
+| Linux | 设备树 | `third_party/linux_mainline/arch/arm/boot/dts/` |
 | BusyBox | defconfig | `third_party/busybox/configs/defconfig` |
 
 ### C. 参考文档

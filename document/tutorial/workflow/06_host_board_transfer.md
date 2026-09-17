@@ -105,7 +105,7 @@ scp -O root@板子IP:/root/log.txt .    # 拉：日志上来
 ```bash
 # 主机 ~/imx-forge
 out/qemu/build/qemu-system-arm -M mcimx6ul-evk -m 512M \
-    -kernel out/mainline/linux/arch/arm/boot/zImage \
+    -kernel out/linux/arch/arm/boot/zImage \
     -dtb out/qemu/imx6ull-aes.dtb \
     -append "console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw" \
     -drive file=out/qemu/rootfs.ext4,if=sd,index=1,format=raw \

@@ -29,12 +29,11 @@ driver_buildlib.sh
 
 ### 内核类型配置
 
-库支持多种内核类型，通过关联数组配置：
+库通过关联数组配置内核类型。项目已单轨化，只有主线内核一条（NXP BSP 内核轨已于 2026-09 移除）：
 
 ```bash
 declare -A KERNEL_CONFIGS
-KERNEL_CONFIGS[mainline]="linux_mainline|out/mainline/linux|imx_aes_mainline_defconfig|主线内核"
-KERNEL_CONFIGS[imx]="linux-imx|out/linux|imx_aes_defconfig|NXP BSP内核"
+KERNEL_CONFIGS[mainline]="linux_mainline|out/linux|imx_aes_mainline_defconfig|主线内核"
 ```
 
 | 字段 | 说明 |
@@ -285,8 +284,7 @@ PROJECT_ROOT/
 │   └── lib/
 │       └── driver_buildlib.sh
 └── third_party/
-    ├── linux_mainline/
-    └── linux-imx/
+    └── linux_mainline/
 ```
 
 ## 故障排除
@@ -310,7 +308,7 @@ ls third_party/linux_mainline/arch/arm/configs/imx_aes_mainline_defconfig
 
 # 手动配置内核
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_mainline_defconfig
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_mainline_defconfig
 ```
 
 #### 错误 2：内核未编译
@@ -325,8 +323,8 @@ make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf-
 
 ```bash
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
-ln -s vmlinux.symvers ../../out/mainline/linux/Module.symvers
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
+ln -s vmlinux.symvers ../../out/linux/Module.symvers
 ```
 
 #### 错误 3：设备树编译失败

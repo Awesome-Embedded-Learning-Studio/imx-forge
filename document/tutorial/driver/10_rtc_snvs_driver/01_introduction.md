@@ -40,11 +40,11 @@ SRTC 的秒计数器是个 **47 位** 的硬件计数器，被拆在两个 32 �
 
 ## 先认认环境
 
-这一章跑在两套内核上，主线 `rtc-snvs.c` 两边都默认编译进内核：
+这一章跑在主线内核上，`rtc-snvs.c` 默认编译进内核：
 
 - **板子**：I.MX6U-ALPHA，片内 SNVS SRTC，核心板带纽扣电池 + 32.768kHz 晶振
-- **内核**：`linux-imx` 6.12.49（NXP BSP，主开发环境）/ `mainline` 7.1.0（进阶验证）
-- **源码**：仓库 `third_party/linux-imx/drivers/rtc/rtc-snvs.c`、`third_party/linux_mainline/drivers/rtc/rtc-snvs.c`
+- **内核**：`mainline` 7.1.0 —— 项目唯一内核轨
+- **源码**：仓库 `third_party/linux_mainline/drivers/rtc/rtc-snvs.c`
 - **用户空间工具**：`hwclock`、`date`（busybox 或 util-linux 版均可）
 
 ::: info 主线默认就启用了

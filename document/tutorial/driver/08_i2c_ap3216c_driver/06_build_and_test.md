@@ -12,7 +12,7 @@ title: 编译与上板测试
 
 ```makefile
 # Makefile
-KERNELDIR := $(PWD)/../../../third_party/linux-imx    # 6.12.49，按你的实际路径改
+KERNELDIR := $(PWD)/../../../third_party/linux_mainline    # 7.1，按你的实际路径改
 CURRENT_PATH := $(shell pwd)
 obj-m := ap3216c.o
 
@@ -25,10 +25,10 @@ clean:
 	$(MAKE) -C $(KERNELDIR) M=$(CURRENT_PATH) clean
 ```
 
-`obj-m := ap3216c.o` 告诉构建系统：把 `ap3216c.c` 编成模块 `ap3216c.ko`。`$(MAKE) -C $(KERNELDIR) M=$(CURRENT_PATH) modules` 的意思是"跳到内核源码树里、借用它的构建规则、编译当前目录下的模块"。这里 `KERNELDIR` 要指向那棵你已经 `make imx_aes_defconfig`（或对应 defconfig）并且至少 `make prepare` 过的树——光有源码不行，得配置过，否则编出来的模块会因为 `Module.symvers` 对不上而拒绝加载。
+`obj-m := ap3216c.o` 告诉构建系统：把 `ap3216c.c` 编成模块 `ap3216c.ko`。`$(MAKE) -C $(KERNELDIR) M=$(CURRENT_PATH) modules` 的意思是"跳到内核源码树里、借用它的构建规则、编译当前目录下的模块"。这里 `KERNELDIR` 要指向那棵你已经 `make imx_aes_mainline_defconfig` 并且至少 `make prepare` 过的树——光有源码不行，得配置过，否则编出来的模块会因为 `Module.symvers` 对不上而拒绝加载。
 
-::: tip 选哪棵内核树
-我们这次同时支持 `linux-imx` 6.12.49 和 `mainline` 7.1.0。日常开发用 `linux-imx` 那棵（推荐），想验证主线兼容性就把 `KERNELDIR` 指到 `third_party/linux_mainline` 再编一次——同一份 `ap3216c.c` 两边都能过。
+::: tip 内核树只有一棵
+项目现在只有 mainline 一条内核轨，`KERNELDIR` 指到 `third_party/linux_mainline`，内核构建输出在 `out/linux`。
 :::
 
 编译驱动，在驱动源码目录下执行：

@@ -281,15 +281,15 @@ make: *** No rule to make target 'modules'. Stop.
 ls -la third_party/linux-mainline/
 
 # 2. 检查内核配置
-ls -la out/mainline/linux/.config
+ls -la out/linux/.config
 
 # 3. 如果缺少配置，重新配置内核
 cd third_party/linux-mainline/
-make O=../../../out/mainline/linux ARCH=arm \
+make O=../../../out/linux ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- imx_aes_mainline_defconfig
 
 # 4. 如果需要，准备内核模块
-make O=../../../out/mainline/linux ARCH=arm \
+make O=../../../out/linux ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
 ```
 
@@ -357,7 +357,7 @@ cd /home/charliechen/imx-forge
 ./scripts/driver_helper/build_driver.sh example-driver --kernel=mainline
 
 # 或者如果使用imx内核
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx
+./scripts/driver_helper/build_driver.sh example-driver
 ```
 
 **预防措施**：

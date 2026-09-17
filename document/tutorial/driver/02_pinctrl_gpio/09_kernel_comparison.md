@@ -1,5 +1,9 @@
 # 主线内核与 imx 内核的差异对比
 
+::: warning 本章基于已退役的 linux-imx 树
+这章写于项目还维护 NXP linux-imx 内核（6.12.49）的双轨时代。linux-imx 源码树已随 vendor 轨退役，文中行号无法再现场核对；本章保留作「NXP BSP vs 主线内核」的行业背景阅读，主线侧内容（third_party/linux_mainline）仍然有效。
+:::
+
 ## 前言：为什么要对比两个内核
 
 我们在整个教程中一直提到两个内核：主线内核（third_party/linux_mainline）和 NXP imx 内核（third_party/linux-imx）。你可能会问：为什么需要两个内核？它们有什么区别？

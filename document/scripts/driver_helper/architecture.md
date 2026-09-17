@@ -192,7 +192,6 @@ clean_specific_driver()  # 清理产物
 --list                   # 列出驱动
 --all                    # 构建所有
 --board=NAME            # 指定板卡
---kernel=TYPE           # 指定内核
 ```
 
 **设计特点**：
@@ -307,13 +306,9 @@ driver_build()              # 统一构建接口
 
 1. **配置驱动设计**
 ```bash
-# 内核类型配置
+# 内核类型配置（单轨：只有主线内核一条）
 declare -A KERNEL_CONFIGS
-KERNEL_CONFIGS[mainline]="linux_mainline|out/mainline/linux|imx_aes_mainline_defconfig|主线内核"
-KERNEL_CONFIGS[imx]="linux-imx|out/linux|imx_aes_defconfig|NXP BSP内核"
-
-# 扩展新内核只需添加配置
-KERNEL_CONFIGS[newtype]="name|output|defconfig|description"
+KERNEL_CONFIGS[mainline]="linux_mainline|out/linux|imx_aes_mainline_defconfig|主线内核"
 ```
 
 2. **错误处理策略**
@@ -417,10 +412,9 @@ MY_NEW_CONFIG="${MY_NEW_CONFIG:-default_value}"
 ```bash
 # 在 driver_buildlib.sh 中添加
 KERNEL_CONFIGS[newkernel]="kernel_name|output_dir|defconfig|description"
-
-# 立即可用，无需修改其他代码
-./scripts/driver_helper/build_driver.sh driver --kernel=newkernel
 ```
+
+注意：`--kernel` 参数已随单轨化退役，当前调用 `build_driver.sh` 不需要（也不能）选内核轨，始终走 `mainline` 这一条配置。
 
 ---
 
@@ -672,9 +666,6 @@ log_error "========================================"
 ```bash
 # 添加新内核类型只需修改配置
 KERNEL_CONFIGS[rt-linux]="linux-rt|out/rt/linux|imx_aes_rt_defconfig|实时内核"
-
-# 立即可用
-./scripts/driver_helper/build_driver.sh driver --kernel=rt-linux
 ```
 
 #### 2. 板卡扩展

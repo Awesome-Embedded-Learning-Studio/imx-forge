@@ -345,7 +345,7 @@ Ctrl + ` 拉出的内置终端就是 WSL 的 shell,咱们的工作目录落在�
 
 ```bash
 # VSCode 内置终端(WSL shell) ~/imx-forge
-./scripts/build_helper/build-mainline-linux.sh --release
+./scripts/build_helper/build-linux.sh --release
 ```
 
 配好 05 篇的 tasks.json 之后 Ctrl+Shift+B 一键触发，编译告警还能跳回源码行。写代码、跑构建、看输出在同一个窗口里转圈，这是咱们换到 Remote-SSH 之后最容易回不去的地方。

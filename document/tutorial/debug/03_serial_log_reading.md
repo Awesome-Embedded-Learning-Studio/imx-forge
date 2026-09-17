@@ -9,7 +9,7 @@ title: 串口日志阅读路线：从一行输出找到下一站
 ::: tip 前置知识 · 咱们的环境
 - 串口工具的装配与配置(minicom、picocom，115200 8N1 无流控)您回 [串口工具使用](../start/04_serial_tools_minicom.md) 看；首次上电流程与 tee 记日志的手法在 [启动与调试](../practical/03_boot_and_debug.md)
 - 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/08_kernel_boot_debug.md)，U-Boot 阶段的命令在 [U-Boot 调试命令](../uboot/09_debugging_commands.md)
-- 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行；日志样本来自 QEMU 直启(mcimx6ul-evk 机器，run-qemu.sh 那条链)的真跑记录，对应的主线内核构建树是 out/mainline/linux,vmlinux 就在 out/mainline/linux/vmlinux;交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
+- 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行；日志样本来自 QEMU 直启(mcimx6ul-evk 机器，run-qemu.sh 那条链)的真跑记录，对应的主线内核构建树是 out/linux,vmlinux 就在 out/linux/vmlinux;交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
 :::
 
 ## 一、串口是板子唯一的主诉渠道
@@ -131,13 +131,13 @@ login: 出现等于宣布系统活着：getty 已经守在 ttymxc0 上等您输�
 
 ```bash
 # 主机 ~/imx-forge;vmlinux 与产生日志的内核是同一份构建
-ls -l out/mainline/linux/vmlinux
-/opt/arm-gnu-toolchain/bin/arm-none-linux-gnueabihf-nm out/mainline/linux/vmlinux | grep -w imx_soc_device_init
-/opt/arm-gnu-toolchain/bin/arm-none-linux-gnueabihf-addr2line -e out/mainline/linux/vmlinux -f -i 0xc1334be0
+ls -l out/linux/vmlinux
+/opt/arm-gnu-toolchain/bin/arm-none-linux-gnueabihf-nm out/linux/vmlinux | grep -w imx_soc_device_init
+/opt/arm-gnu-toolchain/bin/arm-none-linux-gnueabihf-addr2line -e out/linux/vmlinux -f -i 0xc1334be0
 ```
 
 ```text
--rwxr-xr-x 1 charliechen charliechen 26584684 Aug 29 09:55 out/mainline/linux/vmlinux
+-rwxr-xr-x 1 charliechen charliechen 26584684 Aug 29 09:55 out/linux/vmlinux
 c1334be0 t imx_soc_device_init
 imx_soc_device_init
 soc-imx.c:?
@@ -149,8 +149,8 @@ soc-imx.c:?
 
 ```bash
 # 主机 ~/imx-forge;数一数 vmlinux 里有没有 DWARF 调试段
-/opt/arm-gnu-toolchain/bin/arm-none-linux-gnueabihf-readelf -S out/mainline/linux/vmlinux | grep -c debug
-grep -n "CONFIG_DEBUG_INFO_NONE" out/mainline/linux/.config
+/opt/arm-gnu-toolchain/bin/arm-none-linux-gnueabihf-readelf -S out/linux/vmlinux | grep -c debug
+grep -n "CONFIG_DEBUG_INFO_NONE" out/linux/.config
 ```
 
 ```text

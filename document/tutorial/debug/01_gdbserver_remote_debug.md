@@ -320,7 +320,7 @@ cp demo out/release-latest/rootfs/root/demo
 # 主机 ~/imx-forge
 pkill -f qemu-system-arm; sleep 2
 out/qemu/build/qemu-system-arm -M mcimx6ul-evk -m 512M \
-    -kernel out/mainline/linux/arch/arm/boot/zImage \
+    -kernel out/linux/arch/arm/boot/zImage \
     -dtb out/qemu/imx6ull-aes.dtb \
     -append "console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw" \
     -drive file=out/qemu/rootfs.ext4,if=sd,index=1,format=raw \
