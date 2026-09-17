@@ -9,7 +9,7 @@ title: clangd 交叉编译配置：让跳转又快又准
 ::: tip 前置知识 · 咱们的环境
 - VSCode 远程开发会话的建立回 [02 VSCode Remote-SSH](02_vscode_remote_ssh.md)，本篇在会话里操作
 - 从装插件开始的 IDE 配置全流程，[driver 卷的 IDE 配置指南](../driver/00_chardev_base/06p_ide_setup.md) 有完整一份，本篇不重复装插件那几步
-- 路径上下文：本篇所有命令都在仓库根 `~/imx-forge` 下执行，索引对象是 `third_party/linux_mainline` 这棵 mainline 内核源码树，外部构建输出在 `out/mainline/linux`，交叉工具链前缀 `arm-none-linux-gnueabihf-`（Arm GNU Toolchain 15.2.Rel1）
+- 路径上下文：本篇所有命令都在仓库根 `~/imx-forge` 下执行，索引对象是 `third_party/linux_mainline` 这棵 mainline 内核源码树，外部构建输出在 `out/linux`，交叉工具链前缀 `arm-none-linux-gnueabihf-`（Arm GNU Toolchain 15.2.Rel1）
 - 仓库根的 `.clangd` 文件真实存在，咱们下面 cat 它做证据
 :::
 
@@ -32,13 +32,13 @@ clangd 换了个思路：不猜，直接读 `compile_commands.json`。这份文�
 make -C third_party/linux_mainline \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
-  O=out/mainline/linux \
+  O=out/linux \
   compile_commands.json
 ```
 
 ```text
 make: Entering directory '/home/charliechen/imx-forge/third_party/linux_mainline'
-make[1]: Entering directory '/home/charliechen/imx-forge/third_party/linux_mainline/out/mainline/linux'
+make[1]: Entering directory '/home/charliechen/imx-forge/third_party/linux_mainline/out/linux'
 ***
 *** Configuration file ".config" not found!
 ***
@@ -48,7 +48,7 @@ make[1]: Entering directory '/home/charliechen/imx-forge/third_party/linux_mainl
 /home/charliechen/imx-forge/third_party/linux_mainline/Makefile:881: include/config/auto.conf.cmd: No such file or directory
 make[2]: *** [/home/charliechen/imx-forge/third_party/linux_mainline/Makefile:890: .config] Error 1
 make[1]: *** [/home/charliechen/imx-forge/third_party/linux_mainline/Makefile:248: __sub-make] Error 2
-make[1]: Leaving directory '/home/charliechen/imx-forge/third_party/linux_mainline/out/mainline/linux'
+make[1]: Leaving directory '/home/charliechen/imx-forge/third_party/linux_mainline/out/linux'
 make: *** [Makefile:248: __sub-make] Error 2
 make: Leaving directory '/home/charliechen/imx-forge/third_party/linux_mainline'
 ```
@@ -60,7 +60,7 @@ make: Leaving directory '/home/charliechen/imx-forge/third_party/linux_mainline'
 make -C third_party/linux_mainline \
   ARCH=arm \
   CROSS_COMPILE=arm-none-linux-gnueabihf- \
-  O=$PWD/out/mainline/linux \
+  O=$PWD/out/linux \
   compile_commands.json
 ```
 
@@ -74,9 +74,9 @@ make -C third_party/linux_mainline \
   GEN     compile_commands.json
 ```
 
-所以正确的顺序是老老实实先跑一遍 `build-mainline-linux.sh` 完成内核构建，再来生成索引。`.cmd` 文件的数目得交代时点：笔者的 out 树在这次补编前有 4114 个，这次补编自己又长出 1592 个，生成后总共 5706 个——您拿 `find out/mainline/linux -name '*.cmd' | wc -l` 复核时，以自己树上的实数为准。
+所以正确的顺序是老老实实先跑一遍 `build-linux.sh` 完成内核构建，再来生成索引。`.cmd` 文件的数目得交代时点：笔者的 out 树在这次补编前有 4114 个，这次补编自己又长出 1592 个，生成后总共 5706 个——您拿 `find out/linux -name '*.cmd' | wc -l` 复核时，以自己树上的实数为准。
 
-从没构建过的树是另一回事。out 树里连 `.config` 都没有时（从没跑过 `scripts/build_helper/build-mainline-linux.sh` 的树就是这样），这条命令撞上的还是前面那同一屏配置缺失报错，走不到编译那一步，所以完整构建这道门槛咱们绕不过去。`.config` 已在、目标缺失时，它才会当场补齐依赖，等价于一次完整构建。
+从没构建过的树是另一回事。out 树里连 `.config` 都没有时（从没跑过 `scripts/build_helper/build-linux.sh` 的树就是这样），这条命令撞上的还是前面那同一屏配置缺失报错，走不到编译那一步，所以完整构建这道门槛咱们绕不过去。`.config` 已在、目标缺失时，它才会当场补齐依赖，等价于一次完整构建。
 
 另外咱们得记住 `make clean` 的边界。它删的只是 out 树里那份 json，动手的是内核 Makefile 的 CLEAN_FILES 清单，`compile_commands.json` 明确列在 Makefile:1694。`M=` 外部模块那条分支的 clean 规则在 2003 行也列了它，不过管不到咱们这条树内链路。源码树根那份拷贝不受影响，索引照常工作。不过那份拷贝从不自动更新——改配置或换 defconfig 重建之后，想让索引跟上新命令行，得重新生成一遍再拷一次就好。
 
@@ -86,7 +86,7 @@ make -C third_party/linux_mainline \
 
 ```bash
 # 主机 ~/imx-forge;拷到 .clangd 指向的目录
-cp out/mainline/linux/compile_commands.json third_party/linux_mainline/
+cp out/linux/compile_commands.json third_party/linux_mainline/
 ls -lh third_party/linux_mainline/compile_commands.json
 ```
 
@@ -99,7 +99,7 @@ ls -lh third_party/linux_mainline/compile_commands.json
 ```json
 {
   "command": "arm-none-linux-gnueabihf-gcc -Wp,-MMD,drivers/ata/.ahci_imx.o.d -nostdinc -I/home/charliechen/imx-forge/third_party/linux_mainline/arch/arm/include -I./arch/arm/include/generated -I/home/charliechen/imx-forge/third_party/linux_mai……",
-  "directory": "/home/charliechen/imx-forge/out/mainline/linux",
+  "directory": "/home/charliechen/imx-forge/out/linux",
   "file": "/home/charliechen/imx-forge/third_party/linux_mainline/drivers/ata/ahci_imx.c"
 }
 ```
@@ -138,7 +138,7 @@ Diagnostics:
 
 ### CompilationDatabase 指路
 
-`CompilationDatabase: third_party/linux_mainline` 告诉 clangd 去这个目录找 `compile_commands.json`。路径相对项目根解析，所以上一节咱们才把 json 拷进源码树；您要是嫌拷贝这一步烦，把它改成 `out/mainline/linux` 也行，代价是 clean 之后配置指向一个不存在的文件，两种约定挑一种守到底就好。
+`CompilationDatabase: third_party/linux_mainline` 告诉 clangd 去这个目录找 `compile_commands.json`。路径相对项目根解析，所以上一节咱们才把 json 拷进源码树；您要是嫌拷贝这一步烦，把它改成 `out/linux` 也行，代价是 clean 之后配置指向一个不存在的文件，两种约定挑一种守到底就好。
 
 ### Remove 的 13 项，哪些真出现
 
@@ -199,7 +199,7 @@ Index:
 | 现象 | 根因 | 解法 |
 |------|------|------|
 | clangd 跳转变慢或干脆没反应 | json 没生成，或 `.clangd` 的路径与 json 实际位置对不上 | 先完整构建再生成，拷到 `third_party/linux_mainline`，重启 language server |
-| 生成时报 `Configuration file ".config" not found!` | `O=` 写了相对路径，被解析到源码树底下；或从没构建过，out 树里连 `.config` 都没有 | `O=$PWD/out/mainline/linux` 用绝对路径；从没构建过的先完整构建一遍 |
+| 生成时报 `Configuration file ".config" not found!` | `O=` 写了相对路径，被解析到源码树底下；或从没构建过，out 树里连 `.config` 都没有 | `O=$PWD/out/linux` 用绝对路径；从没构建过的先完整构建一遍 |
 | 满屏 `unknown argument` 一类误报 | Remove/Suppress 没配，或 YAML 缩进有误 | 对照仓库根 `.clangd` 逐项核对 |
 | 改了 `.clangd` 不生效 | clangd 缓存了旧配置 | 命令面板执行 clangd: Restart language server |
 | 把 `CompilationDatabase` 指到 out 树又跑了 `make clean` | clean 删的就是配置指向的那份 json，索引直接失灵 | 重新生成并拷回源码树根 |

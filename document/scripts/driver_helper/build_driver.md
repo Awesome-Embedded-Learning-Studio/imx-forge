@@ -2,13 +2,13 @@
 
 ## 概述
 
-`build_driver.sh` 是 IMX Forge 项目中统一的驱动构建入口脚本，用于编译驱动模块和设备树文件。该脚本支持批量构建、单个构建、清理操作，并支持多种内核类型。
+`build_driver.sh` 是 IMX Forge 项目中统一的驱动构建入口脚本，用于编译驱动模块和设备树文件。该脚本支持批量构建、单个构建、清理操作，始终基于主线内核（mainline 单轨）构建。
 
 ## 功能特性
 
 - ✅ 支持单个驱动构建和批量构建
 - ✅ 支持多板卡配置
-- ✅ 支持多内核类型（mainline、imx）
+- ✅ 基于主线内核（mainline）单轨构建，无需选内核
 - ✅ 自动列出所有可用驱动
 - ✅ 支持清理构建产物
 - ✅ 详细的构建日志和错误提示
@@ -36,15 +36,15 @@
 | `--all` | 构建所有驱动 | `--all` |
 | `--clean` | 清理构建产物 | `--clean example-driver` |
 | `--board=NAME` | 只构建指定板卡的驱动 | `--board=alpha-board` |
-| `--kernel=TYPE` | 选择内核类型（mainline\|imx） | `--kernel=imx` |
 | `--help, -h` | 显示帮助信息 | `--help` |
 
 ### 内核类型
 
+只有主线内核一条（单轨），`--kernel` 参数已退役，调用时不需要选内核：
+
 | 类型 | 说明 | 配置文件 | 内核目录 |
 |------|------|----------|----------|
-| mainline | 主线内核（默认） | imx_aes_mainline_defconfig | third_party/linux_mainline |
-| imx | NXP BSP内核 | imx_aes_defconfig | third_party/linux-imx |
+| mainline | 主线内核（默认且唯一） | imx_aes_mainline_defconfig | third_party/linux_mainline |
 
 ## 使用示例
 
@@ -79,9 +79,6 @@
 
 # 构建指定板卡的驱动
 ./scripts/driver_helper/build_driver.sh led alpha-board
-
-# 使用 imx 内核构建
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx
 ```
 
 ### 3. 批量构建所有驱动
@@ -92,9 +89,6 @@
 
 # 只构建 alpha-board 的所有驱动
 ./scripts/driver_helper/build_driver.sh --all --board=alpha-board
-
-# 使用 imx 内核构建所有驱动
-./scripts/driver_helper/build_driver.sh --all --kernel=imx
 ```
 
 ### 4. 清理构建产物
@@ -113,11 +107,11 @@
 ### 5. 组合使用
 
 ```bash
-# 使用 imx 内核构建 alpha-board 的所有驱动
-./scripts/driver_helper/build_driver.sh --all --board=alpha-board --kernel=imx
+# 构建 alpha-board 的所有驱动
+./scripts/driver_helper/build_driver.sh --all --board=alpha-board
 
-# 查看 mainline 内核的可用驱动
-./scripts/driver_helper/build_driver.sh --list --kernel=mainline
+# 查看可用驱动
+./scripts/driver_helper/build_driver.sh --list
 ```
 
 ## 构建产物
@@ -165,11 +159,11 @@ out/driver_artifacts/example-driver/alpha-board/
 ```bash
 # 方案1: 完整编译内核
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j$(nproc)
 
 # 方案2: 快速编译（仅生成必要文件）
 cd third_party/linux_mainline
-make O=../../out/mainline/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
+make O=../../out/linux ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- modules_prepare
 ```
 
 ### 2. 交叉编译工具链未找到
@@ -226,7 +220,7 @@ DEBUG=1 ./scripts/driver_helper/build_driver.sh example-driver
 
 # 查看详细的编译输出
 cd driver/example-driver/alpha-board
-make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -C ../../../third_party/linux_mainline M=$(pwd) O=../../../out/mainline/linux modules
+make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -C ../../../third_party/linux_mainline M=$(pwd) O=../../../out/linux modules
 ```
 
 ## 与其他脚本的配合
@@ -265,10 +259,9 @@ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -C ../../../third_party/li
 
 1. **首次构建前**：确保内核已配置和编译
 2. **批量构建**：使用 `--all` 时会构建所有驱动，可能需要较长时间
-3. **内核切换**：切换内核类型时，确保对应的内核已配置
-4. **清理操作**：`--clean` 会删除所有构建产物，但保留源码
-5. **板卡名称**：板卡名称必须与目录结构匹配
-6. **产物位置**：构建产物统一存放在 `out/driver_artifacts/` 目录
+3. **清理操作**：`--clean` 会删除所有构建产物，但保留源码
+4. **板卡名称**：板卡名称必须与目录结构匹配
+5. **产物位置**：构建产物统一存放在 `out/driver_artifacts/` 目录
 
 ## 高级用法
 
@@ -290,7 +283,7 @@ export ARCH=arm
 ```bash
 # 使用 make 的并行构建功能
 cd driver/example-driver/alpha-board
-make -j$(nproc) ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -C ../../../third_party/linux_mainline M=$(pwd) O=../../../out/mainline/linux modules
+make -j$(nproc) ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -C ../../../third_party/linux_mainline M=$(pwd) O=../../../out/linux modules
 ```
 
 ### 3. 增量构建

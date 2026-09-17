@@ -205,14 +205,14 @@ arm-none-linux-gnueabihf-gcc
 为什么用 NXP 分支而不是主线？因为 NXP 分支包含了 i.MX6ULL 的特定支持，比如 DDR 初始化代码、电源管理、特定的外设驱动等。主线 U-Boot 也在逐步加入这些支持，但可能还不够完善。
 
 ### Linux 内核版本
-我们使用 NXP 维护的 **linux-imx** 内核，版本 **6.12.3**：
+我们使用上游主线 **mainline Linux**，版本 **v7.1**：
 
 ```
-仓库：nxp-imx/linux-imx
-版本：rel/imx/6.12.3-1.0.0
+仓库：torvalds/linux（git.kernel.org）
+版本：v7.1（项目 pin 在该 tag）
 ```
 
-同样的理由，NXP 内核包含了 i.MX 系列芯片的完整驱动支持。主线内核也有支持，但某些外设（如 GPU、VPU）的驱动可能不完整。
+内核子模块是 `third_party/linux_mainline`（浅克隆、固定在 v7.1），板级支持通过 `patches/linux_mainline/` 的总补丁叠加回内核树。选择主线的理由：长期维护有保障，i.MX6ULL 的基础外设支持已经齐全，v7.1 在真板上实测能正常启动运行。NXP linux-imx 内核轨已于 2026-09 退役。
 
 ### BusyBox 版本
 我们使用 BusyBox **1.37.0**：

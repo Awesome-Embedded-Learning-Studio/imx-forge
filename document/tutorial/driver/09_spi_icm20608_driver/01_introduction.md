@@ -41,8 +41,8 @@ ICM-20608 是 TDK InvenSense 的一颗六轴传感器，把三轴陀螺仪、三
 ## 先认认环境
 
 - **板子**：I.MX6U-ALPHA，ICM-20608 接 ECSPI3，CS = GPIO1_IO20
-- **内核**：`linux-imx` 6.12.49（主开发）/ `mainline` 7.1.0（进阶）
-- **源码**：仓库 `third_party/linux-imx`、`third_party/linux_mainline`
+- **内核**：`mainline` 7.1.0 —— 项目唯一内核轨
+- **源码**：仓库 `third_party/linux_mainline`
 - **交叉工具链**：`arm-linux-gnueabihf-gcc`
 
 设备树用项目自己的 `imx6ull-aes.dtsi`。有一点和 I2C 那篇不同：项目的 dtsi 里**默认没有启用 ECSPI3**（连节点都没挂设备），所以设备树那节我们要从零把 ECSPI3 唤醒、配片选、再挂上 ICM-20608。

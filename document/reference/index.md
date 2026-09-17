@@ -39,13 +39,13 @@ title: 参考资源索引
 | 资源 | 链接 | 说明 |
 |------|------|------|
 | i.MX Linux BSP 官方页 | https://www.nxp.com/design/design-center/software/embedded-software/i-mx-software/embedded-linux-for-i-mx-applications-processors:IMXLINUX | BSP 发布包、Release Notes、用户指南 |
-| linux-imx 内核仓库 | https://github.com/nxp-imx/linux-imx | NXP 维护的 i.MX 内核（本项目 NXP 轨用此） |
+| linux-imx 内核仓库 | https://github.com/nxp-imx/linux-imx | NXP 维护的 i.MX 内核（本项目该轨已退役，仅作行业参考链接保留） |
 | meta-imx (Yocto BSP) | https://github.com/nxp-imx/meta-imx | Yocto Project i.MX BSP 层 |
 | mfgtools | https://github.com/nxp-imx/mfgtools/releases | NXP 官方量产烧录工具（UUU 上游） |
 | nxp-imx 组织 | https://github.com/nxp-imx | 全部 i.MX 相关仓库 |
 
-::: tip IMX-Forge 的双轨策略
-本项目同时用 NXP BSP（`third_party/linux-imx`，6.12.3，稳定）和 Mainline（`third_party/linux_mainline`，7.1，紧跟上游）。见 [kernel/ 教程](../tutorial/kernel/)。
+::: tip IMX-Forge 的内核单轨
+本项目内核只用上游 Mainline（`third_party/linux_mainline`，当前 pin 在 v7.1），真板实测 + CI 验证。NXP linux-imx 轨已于 2026-09 退役，上面的仓库链接仅作行业参考保留。见 [kernel/ 教程](../tutorial/kernel/)。
 :::
 
 ## 四、U-Boot

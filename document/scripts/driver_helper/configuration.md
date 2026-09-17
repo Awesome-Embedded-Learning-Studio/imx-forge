@@ -43,7 +43,7 @@ DEFAULT_BOARD="alpha-board"
 DEFAULT_KERNEL_TYPE="mainline"
 ```
 
-**说明**：指定默认的内核类型，影响驱动编译时的内核配置。
+**说明**：指定默认的内核类型，影响驱动编译时的内核配置。项目已单轨化，只有主线内核一条，`--kernel` 参数也已退役。
 
 **使用场景**：
 - 统一开发环境
@@ -53,22 +53,19 @@ DEFAULT_KERNEL_TYPE="mainline"
 ```bash
 # 使用配置文件中的默认内核类型
 ./scripts/driver_helper/build_driver.sh example-driver
-# 等价于
-./scripts/driver_helper/build_driver.sh example-driver --kernel=mainline
 ```
 
 **可选值**：
-- `mainline`：主线内核（默认）
-- `imx`：NXP BSP 内核
+- `mainline`：主线内核（默认且唯一）
 
-**内核类型对比**：
+**内核配置**：
 
-| 特性 | mainline | imx |
-|------|----------|-----|
-| 内核源码 | third_party/linux_mainline | third_party/linux-imx |
-| 配置文件 | imx_aes_mainline_defconfig | imx_aes_defconfig |
-| 输出目录 | out/mainline/linux | out/linux |
-| 特点 | 版本新、特性多 | 厂商优化、稳定性好 |
+| 特性 | mainline |
+|------|----------|
+| 内核源码 | third_party/linux_mainline |
+| 配置文件 | imx_aes_mainline_defconfig |
+| 输出目录 | out/linux |
+| 特点 | 上游主线内核，版本新、特性多 |
 
 ### 3. TFTP 部署目录
 
@@ -215,7 +212,7 @@ export TFTP_DIR="/tmp/tftp"
 # 默认板卡名称
 DEFAULT_BOARD="alpha-board"
 
-# 默认内核类型 (mainline 或 imx)
+# 默认内核类型 (mainline，单轨)
 DEFAULT_KERNEL_TYPE="mainline"
 
 # TFTP 部署目录
@@ -266,22 +263,7 @@ DEFAULT_KERNEL_TYPE="mainline"
 ./scripts/driver_helper/build_driver.sh example-driver gamma-board
 ```
 
-### 场景3：NXP BSP 内核开发
-
-**配置**：
-```bash
-DEFAULT_KERNEL_TYPE="imx"
-NFS_DIR="rootfs/nfs-imx"
-```
-
-**使用**：
-```bash
-# 使用 imx 内核构建
-./scripts/driver_helper/build_driver.sh example-driver
-./scripts/driver_helper/deploy_driver.sh out/driver_artifacts/example-driver/alpha-board --target=nfs
-```
-
-### 场景4：远程部署环境
+### 场景3：远程部署环境
 
 **配置**：
 ```bash
@@ -295,7 +277,7 @@ REMOTE_PATH="/lib/modules"
 ./scripts/driver_helper/deploy_driver.sh out/driver_artifacts/example-driver/alpha-board --target=remote
 ```
 
-### 场景5：CI/CD 环境
+### 场景4：CI/CD 环境
 
 **配置**：
 ```bash
@@ -331,7 +313,6 @@ vim scripts/driver_helper/driver_helper.conf
 ```bash
 # 临时覆盖配置（不影响配置文件）
 export DEFAULT_BOARD="beta-board"
-export DEFAULT_KERNEL_TYPE="imx"
 
 # 使用环境变量
 ./scripts/driver_helper/build_driver.sh example-driver
@@ -341,7 +322,7 @@ export DEFAULT_KERNEL_TYPE="imx"
 
 ```bash
 # 最高优先级，不影响配置文件和环境变量
-./scripts/driver_helper/build_driver.sh example-driver --kernel=imx --board=beta-board
+./scripts/driver_helper/build_driver.sh example-driver --board=beta-board
 ```
 
 ## 配置验证
@@ -456,7 +437,7 @@ TFTP_DIR="${HOME}/tftp-dev"
 
 # 生产环境
 DEFAULT_BOARD="prod-board"
-DEFAULT_KERNEL_TYPE="imx"
+DEFAULT_KERNEL_TYPE="mainline"
 TFTP_DIR="/srv/tftp-prod"
 ```
 

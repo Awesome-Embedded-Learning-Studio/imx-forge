@@ -34,24 +34,22 @@ release_finalize "<component>" "<output-dir>" ["<release-version>"]
 | component | reset 策略 | SOURCE_DATE_EPOCH | patch 处理 |
 |-----------|-----------|-------------------|-----------|
 | `uboot` | 跟 `origin` 默认分支（`lf_v2025.04` 回退） | 默认当前时间（banner 匹配构建时间） | 必需：`patches/uboot-imx/charlies_board.patch` |
-| `linux-imx` | 跟 `origin` 默认分支（`lf-6.12.y` 回退） | 固定 `1609459200`（2021-01-01） | 可选：`patches/linux-imx/linux-imx-latest.patch` |
-| `linux-mainline` | 锁定到超项目 gitlink commit（`git rev-parse HEAD:third_party/linux_mainline`） | 固定 `1609459200` | 取目录最新：`patches/linux_mainline/*.patch` |
+| `linux` | 锁定到超项目 gitlink commit（`git rev-parse HEAD:third_party/linux_mainline`） | 固定 `1609459200`（2021-01-01） | 取目录最新：`patches/linux_mainline/*.patch` |
 
-`patch-arg` 对 `uboot`/`linux-imx` 是 patch 文件路径，对 `linux-mainline` 是 patch 目录路径。`project-root` 仅 `linux-mainline` 需要（解析 gitlink）。
+`patch-arg` 对 `uboot` 是 patch 文件路径，对 `linux` 是 patch 目录路径。`project-root` 仅 `linux` 需要（解析 gitlink）。
 
 ## build_info.txt
 
-`release_finalize` 写入 `${output-dir}/build_info.txt`。两个 linux 轨**必须**含 `Kernel Track:` 行——`release-all.sh` Stage 2 用 `grep -q "Kernel Track: ${KERNEL_TRACK}"` 校验，mainline 轨缺失会硬退出。
+`release_finalize` 写入 `${output-dir}/build_info.txt`。组件只有 `uboot` 和 `linux` 两个键，manifest 里已没有 `Kernel Track:` 行。
 
 ```
 ========================================
-Linux Release Build Information       # U-Boot / Linux / Linux Mainline 三种 header
+Linux Release Build Information       # U-Boot / Linux 两种 header
 ========================================
 Release Version: <version>
 ...
 Linux Information:
 -------------------
-Kernel Track: imx                    # uboot 无此行;linux-imx=imx;linux-mainline=mainline
 Commit: <sha>
 ...
 ```

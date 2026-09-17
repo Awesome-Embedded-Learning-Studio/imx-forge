@@ -24,26 +24,24 @@ tree patches/
 
 ```
 patches/
-├── busybox/
-├── linux-imx/
 ├── linux_mainline/
+├── qemu/
 ├── uboot/
 └── uboot-imx/
 ```
 
-每个子模块对应一个补丁目录，存放针对该组件的补丁文件。这种组织方式的好处是补丁按组件分类，一目了然，而且多个补丁可以共存（比如你可以同时有 linux-imx 和 linux_mainline 的补丁）。
+每个组件对应一个补丁目录，存放针对该组件的补丁文件。这种组织方式的好处是补丁按组件分类，一目了然，内核和 U-Boot 的补丁各归各的目录，互不干扰。
 
 **看一下实际的补丁文件**：
 
 ```bash
-ls patches/linux-imx/
+ls patches/linux_mainline/
 ```
 
 你可能会看到类似：
 
 ```
-linux-imx-latest.patch
-linux-imx-patch_test-20260314.patch
+linux_mainline-feat-imx6ull_patches-20260828.patch
 ```
 
 补丁文件命名遵循 `组件名-分支名-日期.patch` 的格式，这样从文件名就能看出补丁的来源和时间。
@@ -81,10 +79,10 @@ git submodule update --init --recursive
 
 **进入要修改的子模块**：
 
-假设我们要修改 linux-imx 内核：
+假设我们要修改 mainline 内核（子模块 `third_party/linux_mainline`，pin 在上游 tag `v7.1`）：
 
 ```bash
-cd third_party/linux-imx
+cd third_party/linux_mainline
 ```
 
 **查看当前分支**：
@@ -96,21 +94,21 @@ git branch -vv
 你会看到类似：
 
 ```
-* imx_v2022.04  abc1234 [origin/imx_v2022.04] Linux 6.1.x
+* (HEAD detached at v7.1)
 ```
 
-当前在 `imx_v2022.04` 分支上，这是上游的默认分支。
+子模块是浅克隆、固定在 `v7.1` 标签上的，所以默认就是 detached HEAD 状态，不在任何分支上。
 
 **创建工作分支**：
 
 ```bash
-# 基于当前分支创建新分支
-git checkout -b my-feature origin/imx_v2022.04
+# 基于当前 v7.1 创建新分支
+git checkout -b my-feature
 ```
 
 分支名可以随便起，但建议用描述性的名字，比如 `fix-ethernet`、`add-spi-driver` 之类的。
 
-**踩坑经验**：很多人习惯直接在 `imx_v2022.04` 分支上改，改完才发现这是个 detached HEAD 状态，提交都没地方提交。所以一定要先创建自己的工作分支。
+**踩坑经验**：很多人习惯直接在 detached HEAD 状态上改，提交了才发现这些提交没挂在任何分支上，一切换引用就"丢了"（其实还能从 reflog 捞回来）。所以一定要先创建自己的工作分支——patch_maker.sh 在 detached HEAD 状态下也会直接报错退出。
 
 ---
 
@@ -144,7 +142,7 @@ git commit -m "Add IMX-Forge boot signature"
 **查看你的提交**：
 
 ```bash
-git log --oneline origin/imx_v2022.04..HEAD
+git log --oneline v7.1..HEAD
 ```
 
 你会看到：
@@ -153,7 +151,7 @@ git log --oneline origin/imx_v2022.04..HEAD
 abc1234 Add IMX-Forge boot signature
 ```
 
-冒号前面的 `abc1234` 是你的新提交，`origin/imx_v2022.04..HEAD` 表示"从上游分支到当前分支的差异"。
+冒号前面的 `abc1234` 是你的新提交，`v7.1..HEAD` 表示"从固定的 v7.1 基线到当前分支的差异"。
 
 ---
 
@@ -163,36 +161,36 @@ abc1234 Add IMX-Forge boot signature
 
 ```bash
 cd /home/charliechen/imx-forge
-./scripts/patch_maker.sh --submodule_path=linux-imx
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 ```
 
 **脚本执行过程**：
 
 ```
 === Patch Generation Summary ===
-Submodule:     linux-imx
-Default branch: imx_v2022.04
+Submodule:     linux_mainline
+Default branch: master
 Current branch: my-feature
 Commits:        1
-Output:         patches/linux-imx/linux-imx-my-feature-20260522.patch
+Output:         patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 
 Generating patch...
 ✓ Patch generated successfully!
-  File: patches/linux-imx/linux-imx-my-feature-20260522.patch
+  File: patches/linux_mainline/linux_mainline-my-feature-20260917.patch
   Size: 1.2K
 ```
 
 脚本做了几件事：
-1. 检测子模块的默认分支（`imx_v2022.04`）
+1. 检测子模块的默认分支（torvalds 上游是 `master`）
 2. 检测当前分支（`my-feature`）
 3. 计算两个分支之间的提交差异
-4. 生成补丁文件到 `patches/linux-imx/` 目录
+4. 生成补丁文件到 `patches/linux_mainline/` 目录
 5. 文件名包含分支名和当前日期
 
 **看一下生成的补丁文件**：
 
 ```bash
-cat patches/linux-imx/linux-imx-my-feature-20260522.patch
+cat patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 ```
 
 你会看到类似：
@@ -235,8 +233,8 @@ index def1234..abc5678 100644
 补丁生成后，记得提交到 Git：
 
 ```bash
-git add patches/linux-imx/linux-imx-my-feature-20260522.patch
-git commit -m "Add linux-imx patch for boot signature"
+git add patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+git commit -m "Add linux_mainline patch for boot signature"
 ```
 
 这样你的补丁就跟着项目走了，其他人拉取代码后也能自动应用。
@@ -251,22 +249,23 @@ git commit -m "Add linux-imx patch for boot signature"
 
 这是最常用的方式，构建脚本会自动调用。
 
-**应用 linux-imx 补丁**：
+**应用 mainline 内核补丁**：
 
 ```bash
-./scripts/apply_patches.sh linux-imx
+./scripts/apply_patches.sh linux_mainline
 ```
 
 **执行输出**：
 
 ```
 ========================================
-应用 linux-imx 补丁
+应用 linux_mainline 补丁
 ========================================
-补丁目录: patches/linux-imx
+补丁目录: patches/linux_mainline
+目标源码: third_party/linux_mainline
 补丁数量: 2
 
-应用: linux-imx-latest.patch (共 2 个补丁，仅应用最新)
+应用: linux_mainline-my-feature-20260917.patch (共 2 个补丁，仅应用最新)
   ✓ 成功
 
 ========================================
@@ -275,7 +274,7 @@ git commit -m "Add linux-imx patch for boot signature"
 ```
 
 脚本做了几件事：
-1. 扫描 `patches/linux-imx/` 目录，找到所有 `.patch` 文件
+1. 扫描 `patches/linux_mainline/` 目录，找到所有 `.patch` 文件
 2. 按文件名字母排序，取最后一个（最新的）
 3. 进入子模块目录，执行 `git apply --3way`
 4. 报告应用结果
@@ -291,13 +290,13 @@ git commit -m "Add linux-imx patch for boot signature"
 **方法一：使用 git apply**
 
 ```bash
-cd third_party/linux-imx
+cd third_party/linux_mainline
 
 # 检查补丁（不实际应用）
-git apply --stat ../../patches/linux-imx/linux-imx-latest.patch
+git apply --stat ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 
 # 应用补丁
-git apply ../../patches/linux-imx/linux-imx-latest.patch
+git apply ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 ```
 
 `--stat` 参数会显示补丁修改了哪些文件、多少行，但不实际应用。适合先预览一下。
@@ -305,8 +304,8 @@ git apply ../../patches/linux-imx/linux-imx-latest.patch
 **方法二：使用 patch 命令**
 
 ```bash
-cd third_party/linux-imx
-patch -p1 < ../../patches/linux-imx/linux-imx-latest.patch
+cd third_party/linux_mainline
+patch -p1 < ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 ```
 
 `-p1` 表示忽略路径的第一层目录（`a/` 和 `b/`），这是 Git 生成补丁的标准格式。
@@ -320,13 +319,13 @@ patch -p1 < ../../patches/linux-imx/linux-imx-latest.patch
 **冲突的表现**：
 
 ```bash
-./scripts/apply_patches.sh linux-imx
+./scripts/apply_patches.sh linux_mainline
 ```
 
 输出：
 
 ```
-应用: linux-imx-latest.patch
+应用: linux_mainline-my-feature-20260917.patch
   ✗ 失败
 
 error: patch failed: init/main.c:123
@@ -338,8 +337,8 @@ error: init/main.c: patch does not apply
 1. **进入子模块手动应用**
 
 ```bash
-cd third_party/linux-imx
-git apply --3way --reject ../../patches/linux-imx/linux-imx-latest.patch
+cd third_party/linux_mainline
+git apply --3way --reject ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 ```
 
 `--reject` 参数会把无法应用的部分保存到 `.rej` 文件，手动解决冲突。
@@ -373,7 +372,7 @@ git commit -m "Manually resolved patch conflict"
 
 # 回到项目根目录重新生成补丁
 cd /home/charliechen/imx-forge
-./scripts/patch_maker.sh --submodule_path=linux-imx
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 ```
 
 新补丁会基于最新的上游代码，以后就不会冲突了（除非上游又改了同一处）。
@@ -406,9 +405,8 @@ jobs:
 
       - name: Apply patches
         run: |
-          ./scripts/apply_patches.sh linux-imx
+          ./scripts/apply_patches.sh linux_mainline
           ./scripts/apply_patches.sh uboot-imx
-          ./scripts/apply_patches.sh busybox
 
       - name: Build
         run: ./scripts/release-all.sh
@@ -454,9 +452,9 @@ on:
 不要用 `patch1.patch`、`fix.patch` 这种模糊的名字。使用 `组件名-功能描述-日期.patch` 格式：
 
 ```
-linux-imx-fix-ethernet-20260522.patch
-uboot-imx-add-spi-driver-20260522.patch
-busybox-enable-telnet-20260522.patch
+linux_mainline-fix-ethernet-20260917.patch
+uboot-imx-add-spi-driver-20260917.patch
+busybox-enable-telnet-20260917.patch
 ```
 
 这样从文件名就能看出补丁的内容和时间。
@@ -472,28 +470,28 @@ busybox-enable-telnet-20260522.patch
 **✅ 好**：三个独立补丁，各改一个功能
 
 ```bash
-linux-imx-fix-ethernet-20260522.patch
-linux-imx-fix-storage-20260522.patch
-linux-imx-add-gpio-driver-20260522.patch
+linux_mainline-fix-ethernet-20260917.patch
+linux_mainline-fix-storage-20260917.patch
+linux_mainline-add-gpio-driver-20260917.patch
 ```
 
 ---
 
 ### 3. 定期更新补丁
 
-上游子模块会持续更新，长期不维护的补丁最终会无法应用。
+主线内核持续推进，项目升级 pin 的内核版本之后，长期不维护的补丁最终会无法应用。
 
-建议每个月（或者上游更新后）重新生成一次补丁：
+建议每次升级 pin 的 tag 后（或者隔一段时间）重新生成一次补丁：
 
 ```bash
-# 更新子模块
-git submodule update --remote third_party/linux-imx
+# 同步子模块（回到项目 pin 的版本）
+git submodule update --init third_party/linux_mainline
 
 # 重新应用补丁
-./scripts/apply_patches.sh linux-imx
+./scripts/apply_patches.sh linux_mainline
 
 # 如果有冲突，手动解决后重新生成
-./scripts/patch_maker.sh --submodule_path=linux-imx
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 ```
 
 ---
@@ -529,13 +527,13 @@ Related issue: #123
 
 ```bash
 # 重置子模块到原始状态
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git clean -fdx
-git reset --hard origin/imx_v2022.04
+git reset --hard v7.1
 
 # 回到项目根目录应用补丁
 cd /home/charliechen/imx-forge
-./scripts/apply_patches.sh linux-imx
+./scripts/apply_patches.sh linux_mainline
 ```
 
 如果这里失败了，说明补丁有问题，需要重新生成。
@@ -548,7 +546,7 @@ cd /home/charliechen/imx-forge
 
 ```gitignore
 # 子模块的修改应该通过补丁管理，不直接提交
-third_party/linux-imx/
+third_party/linux_mainline/
 third_party/uboot-imx/
 third_party/busybox/
 ```
@@ -562,7 +560,7 @@ third_party/busybox/
 如果补丁 B 依赖补丁 A（比如 B 修改了 A 添加的代码），要在补丁说明里注明：
 
 ```
-Depends-on: linux-imx-base-driver-20260501.patch
+Depends-on: linux_mainline-base-driver-20260901.patch
 ```
 
 这样应用补丁时就知道顺序。不过 IMX-Forge 的"仅应用最新补丁"策略下，这种情况应该合并成一个补丁，避免依赖问题。

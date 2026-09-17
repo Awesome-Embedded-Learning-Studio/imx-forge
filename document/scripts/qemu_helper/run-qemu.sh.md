@@ -70,7 +70,7 @@ scripts/qemu_helper/run-qemu.sh --no-build
 - `--no-build` 下产物缺失直接报错退出，不会偷偷构建——CI 里防止意外覆盖
   缓存产物
 - 内核 zImage 不在自动重建范围（重编内核是显式的重活，脚本不越界替你跑
-  `build-mainline-linux.sh`）
+  `build-linux.sh`）
 
 ## 关键实现细节
 

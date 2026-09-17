@@ -38,24 +38,12 @@
 - 产物：`out/uboot/u-boot-dtb.imx`
 - 保留期：7 天
 
-### linux-imx - Linux NXP BSP 构建
-
-- 超时：18 分钟
-- 产物：`zImage`, `imx6ull-aes.dtb`
-- 保留期：7 天
-
-### linux-mainline - Linux Mainline 构建
+### linux - Linux (Mainline) 构建
 
 - 超时：18 分钟
 - 产物：`zImage`
 - 保留期：7 天
-- **与 linux-imx 并行运行**
-
-### busybox - BusyBox 构建
-
-- 超时：10 分钟
-- 产物：`busybox` 二进制
-- 保留期：7 天
+- **与 U-Boot 等其他组件 job 并行运行**
 
 ### drivers - 驱动构建
 
@@ -67,7 +55,6 @@
 | 场景 | 时间 |
 |------|------|
 | 单个组件 | 8-18 分钟 |
-| 双内核并行 | ~18 分钟 |
 | 全部组件 | ~20 分钟 |
 
 ## 缓存策略
@@ -77,4 +64,4 @@
 
 ## 并行执行
 
-Linux NXP BSP 和 Linux Mainline 内核构建**并行运行**，充分利用 CI 资源。
+U-Boot、Linux (Mainline)、Drivers 各 job 由路径检测结果触发，相互**并行运行**，充分利用 CI 资源。内核只有 Linux (Mainline) 一个 job，没有第二个内核轨的构建。

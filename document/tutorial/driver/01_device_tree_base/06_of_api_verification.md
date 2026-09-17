@@ -212,7 +212,7 @@ static inline void of_node_put(struct device_node *node) { }
 ### of_find_node_by_path 在 IMX 内核中
 
 ```bash
-$ cd /home/charliechen/imx-forge/third_party/linux-imx
+$ cd /home/charliechen/imx-forge/third_party/linux_mainline
 $ git grep -B3 -A3 "of_find_node_by_path" include/linux/of.h
 ```
 

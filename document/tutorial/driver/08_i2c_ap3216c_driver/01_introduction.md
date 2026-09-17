@@ -22,11 +22,11 @@ AP3216C 是 Lite-On（立錡）的一颗三合一传感器，把红外（IR）�
 
 ## 先认认环境
 
-我们这次跑在两套内核上，驱动代码两边通用，这里感谢AI，下面的内容是它基于我们仓库编写的：
+我们这次跑在 mainline 7.1 这套内核上，这里感谢AI，下面的内容是它基于我们仓库编写的：
 
 - **板子**：I.MX6U-ALPHA，AP3216C 挂 I2C1，地址 `0x1e`
-- **内核**：`linux-imx` 6.12.49（NXP BSP，主开发环境）/ `mainline` 7.1.0（进阶验证）
-- **源码**：仓库 `third_party/linux-imx`、`third_party/linux_mainline`
+- **内核**：`mainline` 7.1.0 —— 项目唯一内核轨
+- **源码**：仓库 `third_party/linux_mainline`
 - **交叉工具链**：`arm-linux-gnueabihf-gcc`（编译测试程序）
 
 ## 老教程 vs 新内核：到底差在哪

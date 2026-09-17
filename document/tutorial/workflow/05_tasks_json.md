@@ -14,7 +14,7 @@ title: VSCode tasks.json：把构建绑到快捷键
 
 ## 一、把构建脚本绑到快捷键
 
-咱们一天里敲得最熟的几条命令长这样：`./scripts/release-all.sh` 跑完整链路，`./scripts/build_helper/build-mainline-linux.sh` 重编主线内核，`./scripts/build_helper/buildroot_menuconfig.sh` 进菜单调选项。路径越长手滑的概率越高，笔者就不止一次把 `buildroot_menuconfig` 敲成 `buildroot-menuconfig`，然后对着 `command not found` 愣两秒。VSCode 的任务系统就是给这类命令做代理的：命令写进 `tasks.json`，`Ctrl+Shift+B` 触发默认构建任务，其余的在命令面板（`Ctrl+Shift+P` → `Tasks: Run Task`）里按名字选。
+咱们一天里敲得最熟的几条命令长这样：`./scripts/release-all.sh` 跑完整链路，`./scripts/build_helper/build-linux.sh` 重编主线内核，`./scripts/build_helper/buildroot_menuconfig.sh` 进菜单调选项。路径越长手滑的概率越高，笔者就不止一次把 `buildroot_menuconfig` 敲成 `buildroot-menuconfig`，然后对着 `command not found` 愣两秒。VSCode 的任务系统就是给这类命令做代理的：命令写进 `tasks.json`，`Ctrl+Shift+B` 触发默认构建任务，其余的在命令面板（`Ctrl+Shift+P` → `Tasks: Run Task`）里按名字选。
 
 这些任务放哪？仓库根下的 `.vscode/` 目录。笔者写本篇时 ls 过仓库根，这个目录当前并不存在，原因在 .gitignore 第 12 行：
 
@@ -44,7 +44,7 @@ ls scripts/build_helper/
 ```text
 build-buildroot.sh
 build-linux.sh
-build-mainline-linux.sh
+build-linux.sh
 build-qemu.sh
 build-uboot.sh
 buildroot_menuconfig.sh
@@ -85,7 +85,7 @@ release-all 是全量构建的默认任务，`group` 里的 `isDefault: true` �
     {
       "label": "build: 主线内核 (mainline)",
       "type": "shell",
-      "command": "./scripts/build_helper/build-mainline-linux.sh",
+      "command": "./scripts/build_helper/build-linux.sh",
       "group": "build",
       "presentation": { "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$gcc"]
@@ -130,7 +130,7 @@ menuconfig 调 rootfs 配置，clean 清理 Buildroot 输出，咱们也从 Run 
     {
       "label": "clangd: 生成 compile_commands.json",
       "type": "shell",
-      "command": "make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=${workspaceFolder}/out/mainline/linux compile_commands.json",
+      "command": "make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=${workspaceFolder}/out/linux compile_commands.json",
       "detail": "需先构建过一次内核，见 clangd 配置篇；json 生成后拷回或软链到 third_party/linux_mainline/（.clangd 指向那里）",
       "presentation": { "reveal": "always", "panel": "shared" }
     }
@@ -138,7 +138,7 @@ menuconfig 调 rootfs 配置，clean 清理 Buildroot 输出，咱们也从 Run 
 }
 ```
 
-这条 make 的 `O=` 咱们特意写成 `${workspaceFolder}`，VSCode 跑任务时会把它替换成工作区根的绝对路径。为什么不用相对路径：内核顶层 Makefile 对 `O=` 的解析发生在 `make -C` 切进源码树之后，写 `out/mainline/linux` 会落到 `third_party/linux_mainline/out/mainline/linux` 里去——仓库里那个空目录就是这个写法踩出来的残留；真产物在仓库根的 `out/mainline/linux`，`build-mainline-linux.sh` 里用的就是绝对路径。生成后咱们还要把 json 拷回或软链成 `third_party/linux_mainline/compile_commands.json`，根目录 `.clangd` 的 CompilationDatabase 指的是那里，这是 04 篇定下的约定。这条命令笔者在本仓库真跑过一遍，`GEN compile_commands.json` 一行输出，9.3MB 的 json 按预期落在 `out/mainline/linux/` 下。
+这条 make 的 `O=` 咱们特意写成 `${workspaceFolder}`，VSCode 跑任务时会把它替换成工作区根的绝对路径。为什么不用相对路径：内核顶层 Makefile 对 `O=` 的解析发生在 `make -C` 切进源码树之后，写 `out/linux` 会落到 `third_party/linux_mainline/out/linux` 里去——仓库里那个空目录就是这个写法踩出来的残留；真产物在仓库根的 `out/linux`，`build-linux.sh` 里用的就是绝对路径。生成后咱们还要把 json 拷回或软链成 `third_party/linux_mainline/compile_commands.json`，根目录 `.clangd` 的 CompilationDatabase 指的是那里，这是 04 篇定下的约定。这条命令笔者在本仓库真跑过一遍，`GEN compile_commands.json` 一行输出，9.3MB 的 json 按预期落在 `out/linux/` 下。
 
 咱们贴完保存，八条齐了。
 

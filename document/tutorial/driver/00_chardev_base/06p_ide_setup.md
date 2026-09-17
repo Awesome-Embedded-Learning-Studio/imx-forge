@@ -36,7 +36,6 @@ title: IDE 配置指南
 ```bash
 # 确认内核源码存在
 ls -la third_party/linux_mainline/include/linux
-ls -la third_party/linux_imx/include/linux  # 如果使用 imx 内核
 ```
 
 ### 3. 检查编译器
@@ -97,7 +96,7 @@ head -30 third_party/linux_mainline/compile_commands.json
 ```json
 {
   "command": "arm-none-linux-gnueabihf-gcc -I... -D__KERNEL__ ... -c file.c",
-  "directory": "/home/charliechen/imx-forge/out/mainline/linux",
+  "directory": "/home/charliechen/imx-forge/out/linux",
   "file": "/path/to/source/file.c"
 }
 ```

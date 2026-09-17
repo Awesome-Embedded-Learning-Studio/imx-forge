@@ -33,7 +33,7 @@
 ```
 patch_maker.sh
     ├─ git (版本控制工具)
-    └─ 子模块目录 (third_party/linux-imx, uboot-imx, busybox)
+    └─ 子模块目录 (third_party/linux_mainline, uboot-imx, busybox)
 ```
 
 ## 参数说明
@@ -56,11 +56,12 @@ patch_maker.sh
 
 | 输入格式 | 解析结果 |
 |----------|----------|
-| `linux-imx` | `linux-imx` |
-| `linux_imx` | `linux-imx` (下划线转连字符) |
-| `third_party/linux-imx` | `linux-imx` (移除前缀) |
+| `linux_mainline` | `linux_mainline` |
+| `third_party/linux_mainline` | `linux_mainline` (移除前缀) |
 | `uboot-imx` | `uboot-imx` |
 | `busybox` | `busybox` |
+
+脚本先按输入的原始名字找 `third_party/` 下的目录；找不到时才尝试把下划线换成连字符再找一次（兼容 `uboot-imx` 这类连字符目录）。`linux_mainline` 目录本身就是下划线命名，保持原名不动。脚本 usage 列出的子模块只有 `linux_mainline`、`uboot-imx`、`busybox` 三个。
 
 ### 输出目录规则
 
@@ -152,22 +153,25 @@ done
 **处理步骤**：
 
 ```bash
-# 1. 下划线转连字符
-SUBMODULE_NAME="${SUBMODULE_PATH//_/-}"
+# 1. 移除 third_party/ 前缀
+SUBMODULE_NAME="${SUBMODULE_PATH#third_party/}"
 
-# 2. 移除 third_party/ 前缀
-SUBMODULE_NAME="${SUBMODULE_NAME#third_party/}"
-
-# 3. 构造完整路径
+# 2. 构造完整路径（先按原名找）
 SUBMODULE_FULL_PATH="$REPO_BASE_DIR/third_party/$SUBMODULE_NAME"
+
+# 3. 找不到时把下划线转连字符再试一次（兼容连字符目录）
+if [[ ! -d "$SUBMODULE_FULL_PATH" ]]; then
+    SUBMODULE_NAME_HYPHEN="${SUBMODULE_NAME//_/-}"
+    ...
+fi
 ```
 
 **示例**：
 
 | 输入 | SUBMODULE_NAME | SUBMODULE_FULL_PATH |
 |------|----------------|---------------------|
-| `linux-imx` | `linux-imx` | `PROJECT_ROOT/third_party/linux-imx` |
-| `linux_imx` | `linux-imx` | `PROJECT_ROOT/third_party/linux-imx` |
+| `linux_mainline` | `linux_mainline` | `PROJECT_ROOT/third_party/linux_mainline` |
+| `third_party/linux_mainline` | `linux_mainline` | `PROJECT_ROOT/third_party/linux_mainline` |
 | `third_party/uboot-imx` | `uboot-imx` | `PROJECT_ROOT/third_party/uboot-imx` |
 
 **为什么需要规范化**：
@@ -274,7 +278,7 @@ git format-patch "origin/$DEFAULT_BRANCH..$CURRENT_BRANCH" --stdout > "$PATCH_FU
 使用 `--stdout` 将所有合并到一个文件，更易于管理：
 
 ```
-linux-imx-feature-branch-20250315.patch
+linux_mainline-feature-branch-20250315.patch
 ```
 
 #### 补丁文件命名
@@ -297,7 +301,7 @@ PATCH_FILENAME="${SUBMODULE_NAME}-${CURRENT_BRANCH}-${DATE}.patch"
 
 | 子模块 | 分支 | 日期 | 文件名 |
 |--------|------|------|--------|
-| `linux-imx` | `feature-uart` | `20250315` | `linux-imx-feature-uart-20250315.patch` |
+| `linux_mainline` | `feature-uart` | `20250315` | `linux_mainline-feature-uart-20250315.patch` |
 | `uboot-imx` | `fix-emmc` | `20250315` | `uboot-imx-fix-emmc-20250315.patch` |
 
 **为什么这种命名格式**：
@@ -311,40 +315,40 @@ PATCH_FILENAME="${SUBMODULE_NAME}-${CURRENT_BRANCH}-${DATE}.patch"
 ### 基本用法
 
 ```bash
-# 为 linux-imx 子模块的当前分支生成补丁
-./scripts/patch_maker.sh --submodule_path=linux-imx
+# 为 linux_mainline 子模块的当前分支生成补丁
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 ```
 
 ### 指定输出目录
 
 ```bash
 # 输出到自定义目录
-./scripts/patch_maker.sh --submodule_path=linux-imx --output=my_patches/
+./scripts/patch_maker.sh --submodule_path=linux_mainline --output=my_patches/
 ```
 
 ### 使用不同的名称格式
 
 ```bash
-# 使用下划线（自动转换为连字符）
-./scripts/patch_maker.sh --submodule_path=linux_imx
-
 # 使用完整路径（自动去除前缀）
-./scripts/patch_maker.sh --submodule_path=third_party/uboot-imx
+./scripts/patch_maker.sh --submodule_path=third_party/linux_mainline
+
+# 连字符目录（如 uboot-imx）直接用连字符名
+./scripts/patch_maker.sh --submodule_path=uboot-imx
 ```
 
 ### 输出示例
 
 ```
 === Patch Generation Summary ===
-Submodule:     linux-imx
+Submodule:     linux_mainline
 Default branch: master
 Current branch: feature-custom-driver
 Commits:        3
-Output:         /home/user/imx-forge/patches/linux-imx/linux-imx-feature-custom-driver-20250315.patch
+Output:         /home/user/imx-forge/patches/linux_mainline/linux_mainline-feature-custom-driver-20250315.patch
 
 Generating patch...
 ✓ Patch generated successfully!
-  File: /home/user/imx-forge/patches/linux-imx/linux-imx-feature-custom-driver-20250315.patch
+  File: /home/user/imx-forge/patches/linux_mainline/linux_mainline-feature-custom-driver-20250315.patch
   Size: 15K
 ```
 
@@ -356,7 +360,7 @@ Generating patch...
 
 ```bash
 # 1. 进入子模块目录
-cd third_party/linux-imx
+cd third_party/linux_mainline
 
 # 2. 创建功能分支
 git checkout -b feature-custom-driver
@@ -370,11 +374,11 @@ git commit -m "Add custom driver"
 cd ../..
 
 # 5. 生成补丁
-./scripts/patch_maker.sh --submodule_path=linux-imx
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 
-# 6. 补丁现在在 patches/linux-imx/ 目录
-ls patches/linux-imx/
-# linux-imx-feature-custom-driver-20250315.patch
+# 6. 补丁现在在 patches/linux_mainline/ 目录
+ls patches/linux_mainline/
+# linux_mainline-feature-custom-driver-20250315.patch
 ```
 
 ### 应用补丁
@@ -383,12 +387,12 @@ ls patches/linux-imx/
 
 ```bash
 # 1. 确保子模块在正确的基准版本
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git checkout master
 git pull
 
 # 2. 应用补丁
-git am ../../patches/linux-imx/linux-imx-feature-custom-driver-20250315.patch
+git am ../../patches/linux_mainline/linux_mainline-feature-custom-driver-20250315.patch
 
 # 3. 如果有冲突，解决后继续
 git add .
@@ -402,15 +406,15 @@ git am --continue
 ```
 PROJECT_ROOT/
 ├── patches/
-│   ├── linux-imx/
-│   │   ├── linux-imx-feature-xxx-20250315.patch
-│   │   └── linux-imx-fix-yyy-20250316.patch
+│   ├── linux_mainline/
+│   │   ├── linux_mainline-feature-xxx-20250315.patch
+│   │   └── linux_mainline-fix-yyy-20250316.patch
 │   ├── uboot-imx/
 │   │   └── uboot-imx-feature-zzz-20250315.patch
 │   └── busybox/
 │       └── busybox-config-20250315.patch
 └── third_party/
-    ├── linux-imx/    # 子模块
+    ├── linux_mainline/    # 子模块
     ├── uboot-imx/    # 子模块
     └── busybox/      # 子模块
 ```
@@ -419,7 +423,7 @@ PROJECT_ROOT/
 
 | 名称 | 说明 |
 |------|------|
-| `linux-imx` | NXP Linux 内核 |
+| `linux_mainline` | 上游主线 Linux 内核 |
 | `uboot-imx` | NXP U-Boot |
 | `busybox` | BusyBox 工具集 |
 
@@ -430,7 +434,7 @@ PROJECT_ROOT/
 #### 错误 1：子模块未找到
 
 ```
-[ERROR] Submodule 'linux-imx' not found at third_party/linux-imx
+[ERROR] Submodule 'linux_mainline' not found at third_party/linux_mainline
 ```
 
 **原因**：子模块目录不存在
@@ -448,7 +452,7 @@ ls third_party/
 #### 错误 2：不是 git 仓库
 
 ```
-[ERROR] 'third_party/linux-imx' is not a git repository
+[ERROR] 'third_party/linux_mainline' is not a git repository
 ```
 
 **原因**：目录存在但不是 git 仓库
@@ -457,14 +461,14 @@ ls third_party/
 
 ```bash
 # 检查 .git 是否存在
-ls -la third_party/linux-imx/.git
+ls -la third_party/linux_mainline/.git
 
 # 如果是文件（子模块），读取内容
-cat third_party/linux-imx/.git
+cat third_party/linux_mainline/.git
 
 # 重新初始化子模块
-git submodule deinit third_party/linux-imx
-git submodule update --init third_party/linux-imx
+git submodule deinit third_party/linux_mainline
+git submodule update --init third_party/linux_mainline
 ```
 
 #### 错误 3：Detached HEAD 状态
@@ -479,7 +483,7 @@ git submodule update --init third_party/linux-imx
 
 ```bash
 # 创建或切换到分支
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git checkout -b my-feature-branch
 
 # 或切换到现有分支
@@ -499,14 +503,14 @@ git checkout existing-branch
 
 ```bash
 # 创建功能分支
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git checkout -b my-feature-branch
 
 # 进行修改...
 
 # 然后生成补丁
 cd ../..
-./scripts/patch_maker.sh --submodule_path=linux-imx
+./scripts/patch_maker.sh --submodule_path=linux_mainline
 ```
 
 #### 错误 5：无提交差异
@@ -521,7 +525,7 @@ cd ../..
 
 ```bash
 # 确保有提交
-cd third_party/linux-imx
+cd third_party/linux_mainline
 git log master..my-branch
 
 # 如果没有输出，说明没有新提交

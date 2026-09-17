@@ -149,7 +149,7 @@ FATAL ERROR: Syntax error parsing input tree
 
 翻开 dtsi 一看,节点定义就是光秃秃的 `memory-controller@21b0000 {`(第 989 行),没起名字。没有 label,只能用完整路径引用:`&{/soc/bus@2100000/memory-controller@21b0000}`。
 
-还有一道编译工序容易漏:dts 里的 `#include` 要过 C 预处理器,内核构建里这活由 `scripts/Makefile.lib` 干,咱们自己编就得手动 `cpp -x assembler-with-cpp`,并且 `-I` 要指到 `arch/arm/boot/dts/nxp/imx/`——v7.1 内核把 i.MX 的 dtsi 全挪进了这个子目录,笔者第一版脚本就栽在这。dtc 也有讲究:用内核树里编出来的那份(`out/mainline/linux/scripts/dtc/dtc`),它带着内核的补丁(地址单元格检查之类),系统自带的 dtc 对某些内核 dtsi 会挑刺。
+还有一道编译工序容易漏:dts 里的 `#include` 要过 C 预处理器,内核构建里这活由 `scripts/Makefile.lib` 干,咱们自己编就得手动 `cpp -x assembler-with-cpp`,并且 `-I` 要指到 `arch/arm/boot/dts/nxp/imx/`——v7.1 内核把 i.MX 的 dtsi 全挪进了这个子目录,笔者第一版脚本就栽在这。dtc 也有讲究:用内核树里编出来的那份(`out/linux/scripts/dtc/dtc`),它带着内核的补丁(地址单元格检查之类),系统自带的 dtc 对某些内核 dtsi 会挑刺。
 
 最后是纪律问题。仓库的设备树工作流要求改共享 `imx6ull-aes.dtsi` 时三处同步(patch、子模块、`driver/device_tree/` 副本)。变体不进内核树,不在三处之列;但它 include 了 dtsi,dtsi 一变它就得重编。靠人记这事迟早出事,第五章把新鲜度检查交给脚本。
 

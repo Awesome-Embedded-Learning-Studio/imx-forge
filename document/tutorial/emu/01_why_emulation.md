@@ -12,7 +12,7 @@
 咱们先干一件有点羞辱性的事:把 CI 的「验证」环节翻出来看。`.github/workflows/ci-build.yml` 里,内核产物在构建完成之后经过的全部运行时检查,就这一行:
 
 ```yaml
-file out/mainline/linux/arch/arm/boot/zImage | grep -q ARM
+file out/linux/arch/arm/boot/zImage | grep -q ARM
 ```
 
 `file` 认出这是个 ARM 镜像,检查通过;dtb 那边查的是「文件存在」。一个把启动路径改挂的提交——比如设备树里写错一个时钟引用——照样拿绿灯,直到有人烧到板子上对着串口发呆。产物在,和产物能开机,中间隔着一整条启动链,这条链在今天的项目里靠人肉把关。

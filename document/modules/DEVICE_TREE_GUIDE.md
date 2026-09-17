@@ -1237,7 +1237,7 @@ cp imx6ull-aes.dts imx6ull-myboard.dts
 cp imx6ull-aes.dtsi imx6ull-myboard.dtsi
 
 # 在Linux设备树目录创建新板卡
-cd third_party/linux-imx/arch/arm/boot/dts/nxp/imx/
+cd third_party/linux_mainline/arch/arm/boot/dts/nxp/imx/
 cp imx6ull-aes.dts imx6ull-myboard.dts
 cp imx6ull-aes.dtsi imx6ull-myboard.dtsi
 ```
@@ -1354,7 +1354,7 @@ cd third_party/uboot-imx
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- imx6ull-myboard.dtb
 
 # 编译Linux设备树
-cd third_party/linux-imx
+cd third_party/linux_mainline
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 ```
 
@@ -1627,7 +1627,7 @@ dtc -I dts -O dtb \
 
 ```bash
 # 方法1：使用Linux Makefile
-cd third_party/linux-imx
+cd third_party/linux_mainline
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 
 # 方法2：直接编译单个文件

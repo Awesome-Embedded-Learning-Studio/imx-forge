@@ -28,8 +28,7 @@ title: CI/CD
 | 修改路径 | 触发构建 |
 |----------|----------|
 | `patches/uboot/**` | U-Boot |
-| `patches/linux-imx/**` | NXP BSP 内核 |
-| `patches/linux-mainline/**` | Mainline 内核 |
+| `patches/linux_mainline/**` | Mainline 内核 |
 | `driver/**` | 驱动示例 |
 
 **ci-build** 只构建你修改的部分，节省时间。
@@ -38,7 +37,7 @@ title: CI/CD
 ::: warning 需要完整验证？
 给 PR 添加 `full-build` 标签即可触发 **ci-full**：
 
-Stage 1: U-Boot → Stage 2: 双内核并行 → Stage 3: BusyBox → Stage 4: RootFS
+Stage 1: U-Boot → Stage 2: Linux (Mainline) → Stage 3+4: BusyBox & RootFS
 :::
 
 ---

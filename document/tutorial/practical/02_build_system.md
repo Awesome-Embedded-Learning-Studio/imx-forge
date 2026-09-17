@@ -259,11 +259,11 @@ Linux 内核是操作系统的核心，负责管理硬件资源和提供系统�
 
 ### 获取内核源码
 
-Linux 内核源码在 `third_party/linux-imx/` 目录下：
+Linux 内核源码在 `third_party/linux_mainline/` 目录下：
 
 ```bash
 cd /home/charliechen/imx-forge
-git submodule update --init --remote third_party/linux-imx
+git submodule update --init third_party/linux_mainline
 ```
 
 ### 运行构建脚本
@@ -307,25 +307,25 @@ All required toolchain components found
 #### 3. 配置内核
 
 ```bash
-[INFO] Configuring Linux kernel with imx_aes_defconfig...
-make -C third_party/linux-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/linux imx_aes_defconfig
+[INFO] Configuring Linux kernel with imx_aes_mainline_defconfig...
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/linux imx_aes_mainline_defconfig
 ```
 
-这里使用 `imx_aes_defconfig` 配置，针对 i.MX6ULL 平台进行了优化。
+这里使用 `imx_aes_mainline_defconfig` 配置，针对 i.MX6ULL 平台进行了优化。
 
-> **注意：** `imx_aes_defconfig` 是 IMX-Forge 项目自定义的配置文件（包含通过补丁添加的 AES 板卡支持），在使用前需要确保已应用项目补丁。构建脚本会自动处理补丁应用。
+> **注意：** `imx_aes_mainline_defconfig` 是 IMX-Forge 项目自定义的配置文件（由项目模板生成，包含 AES 板卡支持），在使用前需要确保已应用项目补丁。构建脚本会自动处理补丁应用。
 
 **经验**：如果想自定义内核配置，可以运行 `make menuconfig`：
 
 ```bash
-make -C third_party/linux-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/linux menuconfig
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/linux menuconfig
 ```
 
 #### 4. 编译内核
 
 ```bash
 [INFO] Building Linux kernel...
-make -C third_party/linux-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/linux -j8
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/linux -j8
 ```
 
 内核编译比 U-Boot 要慢得多，可能需要 10-30 分钟（取决于 CPU 和缓存）。

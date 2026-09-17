@@ -6,12 +6,11 @@ title: 电容触摸驱动教程（goodix）
 
 ## 版本说明
 
-本教程基于以下内核版本，主线 `goodix.c` 在两边都默认编译进内核、开箱即用（alpha 板 defconfig 已开 `CONFIG_TOUCHSCREEN_GOODIX=y`）：
+本教程基于以下内核版本，主线 `goodix.c` 默认编译进内核、开箱即用（alpha 板 defconfig 已开 `CONFIG_TOUCHSCREEN_GOODIX=y`）：
 
-- **linux-imx** 6.12.49 <Badge type="tip" text="推荐" />
-- **mainline** 7.1.0 <Badge type="info" text="进阶" />
+- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
-源码就躺在仓库的 `third_party/linux-imx` 与 `third_party/linux_mainline` 下，文中每一处函数签名、行号都对着 `drivers/input/touchscreen/goodix.c` 核对过。
+源码就躺在仓库的 `third_party/linux_mainline` 下，文中每一处函数签名、行号都对着 `drivers/input/touchscreen/goodix.c` 核对过。
 
 ## 这一篇要解决什么问题
 

@@ -33,7 +33,6 @@ cd third_party/linux_mainline
 
 支持的组件名称：
 - `linux_mainline` - 主线内核补丁
-- `linux-imx` - NXP BSP 内核补丁
 - `uboot-imx` - U-Boot 补丁
 - `busybox` - BusyBox 补丁
 
