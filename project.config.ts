@@ -67,8 +67,8 @@ export default defineProject({
     // readingUX / codeFold 不写也默认 true(defineProject 兜底),这里显式写明意图。
     readingUX: true,
     codeFold: true,
-    // Mermaid 图表:开启 —— ```mermaid 块渲染为 SVG(客户端按需从 jsdelivr CDN 加载)。
-    // 离线/内网环境图渲染失败(不影响其它内容);需关闭时改 false。
+    // Mermaid 图表:开启 —— ```mermaid 块渲染为 SVG(客户端 npm mermaid 按需加载,打进
+    // 独立懒加载 chunk,离线可用;当前页真有图才下载)。需关闭时改 false。
     mermaid: true,
   },
 
