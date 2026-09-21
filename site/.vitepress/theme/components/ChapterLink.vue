@@ -20,15 +20,22 @@ const resolvedHref = computed(() => props.href.replace(/\.md(?=#|$)/, ''))
 // 外层 ChapterNav provide 的是 ref(变体变化要联动子卡);兼容历史裸字符串注入。
 const navVariant = inject<Ref<'main' | 'sub'> | 'main' | 'sub'>('chapterNavVariant', 'main')
 const effectiveVariant = computed(() => props.variant ?? unref(navVariant))
+
+// 徽章两位数补零只对数字编号有意义:非数字 num(如教程主页的「★」)原样显示,
+// 老逻辑无脑 padStart 会把它补成「0★」。
+const badgeText = computed(() => {
+  const raw = String(props.num)
+  return /^\d+$/.test(raw) ? raw.padStart(2, '0') : raw
+})
 </script>
 
 <template>
   <a :href="resolvedHref" class="chapter-link" :class="[`chapter-link--${effectiveVariant}`]">
     <span v-if="effectiveVariant === 'main' && num !== undefined" class="chapter-badge">
-      {{ String(num).padStart(2, '0') }}
+      {{ badgeText }}
     </span>
     <span v-else-if="effectiveVariant === 'sub'" class="chapter-node" aria-hidden="true">
-      <span v-if="num !== undefined">{{ String(num).padStart(2, '0') }}</span>
+      <span v-if="num !== undefined">{{ badgeText }}</span>
       <span v-else class="chapter-node-auto" />
     </span>
     <span class="chapter-body">
@@ -268,15 +275,12 @@ const effectiveVariant = computed(() => props.variant ?? unref(navVariant))
   content: counter(chapter-stop, decimal-leading-zero);
 }
 
-.chapter-link--sub:first-child .chapter-node,
+/* 首站节点填充/hover 填充。首末站专属装饰(首站填充、末站双圈、起点/终点站牌)
+   不在这里写:它们必须以 ChapterNav 的 .chapter-links 容器为锚才不会误伤
+   RoadMapPhase 等其它容器里的 sub 卡片,相关规则见 ChapterNav.vue(:deep)。 */
 .chapter-link--sub:is(:hover, :focus-visible) .chapter-node {
   background: var(--vp-c-brand-1);
   color: var(--vp-c-bg);
-}
-
-.chapter-link--sub:last-child:not(:first-child) .chapter-node {
-  border-width: 4px;
-  border-style: double;
 }
 
 .chapter-waymark {
@@ -287,17 +291,11 @@ const effectiveVariant = computed(() => props.variant ?? unref(navVariant))
   letter-spacing: 0.12em;
 }
 
+/* 站牌默认全隐藏;地铁地图内的首末站由 ChapterNav 侧的 :deep 规则点亮 */
 .chapter-waymark,
 .chapter-start,
 .chapter-finish {
   display: none;
-}
-
-.chapter-link--sub:first-child:not(:only-child) .chapter-waymark,
-.chapter-link--sub:first-child:not(:only-child) .chapter-start,
-.chapter-link--sub:last-child:not(:only-child) .chapter-waymark,
-.chapter-link--sub:last-child:not(:only-child) .chapter-finish {
-  display: block;
 }
 
 .chapter-link--sub:only-child {

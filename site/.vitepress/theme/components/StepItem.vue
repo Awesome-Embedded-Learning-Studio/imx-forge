@@ -115,10 +115,11 @@ defineProps<{
 
 .dark .step-item-icon {
   border-color: var(--vp-c-border);
+  /* 品牌渐变改走令牌:暗色 brand-soft/purple-soft 自带适配暗底的透明度 */
   background: linear-gradient(
     135deg,
-    rgba(81, 107, 232, 0.2) 0%,
-    rgba(177, 127, 232, 0.2) 100%
+    var(--vp-c-brand-soft) 0%,
+    var(--vp-c-purple-soft) 100%
   );
 }
 

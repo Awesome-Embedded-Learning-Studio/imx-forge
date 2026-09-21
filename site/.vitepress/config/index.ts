@@ -87,8 +87,9 @@ function buildLocales(): Record<string, any> {
 // CSS 变量与 data 属性,避免「先以默认值渲染再跳变」的 FOUC。默认值取自 readingDefaults。
 const head: NonNullable<ReturnType<typeof defineConfig>['head']> = [
   ['link', { rel: 'icon', href: projectConfig.favicon || `${projectConfig.base}favicon.ico` }],
-  // theme-color 双值:浏览器 UI(地址栏/状态栏)跟随站点明暗底色(骨白/暖炭)
-  ['meta', { name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#F7F3EC' }],
+  // theme-color 双值:浏览器 UI(地址栏/状态栏)跟随站点明暗底色,取值须与
+  // custom.css 的 --vp-c-bg 令牌一致(骨白 #FCFAF6 / 暖炭 #17120E)
+  ['meta', { name: 'theme-color', media: '(prefers-color-scheme: light)', content: '#FCFAF6' }],
   ['meta', { name: 'theme-color', media: '(prefers-color-scheme: dark)', content: '#17120E' }],
 ]
 
@@ -181,6 +182,16 @@ export default defineConfig({
 
     search: {
       provider: 'local',
+      // 导航栏搜索按钮(VPNavBarSearchButton,内置件)的文案也走这里:不配则 SSG
+      // 产物里按钮仍是英文 "Search"。模态框文案已内置在覆盖版 VPLocalSearchBox。
+      options: {
+        translations: {
+          button: {
+            buttonText: '搜索',
+            buttonAriaLabel: '搜索',
+          },
+        },
+      },
     },
 
     editLink: {

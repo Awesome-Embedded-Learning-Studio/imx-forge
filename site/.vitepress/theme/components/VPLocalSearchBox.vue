@@ -91,9 +91,13 @@ const loadingIndex = ref(false)
 let loadToken = 0
 
 // 详细视图摘要生成中(列表底部提示用);fillingExcerpts 标记渐进填充,
-// 期间不重置用户的选择
+// 期间不重置用户的选择。excerptGen 是旗标世代号:旧一轮被取消后其
+// try/finally 仍会在挂起的 await 恢复时执行,若 finally 无条件清旗标,
+// 会误清新一轮刚置上的旗标(提示提前消失 + 选择反复跳回首条),
+// 故 finally 只清理属于自己的世代。
 const excerptLoading = ref(false)
 let fillingExcerpts = false
+let excerptGen = 0
 
 // 让出主线程:优先用 scheduler.yield(事件优先级保真),老浏览器退 setTimeout
 function yieldToMain(): Promise<void> {
@@ -222,6 +226,7 @@ debouncedWatch(
     // 原版一次跑完 16 页,详细视图一开整段冻结。改为逐页处理 + 页间让出
     // 主线程,每页完成即渐进填充该条结果的摘要。
     if (showDetailedListValue && results.value.length) {
+      const gen = ++excerptGen
       excerptLoading.value = true
       fillingExcerpts = true
       try {
@@ -284,8 +289,11 @@ debouncedWatch(
           if (canceled) return
         }
       } finally {
-        fillingExcerpts = false
-        excerptLoading.value = false
+        // 只有最新世代才有资格清旗标;旧世代的迟到收尾不得碰新一轮的状态
+        if (gen === excerptGen) {
+          fillingExcerpts = false
+          excerptLoading.value = false
+        }
       }
     }
 

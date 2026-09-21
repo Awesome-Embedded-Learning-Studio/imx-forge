@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { registerMermaidLightboxOpener, type MermaidLightboxPayload } from '../mermaid-lightbox'
+import { subscribeBeforeRouteChange } from '../router-hooks'
 
 // panzoom 只在 mountDiagram 里动态 import,不进 SSR bundle,也不进首屏 chunk。
 // 这里用本地最小类型,避免静态 import 类型把库拽进来。
@@ -86,6 +87,13 @@ let prevOverflow = ''
 const unregister = registerMermaidLightboxOpener((p) => {
   payload = p
   openDialog()
+})
+
+// SPA 路由切换时自动关模态:lightbox 常驻 layout-top 不会随页面销毁,开着模态
+// 按浏览器后退/前进时页面内容已换、模态还盖在上面且 body 滚动锁不解除。
+// close() 里 trigger 若已随旧页脱离文档,focus 静默无效,焦点回落 body,可接受。
+const unsubscribeRoute = subscribeBeforeRouteChange(() => {
+  if (open.value) close()
 })
 
 function openDialog() {
@@ -207,6 +215,7 @@ function reset() {
 
 onBeforeUnmount(() => {
   unregister()
+  unsubscribeRoute()
   if (open.value) teardown()
 })
 </script>

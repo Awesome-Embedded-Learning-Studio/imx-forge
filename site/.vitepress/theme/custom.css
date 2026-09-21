@@ -28,8 +28,10 @@
   --vp-c-divider: #E0D8CC;
   --vp-c-border: #D6CDBF;
 
-  /* ── CJK 字体栈 ── */
-  --vp-font-family: system-ui, -apple-system, 'Segoe UI', Roboto,
+  /* ── CJK 字体栈 ── VitePress 正文消费的是 --vp-font-family-base(base.css),
+     不是 --vp-font-family——写成后者是死变量、栈从未生效(TAMCPP 同款笔误,
+     这里改对)。system-ui 在前:苹方/雅黑/思源按平台顺次兜底。 */
+  --vp-font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto,
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
     'Source Han Sans SC', 'Noto Sans CJK SC', sans-serif;
 
@@ -216,50 +218,10 @@ html {
 }
 
 /* ================================================================
-   Home Layout — Hero & Feature Cards
+   Home Layout — Feature Cards
+   (默认 VPHero 被 ImxHero.vue 的 .VPHome .VPHero{display:none} 永久隐藏,
+   原 .VPHero 系列样式已随隐藏成为死代码并移除;hero 视觉全部在 ImxHero 内)
    ================================================================ */
-
-.VPHero {
-  padding-bottom: 48px !important;
-}
-
-@media (min-width: 960px) {
-  .VPHero {
-    padding-bottom: 64px !important;
-  }
-}
-
-.VPHome .VPHero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    135deg,
-    var(--vp-c-brand-soft) 0%,
-    transparent 50%,
-    var(--vp-c-indigo-soft) 100%
-  );
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.VPHero .name.clip {
-  background: linear-gradient(
-    135deg,
-    var(--vp-c-brand-1) 0%,
-    var(--vp-c-indigo-1) 50%,
-    var(--vp-c-purple-1) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.VPHero .tagline {
-  font-weight: 400 !important;
-  color: var(--vp-c-text-2) !important;
-}
 
 /* ── Feature Card Animation ──────────────────────────────────── */
 

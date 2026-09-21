@@ -169,6 +169,30 @@ onBeforeUnmount(() => {
   counter-reset: chapter-stop;
 }
 
+/* 首末站专属装饰:首站节点填充、末站节点双圈、起点/终点站牌。
+   必须以本组件的 .chapter-links 容器为锚(用 :deep 穿进 ChapterLink 的元素):
+   RoadMapPhase 等其它容器也放 sub 卡片,若在 ChapterLink 侧按
+   :first-child/:last-child 自行判定,每个容器的首尾都会被误判成车站端点
+   (tutorial 主页曾因此每个阶段卡各标一对起点/终点,共 14 处)。
+   :deep() 之后的部分不带本组件 scope,正好命中 ChapterLink 的类名。 */
+.chapter-links > :deep(.chapter-link--sub:first-child .chapter-node) {
+  background: var(--vp-c-brand-1);
+  color: var(--vp-c-bg);
+}
+
+.chapter-links > :deep(.chapter-link--sub:last-child:not(:first-child) .chapter-node) {
+  border-width: 4px;
+  border-style: double;
+}
+
+.chapter-links
+  > :deep(.chapter-link--sub:first-child:not(:only-child) .chapter-waymark),
+.chapter-links > :deep(.chapter-link--sub:first-child:not(:only-child) .chapter-start),
+.chapter-links > :deep(.chapter-link--sub:last-child:not(:only-child) .chapter-waymark),
+.chapter-links > :deep(.chapter-link--sub:last-child:not(:only-child) .chapter-finish) {
+  display: block;
+}
+
 .chapter-trail {
   position: absolute;
   inset: 0;

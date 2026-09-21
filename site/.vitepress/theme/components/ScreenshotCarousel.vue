@@ -179,6 +179,10 @@ onBeforeUnmount(() => {
   position: relative;
   height: clamp(300px, 42vw, 430px);
   perspective: 1400px;
+  /* 远端 cell(左右 -58%/+58% 平移)向两侧伸出视口,不裁剪会让整个首页在
+     1280~1440px 笔记本宽度出现横向滚动条。clip 不像 hidden 那样创建
+     滚动容器,只单纯裁掉溢出——正合 coverflow 舞台语义。 */
+  overflow-x: clip;
 }
 
 .shot-carousel__cell {
