@@ -67,8 +67,8 @@ export default defineProject({
     // readingUX / codeFold 不写也默认 true(defineProject 兜底),这里显式写明意图。
     readingUX: true,
     codeFold: true,
-    // Mermaid 图表:开启 —— ```mermaid 块渲染为 SVG(客户端按需从 jsdelivr CDN 加载)。
-    // 离线/内网环境图渲染失败(不影响其它内容);需关闭时改 false。
+    // Mermaid 图表:开启 —— ```mermaid 块渲染为 SVG(客户端 npm mermaid 按需加载,打进
+    // 独立懒加载 chunk,离线可用;当前页真有图才下载)。需关闭时改 false。
     mermaid: true,
   },
 
@@ -168,7 +168,7 @@ export default defineProject({
         name: '内核移植',
         dir: 'kernel',
         chapters: 33,
-        desc: '双轨策略:NXP BSP (6.12.3) 稳定可靠 + Mainline (7.1) 紧跟上游。设备树、Kconfig、编译与烧写。',
+        desc: '主线单轨:统一收敛到上游 Mainline Linux(当前 v7.1,真板实测启动)。设备树、Kconfig、编译与烧写。',
         status: 'done',
         link: '/tutorial/kernel/',
       },

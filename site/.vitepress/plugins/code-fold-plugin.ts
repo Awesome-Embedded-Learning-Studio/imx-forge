@@ -66,17 +66,19 @@ export const codeFoldPlugin = (lines = 20): PluginSimple => (md: MarkdownIt) => 
     if (lineCount <= FOLD_THRESHOLD) return html
 
     // imx-forge 当前仅 zh-CN;保留双语 summary 以备未来加 EN 卷(env.relativePath 以 "en/" 开头判定)。
+    // summary 三段式标记(vp-cf-icon/title/count)与 article-code.css 的折叠卡样式配套。
     const relativePath = env?.relativePath
     const isEn = typeof relativePath === 'string' && relativePath.startsWith('en/')
-    const closedLabel = isEn
-      ? `Expand <em>(${lineCount} lines)</em>`
-      : `展开代码 <em>(共 ${lineCount} 行)</em>`
+    const closedLabel = isEn ? 'Expand code' : '展开代码'
     const openLabel = isEn ? 'Collapse' : '收起代码'
+    const countLabel = isEn ? `${lineCount} lines` : `共 ${lineCount} 行`
 
     return (
       `<div class="vp-code-fold" data-lines="${lineCount}">` +
-      `<details><summary><span class="vp-cf-closed">${closedLabel}</span>` +
-      `<span class="vp-cf-open">${openLabel}</span></summary></details>` +
+      `<details><summary><span class="vp-cf-icon" aria-hidden="true"></span>` +
+      `<span class="vp-cf-title"><span class="vp-cf-closed">${closedLabel}</span>` +
+      `<span class="vp-cf-open">${openLabel}</span></span>` +
+      `<span class="vp-cf-count">${countLabel}</span></summary></details>` +
       html +
       `</div>`
     )

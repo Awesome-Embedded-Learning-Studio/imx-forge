@@ -8,6 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@panzoom/panzoom':
+        specifier: ^4.6.2
+        version: 4.6.2
+      '@vueuse/core':
+        specifier: ^12.4.0
+        version: 12.8.2
+      '@vueuse/integrations':
+        specifier: ^12.4.0
+        version: 12.8.2(focus-trap@7.8.0)
+      mark.js:
+        specifier: 8.11.1
+        version: 8.11.1
       mermaid:
         specifier: ^10.9.6
         version: 10.9.6
@@ -21,6 +33,9 @@ importers:
       markdown-it-mathjax3:
         specifier: ^4.3.2
         version: 4.3.2
+      shiki:
+        specifier: ^2.5.0
+        version: 2.5.0
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -454,6 +469,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@panzoom/panzoom@4.6.2':
+    resolution: {integrity: sha512-Zn3B5/hwa6eYIPRSKX0xf2clv8nviTX8AnAU5kU/EugiTDhG41ya2wlBqYrZJYCWQROr/5XkWObZhIkepi89qw==}
 
   '@rollup/rollup-android-arm-eabi@4.60.3':
     resolution: {integrity: sha512-x35CNW/ANXG3hE/EZpRU8MXX1JDN86hBb2wMGAtltkz7pc6cxgjpy1OMMfDosOQ+2hWqIkag/fGok1Yady9nGw==}
@@ -1819,6 +1837,8 @@ snapshots:
   '@iconify/types@2.0.0': {}
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@panzoom/panzoom@4.6.2': {}
 
   '@rollup/rollup-android-arm-eabi@4.60.3':
     optional: true

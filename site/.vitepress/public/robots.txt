@@ -1,0 +1,7 @@
+# 全站放开抓取。Sitemap 指向 VitePress 构建产物(dist 根)里的 sitemap.xml——
+# 只有在 site/.vitepress/config/index.ts 配置了 sitemap.hostname 才会生成,
+# 改 base 或站点域名时,这里与 hostname 需同步修改。
+User-agent: *
+Allow: /
+
+Sitemap: https://awesome-embedded-learning-studio.github.io/imx-forge/sitemap.xml

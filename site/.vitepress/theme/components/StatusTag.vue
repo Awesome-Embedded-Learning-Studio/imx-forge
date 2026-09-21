@@ -43,9 +43,9 @@ const label = props.text ?? defaultLabels[props.type]
 }
 
 .status-tag--active {
-  background-color: rgba(81, 107, 232, 0.12);
+  background-color: var(--vp-c-brand-soft);
   color: var(--vp-c-brand-1);
-  border: 1px solid rgba(81, 107, 232, 0.25);
+  border: 1px solid var(--vp-c-brand-soft-2);
 }
 
 .status-tag--planned {
@@ -66,8 +66,8 @@ const label = props.text ?? defaultLabels[props.type]
 }
 
 .dark .status-tag--active {
-  background-color: rgba(81, 107, 232, 0.15);
-  border-color: rgba(81, 107, 232, 0.3);
+  /* 暗色下 brand-soft 令牌已自带更高不透明度(0.16/0.22),这里只需再垫一档边框 */
+  border-color: var(--vp-c-brand-soft-2);
 }
 
 .dark .status-tag--planned {
