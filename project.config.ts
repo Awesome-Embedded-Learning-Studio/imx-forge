@@ -168,7 +168,7 @@ export default defineProject({
         name: '内核移植',
         dir: 'kernel',
         chapters: 33,
-        desc: '双轨策略:NXP BSP (6.12.3) 稳定可靠 + Mainline (7.1) 紧跟上游。设备树、Kconfig、编译与烧写。',
+        desc: '主线单轨:统一收敛到上游 Mainline Linux(当前 v7.1,真板实测启动)。设备树、Kconfig、编译与烧写。',
         status: 'done',
         link: '/tutorial/kernel/',
       },
