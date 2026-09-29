@@ -123,7 +123,7 @@ BSP 内核的问题，厂商可能已经解决并在文档中说明了。主线�
 
 最后说点实际的。i.MX6ULL 这种 2016 年发布的芯片，主线内核的支持已经比较成熟了。基础的 UART、I2C、SPI、Ethernet 都能正常工作。显示系统虽然需要从 framebuffer 迁移到 DRM，但驱动代码已经在主线了。
 
-这个项目里已经有一个完整的主线移植补丁（`patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch`），里面包含了设备树和 defconfig 的改动。后续的章节会详细讲解这些改动背后的原理，以及如何自己完成迁移。
+这个项目里已经有一个完整的主线移植补丁（`patches/linux_mainline/` 目录下，文件名带日期、以 `ls` 实际结果为准），里面包含了设备树和 defconfig 的改动。后续的章节会详细讲解这些改动背后的原理，以及如何自己完成迁移。
 
 ## 下一章预告
 

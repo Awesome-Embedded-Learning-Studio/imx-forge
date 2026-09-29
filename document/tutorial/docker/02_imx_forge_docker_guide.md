@@ -88,7 +88,6 @@ ls scripts/build_helper/ scripts/driver_helper/
 scripts/build_helper/:
 build-buildroot.sh
 build-linux.sh
-build-linux.sh
 build-qemu.sh
 build-uboot.sh
 buildroot_menuconfig.sh
@@ -98,7 +97,6 @@ scripts/driver_helper/:
 README.md
 build_driver.sh
 deploy_driver.sh
-driver_helper.conf
 driver_helper.conf.template
 review_driver.sh
 show_device_tree.sh
@@ -110,7 +108,6 @@ template_creator.sh
 | 脚本 | 管什么 |
 |------|------|
 | build-uboot.sh | 编 U-Boot |
-| build-linux.sh | 编 NXP BSP 轨内核 |
 | build-linux.sh | 编主线轨内核 |
 | build-buildroot.sh | 构建 rootfs 用户空间，产物进 out/release-latest/rootfs/ |
 | buildroot_menuconfig.sh | 管 Buildroot 的配置界面 |
@@ -524,8 +521,7 @@ docker system prune -a --volumes                                       # 全面�
 # 容器内 /workspace
 ./scripts/release-all.sh                        # 一键全量构建（连字符）
 ./scripts/build_helper/build-uboot.sh           # U-Boot
-./scripts/build_helper/build-linux.sh           # NXP BSP 轨内核
-./scripts/build_helper/build-linux.sh  # 主线轨内核
+./scripts/build_helper/build-linux.sh           # 主线轨内核
 ./scripts/build_helper/build-buildroot.sh       # Buildroot rootfs
 picocom -b 115200 /dev/ttyUSB0                  # 串口终端
 ```

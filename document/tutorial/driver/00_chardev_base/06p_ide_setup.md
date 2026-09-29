@@ -6,7 +6,7 @@ title: IDE 配置指南
 
 ## 前言：为什么需要配置 clangd
 
-当你第一次在 VSCode 中打开 `driver/chardev_led_v1_01/alpha-board/chardev_led_v1_01_main.c` 时，可能会遇到这种情况：
+当你第一次在 VSCode 中打开 `driver/03_tutorial_chardev_led_v1/alpha-board/chardev_led_v1_01_main.c` 时，可能会遇到这种情况：
 
 - `<linux/module.h>` 显示红色波浪线，提示"找不到文件"
 - `pr_info()` 被标记为"未定义的标识符"

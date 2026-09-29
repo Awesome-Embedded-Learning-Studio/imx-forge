@@ -88,24 +88,26 @@ linux-mainline/
 
 ## 第三步——应用移植补丁
 
-这个项目里有一个完整的移植补丁：`patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch`。这个补丁包含了设备树文件和 defconfig 的改动。
+这个项目里有一个完整的移植补丁：`patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260828.patch`。这个补丁包含了设备树文件和 defconfig 的改动。
+
+> **提示**：补丁文件名带日期，会随维护更新。动手前先 `ls patches/linux_mainline/` 确认仓库里当前的文件名，下文以 `20260828` 为例。
 
 ### 补丁格式说明
 
-这是一个标准的 git 格式补丁，你可以用 `git am` 或 `patch -p1` 应用：
+这是一个**裸 diff 格式**的补丁（不是 `git format-patch` 生成的补丁，没有 commit 头），所以**不能用 `git am` 应用**（会报 `Patch format detection failed`），要用 `git apply` 或 `patch -p1`：
 
 ```bash
-# 方法一：使用 git am（推荐，会保留 commit 信息）
+# 方法一：使用 git apply（推荐，会检查补丁能否干净应用）
 cd ~/linux-kernel/linux-mainline
-git am /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch
+git apply /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260828.patch
 ```
 
-如果 `git am` 报错（比如冲突），可以尝试：
+如果 `git apply` 报错（比如行号偏移导致冲突），可以尝试：
 
 ```bash
-# 方法二：使用 patch（更宽容，但不会保留 commit 信息）
+# 方法二：使用 patch（更宽容，允许漂移，但不会自动进 git 暂存区）
 cd ~/linux-kernel/linux-mainline
-patch -p1 < /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch
+patch -p1 < /path/to/imx-forge/patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260828.patch
 ```
 
 ### 验证补丁应用结果
@@ -168,9 +170,9 @@ diff ~/linux-kernel/linux-mainline/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi \
 
 ## 常见问题排查
 
-### 问题一：git am 失败
+### 问题一：git apply 失败
 
-如果 `git am` 报错 `Patch does not have a valid e-mail address`，可能是补丁格式问题。尝试用 `patch -p1`：
+如果 `git apply` 报错（比如 `error: patch failed`），通常是内核源码版本和补丁对不上。先确认你切到了 **v7.1**（见第一步），还是不行就换更宽容的 `patch -p1`（允许上下文漂移）：
 
 ```bash
 patch -p1 < /path/to/patch.diff
@@ -187,16 +189,17 @@ git clone --depth=1 --branch v7.1 https://mirrors.tuna.tsinghua.edu.cn/git/linux
 
 ### 问题三：补丁冲突
 
-如果补丁和应用后的代码有冲突，`git am` 会失败。你需要手动解决冲突：
+`git apply` 是"要么全部成功、要么全部不动"：只要有一处上下文对不上，整个补丁都不会应用。想看具体哪里对不上，可以加 `--reject`：
 
 ```bash
-# 查看冲突文件
-git status
+# 应用补丁，对不上的块会写成 .rej 文件
+git apply --reject /path/to/patch.diff
 
-# 编辑冲突文件，解决冲突后标记为已解决
-git add <冲突文件>
-git am --continue
+# 找出有冲突的文件
+find . -name '*.rej'
 ```
+
+`.rej` 文件里就是没应用上的改动块，对照着手工改进源码，改完把 `.rej` 删掉即可。
 
 ## 下一章预告
 
@@ -217,8 +220,8 @@ git am --continue
 # 克隆主线内核（v7.1）
 git clone --depth=1 --branch v7.1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git linux-mainline
 
-# 应用补丁
-git am /path/to/patch.diff
+# 应用补丁（裸 diff 格式，用 git apply，不能用 git am）
+git apply /path/to/patch.diff
 
 # 或使用 patch
 patch -p1 < /path/to/patch.diff

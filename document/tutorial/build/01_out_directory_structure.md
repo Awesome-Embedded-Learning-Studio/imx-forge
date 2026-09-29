@@ -66,15 +66,14 @@ export OUTPUT_DIR=out/uboot
 export OUTPUT_DIR=out/linux
 ./scripts/build_helper/build-linux.sh
 
-# 单独构建 BusyBox
-export OUTPUT_DIR=out/busybox
-./scripts/build_helper/build-busybox.sh
+# 单独构建 Buildroot rootfs（BusyBox 已由 Buildroot 托管）
+./scripts/build_helper/build-buildroot.sh
 ```
 
 这种模式下，构建产物会输出到：
 - `out/uboot/`
 - `out/linux/`
-- `out/busybox/`
+- `out/release-latest/buildroot/`（Buildroot 工作目录，最终 rootfs 在 `out/release-latest/rootfs/`）
 
 **适用场景**：开发调试阶段，只需要修改和重新编译某个组件时。
 

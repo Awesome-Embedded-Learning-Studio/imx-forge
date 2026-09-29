@@ -1,5 +1,9 @@
 # BusyBox 编译安装：一把瑞士军刀的自制指南
 
+::: warning 本章脚本已退役，保留作概念教学
+本章使用的 `./scripts/build_helper/build-busybox.sh` 已经退役——rootfs 自 Buildroot 接管后，BusyBox 由 Buildroot 的 `BR2_PACKAGE_BUSYBOX` 统一构建。本文保留 BusyBox 交叉编译的原理和坑位讲解作参考；**现行做法请直接看 [Buildroot · 首次构建](../buildroot/02_first_build.md)与[迁移指南](../buildroot/12_migration_guide.md)**。
+:::
+
 ## 为什么要写这篇文章
 
 上一章我们介绍了 Rootfs 的概念和各种方案。这一章，我们要真正动手把 BusyBox 编译出来。

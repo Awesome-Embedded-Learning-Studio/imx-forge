@@ -314,7 +314,7 @@ c0008000 t _start
 如果你编译了设备树，可以验证一下：
 
 ```bash
-dtc -I dtb -O dts arch/arm/boot/dts/imx6ull-14x14-evk.dtb | grep fsl,imx6ull
+dtc -I dtb -O dts out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb | grep fsl,imx6ull
 ```
 
 你应该能看到类似这样的输出：

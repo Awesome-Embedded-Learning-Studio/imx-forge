@@ -12,7 +12,7 @@
 
 在正式开始之前，先把我们的实验环境交代清楚。这很重要，因为不同的芯片、不同的板子设计，寄存器地址和连接方式都可能不同。
 
-我们用的是i.MX 6ULL Alpha Board，芯片是i.MX 6ULL（ARM Cortex-A7内核），内核版本是Linux 5.x主线或者NXP BSP 4.1.15，工具链是arm-none-linux-gnueabihf-gcc。LED连接在GPIO1_IO03引脚上，这个信息特别重要，因为整个驱动的寄存器配置都围绕这个引脚展开。
+我们用的是i.MX 6ULL Alpha Board，芯片是i.MX 6ULL（ARM Cortex-A7 内核），内核是主线 Linux 7.1（`third_party/linux_mainline`，产物在 `out/linux`），工具链是arm-none-linux-gnueabihf-gcc。LED连接在GPIO1_IO03引脚上，这个信息特别重要，因为整个驱动的寄存器配置都围绕这个引脚展开。
 
 LED的连接方式是这样的：它的一端通过一个限流电阻接到VCC（高电平），另一端接到GPIO1_IO03引脚。也就是说，当GPIO输出低电平时，电流从VCC流向GPIO，LED点亮；当GPIO输出高电平时，两端电势差为零，LED熄灭。这叫做"低电平有效"（Active Low），在实际硬件设计中很常见。原因有很多，比如驱动能力的考虑、功耗的考虑、或者历史兼容性的考虑。总之记住一点——写0灯亮，写1灯灭。这个细节如果你搞反了，调试起来会非常困惑，因为你以为在开灯，实际在关灯，或者反过来。
 
@@ -36,7 +36,7 @@ GPIO（General Purpose Input/Output），通用输入输出端口，这是我们
 
 你可能会问，这些寄存器的地址是怎么知道的？总不能瞎猜吧？当然不能。这些地址都是从芯片厂商提供的参考手册（Reference Manual）里查出来的。i.MX 6ULL的参考手册有几千页，里面详细列出了每一个寄存器的地址、每一位的含义。
 
-我们的新驱动代码中，这些地址都被整理在driver/chardev_led_v1_01/alpha-board/led_reg.h文件里。我们来看看这个文件，了解一下寄存器定义的规范。
+我们的新驱动代码中，这些地址都被整理在driver/03_tutorial_chardev_led_v1/alpha-board/led_reg.h文件里。我们来看看这个文件，了解一下寄存器定义的规范。
 
 首先是CCM_CCGR1寄存器，地址是0x020C406C，作用是使能GPIO1外设时钟。参考手册在第18章（Clock Control Module）第700页。注意注释里详细说明了这个寄存器的用途、参考手册的章节和页码，这是很好的习惯，当你几个月后再看这段代码时，会感谢当时的自己留下了这些注释。
 

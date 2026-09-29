@@ -60,9 +60,9 @@ make[1]: Leaving directory '/path/to/kernel'
 
 ### 修改设备树
 
-首先，需要把我们的 pinctrl 和 GPIO 配置添加到设备树里。设备树文件在 `arch/arm/boot/dts/` 目录下。
+首先，需要把我们的 pinctrl 和 GPIO 配置添加到设备树里。主线内核的设备树源文件在 `arch/arm/boot/dts/nxp/imx/` 目录下。
 
-对于我们的开发板，设备树文件可能是 `imx6ull-14x14-evk.dts` 或类似的文件。
+我们开发板的板级文件是 `imx6ull-aes.dts`（基于 `imx6ull-aes.dtsi`）。
 
 ```dts
 / {
@@ -92,17 +92,11 @@ make[1]: Leaving directory '/path/to/kernel'
 设备树的编译是内核编译过程的一部分：
 
 ```bash
-# 进入内核目录
-cd /path/to/kernel
-
-# 编译设备树
-make dtbs
-
-# 或者只编译特定的设备树
-make imx6ull-14x14-evk.dtb
+# 在项目根目录，编译所有已启用的设备树（输出在 out/linux）
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=$(pwd)/out/linux dtbs
 ```
 
-编译后的 `.dtb` 文件在 `arch/arm/boot/dts/` 目录下。
+编译后的 `.dtb` 文件在 `out/linux/arch/arm/boot/dts/nxp/imx/` 目录下，我们关心的是 `imx6ull-aes.dtb`。
 
 ## 部署到开发板
 
@@ -115,7 +109,7 @@ make imx6ull-14x14-evk.dtb
 scp pinctrl_gpio_demo_04_driver.ko root@board_ip:/lib/modules/
 
 # 拷贝设备树
-scp arch/arm/boot/dts/imx6ull-14x14-evk.dtb root@board_ip:/boot/
+scp out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb root@board_ip:/boot/
 ```
 
 ### 更新设备树

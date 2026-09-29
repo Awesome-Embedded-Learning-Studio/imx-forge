@@ -60,22 +60,25 @@ modules:
 
 ```bash
 cd /home/charliechen/imx-forge
-scripts/driver_helper/build_driver.sh chardev_led_v1_01 alpha-board
+scripts/driver_helper/build_driver.sh 03_tutorial_chardev_led_v1 alpha-board
 ```
 
 这条脚本会自动处理内核类型检测、编译、拷贝等操作。如果一切顺利，你会看到类似这样的输出：
 
 ```
-🔨 编译chardev_led_v1_01驱动...
+🔨 构建驱动: 03_tutorial_chardev_led_v1/alpha-board
 make[1]: Entering directory '/home/charliechen/imx-forge/third_party/linux-mainline'
-  CC [M]  /home/charliechen/imx-forge/driver/chardev_led_v1_01/alpha-board/chardev_led_v1_01_main.o
-  CC [M]  /home/charliechen/imx-forge/driver/chardev_led_v1_01/alpha-board/led_hw.o
-  MODPOST /home/charliechen/imx-forge/driver/chardev_led_v1_01/alpha-board/Module.symvers
-  CC [M]  /home/charliechen/imx-forge/driver/chardev_led_v1_01/alpha-board/chardev_led_v1_01_driver.mod.o
-  LD [M]  /home/charliechen/imx-forge/driver/chardev_led_v1_01/alpha-board/chardev_led_v1_01_driver.ko
+  CC [M]  /home/charliechen/imx-forge/driver/03_tutorial_chardev_led_v1/alpha-board/chardev_led_v1_01_main.o
+  CC [M]  /home/charliechen/imx-forge/driver/03_tutorial_chardev_led_v1/alpha-board/led_hw.o
+  MODPOST /home/charliechen/imx-forge/driver/03_tutorial_chardev_led_v1/alpha-board/Module.symvers
+  CC [M]  /home/charliechen/imx-forge/driver/03_tutorial_chardev_led_v1/alpha-board/chardev_led_v1_01_driver.mod.o
+  LD [M]  /home/charliechen/imx-forge/driver/03_tutorial_chardev_led_v1/alpha-board/chardev_led_v1_01_driver.ko
 make[1]: Leaving directory '/home/charliechen/imx-forge/third_party/linux-mainline'
-✓ 驱动编译完成: out/driver_artifacts/chardev_led_v1_01/alpha-board/chardev_led_v1_01_driver.ko
+✓ 编译完成 (1 个模块)
+✓ 构建完成: out/driver_artifacts/03_tutorial_chardev_led_v1/alpha-board
 ```
+
+> **注意**：传给脚本的是**仓库里的驱动目录名** `03_tutorial_chardev_led_v1`（`driver/` 下真实存在的目录），而模块名 `chardev_led_v1_01_driver` 是目录里 Makefile 定义的，两者不是一回事。
 
 但说实话，第一次编译很少能这么顺利。我们总结了一些常见的坑，希望能帮你节省点时间。
 
@@ -87,12 +90,12 @@ make[1]: Leaving directory '/home/charliechen/imx-forge/third_party/linux-mainli
 
 ## 第三步：部署到开发板
 
-编译成功后，`.ko` 文件位于 `out/driver_artifacts/chardev_led_v1_01/alpha-board/` 目录下。现在需要把它部署到开发板。
+编译成功后，`.ko` 文件位于 `out/driver_artifacts/03_tutorial_chardev_led_v1/alpha-board/` 目录下。现在需要把它部署到开发板。
 
 我们的项目提供了部署脚本：
 
 ```bash
-scripts/driver_helper/deploy_driver.sh chardev_led_v1_01 alpha-board
+scripts/driver_helper/deploy_driver.sh 03_tutorial_chardev_led_v1 alpha-board
 ```
 
 对于现在咱们是NFS调试阶段，那就部署到NFS上就好。

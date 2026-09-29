@@ -434,8 +434,8 @@ $ dtc -I dtb -O dts test.dtb
 当你怀疑 DTB 文件有问题时，把它转回 DTS 格式是最直接的调试方法。你可以对比转回的 DTS 和你写的 DTS，看看哪里不一样。
 
 ```bash
-$ dtc -I dtb -O dts /boot/imx6ull-14x14-evk.dtb > current.dts
-$ diff current.dts arch/arm/boot/dts/imx6ull-14x14-evk.dts
+$ dtc -I dtb -O dts /boot/imx6ull-aes.dtb > current.dts
+$ diff current.dts third_party/linux_mainline/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts
 ```
 
 这个方法在排查设备树问题时非常有效，强烈建议掌握。

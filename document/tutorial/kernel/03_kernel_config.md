@@ -314,8 +314,7 @@ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/linux my_imx6ull_def
 
 | 配置项 | 说明 | 推荐值 |
 |--------|------|--------|
-| CONFIG_SMP | 对称多处理器支持 | y（多核） |
-| CONFIG_NR_CPUS=2 | 最大CPU核心数 | 实际核心数 |
+| CONFIG_SMP | 对称多处理器支持 | n（i.MX6ULL 是单核 Cortex-A7，项目 defconfig 即未开启） |
 | CONFIG_VMSPLIT_3G | 3G用户/1G内核 | y（内存<1GB） |
 | CONFIG_PREEMPT | 抢占式内核 | y（低延迟） |
 

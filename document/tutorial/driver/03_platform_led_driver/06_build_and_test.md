@@ -71,7 +71,7 @@ ls -l /dev/AES_LED
 点亮 LED：
 
 ```bash
-echo '1' > /dev/AES_LED
+printf '1' > /dev/AES_LED
 ```
 
 LED 应该点亮。如果没反应，检查 LED 硬件连接、设备树的 GPIO 编号是否正确、`GPIO_ACTIVE_LOW` 是否符合硬件设计。
@@ -79,7 +79,7 @@ LED 应该点亮。如果没反应，检查 LED 硬件连接、设备树的 GPIO
 熄灭 LED：
 
 ```bash
-echo '0' > /dev/AES_LED
+printf '0' > /dev/AES_LED
 ```
 
 LED 应该熄灭。
@@ -91,6 +91,10 @@ cat /dev/AES_LED
 ```
 
 应该输出 `1`（如果 LED 点亮）或 `0`（如果 LED 熄灭）。
+
+::: tip 为什么用 printf 不用 echo
+驱动的 `write` 会拒绝长度大于 1 的写入（返回 `-EINVAL`）。`echo '1' > /dev/AES_LED` 实际写入的是 `'1'` 和换行符 `\n` 两个字节，会被拒绝；`printf '1'` 不带换行，正好一个字节，才能通过。
+:::
 
 ## 调试技巧
 

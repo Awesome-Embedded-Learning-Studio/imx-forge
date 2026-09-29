@@ -368,7 +368,7 @@ host 192.168.60.1 is alive
 ```bash
 # 假设你的编译输出在 ~/linux-build
 cp ~/linux-build/arch/arm/boot/zImage ~/tftp/
-cp ~/linux-build/arch/arm/boot/dts/imx6ull-aes.dtb ~/tftp/
+cp ~/linux-build/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb ~/tftp/
 ```
 
 确保文件权限正确：

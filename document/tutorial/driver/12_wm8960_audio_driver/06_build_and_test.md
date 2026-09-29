@@ -7,7 +7,7 @@ title: 修 defconfig 与上板验证
 这一节上板。和 [RTC](../10_rtc_snvs_driver/)、[goodix](../11_goodix_touchscreen_driver/) 一样，**没有 `.ko` 可编译**——`fsl-asoc-card.c`/`wm8960.c`/`fsl_sai.c` 都编进内核、开机自动 probe。但音频这章比那俩多一个**前置坑**：mainline 的 defconfig 模板把 `fsl-asoc-card` 配成 `=m`，而项目 build 流程不编模块，结果整机静音。这就是 [Issue #43](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues/43)，我们这一节第一件事就是把它修掉，再用 `aplay`/`amixer`/`arecord` 验证耳机出声、录音回放。
 
 ::: tip 学习目标
-把 mainline defconfig 里 `CONFIG_SND_SOC_FSL_ASOC_CARD` 从 `=m` 改成 `=y`（Issue #43 根因）；编内核 + dtb；用 `install_alsa.sh` 给 rootfs 装 `aplay`/`amixer`/`arecord`；上板确认声卡、解 WM8960 默认静音、播放 WAV 出声、录音回放；掌握「无声」的排查思路。
+把 mainline defconfig 里 `CONFIG_SND_SOC_FSL_ASOC_CARD` 从 `=m` 改成 `=y`（Issue #43 根因）；编内核 + dtb；用 Buildroot 给 rootfs 带上 `aplay`/`amixer`/`arecord`；上板确认声卡、解 WM8960 默认静音、播放 WAV 出声、录音回放；掌握「无声」的排查思路。
 :::
 
 ## 第一步：修 mainline defconfig（Issue #43）
@@ -68,26 +68,22 @@ ls third_party/linux_mainline/sound/soc/fsl/fsl-asoc-card.o   # .o 存在说明�
 
 ## 第三步：给 rootfs 装 ALSA 用户态
 
-alpha 板的 rootfs 默认没有 `aplay`/`amixer`/`arecord`。本仓库的 `scripts/third_party_install/install_alsa.sh`（[本教程配套新增](index.md)）会交叉编译 `alsa-lib` + `alsa-utils`，把它们装进 rootfs。手动触发：
+`aplay`/`amixer`/`arecord` 现在由 Buildroot 托管：项目 defconfig 默认开了 `BR2_PACKAGE_ALSA_LIB`（mixer/pcm/ucm）和 `BR2_PACKAGE_ALSA_UTILS`（aplay/amixer/alsactl 等），重编一次 rootfs 就自带。早期"手写 `install_alsa.sh` 手工交叉编译"的做法已经退役（版本一升级就得改脚本），新旧对照见[迁移指南](../../buildroot/12_migration_guide.md)。
 
 ```bash
-# 方式一：只跑 alsa 安装（快）
-ROOTFS_DIR=rootfs/nfs ./scripts/third_party_install/install_alsa.sh
+# 重编 rootfs（ALSA 用户态包含在内）
+./scripts/build_helper/build-buildroot.sh
 
-# 方式二：跑整个 rootfs 验证 + 第三方依赖安装（会自动执行所有 install_*.sh）
-./scripts/varified_rootfs_ok.sh
+# 确认工具在
+ls out/release-latest/rootfs/usr/bin/aplay
+ls out/release-latest/rootfs/usr/bin/amixer
+ls out/release-latest/rootfs/usr/lib/libasound.so.*
 ```
-
-跑完确认 `rootfs/nfs/usr/bin/aplay` 存在、`libasound.so.*` 在 `rootfs/nfs/usr/lib/`。脚本带缓存（`out/.alsa-workdir/`），第二次跑会跳过已下載的 tarball；想强制重装加 `FORCE=1`。
-
-::: tip 工具链要先进 PATH
-`install_alsa.sh` 用 `arm-none-linux-gnueabihf-` 交叉编译，跑前先 `source scripts/init/env-init.sh` 让工具链可见，否则报「Cross compiler not found」。
-:::
 
 ## 第四步：部署 + 上板
 
 - **dtb**：拷到 tftp 目录（`/home/charliechen/tftp`），netboot 固定拉 `imx6ull-aes.dtb`。**部署后必须重启板子**才生效（dtb 互斥、每次启动重拉）。
-- **rootfs**：alpha 板走 NFS root，bind-mount 源指向 `rootfs/nfs`。**换 bind-mount 源后必须 `restart nfs-ganesha`**，否则板子挂载 ESTALE 报错。
+- **rootfs**：alpha 板走 NFS root，`scripts/manual_mount_nfs.sh` 把 `out/release-latest/rootfs` bind-mount 到 `rootfs/nfs`。**重编 rootfs 或换 bind-mount 源后必须 `restart nfs-ganesha`**，否则板子挂载 ESTALE 报错。
 
 ## 第五步：确认声卡
 
@@ -187,7 +183,7 @@ aplay /tmp/r.wav    # 把刚录的播出来，耳机里听到自己刚才录的
 
 ## 小结
 
-这一节我们在 alpha 板上把 WM8960 验证通了：先修掉 mainline defconfig 的 `ASOC_CARD=m` 坑（Issue #43，让 machine 驱动编进内核），编内核 + dtb，用 `install_alsa.sh` 装 `aplay`/`amixer`/`arecord`，部署上板，`cat /proc/asound/cards` 确认 `wm8960-audio` 上线，`amixer` 解掉 WM8960 默认静音这个最大坑，最后 `aplay` 出声、`arecord` 录音回放。全程没编译一行驱动代码——`fsl-asoc-card.c` / `wm8960.c` / `fsl_sai.c` 全默认在内核里，我们要做的只是「让它正确地编进去 + 把音量拧开」。
+这一节我们在 alpha 板上把 WM8960 验证通了：先修掉 mainline defconfig 的 `ASOC_CARD=m` 坑（Issue #43，让 machine 驱动编进内核），编内核 + dtb，用 Buildroot 重编 rootfs 带上 `aplay`/`amixer`/`arecord`，部署上板，`cat /proc/asound/cards` 确认 `wm8960-audio` 上线，`amixer` 解掉 WM8960 默认静音这个最大坑，最后 `aplay` 出声、`arecord` 录音回放。全程没编译一行驱动代码——`fsl-asoc-card.c` / `wm8960.c` / `fsl_sai.c` 全默认在内核里，我们要做的只是「让它正确地编进去 + 把音量拧开」。
 
 回头看，音频这章和 RTC、goodix 一样走了「分析型」路线：把主线这套 machine + codec + cpu_dai 三件套从 ASoC 架构（[02 节](02_asoc_framework.md)）、probe 缝合（[03 节](03_machine_driver_analysis.md)）、codec 与时钟（[04 节](04_codec_and_clock.md)）、设备树（[05 节](05_device_tree.md)）一路拆透，再上板验证。到这里，Linux 音频子系统这块拼图补齐了——以后遇到任何 codec（wm8962、sgtl5000、cs42xx8……），套路都是：`fsl-asoc-card` 加个 `compatible` 分支、设备树改俩节点、codec 驱动换一份，machine 和 cpu_dai 不用动。
 

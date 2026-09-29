@@ -141,7 +141,7 @@ struct device_node *of_find_node_by_path(const char *path);
 这个函数在我们的 LED 驱动里用到了：
 
 ```c
-/* 从 /home/charliechen/imx-forge/driver/device_tree_try_03/alpha-board/led_hw.c */
+/* 摘自 driver/06_tutorial_device_tree_try/alpha-board/led_hw.c */
 static const char* kIMX_AES_LED = "/imx_aes_led";
 
 led.device_tree_node = of_find_node_by_path(kIMX_AES_LED);
@@ -154,7 +154,7 @@ if (led.device_tree_node == NULL) {
 这里我们直接用路径 `/imx_aes_led` 去找节点。这个路径对应设备树里的定义：
 
 ```dts
-/* 从 /home/charliechen/imx-forge/driver/device_tree/alpha-board/device_tree_try_03/imx6ull-aes-led.dts */
+/* 摘自 driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts */
 / {
     imx_aes_led {
         #address-cells = <1>;

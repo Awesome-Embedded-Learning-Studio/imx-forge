@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 
 ```bash
 cd /home/charliechen/imx-forge
-./scripts/driver_helper/build_driver.sh chardev_led_v2_02 alpha-board
+./scripts/driver_helper/build_driver.sh 04_tutorial_chardev_led_v2 alpha-board
 ```
 
 这个脚本会帮我们处理交叉编译的细节，包括设置交叉编译器、指定架构参数、编译驱动和应用程序。说实话，手动敲交叉编译命令真的很烦，每次都要查半天参数，写成脚本之后一条命令搞定，轻松很多。
@@ -103,7 +103,7 @@ cd /home/charliechen/imx-forge
 编译完成后，我们把文件部署到开发板：
 
 ```bash
-./scripts/driver_helper/deploy_driver.sh chardev_led_v2_02 alpha-board
+./scripts/driver_helper/deploy_driver.sh 04_tutorial_chardev_led_v2 alpha-board
 ```
 
 部署脚本会通过网络把驱动和应用程序拷贝到开发板的正确位置。我们的开发板配置要求内核版本 6.12.49 或更高，支持 mdev（BusyBox 的设备管理器），设备文件 `/dev/AES_LED` 会在驱动加载后自动创建。
