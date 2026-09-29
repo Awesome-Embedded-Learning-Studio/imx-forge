@@ -58,7 +58,7 @@
 
 ### 编写设备节点
 
-打开你的设备树文件。在我们的项目中，这个文件位于 `driver/device_tree/alpha-board/device_tree_try_03/imx6ull-aes-led.dts`。在根节点 `/` 下添加如下内容：
+打开你的设备树文件。在我们的项目中，这个文件位于 `driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts`。在根节点 `/` 下添加如下内容：
 
 ```dts
 /dts-v1/;
@@ -109,8 +109,13 @@
 在编译之前，最好先检查一下语法是否正确。DTC编译器会帮你检查大部分语法错误：
 
 ```bash
-# 语法检查（不生成输出文件）
-dtc -I dts -O dtb -o /dev/null driver/device_tree/alpha-board/device_tree_try_03/imx6ull-aes-led.dts
+# 语法检查（不生成输出文件；DTS 里有 #include，要先过 C 预处理器，见下文"手动编译DTB"）
+gcc -E -nostdinc -undef -x assembler-with-cpp \
+    -I third_party/linux_mainline/arch/arm/boot/dts \
+    -I third_party/linux_mainline/arch/arm/boot/dts/nxp/imx \
+    -I driver/device_tree/alpha-board/linux \
+    driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts \
+  | dtc -I dts -O dtb -o /dev/null -
 ```
 
 如果没有报错，说明语法基本正确。如果报错了，根据错误提示修改相应位置。
@@ -129,37 +134,41 @@ dtc -I dts -O dtb -o /dev/null driver/device_tree/alpha-board/device_tree_try_03
 # 进入项目根目录
 cd /home/charliechen/imx-forge
 
-# 构建驱动（会自动编译设备树）
-./scripts/driver_helper/build_driver.sh device_tree_try_03 alpha-board
+# 构建驱动（传的是 driver/ 下的驱动目录名，不是模块名）
+./scripts/driver_helper/build_driver.sh 06_tutorial_device_tree_try alpha-board
 ```
 
 这个脚本会自动完成以下工作：
-1. 查找驱动的源码和设备树文件
-2. 编译驱动代码生成.ko文件
-3. 编译设备树文件生成.dtb文件
-4. 把所有产物放到 `out/driver_artifacts/device_tree_try_03/alpha-board/` 目录
+1. 到 `driver/06_tutorial_device_tree_try/alpha-board/` 编译驱动代码，生成 `device_tree_try_03_driver.ko`（模块名沿用了早期教程编号，是 Makefile 里定义的）
+2. 把产物放到 `out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/` 目录
 
 执行后，你应该看到类似这样的输出：
 
 ```
-🔨 编译device_tree_try_03驱动...
-✓ 驱动编译完成: out/driver_artifacts/device_tree_try_03/alpha-board/device_tree_try_03_driver.ko
-✓ 设备树编译完成: out/driver_artifacts/device_tree_try_03/alpha-board/imx6ull-aes-led.dtb
+🔨 构建驱动: 06_tutorial_device_tree_try/alpha-board
+✓ 编译完成 (1 个模块)
+✓ 构建完成: out/driver_artifacts/06_tutorial_device_tree_try/alpha-board
 ```
+
+::: warning 这棵设备树目前要手动编
+这棵设备树的覆盖目录编号（`11_tutorial_device_tree_try`）和驱动目录编号（`06_tutorial_device_tree_try`）不一致，是历史遗留。`build_driver.sh` 按驱动目录名去 `driver/device_tree/alpha-board/` 下找设备树，目前找不到这一棵，所以 `.dtb` 不会自动产出——用下面"手动编译DTB"的命令自己编。
+:::
 
 ### 手动编译DTB
 
-如果你想单独编译设备树，可以使用DTC命令：
+如果你想单独编译设备树，注意 DTS 里有 `#include`，直接喂给 `dtc` 会报错，要先过 C 预处理器：
 
 ```bash
-# 基本编译命令
-dtc -I dts -O dtb -o imx6ull-aes-led.dtb imx6ull-aes-led.dts
-
-# 带include路径的编译（如果你的DTS引用了其他文件）
-dtc -I dts -O dtb -i driver/device_tree/alpha-board/ \
-    -o imx6ull-aes-led.dtb \
-    driver/device_tree/alpha-board/device_tree_try_03/imx6ull-aes-led.dts
+gcc -E -nostdinc -undef -x assembler-with-cpp \
+    -I third_party/linux_mainline/arch/arm/boot/dts \
+    -I third_party/linux_mainline/arch/arm/boot/dts/nxp/imx \
+    -I driver/device_tree/alpha-board/linux \
+    driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts \
+  | dtc -I dts -O dtb \
+    -o out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/imx6ull-aes-11_tutorial_device_tree_try.dtb -
 ```
+
+include 路径依次是：主线内核的 ARM 设备树目录、厂商子目录（imx 系列在 `nxp/imx/` 下）、项目主板目录（`imx6ull-aes.dtsi` 在这里）。这套预处理流程的原理在[编译机制](11_compile_mechanism.md)和[编译迁移](12_compile_migration.md)两章有完整拆解。
 
 ### 检查编译结果
 
@@ -167,14 +176,15 @@ dtc -I dts -O dtb -i driver/device_tree/alpha-board/ \
 
 ```bash
 # 查看产物目录
-ls -lh out/driver_artifacts/device_tree_try_03/alpha-board/
+ls -lh out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/
 
 # 预期输出：
 # device_tree_try_03_driver.ko
-# imx6ull-aes-led.dtb
+# imx6ull-aes-11_tutorial_device_tree_try.dtb（手动编译产出）
+# build_info.txt
 ```
 
-如果只看到了.ko文件但没有.dtb文件，说明设备树编译失败了。这时候你需要检查：
+如果只看到了.ko文件但没有.dtb文件，说明设备树还没有编译（见上面的警告）。这时候你需要检查：
 1. DTS文件路径是否正确
 2. include的.dtsi文件是否存在
 3. DTC编译器是否正确安装
@@ -186,7 +196,7 @@ ls -lh out/driver_artifacts/device_tree_try_03/alpha-board/
 ```bash
 # 反编译DTB
 dtc -I dtb -O dts -o test_from_dtb.dts \
-    out/driver_artifacts/device_tree_try_03/alpha-board/imx6ull-aes-led.dtb
+    out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/imx6ull-aes-11_tutorial_device_tree_try.dtb
 
 # 查看反编译结果
 cat test_from_dtb.dts
@@ -418,7 +428,7 @@ bool led_get_status(void) {
 cd /home/charliechen/imx-forge
 
 # 构建驱动
-./scripts/driver_helper/build_driver.sh device_tree_try_03 alpha-board
+./scripts/driver_helper/build_driver.sh 06_tutorial_device_tree_try alpha-board
 ```
 
 这个脚本会自动处理以下事情：
@@ -433,7 +443,7 @@ cd /home/charliechen/imx-forge
 
 ```bash
 # 进入驱动目录
-cd driver/device_tree_try_03/alpha-board
+cd driver/06_tutorial_device_tree_try/alpha-board
 
 # 编译
 make
@@ -468,18 +478,18 @@ modules:
 
 ```bash
 # 查看产物目录
-ls -lh out/driver_artifacts/device_tree_try_03/alpha-board/
+ls -lh out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/
 
 # 预期输出：
-# device_tree_try_03_driver.ko    (约14K)
-# imx6ull-aes-led.dtb             (约35K)
+# device_tree_try_03_driver.ko                       (约14K)
+# imx6ull-aes-11_tutorial_device_tree_try.dtb        (约35K，手动编译产出)
 ```
 
 你可以使用 `modinfo` 命令查看模块的信息：
 
 ```bash
 # 查看模块信息
-modinfo out/driver_artifacts/device_tree_try_03/alpha-board/device_tree_try_03_driver.ko
+modinfo out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/device_tree_try_03_driver.ko
 
 # 输出示例：
 # filename:       device_tree_try_03_driver.ko
@@ -487,7 +497,7 @@ modinfo out/driver_artifacts/device_tree_try_03/alpha-board/device_tree_try_03_d
 # description:    Device Tree try
 # author:         Charliechen114514
 # license:        GPL
-# vermagic:       5.10.0 SMP mod_unload modversions aarch64
+# vermagic:       7.1.0 ... ARMv7（具体内容随内核配置而变）
 ```
 
 请注意 `vermagic` 字段，它显示了模块编译时的内核版本。如果你的板子运行的是不同版本的内核，模块加载时会因为版本不匹配而失败。
@@ -503,14 +513,14 @@ modinfo out/driver_artifacts/device_tree_try_03/alpha-board/device_tree_try_03_d
 在我们的项目中，使用TFTP启动是最常见的方式。DTB文件需要放在TFTP服务器的根目录下：
 
 ```bash
-# 使用deploy_driver.sh脚本部署
-./scripts/driver_helper/deploy_driver.sh device_tree_try_03 alpha-board --target=tftp
+# 使用deploy_driver.sh脚本部署（驱动目录名）
+./scripts/driver_helper/deploy_driver.sh 06_tutorial_device_tree_try alpha-board --target=tftp
 
-# 或者手动拷贝
-sudo cp out/driver_artifacts/device_tree_try_03/alpha-board/imx6ull-aes-led.dtb /srv/tftp/imx6ull-aes.dtb
+# 或者手动拷贝（dtb 是前面手动编译产出的那个）
+sudo cp out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/imx6ull-aes-11_tutorial_device_tree_try.dtb /srv/tftp/imx6ull-aes.dtb
 ```
 
-请注意这里的一个细节：目标文件名是 `imx6ull-aes.dtb`，而不是 `imx6ull-aes-led.dtb`。这是因为U-Boot在启动时会加载一个固定名字的DTB文件，这个名字在U-Boot环境变量里定义。
+请注意这里的一个细节：目标文件名是 `imx6ull-aes.dtb`，而不是编译产物的原名。这是因为U-Boot在启动时会加载一个固定名字的DTB文件，这个名字在U-Boot环境变量里定义。
 
 如果你不确定自己的板子使用哪个DTB文件名，可以在U-Boot命令行输入 `printenv` 查看所有环境变量：
 
@@ -525,13 +535,13 @@ fdt_file=imx6ull-aes.dtb
 
 ```bash
 # 使用deploy_driver.sh脚本部署
-./scripts/driver_helper/deploy_driver.sh device_tree_try_03 alpha-board --target=nfs
+./scripts/driver_helper/deploy_driver.sh 06_tutorial_device_tree_try alpha-board --target=nfs
 
 # 或者手动拷贝到NFS目录
-cp out/driver_artifacts/device_tree_try_03/alpha-board/device_tree_try_03_driver.ko /path/to/nfs/root/lib/modules/
+cp out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/device_tree_try_03_driver.ko /path/to/nfs/root/lib/modules/
 
 # 或者通过scp/串口传输
-scp out/driver_artifacts/device_tree_try_03/alpha-board/device_tree_try_03_driver.ko root@192.168.1.100:/lib/modules/
+scp out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/device_tree_try_03_driver.ko root@192.168.1.100:/lib/modules/
 ```
 
 ### 重启板子
@@ -804,7 +814,7 @@ dmesg -w
 
 ## 附录：完整代码清单
 
-### A. 设备树文件 (imx6ull-aes-led.dts)
+### A. 设备树文件 (imx6ull-aes-11_tutorial_device_tree_try.dts)
 
 ```dts
 /dts-v1/;

@@ -334,7 +334,7 @@ make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi
 
 ```
   Kernel: arch/arm/boot/zImage is ready
-  DTC     arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dtb
+  DTC     arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
 ```
 
 这表示内核镜像和设备树已经成功编译。
@@ -372,33 +372,34 @@ Kernel artifacts in /home/charliechen/imx-forge/out/linux:
 
 ### 查找设备树文件
 
-设备树文件在 `arch/arm/boot/dts/` 目录下：
+设备树文件在输出目录的 `arch/arm/boot/dts/nxp/imx/` 目录下：
 
 ```bash
-ls /home/charliechen/imx-forge/out/linux/arch/arm/boot/dts/*.dtb
+ls /home/charliechen/imx-forge/out/linux/arch/arm/boot/dts/nxp/imx/*.dtb
 ```
 
-你应该能看到 `imx6ull-14x14-evk-emmc.dtb` 或类似的文件。
+你应该能看到 `imx6ull-aes.dtb`——这是我们开发板的设备树。
 
 ## 第四步：BusyBox Rootfs 构建——用户空间的基石
 
+::: warning 本节的 build-busybox.sh 已退役
+`./scripts/build_helper/build-busybox.sh` 已随"手搓 rootfs"流程一起退役：rootfs 现由 Buildroot 统一构建（`./scripts/build_helper/build-buildroot.sh`，BusyBox 是其中的一个包）。下文对旧脚本执行过程的解析保留作原理参考；**现行做法请直接看 [Buildroot · 首次构建](../buildroot/02_first_build.md)**。
+:::
+
 Rootfs 是内核启动后挂载的第一个文件系统，包含所有用户程序和配置。BusyBox 是一个集成了大量 UNIX 工具的单个可执行文件，非常适合嵌入式系统。
 
-### 获取 BusyBox 源码
+### 运行构建脚本（现行）
 
 ```bash
 cd /home/charliechen/imx-forge
-git submodule update --init --remote third_party/busybox
+./scripts/build_helper/build-buildroot.sh
 ```
 
-### 运行构建脚本
+构建产出在 `out/release-latest/rootfs/`（Buildroot 工作目录在 `out/release-latest/buildroot/`）。
 
-```bash
-cd /home/charliechen/imx-forge
-./scripts/build_helper/build-busybox.sh
-```
+### 旧脚本执行过程解析（已退役，原理参考）
 
-### 脚本执行过程解析
+以下是一个已经退役的 `build-busybox.sh` 手搓流程的执行过程记录，帮助你理解 BusyBox 交叉编译的每个环节；实际构建已由 Buildroot 接管，不需要手动做这些。
 
 #### 1. 依赖检查
 

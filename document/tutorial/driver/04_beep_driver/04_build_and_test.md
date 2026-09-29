@@ -89,16 +89,16 @@ crw-rw---- 1 root root 246, 0 Jan 1 00:00 /dev/beep
 
 ```bash
 # 让蜂鸣器响
-echo '0' > /dev/beep
+printf '0' > /dev/beep
 
 # 让蜂鸣器静音
-echo '1' > /dev/beep
+printf '1' > /dev/beep
 ```
 
 如果蜂鸣器反应和预期相反，说明 GPIO 极性配置有问题，回看设备树章节的分析。
 
-::: warning 注意写入内容
-要写的是字符 `'0'`，不是数字 `0`。`echo 0 > /dev/beep` 写的是字符 `'0'`，`printf '\x00' > /dev/beep` 写的是数字 `0`。
+::: warning 注意写入的字节数
+两个坑：一是要写的是字符 `'0'`，不是数字 `0`（`printf '\x00' > /dev/beep` 写的才是数字 `0`）；二是驱动的 `write` 要求 `count == 1`，而 `echo` 会在末尾多写一个换行符 `\n`（共 2 字节，驱动直接返回 `-EINVAL`），所以必须用不带换行的 `printf '0' > /dev/beep`。
 :::
 
 ### 调试脚本
@@ -112,24 +112,24 @@ echo "Testing beep driver..."
 
 # 测试 1：短鸣
 echo "Test 1: Short beep"
-echo '0' > /dev/beep
+printf '0' > /dev/beep
 sleep 0.5
-echo '1' > /dev/beep
+printf '1' > /dev/beep
 sleep 0.5
 
 # 测试 2：长鸣
 echo "Test 2: Long beep"
-echo '0' > /dev/beep
+printf '0' > /dev/beep
 sleep 2
-echo '1' > /dev/beep
+printf '1' > /dev/beep
 sleep 0.5
 
 # 测试 3：报警声
 echo "Test 3: Alarm pattern"
 for i in $(seq 1 5); do
-    echo '0' > /dev/beep
+    printf '0' > /dev/beep
     sleep 0.2
-    echo '1' > /dev/beep
+    printf '1' > /dev/beep
     sleep 0.2
 done
 
@@ -217,7 +217,7 @@ echo 0 > /sys/class/gpio/gpio161/value
 
 ### 问题 2：写入设备节点没反应
 
-**现象**：`echo '0' > /dev/beep` 执行成功，但蜂鸣器没反应。
+**现象**：`printf '0' > /dev/beep` 执行成功，但蜂鸣器没反应。
 
 **原因**：设备树不匹配或驱动加载失败。
 
