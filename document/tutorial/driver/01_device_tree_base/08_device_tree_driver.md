@@ -1,208 +1,165 @@
 ---
-title: 设备树驱动改造
+title: 从硬编码到设备树驱动
 ---
 
-# 08. 设备树驱动改造——从硬编码到设备树的实战之旅
+# 08. 从硬编码到设备树驱动
 
-## 前言：我们为什么要做这件事
+## 前言：五个写死的地址
 
-如果你跟着我们的教程一路走过来，现在应该已经写过两种 LED 驱动了：一种是完全硬编码的版本，所有寄存器地址都写死在代码里；另一种是我们在上一章对比过的设备树版本。但说实话，光看对比是不够的——你得亲自把手弄脏，把一个硬编码驱动改造成设备树驱动，才能真正理解这个过程。
+在[字符设备驱动教程](../00_chardev_base/)里，我们点亮过一次 LED。当时的做法你已经知道了：翻芯片手册，把五个寄存器的物理地址一个个抄进 `led_reg.h`：
 
-这就是我们这一章要做的事情。我们会从一个实实在在的硬编码驱动出发，一步步把它改造成使用设备树的版本。这个过程不是一蹴而就的，我们需要分步骤进行：添加头文件、定义节点路径、查找设备节点、读取设备属性、改造地址映射、完善错误处理。每一步都有它的道理，每一步都可能踩坑。
+```c
+/* led_reg.h - 硬编码方式的寄存器地址定义 */
+static const u32 kCCM_CCGR1_BASE = 0X020C406C;
+static const u32 kSW_MUX_GPIO1_IO03_BASE = 0X020E0068;
+static const u32 kSW_PAD_GPIO1_IO03_BASE = 0X020E02F4;
+static const u32 kGPIO1_DR_BASE = 0X0209C000;
+static const u32 kGPIO1_GDIR_BASE = 0X0209C004;
+```
 
-你会发现，这次改造的核心思想不是"重写"，而是"渐进式重构"。我们会保持硬件抽象层不变，只修改硬件信息的获取方式。这样做的好处是：你可以逐步验证每一步的正确性，如果出错了也能快速定位是哪一步出了问题。这比一次性改完所有代码要安全得多。
+`led_reg.h` 在教程里服役得很好，但代价也是实打实的。地址抄错一个数字，排查起来是灾难。LED 从 GPIO1_IO03 换到 IO04，你得重新翻手册、改宏、重新编译。真用同一颗芯片做了三款产品，你还得维护三份几乎一样、只差几个地址的驱动。这些麻烦追到底都是同一个根子：硬件信息和驱动代码长在了一起。
 
-说实话，这种渐进式改造的方法论，在实际工程项目中非常重要。很多时候我们不敢改老代码，就是怕改出问题来。但如果你学会了这种小步迭代、逐步验证的方式，你会发现即使是重构核心代码，也不那么可怕了。
+设备树给的解法一句话咱们也就说完了：把地址搬进一个文本文件，驱动在运行时自己来取。本章我们就拿仓库里真实的 `led_hw.c` 开刀，把硬编码版改造成设备树版，然后一路跑通编译、部署、在板子上点灯。
 
----
+怎么改也有讲究。我们不会一次性把代码全换掉，而是分成六步走，每一步只动一小块，改完就能编译、能在板子上验证。哪一步出了问题，你立刻能定位到是哪一步引入的，这个习惯在改造任何老代码时都用得上。
 
-## 改造策略：为什么渐进式改造很重要
+## 改造对象，和不变的东西
 
-在我们开始动手之前，先来聊聊改造策略。你可能会问：为什么不直接写出最终的设备树驱动版本，而要分这么多步骤？
+这个驱动模块由 `driver/06_tutorial_device_tree_try/alpha-board/` 下的两个文件组成：`led_hw.c` 负责硬件操作，`device_tree_try_03_driver_main.c` 负责字符设备框架。六步改造全部落在 `led_hw.c` 上，main 文件一行不动。而整个改造过程中，我们守住的是 `led_hw.h` 里声明的四个接口：
 
-答案很简单：因为我们要保证每一步都是可验证的。假设你一次性改完所有代码，然后上板测试发现驱动起不来，这时候你该从哪里开始排查？是设备树节点写错了？是 OF API 调用方式不对？还是地址映射出了问题？当所有改动混在一起时，调试会变得异常困难。
+```c
+int  led_hw_init(void);
+void led_hw_deinit(void);
+void led_set_status(bool status);
+bool led_get_status(void);
+```
 
-但如果你分步骤进行，每一步改完都能验证它的正确性，那情况就完全不同了。比如你先添加设备树头文件，编译一下确保没问题；然后添加节点查找代码，上板测试确认能找到节点；再然后添加属性读取代码，确认能读取到正确的值。这样一步步推进，即使出错了也能快速定位到具体是哪一步出了问题。
+只动过一处，`led_hw_init` 在字符设备教程基线里返回 `void`，这一版改成了 `int`，好把 `-EINVAL`、`-ENOMEM` 这些失败报出去。除此之外接口原样，上层字符设备代码因此一行都不用动，硬件抽象层的价值也就在这儿：我们改的只是“地址从哪里来”这一件事，上层根本感知不到下层动过。
 
-另一个重要的原因是：我们要保持硬件抽象层的接口不变。你仔细看我们的代码结构，会发现 `led_hw.h` 里定义的接口——`led_hw_init`、`led_hw_deinit`、`led_set_status`、`led_get_status`——在整个改造过程中都没有变化。这意味着上层的字符设备驱动代码完全不需要修改，我们只需要改动硬件抽象层的实现。这种接口稳定的设计，让大规模重构变得可控。
+## 要吃进驱动的那棵设备树
 
----
+来看我们要吃进去的东西。设备树文件在 `driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts`，内容如下：
 
-## 步骤1：添加设备树头文件
+```dts
+/dts-v1/;
+#include "imx6ull.dtsi"
+#include "imx6ull-aes.dtsi"
 
-改造的第一步非常简单：添加设备树相关的头文件。打开 `led_hw.c`，在原有的头文件之后添加两行：
+/ {
+	model = "Awesome Embedded Studio IMX6ULL Example Driver";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+	imx_aes_led {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "atkalpha-led";
+		status = "okay";
+		reg = < 0X020C406C 0X04 /* CCM_CCGR1_BASE */
+				0X020E0068 0X04 /* SW_MUX_GPIO1_IO03_BASE */
+				0X020E02F4 0X04 /* SW_PAD_GPIO1_IO03_BASE */
+				0X0209C000 0X04 /* GPIO1_DR_BASE */
+				0X0209C004 0X04 >; /* GPIO1_GDIR_BASE */
+	};
+};
+```
+
+和 `led_reg.h` 对照着看，五个地址全数搬了过来，只是从 C 常量变成了 `reg` 属性里的五组“地址、长度”对，`0X04` 是每个寄存器的长度，4 字节。DTS 语法的全貌在[卷内的语法详解一章](03_device_tree_syntax.md)有速览，我们只要认得出这个成对格式就够用。地址后面跟着注释写明寄存器名，这个习惯值得保持：设备树文件没有类型系统帮你，注释就是唯一的自解释手段。
+
+从节点的位置说起。`imx_aes_led` 直接挂在根节点 `/` 下面，所以它的完整路径是 `/imx_aes_led`，这个路径待会儿就是驱动找它的钥匙。为什么放根下？我们拿 LED 直接操作 GPIO 寄存器，它是个简单设备，不属于任何总线。真正挂在 I2C、SPI 总线上的设备要放到对应总线节点下面，那是后面驱动章节的事。
+
+另一件要交代的是 `compatible = "atkalpha-led"` 这个值的血统。它来自这套教程参考的正点原子 Alpha 开发板血统。我们仓库自己的板卡身份是 aes，全称 Awesome Embedded Studio。名字都对不上，能工作吗？能。本章的驱动按路径找节点，压根不做 compatible 匹配，这个值是什么都不影响运行。等我们走到平台设备驱动教程，匹配改靠 compatible 完成，那时用的是 `imxaes,led` 这样的自有命名。这里保留原值并把来历说清楚，比悄悄换掉更诚实。
+
+## 六步改造 led_hw.c
+
+### 第一步：两个头文件
 
 ```c
 #include <linux/of.h>
 #include <linux/of_address.h>
 ```
 
-这两个头文件的作用是什么呢？`linux/of.h` 提供了设备树的基础数据结构和 API，比如 `struct device_node`、`of_find_node_by_path`、`of_property_read_string` 等。而 `linux/of_address.h` 提供了地址映射相关的 API，最重要的是 `of_iomap` 函数。
+`of.h` 提供设备树的基础数据结构和查找、读属性的 API（`struct device_node`、`of_find_node_by_path`、`of_property_read_string` 这些），`of_address.h` 提供地址映射的 `of_iomap`。只要用到 OF API，两个头文件基本就够了，其余声明会经由它们间接包含。加完我们编译一次，确认没有拼写问题，然后往下走。
 
-当初我第一次改代码时，就是从这里开始的。因为不知道需要哪些头文件，我把驱动里用到的每个 OF API 都去查了一下它们的定义位置，然后一个一个添加头文件。后来才发现其实只需要这两个核心头文件就够了，其他 OF API 的声明都会通过这两个头文件间接包含进来。
-
-添加完头文件之后，先编译一下确保没有语法错误。虽然我们还没有写任何设备树相关代码，但这一步能确认头文件路径正确、没有拼写错误。这种"小步验证"的习惯，能帮你避免很多低级错误。
-
----
-
-## 步骤2：定义设备树节点路径
-
-接下来我们需要定义设备树节点的路径。在硬编码版本里，我们用宏定义来存储寄存器地址；而在设备树版本里，我们需要一个字符串来存储设备树节点的路径。
+### 第二步：路径常量，斜杠不能少
 
 ```c
 static const char* kIMX_AES_LED = "/imx_aes_led";
 ```
 
-这里有个细节需要注意：路径字符串前面有一个斜杠 `/`，表示这是从根节点开始的绝对路径。如果你写成 `"imx_aes_led"`（没有前面的斜杠），那 `of_find_node_by_path` 会把它当作相对路径处理，结果就找不到节点了。这一点我当初踩过坑，找了半天才发现是少了一个斜杠。
+开头的 `/` 表示从根节点起算的绝对路径。写成 `"imx_aes_led"` 的话，`of_find_node_by_path` 会找不到节点，返回 NULL，而且报错信息只有一句 `dtsled node can not found!`，你盯着代码看它明明哪儿都对。我当初就在这个斜杠上耗了半天，所以这一步专门停下来讲它。
 
-但你可能会问：这个路径字符串是怎么确定的？答案很简单：它是我们在设备树文件里定义的节点路径。我们来看看设备树文件：
-
-```dts
-/imx_aes_led {
-    #address-cells = <1>;
-    #size-cells = <1>;
-    compatible = "atkalpha-led";
-    status = "okay";
-    reg = <...>;
-};
-```
-
-请注意节点名前面的斜杠——这表示这个节点直接挂在根节点下面。所以它的完整路径就是 `/imx_aes_led`。如果你把节点定义在其他节点下面，比如 `&iomuxc` 里面，那路径就会变成 `/iomuxc/imx_aes_led`，你需要在代码里相应修改路径字符串。
-
-还有一个细节：路径字符串是用 `static const` 修饰的。`const` 表示这个字符串不会被修改，`static` 表示这个符号只在当前文件可见。这样做的好处是编译器可以把字符串放在只读段，而且不会和其他文件的同名符号冲突。
-
----
-
-## 步骤3：查找设备树节点
-
-定义好路径之后，下一步就是查找设备树节点。这一步是设备树驱动的入口——如果找不到节点，后续的所有操作都没法进行。
-
-我们先来看看代码是怎么写的：
+### 第三步：of_find_node_by_path 拿节点
 
 ```c
-int led_hw_init(void) {
-    /* ... 变量定义 ... */
-
-    /* 1. 获取设备树节点 */
-    led.device_tree_node = of_find_node_by_path(kIMX_AES_LED);
-    if (led.device_tree_node == NULL) {
-        pr_err("dtsled node can not found!\n");
-        return -EINVAL;
-    }
-    pr_info("dtsled node has been found!\n");
+led.device_tree_node = of_find_node_by_path(kIMX_AES_LED);
+if (led.device_tree_node == NULL) {
+    pr_err("dtsled node can not found!\n");
+    return -EINVAL;
+}
+pr_info("dtsled node has been found!\n");
 ```
 
-这里的 `of_find_node_by_path` 函数是设备树 API 的核心函数之一。它的作用是根据路径字符串查找设备树节点，如果找到了就返回一个 `struct device_node*` 指针，如果找不到就返回 `NULL`。
+这是设备树驱动真正的入口。找到节点返回 `struct device_node*`，找不到返回 NULL，我们据此提前退出，不再像硬编码版那样默认硬件一定在。这里返回 `-EINVAL` 其实不太精确，`-ENODEV`（设备不存在）更贴切。自己的练习驱动里两者无伤大雅，但你要知道区别在哪。
 
-请注意这里的错误处理：我们检查了返回值是否为 `NULL`，如果是就打印错误信息并返回 `-EINVAL`。这个错误码表示"无效参数"，虽然在这里可能不太准确——更合适的可能是 `-ENODEV`（设备不存在）——但对于我们自己写的驱动来说，只要能区分成功和失败就行，具体的错误码可以后续优化。
+还有一件事现在就要记下：`of_find_node_by_path` 成功返回时，会把这个节点的引用计数加一。这意味着后面用完节点，必须用 `of_node_put` 把引用还回去，否则那部分内存永远不释放。第六步我们会兑现这个承诺。
 
-但这里有个重要的细节：`of_find_node_by_path` 成功返回时，会增加设备树节点的引用计数。这意味着你用完这个节点之后，必须调用 `of_node_put` 来释放引用，否则会导致内存泄漏。我们会在资源清理部分详细讨论这个问题。
+### 第四步：三个属性各读一遍，但只有 reg 不能失败
 
-现在你可能会问：如果设备树节点不存在，是什么原因导致的？这里有几个常见的可能性。第一，设备树文件根本没有定义这个节点；第二，节点定义了但是路径字符串写错了；第三，设备树编译后的 dtb 文件没有正确部署到目标系统；第四，内核启动时没有加载正确的 dtb 文件。这些都需要你逐一排查。
-
-一个有用的调试技巧是：你可以通过 `/sys/firmware/devicetree/base` 目录来查看运行时的设备树。如果目标系统上存在 `/sys/firmware/devicetree/base/imx_aes_led` 目录，那说明节点确实存在；如果不存在，那就需要检查设备树文件和 dtb 部署。
-
----
-
-## 步骤4：读取设备属性
-
-找到设备树节点之后，下一步就是读取设备的属性。在实际的驱动开发中，这一步非常重要——你需要验证设备的 `compatible` 属性是否匹配、`status` 属性是否为 `"okay"`，以及 `reg` 属性里包含的地址信息是否正确。
-
-我们先来看看读取 `compatible` 属性的代码：
+改造版驱动连着读了三个属性，我们一个一个看，每一个用不同的 API，各有讲究：
 
 ```c
-    /* 2. 获取 compatible 属性 */
-    proper = of_find_property(led.device_tree_node, "compatible", NULL);
-    if (proper == NULL) {
-        pr_err("compatible property find failed\n");
-    } else {
-        pr_info("compatible = %s\n", (char*)proper->value);
-    }
+/* 读 compatible：拿原始属性结构 */
+proper = of_find_property(led.device_tree_node, "compatible", NULL);
+if (proper == NULL) {
+    pr_err("compatible property find failed\n");
+} else {
+    pr_info("compatible = %s\n", (char*)proper->value);
+}
+
+/* 读 status：读字符串的专用接口 */
+ret = of_property_read_string(led.device_tree_node, "status", &str);
+if (ret < 0) {
+    pr_err("status read failed!\n");
+} else {
+    pr_info("status = %s\n", str);
+}
+
+/* 读 reg：整数数组 */
+ret = of_property_read_u32_array(led.device_tree_node, "reg", regdata, 10);
+if (ret < 0) {
+    pr_err("reg property read failed!\n");
+    of_node_put(led.device_tree_node);
+    return -EINVAL;
+}
 ```
 
-这里的 `of_find_property` 函数用来查找设备树节点中的属性。请注意它的返回值类型是 `struct property*`，这个结构体的 `value` 字段指向属性值的原始数据。对于字符串类型的属性，`value` 字段就是一个以 null 结尾的字符串，所以我们可以直接把它转换成 `char*` 来打印。
+`of_find_property` 返回原始的 `struct property*`，`value` 字段直接指向属性值，演示“属性在内核里长什么样”最直观。`of_property_read_string` 是正经的字符串读取接口，注意第三个参数是 `const char**`，它给你的是指向设备树原始数据的指针，不是一份拷贝，所以不需要你释放。`of_property_read_u32_array` 按 u32 数组读，我们的 `reg` 有五组地址长度、共 10 个值，所以第四个参数是 10。
 
-但请注意这里的错误处理：如果 `of_find_property` 返回 `NULL`，我们只是打印了一个错误信息，并没有直接返回失败。这是因为 `compatible` 属性对于我们的驱动来说并不是严格必需的——我们通过路径查找节点，而不是通过 `compatible` 属性匹配。但在平台设备驱动中，`compatible` 属性是驱动匹配的核心，那时候你就需要严格检查它了。
+失败处理的松紧也不一样：compatible 和 status 读取失败只打印不返回，因为我们这个驱动不依赖它们做决定（路径才是钥匙）。reg 失败就必须返回了，下一步的 `of_iomap` 全靠它。注意返回前的 `of_node_put`：第三步借的引用，从这里提前退出时也要还，一条退出路径都不能欠。
 
-接下来是读取 `status` 属性：
+### 第五步：of_iomap 按索引映射
 
 ```c
-    /* 3. 获取 status 属性 */
-    ret = of_property_read_string(led.device_tree_node, "status", &str);
-    if (ret < 0) {
-        pr_err("status read failed!\n");
-    } else {
-        pr_info("status = %s\n", str);
-    }
+led.ccm_ccgr1   = of_iomap(led.device_tree_node, 0);
+led.sw_mux_gpio = of_iomap(led.device_tree_node, 1);
+led.sw_pad_gpio = of_iomap(led.device_tree_node, 2);
+led.gpio_dr     = of_iomap(led.device_tree_node, 3);
+led.gpio_gdir   = of_iomap(led.device_tree_node, 4);
+
+if (!led.ccm_ccgr1 || !led.sw_mux_gpio || !led.sw_pad_gpio ||
+    !led.gpio_dr || !led.gpio_gdir) {
+    pr_err("ioremap failed!\n");
+    of_node_put(led.device_tree_node);
+    return -ENOMEM;
+}
 ```
 
-这里使用了 `of_property_read_string` 函数，它专门用来读取字符串类型的属性。请注意这个函数的参数设计：第三个参数是一个 `const char**` 类型的指针，函数会把读取到的字符串地址存储到这个指针指向的位置。这种设计避免了函数内部分配内存，调用者不需要手动释放。
+我们对照着 dts 看：第二个参数是索引，0 对应 `reg` 里第一组 `0X020C406C 0X04`，1 对应第二组，以此类推。驱动从此不需要知道地址是什么，只需要知道“我要第几组”。硬编码版里换引脚要重查手册、改宏、重编译。现在换板子改 dts 里的地址就行，`.ko` 原封不动。
 
-对于 `status` 属性，标准的值是 `"okay"` 表示设备可用，`"disabled"` 表示设备被禁用。如果 `status` 属性不存在，大多数驱动会默认认为设备是可用的。但在我们的代码里，如果读取失败我们只是打印错误信息，继续执行。这是因为我们的驱动比较简单，不依赖 `status` 属性来做决定。
+`of_iomap` 内部走的就是 `ioremap`，失败同样返回 NULL，所以五个映射挨个判空，任何一个失败都回收引用、返回 `-ENOMEM`。它比裸 `ioremap` 多做的一件事是地址转换：`reg` 里写的是总线地址，某些架构上要经过转换才是 CPU 视角的物理地址，`of_iomap` 替你处理了这层。
 
-最后是读取 `reg` 属性：
+映射拿到之后，使能时钟、配复用、配电气属性、设输出方向这一串寄存器操作，序列和语义都和硬编码版一致，只是地址变量的来源从宏换成了结构体成员。这部分与设备树无关，我们就不贴了，完整代码在仓库里。
 
-```c
-    /* 4. 获取 reg 属性内容 */
-    ret = of_property_read_u32_array(led.device_tree_node, "reg", regdata, 10);
-    if (ret < 0) {
-        pr_err("reg property read failed!\n");
-        of_node_put(led.device_tree_node);
-        return -EINVAL;
-    }
-
-    pr_info("reg data:\n");
-    for (int i = 0; i < 10; i++) {
-        pr_cont("%#X ", regdata[i]);
-    }
-    pr_cont("\n");
-```
-
-这里的 `of_property_read_u32_array` 函数用来读取整数数组类型的属性。`reg` 属性本质上是一个地址和长度的数组，我们的 LED 节点有 5 个寄存器，每个寄存器有一个地址和一个长度，所以总共有 10 个 u32 值。
-
-请注意这里的一个细节：我们直接指定了读取 10 个值。这种方式在我们的特定场景下没问题，因为我们知道设备树里确实有 5 组地址。但在更通用的驱动中，你应该先查询属性里有多少个值，然后动态分配内存来存储。这可以通过 `of_property_count_u32_elems` 函数来实现。
-
-还有一个重要的细节：在 `reg` 属性读取失败时，我们调用了 `of_node_put(led.device_tree_node)` 来释放节点引用。这是因为在读取失败时我们直接返回了错误码，不再执行后续的清理逻辑，所以需要在这里手动释放引用。这是一个很容易被遗忘的细节，但忘记释放会导致内存泄漏。
-
----
-
-## 步骤5：使用 of_iomap 替代 ioremap
-
-现在我们来到了改造的核心部分：地址映射。在硬编码版本里，我们直接调用 `ioremap` 把物理地址映射成虚拟地址；而在设备树版本里，我们使用 `of_iomap` 函数，它可以从设备树节点的 `reg` 属性中自动提取地址信息并进行映射。
-
-我们先来看看代码：
-
-```c
-    /* 5. 使用 of_iomap 进行寄存器地址映射 */
-    led.ccm_ccgr1 = of_iomap(led.device_tree_node, 0);
-    led.sw_mux_gpio = of_iomap(led.device_tree_node, 1);
-    led.sw_pad_gpio = of_iomap(led.device_tree_node, 2);
-    led.gpio_dr = of_iomap(led.device_tree_node, 3);
-    led.gpio_gdir = of_iomap(led.device_tree_node, 4);
-
-    if (!led.ccm_ccgr1 || !led.sw_mux_gpio || !led.sw_pad_gpio ||
-        !led.gpio_dr || !led.gpio_gdir) {
-        pr_err("ioremap failed!\n");
-        of_node_put(led.device_tree_node);
-        return -ENOMEM;
-    }
-```
-
-请注意 `of_iomap` 的调用方式：第一个参数是设备树节点，第二个参数是索引。这个索引对应 `reg` 属性中的第几组地址。索引 0 对应第一组 `0X020C406C 0X04`，索引 1 对应第二组 `0X020E0068 0X04`，以此类推。
-
-这个设计非常巧妙。驱动代码不需要知道具体的地址值，它只需要知道"我需要第几个寄存器"。具体的地址是什么，那是设备树的事情。这种抽象让驱动代码和硬件配置解耦了——如果你换了一块板子，只需要修改设备树文件里的地址，驱动代码完全不用动。
-
-但这里有个容易被忽略的细节：`of_iomap` 内部会调用 `ioremap`，所以失败时返回的也是 `NULL`。我们需要检查所有映射是否成功，只要有一个失败了就应该报错并清理资源。请注意这里的错误处理：如果映射失败，我们不仅打印错误信息，还调用了 `of_node_put` 来释放节点引用，然后返回 `-ENOMEM`（表示内存不足）。
-
-你可能会问：为什么 `of_iomap` 比直接调用 `ioremap` 更好？除了我们刚才说的抽象性优势之外，`of_iomap` 还有一个重要的特性：它会自动处理 `reg` 属性中的地址转换。在某些架构上，设备树里的地址可能不是物理地址，而是需要经过某种转换的"总线地址"。`of_iomap` 会自动处理这种转换，而直接使用 `ioremap` 就需要你手动计算转换后的地址。
-
----
-
-## 步骤6：完善错误处理和资源清理
-
-完成了地址映射之后，硬件初始化的后续步骤——使能时钟、配置 GPIO 复用和电气属性、设置 GPIO 方向——这些操作在硬编码版本和设备树版本中基本是一样的。区别只是地址的来源不同：硬编码版本用的是全局变量，设备树版本用的是结构体成员。
-
-所以我们直接跳到资源清理的部分。这是设备树驱动改造中很容易被忽略，但实际上非常重要的一环。
+### 第六步：deinit 收尾，把借的引用还回去
 
 ```c
 void led_hw_deinit(void) {
@@ -212,7 +169,7 @@ void led_hw_deinit(void) {
         iounmap(led.ccm_ccgr1);
         led.ccm_ccgr1 = NULL;
     }
-    /* ... 其他 iounmap 调用 ... */
+    /* 其余四个 iounmap 同款，逐个判空、置 NULL */
 
     if (led.device_tree_node) {
         of_node_put(led.device_tree_node);
@@ -221,93 +178,143 @@ void led_hw_deinit(void) {
 }
 ```
 
-请注意这里几个重要的细节。第一，在调用 `iounmap` 之前，我们检查了指针是否为 `NULL`。这是为了防止双重释放——如果 `led_hw_deinit` 被调用两次，第一次会把指针设为 `NULL`，第二次检查到 `NULL` 就不会再次调用 `iounmap`。这种防御性编程在实际项目中非常重要。
+每个指针释放前判空、释放后置 NULL，这让 `deinit` 被调用两次也不会双重释放。好处平时看不见，出事的时候才显出来。最后的 `of_node_put` 兑现第三步的承诺：引用计数不归零，节点内存就永远挂着。你可能会想，模块卸载时内核不会自动清理吗？不会。设备树节点的生命周期就是靠引用计数管的，内核不知道你什么时候不用了，只有你自己知道。
 
-第二，在释放完所有资源之后，我们把指针都设为 `NULL`。这是一种叫做"悬空指针预防"的实践。如果不把指针设为 `NULL`，那么在释放之后指针仍然指向已经释放的内存，如果后续代码错误地使用了这个指针，就会导致未定义行为。把指针设为 `NULL` 之后，如果有人错误使用，至少会立即触发空指针异常，而不是产生难以调试的内存破坏。
+到这里改造就完成了。我们回头看，`led_hw.h` 的接口只动过一处，`led_hw_init` 的返回值从字符设备教程里的 `void` 改成了 `int`，好把失败报出去。除此之外一行没动，上层字符设备代码也没动过，动的只有“地址从哪来”。
 
-第三，最后我们调用了 `of_node_put(led.device_tree_node)`。这是设备树 API 的要求——每次调用 `of_find_node_by_path` 都会增加节点的引用计数，用完后必须调用 `of_node_put` 来减少计数。如果忘记调用，设备树节点的内存永远不会被释放，会导致内存泄漏。
+## 动手：编译、部署、上板点灯
 
-但你可能会问：在模块卸载的时候，内核不是会自动清理所有资源吗？对于设备树节点来说，答案是"不会"。设备树节点的生命周期管理是通过引用计数来实现的，只有当引用计数降为零时，节点才会被释放。如果你忘记调用 `of_node_put`，引用计数永远不会降为零，节点就永远不会被释放。
+代码看懂只是半件事，我们接下来把它真正跑起来，全程用仓库自带的脚本。动手前对一下环境：`third_party/linux_mainline` 已初始化检出（编 dtb 的 include 路径在它里面），你自己的电脑上装好 `dtc` 和 `arm-none-linux-gnueabihf-` 交叉工具链，部署用的 TFTP、NFS 服务能跑。缺哪样，编译或部署环节就会卡住，补齐了再往下走。
 
----
+### 编驱动：一个脚本的事
 
-## 设备树文件编写
-
-驱动代码改造完成之后，我们还需要编写对应的设备树文件。设备树文件是驱动和硬件之间的桥梁，它告诉内核"硬件在哪里"以及"硬件是什么样子的"。
-
-我们来看看完整的设备树文件：
-
-```dts
-/dts-v1/;
-#include "imx6ull.dtsi"
-#include "imx6ull-aes.dtsi"
-
-/ {
-    model = "Awesome Embedded Studio IMX6ULL Example Driver";
-    compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
-
-    imx_aes_led {
-        #address-cells = <1>;
-        #size-cells = <1>;
-        compatible = "atkalpha-led";
-        status = "okay";
-        reg = < 0X020C406C 0X04    /* CCM_CCGR1_BASE */
-                0X020E0068 0X04    /* SW_MUX_GPIO1_IO03_BASE */
-                0X020E02F4 0X04    /* SW_PAD_GPIO1_IO03_BASE */
-                0X0209C000 0X04    /* GPIO1_DR_BASE */
-                0X0209C004 0X04 >; /* GPIO1_GDIR_BASE */
-    };
-};
+```bash
+# 项目根目录下
+./scripts/driver_helper/build_driver.sh 06_tutorial_device_tree_try alpha-board
 ```
 
-这个文件的开头是 `/dts-v1/;`，表示这是设备树源文件的版本 1 格式。然后我们包含了两个 `.dtsi` 文件：`imx6ull.dtsi` 描述了 IMX6ULL 芯片本身的硬件信息，`imx6ull-aes.dtsi` 描述了我们板子的共性配置。
+传的是 `driver/` 下的驱动目录名。产物落在 `out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/device_tree_try_03_driver.ko`，模块名里的 `03` 是早期教程编号在 Makefile 里的残留，不用管它。编完我们用 `modinfo` 看一眼 `vermagic`，它必须和板子运行的内核版本一致，不然 `insmod` 会直接拒绝：
 
-根节点 `/` 下面有两个属性：`model` 和 `compatible`。`model` 是一个自由文本字段，用来描述这块板子；`compatible` 是一个字符串列表，用来匹配平台代码。这些是设备树的标准属性，大多数设备树文件都会包含。
+```bash
+modinfo out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/device_tree_try_03_driver.ko | grep vermagic
+```
 
-然后是我们的 LED 节点 `imx_aes_led`。请注意这个节点直接挂在根节点下面，所以它的完整路径是 `/imx_aes_led`。如果你把节点定义在其他地方，比如 `&iomuxc` 里面，那路径就会不同。
+### 编设备树：这棵树要手动编
 
-节点里有四个属性。`#address-cells` 和 `#size-cells` 定义了子节点中地址和长度的表示方式——因为我们的节点没有子节点，这两个属性其实不是必需的，但加上也无妨。`compatible` 属性定义了设备的兼容性字符串，在平台设备驱动中用来匹配驱动。`status` 属性表示设备的状态，`"okay"` 表示设备可用，`"disabled"` 表示设备被禁用。
+::: warning 这棵设备树目前要手动编
+驱动目录编号是 `06_tutorial_device_tree_try`，设备树目录编号却是 `11_tutorial_device_tree_try`，历史遗留对不上。`build_driver.sh` 会去 `driver/device_tree/alpha-board/` 下找与驱动目录同名的子目录，落空再退回驱动目录里找 `.dts`，`06_tutorial_device_tree_try` 两处都没有，所以 `.dtb` 不会自动产出，我们用下面的命令自己编。
+:::
 
-最重要的是 `reg` 属性，它定义了设备所需的寄存器地址。`reg` 属性的格式是：地址和长度交替出现。我们的 LED 设备需要 5 个寄存器，每个寄存器 4 字节，所以 `reg` 属性里有 10 个值。
+dts 里有 `#include`，直接喂给 `dtc` 会报错，我们得让它过一遍 C 预处理器，再交给 `dtc`：
 
-请注意 `reg` 属性中的注释。我们在每个地址后面都添加了注释，说明这个地址对应的寄存器名称。这是一个好习惯，设备树文件不像 C 代码那样有良好的结构化表示，加上注释能让代码更容易维护。
+```bash
+gcc -E -nostdinc -undef -x assembler-with-cpp \
+    -I third_party/linux_mainline/arch/arm/boot/dts \
+    -I third_party/linux_mainline/arch/arm/boot/dts/nxp/imx \
+    -I driver/device_tree/alpha-board/linux \
+    driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts \
+  | dtc -I dts -O dtb \
+    -o out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/imx6ull-aes-11_tutorial_device_tree_try.dtb -
+```
 
----
+命令里的三个 `-I` 我们挨个看过来。第一个是内核的 ARM 设备树公共目录。第二个是 NXP imx 子目录，`imx6ull.dtsi` 在这里。第三个到项目主板目录里找 `imx6ull-aes.dtsi`。这套“预处理一遍再交给 dtc”的两阶段流程就是内核自己编设备树的方式，细节在[编译机制一章](11_compile_mechanism.md)里拆。
 
-## 常见问题与调试
+编完我们可以反编译对拍，确认我们的节点真的在 dtb 里：
 
-到这里，我们的设备树驱动改造就完成了。但在实际操作中，你可能会遇到各种各样的问题。我们来总结一些常见的坑点和对应的调试方法。
+```bash
+dtc -I dtb -O dts -o /tmp/check.dts \
+    out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/imx6ull-aes-11_tutorial_device_tree_try.dtb
+grep -A 10 "imx_aes_led" /tmp/check.dts
+```
 
-### 节点路径不对
+反编译出来的格式和源文件会有出入，我们只对节点结构和属性值，这两样应当一致。
 
-最常见的问题是节点路径写错了。比如你把设备树节点定义在 `/soc/iomuxc` 下面，但代码里写的路径是 `/imx_aes_led`，那肯定找不到节点。
+### 部署
 
-调试方法是在代码里打印完整的错误信息，包括你查找的路径字符串。还可以通过 `/sys/firmware/devicetree/base` 目录来查看运行时的设备树结构，确认节点的实际路径。
+```bash
+# dtb 走 TFTP
+./scripts/driver_helper/deploy_driver.sh 06_tutorial_device_tree_try alpha-board --target=tftp
 
-### reg 属性格式错误
+# ko 走 NFS rootfs
+./scripts/driver_helper/deploy_driver.sh 06_tutorial_device_tree_try alpha-board --target=nfs
+```
 
-`reg` 属性的格式是"地址和长度交替出现"，如果格式不对会导致读取失败。常见错误包括：只写了地址没写长度、长度写成了 `0`、地址和长度的数量不匹配等。
+dtb 部署时目标名是 `imx6ull-aes.dtb`，不是产物原名，U-Boot 按 `fdt_file` 环境变量里写死的名字加载。拿不准你的板子用哪个名字，你在 U-Boot 命令行 `printenv fdt_file` 查。dtb 换了要重启板子才生效。ko 不用，`insmod` 即可。
 
-调试方法是使用 `of_property_read_u32_array` 读取 `reg` 属性后，把读取到的所有值都打印出来。你可以数一下值的数量是否正确，每个值的大小是否合理。
+### 板上验证：把树查一遍，再加载
 
-### 地址映射失败
+在板子上我们按固定的顺序走，顺序本身就是排查方法：确认内核手里的设备树里真有这个节点，然后加载驱动。树里没有的话，驱动第一步 `of_find_node_by_path` 就会失败，问题出在 dtb 部署那一侧，不在驱动。把树放在加载前面查，为的就是把这两类问题分开。
 
-`of_iomap` 调用失败通常是因为 `reg` 属性里的地址不正确，或者索引超出了范围。比如 `reg` 属性只定义了 3 组地址，但你尝试用索引 3 去映射第四组，那就会返回 `NULL`。
+```bash
+ls /proc/device-tree/imx_aes_led/
+cat /proc/device-tree/imx_aes_led/compatible
+# atkalpha-led
+cat /proc/device-tree/imx_aes_led/status
+# okay
+hexdump -C /proc/device-tree/imx_aes_led/reg
+```
 
-调试方法是先检查 `reg` 属性的值是否正确，然后确认 `of_iomap` 的索引没有超出范围。你还可以在调用 `of_iomap` 之后立即检查返回值是否为 `NULL`，如果是就打印错误信息。
+`/proc/device-tree` 就是内核展开后的设备树本体，每个节点一个目录、每个属性一个文件，它是你在运行中的系统上检查设备树的第一入口。三个输出都对上 dts 里写的值，说明新 dtb 已经被内核吃进去了。接下来加载驱动：
 
-### 忘记释放资源
+```bash
+insmod device_tree_try_03_driver.ko
+dmesg | tail -30
+```
 
-忘记调用 `of_node_put` 或 `iounmap` 会导致内存泄漏。这种问题在短时间运行时不会暴露，但长时间运行后会耗尽系统内存。
+你在 `dmesg` 里能看到 `led_hw_init` 那一串 `pr_info` 输出，下面是节选。`reg data` 和 `LED Init OK!` 之间还夹着映射地址、CCGR1 位分解、GDIR 和 DR 初值那十来行，这里省掉了，虚拟地址的值只有跑在板子上才拿得到，我们不编。
 
-调试方法是使用内核的内存调试工具，比如 `kmemleak`，可以检测到内存泄漏。更好的做法是在代码里养成好习惯，每次获取资源后都确保在所有退出路径上都释放资源。
+```text
+dtsled node has been found!
+compatible = atkalpha-led
+status = okay
+reg data:
+0X20C406C 0X4 0X20E0068 0X4 0X20E02F4 0X4 0X209C000 0X4 0X209C004 0X4
+LED Init OK!
+```
 
----
+`reg data` 那行是本章的高光时刻：打印出来的五个地址，和你 dts 里写的五个完全一致。数据真的从 dts 出发，经过 dtb、经过内核展开，流进了驱动变量。最后点灯：
+
+```bash
+ls -l /dev/AES_LED
+# crw------- 1 root 245, 0 ... /dev/AES_LED   主设备号和 dmesg 里的一致
+
+echo 1 > /dev/AES_LED    # 点亮（这块板的 LED 低电平点亮，写 1 是"开"）
+echo 0 > /dev/AES_LED    # 熄灭
+
+rmmod device_tree_try_03_driver
+```
+
+灯亮的那一下，从 `led_reg.h` 到设备树的迁移，我们就算走完了。
+
+## API 拿不准时，上源码里对
+
+教程里的 API 签名是死的，内核是活的。你以后一定会有“这个函数到底存不存在、参数是什么”的时刻，别搜教程，直接问内核源码：
+
+```bash
+cd third_party/linux_mainline
+git grep -n "of_find_node_by_path" include/linux/of.h
+```
+
+你会看到它在 `include/linux/of.h` 里是个 `static inline` 包装，真正干活的是 `of_find_node_opts_by_path(path, NULL)`，内核给它留了个传选项的口子，日常用不到而已。同一个名字出现两处也别慌，一处是真实现，另一处是 `CONFIG_OF` 关闭时的空桩，看上下文就能分辨。
+
+查的时候有两个习惯值得养成：查声明从 `include/` 查起，用 `git grep` 而不是裸 `grep -r`，内核几十万文件，后者会把你淹死。本项目的内核轨只有 mainline（7.1.0）一条，所以只对这一棵树。引用 API 时写函数名和文件就够，行号会随版本漂，别依赖它。
+
+## 常见卡点
+
+**路径少斜杠，节点就找不到。** 现象是 `of_find_node_by_path` 稳定返回 NULL，代码怎么看都没错。你检查 `kIMX_AES_LED` 开头的 `/`，再对照 `/proc/device-tree` 下的实际路径。路径失效还有一类：节点挪了位置（比如挂到别的节点下面），路径字符串要跟着变。
+
+**reg 的数量对不上。** `of_property_read_u32_array` 的第四个参数写 10，是因为 reg 有五组“地址、长度”。dts 里加减了寄存器，这个数字要我们同步改。更通用的做法是用 `of_property_count_u32_elems` 问一问实际数量。
+
+**of_iomap 索引越界返回 NULL。** reg 只写了三组，索引却用到 4，映射必然失败。判空兜底我们写了，但排查时数一遍 dts 里的组数，然后看代码里的索引。
+
+**忘了 of_node_put。** 短时间运行看不出问题，引用泄漏是慢性病。习惯成自然：我们从 `of_find_node_by_path` 拿到的引用，每个退出路径上都还。
+
+**改了 dts，板上还是老样子。** 挨个想过去：dtb 重新编了没有（这棵树要手动编，脚本不会替你），部署的目标文件名对不对（`imx6ull-aes.dtb`），重启了没有。`/proc/device-tree` 里看到新值，才算真的生效。
 
 ## 下一步
 
-到这里，我们已经完成了从硬编码驱动到设备树驱动的完整改造。你应该能看到，设备树方式的核心优势在于"配置与代码分离"——硬件信息不再硬编码在驱动里，而是通过设备树文件来描述。这让驱动更加通用，也更容易维护。
+这一章我们手工完成了“驱动去设备树里取地址”的迁移，但驱动和设备树的结合还停在手动阶段：自己按路径找节点、自己管引用计数。下一章[板级 DTS 修改实操](09_board_dts_modification.md)把镜头转向设备树本身，走一遍在既有板级 dts 上加节点、编译、部署、验证的完整流程。再往后，平台设备驱动教程会把这些手动活交还给内核的匹配机制。
 
-但说实话，我们现在写的设备树驱动还不是"标准"的 Linux 驱动。我们手动查找设备树节点，手动进行资源管理，这种方式虽然能工作，但不是内核推荐的最佳实践。更现代的做法是使用平台设备驱动框架，让内核自动完成设备匹配和资源分配。
-
-**继续阅读：** [09. 板级DTS修改实操](./09_board_dts_modification.md) 了解如何用更现代的方式编写设备树驱动，让内核帮你自动完成设备匹配和资源管理。
+::: details 深读：这些 API 在内核里是怎么实现的
+`of_find_node_by_path` 摸到的 `device_node` 是从哪来的？内核启动时怎么把一张扁平的 dtb 展开成这棵可以 `ls` 的树？`of_platform_populate` 又是怎么把节点变成设备的？这一整条链路我们将在独立的设备树原理仓库里逐章拆解（手搓 DTB 解析器、内核走读两个系列），本卷链接待该仓库篇目定稿后接入。
+:::
