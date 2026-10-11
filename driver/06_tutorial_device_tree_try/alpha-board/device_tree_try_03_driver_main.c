@@ -1,10 +1,8 @@
-// 设备树的追加部分放到了
-// driver/device_tree/alpha-board/device_tree_try_03/imx6ull-aes-led.dts
-// 这里利用的了设备树的编译特性，感兴趣的朋友请到
-// document/tutorial/driver/device_tree_compile/kernel_mechanism.md
-// 下阅读！仓库在
-// https://github.com/Awesome-Embedded-Learning-Studio/imx-forge.git
-// 下！
+// 本章配套的设备树文件在
+// driver/device_tree/alpha-board/11_tutorial_device_tree_try/imx6ull-aes-11_tutorial_device_tree_try.dts
+// 改造思路的完整讲解见仓库
+// https://github.com/Awesome-Embedded-Learning-Studio/imx-forge
+// 的 document/tutorial/driver/01_device_tree_base/08_device_tree_driver.md
 
 #include <linux/init.h>
 #include <linux/kernel.h>

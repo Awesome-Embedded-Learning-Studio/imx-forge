@@ -1,7 +1,7 @@
 # 05 — 三件套封装:run-qemu.sh 与防陈旧的自动重建
 
 ::: info 本节你将学到
-- 三件套脚本的分工与依赖顺序:rootfs 镜像 → 变体 dtb → 启动
+- 三件套脚本的分工与依赖顺序:rootfs 镜像 → 真板同源 dtb → 启动
 - 防陈旧自动重建的实现:`find -newer` 扫树判新鲜度,为什么顶层目录的 mtime 不可信
 - 冒烟模式(`--smoke`)的判定语义:超时为什么算成功、串口关键字链怎么给 CI 消费
 - 交互模式长什么样:登录、跑命令、干净关机,以及模拟环境眼下还有哪些东西没有戏
@@ -11,7 +11,7 @@
 
 第四章结束时,正确的命令散落在 shell 历史里,更要命的是产物新鲜度没人管:改了 dtsi,`out/qemu/` 里的 dtb 还是旧的;重跑了 Buildroot,rootfs 镜像还是旧的。拿着旧产物启动,QEMU 不报任何错,跑的是一个「你以为改了、其实没改」的系统。笔者就中过一次招:调设备树调了半天,行为纹丝不动,最后发现根本没重编 dtb。报错的问题好排查,静默的旧产物才难缠。
 
-所以封装要干两件事:固化命令,管好重建时机。`scripts/qemu_helper/` 三件套按依赖排:`make-rootfs-img.sh` 管第三章的镜像,`make-qemu-dtb.sh` 管第四章的变体编译,`run-qemu.sh` 是唯一入口,启动前自检产物、拼参数,交互和冒烟两种模式都在它身上。
+笔者把这套流程封装进 `scripts/qemu_helper/` 三件套,固化命令之外还要管好重建时机。三个脚本按依赖排:`make-rootfs-img.sh` 管第三章的镜像,`make-qemu-dtb.sh` 管第四章那棵设备树的编译(今天编的是内核树的真机 dts 原样,编完只补两条 MAC;变体的来龙去脉在第四章,退役的论证在第八章),`run-qemu.sh` 是唯一入口,启动前自检产物、拼参数,交互和冒烟两种模式都在它身上。
 
 ## 交互模式:一次真实的会话
 
@@ -39,11 +39,19 @@ model name	: ARMv7 Processor rev 5 (v7l)
 
 ## 自动重建:判定谁比谁旧
 
-启动前的自检在 `run-qemu.sh` 里,dtb 这路拿变体 dts 和内核树的整个 dtsi 目录,跟现有 dtb 比 mtime:
+启动前的自检在 `run-qemu.sh` 里,dtb 这路先看文件在不在,不在就直接重建;在的话,咱们拿内核树里真板 dts 和它 include 的那几份 dtsi,跟现有 dtb 比 mtime:
 
 ```bash
-newer="$(find "${dts}" "${imx_dtsi_dir}" \
-    \( -name '*.dts' -o -name '*.dtsi' \) \
+if [[ ! -f "${DTB}" ]]; then
+    log "dtb missing, building: ${DTB}"
+    "${SCRIPT_DIR}/make-qemu-dtb.sh" || die "make-qemu-dtb.sh failed"
+    return
+fi
+
+# the real board dts or any dtsi it includes newer than our dtb?
+newer="$(find "${imx_dtsi_dir}" \
+    \( -name 'imx6ull-aes*' -o -name 'imx6ull.dtsi' -o -name 'imx6ul.dtsi' \
+    -o -name 'imx6ull-evk.dtsi' \) \
     -newer "${DTB}" -print -quit 2>/dev/null)"
 if [[ -n "${newer}" ]]; then
     log "dtb stale (newer: ${newer#"${PROJECT_ROOT}/"}), rebuilding"
@@ -51,7 +59,7 @@ if [[ -n "${newer}" ]]; then
 fi
 ```
 
-`-print -quit` 的意思:找到第一个比 dtb 新的文件就停,不扫全树——判定只要「有没有」,多少无所谓。扫的对象是整个 `nxp/imx/` 目录而非只有变体 include 的那几个文件,因为 include 关系脚本不追踪,宁可多编:dtc 亚秒级,多编一次的代价可以忽略,漏编一次就是笔者上面吃过的哑巴亏。
+`-print -quit` 的意思:找到第一个比 dtb 新的文件就停,不扫全树——判定只要“有没有”,多少无所谓。扫的对象按名字圈定:板级这对 `imx6ull-aes.dts/.dtsi`,加上 `imx6ull.dtsi`、`imx6ul.dtsi`、`imx6ull-evk.dtsi` 几份公共底座。include 关系脚本不解析,这份名单是笔者手工维护的闭包,哪天 dts 新 include 了别的文件,得记得把名字添进去;名单之内宁多勿漏:dtc 亚秒级,多编一次的代价可以忽略,漏编一次就是笔者上面吃过的哑巴亏。
 
 rootfs 镜像这路结构相同,扫的对象换成 `out/release-latest/rootfs/` 整棵树。这里有个容易想当然的地方:只看顶层目录的 mtime 行不行?不行。Buildroot 更新 rootfs 是原地覆写,`cp` 覆盖一个已有文件时,父目录的 mtime 纹丝不动,只有文件自己变新。所以必须钻进树里逐文件比——这行代码扫的是几万个文件,在一块现代 SSD 上耗不到两秒,换来的是「Buildroot 跑完、镜像必新」。
 
@@ -105,10 +113,10 @@ $ scripts/qemu_helper/run-qemu.sh --smoke --timeout=240
 [   12.832517] platform 20c8000.anatop:tempmon: deferred probe pending: imx_thermal: failed to init from nvmem
 ```
 
-它要 OCOTP 熔丝盒里的校准数据,而 OCOTP 是咱们自己在第四章关掉的第一批地鼠之一——自己关的门,把温度传感器也关在了外面。FEC 那两条 deferred(`reason unknown`)还没破案:驱动编在内核里,`fec_probe` 符号都在,就是没人绑上来,笔者怀疑是 `phy-supply` 引的那颗 regulator-fixed(挂在 gpio5 上)永远不 ready,没查透,记在这,下一阶段收拾。
+它要 OCOTP 熔丝盒里的校准数据,而 OCOTP 是咱们自己在第四章关掉的第一批地鼠之一——自己关的门,把温度传感器也关在了外面。(如今这条早就不成立:变体退役、设备树回到真机单源之后,编译管线不再关任何节点,OCOTP 这类空洞在自建的 QEMU 里已经是读零的桩,见第六章和第八章。)FEC 那两条 deferred(`reason unknown`)还没破案:驱动编在内核里,`fec_probe` 符号都在,就是没人绑上来,笔者怀疑是 `phy-supply` 引的那颗 regulator-fixed(挂在 gpio5 上)永远不 ready,没查透,记在这,下一阶段收拾。
 
 这些边界排开,后面阶段的路线也就顺出来了:CAN 和触摸要写 QEMU 器件模型,FEC 的 defer 要啃设备树供应链,显示等 QEMU 11.1,U-Boot 链等 Bin Meng 那个系列进 release。每一样都够再折腾一章。
 
 ::: tip 卷尾
-五章走完:一份按版本意识维护的设备树变体、一套防陈旧的三件套、一条验证过的直启链路,外加「串口死寂 → earlycon → 三路读 panic」的排障手法。下一块拼图是 CI——让每次内核提交自动回答「能不能开机」。
+五章走下来,咱们手里是:一条真机同源的设备树编译管线(变体方案怎么来的在第四章,怎么退役的在第八章)、一套防陈旧的三件套、一条验证过的直启链路,外加“串口死寂 → earlycon → 三路读 panic”的排障手法。下一块拼图是 CI——让每次内核提交自动回答“能不能开机”。
 :::

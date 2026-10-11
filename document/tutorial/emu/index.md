@@ -24,7 +24,7 @@ title: QEMU 板级模拟
 </ChapterNav>
 
 ::: tip 学习目标
-理解 QEMU 对 i.MX6ULL 的模拟边界(真模型、桩、地址空洞三档,以及 `info mtree` 怎么看家底),掌握 QEMU 变体设备树的设计与编译管线、rootfs 镜像制作与 SD 卡模拟的约束,吃透「external abort 杀内核」这类问题的完整读法(earlycon + PC/pte/寄存器三路互证),最后用一套带新鲜度检查的脚本把模拟环境固化下来。
+理解 QEMU 对 i.MX6ULL 的模拟边界(真模型、桩、地址空洞三档,以及 `info mtree` 怎么看家底),掌握真机同源设备树的编译管线(第四章的变体方案与它在第八章的退役)、rootfs 镜像制作与 SD 卡模拟的约束,吃透“external abort 杀内核”这类问题的完整读法(earlycon + PC/pte/寄存器三路互证),最后用一套带新鲜度检查的脚本把模拟环境固化下来——这些咱们都亲手走过一遍。
 :::
 
 ::: info 前置知识

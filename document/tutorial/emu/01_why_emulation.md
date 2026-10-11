@@ -58,7 +58,7 @@ Hardware name: Freescale i.MX6 Ultralite (Device Tree)
 
 内核的 ARM 子系统靠机器描述符(`machine_desc`)认识板子,每个描述符带一张 `dt_compat` 兼容串表;mainline 的 imx6ul 描述符,那张表同时收 `fsl,imx6ull-*`。所以内核拿着咱们的 dtb,匹配到 6UL 的描述符,把自己当一台 i.MX6 Ultralite 跑。QEMU 那头更省事,它根本不读 `compatible`:机器模型是焊死的硬件,dtb 只是「内核读的说明书」,说明书里写了不存在的器件,它按自己的家底回应——家底长什么样,第二章整个拿来讲。
 
-外设兼容串和机器描述符都对上,QEMU 又只认自己的固定模型,「6UL 机器 + 6ULL dtb」这条路就通了。CSDN 上有人单独这么跑过;把设备树变体、rootfs 镜像、CI 冒烟整套做齐的,笔者还没搜到第二家。
+外设兼容串和机器描述符都对上,QEMU 又只认自己的固定模型,“6UL 机器 + 6ULL dtb”这条路就通了。CSDN 上有人单独这么跑过;把真机同源设备树、rootfs 镜像、CI 冒烟整套做齐的,笔者还没搜到第二家。
 
 ## Renode:查了仓库才知道是误传
 
