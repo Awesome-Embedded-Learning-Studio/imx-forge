@@ -459,5 +459,5 @@ cp scripts/driver_helper/driver_helper.conf.template scripts/driver_helper/drive
 - [build_driver.md](./build_driver.md) - 驱动构建脚本
 - [deploy_driver.md](./deploy_driver.md) - 驱动部署脚本
 - [review_driver.md](./review_driver.md) - 驱动审查脚本
-- [show_device_tree.md](./show_device_tree.md) - 设备树查看脚本
+- [show_device_tree.sh.md](./show_device_tree.sh.md) - 设备树查看脚本
 - [driver_buildlib.md](../lib/driver_buildlib.md) - 构建库说明

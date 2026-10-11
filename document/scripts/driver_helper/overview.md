@@ -429,7 +429,7 @@ out/driver_artifacts/example-driver/alpha-board/
 | 编译设备树 | [architecture.md](./architecture.md#设备树编译系统) | 🟡 |
 | 部署产物 | [workflow.md](./workflow.md#部署阶段) | 🟢 |
 | 审查产物 | [review_driver.md](./review_driver.md) | 🟡 |
-| 查看设备树 | [show_device_tree.md](./show_device_tree.md) | 🟢 |
+| 查看设备树 | [show_device_tree.sh.md](./show_device_tree.sh.md) | 🟢 |
 | 配置系统 | [configuration.md](./configuration.md) | 🟢 |
 
 ---
