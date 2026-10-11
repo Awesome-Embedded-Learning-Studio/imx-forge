@@ -419,6 +419,32 @@ verify_build_artifacts() {
     fi
 }
 
+# Board device tree: driver/device_tree/alpha-board/linux/ is the single
+# source of truth. Since the v7.2.9 reforge there is NO kernel patch — the
+# two board files are copied into the tree and the dtb gets registered in
+# the kernel Makefile. Both steps are idempotent, so a release-mode
+# `reset` to the pinned gitlink self-heals by simply copying again.
+copy_board_dts() {
+    local BOARD_DIR="${PROJECT_ROOT}/driver/device_tree/alpha-board/linux"
+    local DT_DIR="${LINUX_SRC_DIR}/arch/arm/boot/dts/nxp/imx"
+
+    log_info "Installing board device tree from single source..."
+    for f in imx6ull-aes.dts imx6ull-aes.dtsi; do
+        if [[ ! -f "${BOARD_DIR}/${f}" ]]; then
+            log_error "Board device tree file missing: ${BOARD_DIR}/${f}"
+            exit 1
+        fi
+    done
+
+    cp "${BOARD_DIR}/imx6ull-aes.dts" "${BOARD_DIR}/imx6ull-aes.dtsi" "${DT_DIR}/"
+
+    if ! grep -q '^	imx6ull-aes\.dtb \\$' "${DT_DIR}/Makefile"; then
+        sed -i 's|^\timx6ull-14x14-evk\.dtb \\$|&\n\timx6ull-aes.dtb \\|' "${DT_DIR}/Makefile"
+        log_info '  registered imx6ull-aes.dtb in dtb-$(CONFIG_SOC_IMX6UL) (Makefile)'
+    fi
+    log_info "  board dts installed: ${DT_DIR}/imx6ull-aes.dts"
+}
+
 # Main build process
 main() {
     log_info "Starting Linux kernel build for ${DEFCONFIG}"
@@ -427,12 +453,12 @@ main() {
     fi
     log_info "========================================"
 
-    # Release 编排(--release):reset 净源码到超项目锁定的 gitlink commit→打目录最新 patch
-    # →建 release 分支。defconfig 由 prepare_defconfig 从超项目模板生成,reset 不影响。
+    # Release 编排(--release):reset 净源码到超项目锁定的 gitlink commit→建 release 分支。
+    # v7.2.9 重推后内核无补丁:板级设备树由 copy_board_dts 从超项目拷入(reset 后重拷自愈),
+    # defconfig 由 prepare_defconfig 从超项目模板生成,reset 都不影响。
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
         source "${SCRIPT_LIB_DIR}/release.sh"
-        release_prepare "linux" "${LINUX_SRC_DIR}" \
-            "${PROJECT_ROOT}/patches/linux_mainline" "${PROJECT_ROOT}"
+        release_prepare "linux" "${LINUX_SRC_DIR}" "" "${PROJECT_ROOT}"
         log_info "========================================"
     fi
 
@@ -464,6 +490,7 @@ main() {
     log_info "========================================"
 
     prepare_defconfig
+    copy_board_dts
     do_configure
     do_build
     do_modules_prepare

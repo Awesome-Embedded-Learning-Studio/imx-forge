@@ -6,7 +6,6 @@
 
 #include "imx6ull.dtsi"
 #include "imx6ull-aes.dtsi"
-#include "imx6ull-14x14-evk-u-boot.dtsi"
 
 / {
 	model = "Awesome Embedded Studio IMX6ULL (i.mx NXP)";
@@ -27,8 +26,6 @@
 	status = "okay";
 };
 
-/delete-node/ &sim2;
-
 /*
 	usdhc2 is assigned from arch/arm/dts/imx6ull-14x14-evk-emmc.dts
 	which we simplified the include hieracy
@@ -42,4 +39,3 @@
 	non-removable;
 	status = "okay";
 };
-

@@ -69,7 +69,7 @@ die()  { echo "[make-qemu-dtb] error: $*" >&2; exit 1; }
 DTS="${LINUX_SRC}/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts"
 OUT_BUILD="${OUT_BUILD:-${PROJECT_ROOT}/out/linux}"
 DTC="${OUT_BUILD}/scripts/dtc/dtc"
-[[ -f "${DTS}" ]] || die "board dts not found: ${DTS} (is the submodule initialized + patch applied?)"
+[[ -f "${DTS}" ]] || die "board dts not found: ${DTS} (run build-linux.sh once — it copies the board dts from driver/device_tree/alpha-board/linux/ into the tree)"
 [[ -x "${DTC}" ]] || die "kernel dtc not built at ${DTC}: run build-linux.sh once first"
 command -v fdtput >/dev/null || die "fdtput not found (apt install device-tree-compiler)"
 
