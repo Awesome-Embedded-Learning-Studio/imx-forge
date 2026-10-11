@@ -157,13 +157,17 @@ sleep 8
 log "guest session done, log: ${LOG_PATH}"
 
 # --- host-side assertions --------------------------------------------------
-# Each check has a globally unique KEY= line in the log, so a plain grep
-# over the whole log is both simpler and sturdier than section slicing.
+# Each check prints a KEY=value result line at column 0, so one grep over
+# the whole log beats section slicing. Patterns are anchored with ^ on
+# purpose: the guest echoes every command back, and an unanchored pattern
+# like ICM=yes also matches the "echo ICM=yes" text inside the echoed
+# command line — the check then passes on its own echo (a hollow PASS
+# that really shipped once: the result on file was ICM=no).
 declare -A RESULT
 
 check() { # name pattern description
     local name="$1" pattern="$2" desc="$3"
-    if grep -qE "$pattern" "${LOG_PATH}"; then
+    if grep -qE "^${pattern}" "${LOG_PATH}"; then
         RESULT[$name]="PASS"
         printf '  %-16s PASS  %s\n' "$name" "$desc"
     else

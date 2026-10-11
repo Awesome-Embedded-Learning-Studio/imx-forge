@@ -1,327 +1,262 @@
 ---
-title: 主线内核配置
+title: 内核配置：一份 defconfig 的由来
 ---
 
-# 主线内核配置：从 imx_v6_v7_defconfig 到 i.MX6ULL 专用配置
+# 内核配置：一份 defconfig 的由来
 
-## 前言：配置不是一次性的事情
+> 同一棵主线源码树，怎么长出一份属于咱们这块 i.MX6ULL 板子的可编译配置？本篇就答这一问。上一篇 [BSP vs 主线对比](./04_bsp_vs_mainline.md) 把两个世界的架构差异摆上了台面，本篇把差异翻译成一份能喂给 make 的 .config。编译产物验证与 QEMU 首启留给下一篇 [设备树：从参考板改出 AES 板，编译并首启](./06_dts_migration.md) 收官，本篇的边界就是配置本身。
 
-说实话，第一次配置主线内核的时候，我是真的有点懵。`make menuconfig` 打开之后，密密麻麻的配置选项，成千上万个。你根本不知道哪些是必须的，哪些是可选的，哪些开了会冲突。
+::: tip 前置知识·环境
+- 编译环境与工具链：[从零开始搭建主线内核编译环境](./02_env_setup.md)
+- 主线源码树获取：[取源码：从 stable 树拉下 v7.2.9](./03_source_fetch.md)
+- 架构差异背景：[BSP vs 主线对比](./04_bsp_vs_mainline.md)
 
-这篇文章的目标是帮你理清思路：我们从 i.MX 系列的通用配置开始，逐步调整成适合 i.MX6ULL 主线移植的配置。这个项目已经提供了一个配置模板 `driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template`，我会解释每个关键配置的作用，让你知道为什么要这样配。
+本篇全部命令咱们都在主机 ~/imx-forge 仓库根目录执行，操作对象是 third_party/linux_mainline 这棵 Linux 7.2.9 主线源码树，交叉工具链为 arm-none-linux-gnueabihf-（Arm GNU Toolchain 15.2.Rel1）。
+:::
 
-## 第一步——选择基础配置
+## 配置的本质：五千多项三选一
 
-主线内核为不同架构提供了基础配置文件（defconfig），对于 i.MX6ULL 这种 ARMv7 平台，我们用的是 `imx_v6_v7_defconfig`：
+同一份内核源码，编出来的镜像能小到几兆，也能大到上百兆，行为更是天差地别。分水岭就一个文件：.config。它的本体是一张巨大的三选一问卷——=y 把驱动编进内核镜像，=m 编成独立的 .ko 模块，not set 就是不要。咱们仓库这份配置到底什么规模？一条计数命令就有感觉：
 
 ```bash
-cd ~/linux-kernel/linux-mainline
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- imx_v6_v7_defconfig
+# 主机 ~/imx-forge
+grep -c '^CONFIG' out/linux/.config
 ```
 
-这个配置文件在 `arch/arm/configs/imx_v6_v7_defconfig`，包含了 i.MX6 系列处理器的基本支持。但它是通用配置，需要针对 i.MX6ULL 做一些调整。
-
-## 第二步——理解配置文件结构
-
-内核配置本质上是一个巨大的键值对列表，每个配置项控制一个功能模块的编译方式：
-
-- `=y`：编译进内核（vmlinux），启动时自动加载
-- `=m`：编译成模块（.ko 文件），需要时手动加载
-- `is not set`：不编译
-
-对于嵌入式系统，通常把必需的功能编译进内核（`=y`），可选功能编译成模块（`=m`），不需要的功能关掉（`is not set`）。
-
-## 第三步——必须开启的配置项
-
-我们按照子系统分类，逐个看关键配置。
-
-### 显示子系统（DRM）
-
-这是主线内核和 BSP 内核差异最大的地方。你必须开启 DRM，关掉旧的 Framebuffer：
-
-```kconfig
-# DRM 子系统核心
-CONFIG_DRM=y
-
-# eLCDIF DRM 驱动
-CONFIG_DRM_MXSFB=y
-
-# Panel 驱动框架
-CONFIG_DRM_PANEL=y
-CONFIG_DRM_PANEL_BRIDGE=y
-
-# panel-dpi 通用驱动（重要！）
-CONFIG_DRM_PANEL_SIMPLE=y
-
-# 背光支持
-CONFIG_BACKLIGHT_CLASS_DEVICE=y
-CONFIG_BACKLIGHT_PWM=y
-
-# PWM 控制器（i.MX6ULL 用 PWM1 控制背光）
-CONFIG_PWM=y
-CONFIG_PWM_IMX27=y
+```text
+1839
 ```
 
-如果你不开 `CONFIG_DRM_PANEL_SIMPLE`，后续设备树里的 `panel-dpi` 节点就不会被识别，LCD 不会亮。
+1839 行生效的赋值，再算上 3509 行显式的 is not set，整张问卷五千多个决定。桌面发行版的思路是不确定的硬件全编成模块，插上什么现场加载什么；嵌入式板子反着来，咱们盘子里就那么几样外设，该在的必须在。所以开发板社区普遍走一块板一份 config 的路线：给这块板留一份能直接出可用内核的配置清单，后来的人 make 一下就能对齐，不必对着 menuconfig 的上千个菜单从零点一遍。imx-forge 也是这个路数。这份清单放在哪、怎么生成，有点讲究，咱们一样一样看。
 
-### 应当关闭的旧驱动
+## make xxx_defconfig 那一下发生了什么
 
-为了避免冲突，必须关掉旧的 Framebuffer 驱动：
+空口讲机制没意思，咱们拿证据说话。CONFIG_FEC 是 i.MX 系列网卡驱动的开关，咱们在三个文件里分别找它的下落：配置模板、上游底版、最终产物。
 
-```kconfig
-# CONFIG_FB_MXS is not set
-# CONFIG_FB_MXC_SYNC_PANEL is not set
+```bash
+# 主机 ~/imx-forge
+/usr/bin/grep -c 'CONFIG_FEC=' driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template
+/usr/bin/grep -c 'CONFIG_FEC=' third_party/linux_mainline/arch/arm/configs/imx_v6_v7_defconfig
+/usr/bin/grep -n 'CONFIG_FEC=' out/linux/.config
 ```
 
-这两个配置如果开了，会和 DRM 驱动争抢设备，结果就是两个都不能正常工作。
-
-### 网络支持
-
-i.MX6ULL 有两个以太网控制器，需要开启 FEC 驱动和 PHY 驱动：
-
-```kconfig
-# FEC 以太网控制器
-CONFIG_FEC=y
-
-# PHY 驱动（KSZ8081 是 Micrel PHY）
-CONFIG_NET_PHY=y
-CONFIG_MICREL_PHY=y
-CONFIG_AT803X_PHY=y
-CONFIG_DP83867_PHY=y
-
-# CAN 总线（如果需要）
-CONFIG_CAN=y
-CONFIG_CAN_FLEXCAN=y
+```text
+0
+0
+1585:CONFIG_FEC=y
 ```
 
-### 触摸屏支持
+前两个文件里一行都没有，.config 里却端端正正躺着 CONFIG_FEC=y。网卡驱动总不会是天上下来的吧？咱们把三处一摆，defconfig 的机制就清楚了。
 
-Goodix GT9147 触摸屏驱动：
+敲下 make xxx_defconfig 的时候，kbuild 到 arch/arm/configs/ 目录下找同名文件，咱们这棵树里的实况是：
 
-```kconfig
-CONFIG_INPUT_TOUCHSCREEN=y
-CONFIG_TOUCHSCREEN_GOODIX=y
+```bash
+# 主机 ~/imx-forge
+ls third_party/linux_mainline/arch/arm/configs/ | grep imx_v6_v7
 ```
 
-### 其他外设
-
-```kconfig
-# 串口（调试必需）
-CONFIG_SERIAL_IMX=y
-CONFIG_SERIAL_IMX_CONSOLE=y
-
-# I2C
-CONFIG_I2C=y
-CONFIG_I2C_IMX=y
-
-# SPI
-CONFIG_SPI=y
-CONFIG_SPI_IMX=y
-
-# SD/eMMC
-CONFIG_MMC=y
-CONFIG_MMC_SDHCI=y
-CONFIG_MMC_SDHCI_ESDHC_IMX=y
-
-# USB
-CONFIG_USB=y
-CONFIG_USB_CHIPIDEA=y
-CONFIG_USB_MXS_PHY=y
+```text
+imx_v6_v7_defconfig
 ```
 
-## 第四步——使用配置模板
+找到之后，这份文件在咱们手里并不会被原样拿来当 .config 用。它是一份精简清单，kbuild 拿它跟全量 Kconfig 合并：清单里写了的项按清单来，没写的项逐个回退到各 Kconfig 文件里声明的默认值。FEC 的谜底就埋在默认值里——drivers/net/ethernet/freescale/Kconfig 的 FEC 条目写着 default ARCH_MXC || SOC_IMX28 if ARM，而 ARCH_MXC=y 恰好由 imx_v6_v7_defconfig 提供。于是没有任何一方提名 FEC，kbuild 合并时照样替咱们把它开了。这也解释了模板凭什么可以只写差异：全量五千多项要是都得手写，这份文件就没法维护了。
 
-这个项目提供了一个完整的配置模板 `driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template`。构建脚本会用这个模板生成最终的 defconfig。
+至于为什么挑 imx_v6_v7_defconfig 当底：NXP 自家的参考板 imx6ul-14x14-evk，跟咱们这块阿尔法板是同一颗 i.MX6UL/6ULL 家族 SoC，CPU 频控、串口、uSDHC、DMA 这类 SoC 级配置九成能直接复用。数字也支持这个判断，底版实测 481 行、463 个赋值，SOC_IMX6UL=y 就在第 27 行。所以咱们要做的事很明确：这份 imx_v6_v7_defconfig 本身就内含 imx6ul-evk 在内的全系 i.MX 板配置，咱们站在它之上，把板级差异和主线化取舍叠上去。
 
-模板里有一个特殊的变量 `${FIRMWARE_DIR}`，用于指定固件文件的路径：
+## 本仓库的配置真理源：575 行模板与一个占位符
 
-```kconfig
+咱们仓库里配置的唯一真理源，是 driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template。wc 实测 575 行，内部用分节注释切成 39 个段落，从 General Setup 一路排到 MTD：
+
+```bash
+# 主机 ~/imx-forge
+wc -l driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template
+/usr/bin/grep -n '^# ---' driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template
+```
+
+```text
+575 driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template
+8:# --- General Setup ---
+25:# --- Architecture (i.MX6ULL specific) ---
+45:# --- CPU Frequency & Power Management ---
+61:# --- Modules ---
+69:# --- Networking ---
+90:# --- Ethernet (important for i.MX6ULL) ---
+...
+533:# --- MTD (NOR/NAND Flash) ---
+```
+
+输出合计 40 行（wc 一行加 39 个分节），咱们在上面截了头尾，完整清单以实际执行为准。
+
+模板里唯一的花样藏在末尾，咱们直接看最后两行：
+
+```ini
 CONFIG_EXTRA_FIRMWARE="regulatory.db regulatory.db.p7s"
 CONFIG_EXTRA_FIRMWARE_DIR="${FIRMWARE_DIR}"
 ```
 
-构建脚本会用实际的路径替换这个变量：
+EXTRA_FIRMWARE 的用途，是把 regulatory.db 这类固件文件直接嵌进内核镜像，省得咱们运行期去 rootfs 里找；固件目录因机器而异，所以留了 ${FIRMWARE_DIR} 占位符。scripts/build_helper/build-linux.sh 的 prepare_defconfig 函数负责补上它，核心就两行：
 
 ```bash
-# build-linux.sh 中的处理
+# 节选自 scripts/build_helper/build-linux.sh（prepare_defconfig 函数）
 FIRMWARE_DIR=$(realpath "${FIRMWARE_DIR}")
 sed "s|\${FIRMWARE_DIR}|${FIRMWARE_DIR}|g" "${TEMPLATE_FILE}" > "${TARGET_FILE}"
 ```
 
-## 第五步——调整配置
+sed 把占位符替换成仓库内 driver/firmwares 的绝对路径，产物写到内核树的 arch/arm/configs/imx_aes_mainline_defconfig，随后 make 拿这份生成的 defconfig 去生成 .config。替换前后的对照不用另外做，产物里就是现成的样例，咱们在产物里把这一行找出来（/usr/bin/grep -n CONFIG_EXTRA_FIRMWARE_DIR out/linux/.config）：
 
-如果你需要修改配置，有两种方式：直接编辑 defconfig 文件，或者用 `make menuconfig`。
+```text
+CONFIG_EXTRA_FIRMWARE_DIR="/home/charliechen/imx-forge/driver/firmwares"
+```
 
-### 使用 menuconfig
+想脱离构建脚本手工做一遍等价操作也不难：把模板拷进内核树的 arch/arm/configs/ 并改名为 imx_aes_mainline_defconfig，把占位符替换成自己机器上固件目录的绝对路径，然后 make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O="$PWD/out/linux" imx_aes_mainline_defconfig 即可（O= 为什么要写绝对路径，menuconfig 一节里专门交代）。那个路径没有唯一正确值，跟着您自己仓库放在哪走。
 
-`make menuconfig` 提供了一个图形化的配置界面，你可以搜索、导航、修改配置：
+::: warning 坑：占位符没替换就 configure
+${FIRMWARE_DIR} 若原样混进了配置，kbuild 在嵌入固件环节会拿这个字面路径去找 regulatory.db，目录当然不存在，构建当场断在一个看起来像固件丢失的报错上，根因其实是模板没有经过替换。手工生成 defconfig 时这一步最容易漏，您替换完拿 grep 查一下 ${ 没有残留，再往下走。
+:::
+
+## 显示、音频、网络：真正叠了板级意志的三组
+
+39 节里大部分是对上游底版的继承与扩展，真正叠了板级意志的就少数几组，咱们挑三组细看。其余的照分节注释按需读模板原文就行，不必逐行背。
+
+### 显示：DRM 一条道，旧驱动连源码都没了
+
+第 259 行的 # --- Multimedia / Display --- 节，是主线化痕迹最重的一节。fbdev 版的 mxsfb 驱动主线早年自带，后来整族移出主线，这棵 7.2.9 树里连源码文件都不存在了，咱们当场就能验证：
 
 ```bash
-cd ~/linux-kernel/linux-mainline
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+# 主机 ~/imx-forge
+ls third_party/linux_mainline/drivers/video/fbdev/mxsfb.c
+ls third_party/linux_mainline/drivers/gpu/drm/mxsfb/
 ```
 
-常用操作：
-
-- `/`：搜索配置项（比如搜索 "DRM_MXSFB"）
-- 空格：切换 `y/m/n` 状态
-- Enter：进入子菜单
-- Esc Esc：返回上级菜单
-- `/` 搜索后按数字键跳转到对应位置
-
-修改完成后保存退出，会生成 `.config` 文件。
-
-### 保存为 defconfig
-
-如果你想把当前的配置保存为 defconfig：
-
-```bash
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- savedefconfig
+```text
+ls: cannot access 'third_party/linux_mainline/drivers/video/fbdev/mxsfb.c': No such file or directory
+Kconfig  Makefile  lcdif_drv.c  lcdif_drv.h  lcdif_kms.c  lcdif_regs.h  mxsfb_drv.c  mxsfb_drv.h  mxsfb_kms.c  mxsfb_regs.h
 ```
 
-这会生成 `defconfig` 文件，你可以把它复制到 `arch/arm/configs/` 目录下，作为新的板级配置：
+旧世界只剩一个空地址，eLCDIF 的驱动住在 DRM 家里。模板相应地把 CONFIG_DRM、CONFIG_DRM_MXSFB、CONFIG_DRM_PANEL_SIMPLE、CONFIG_BACKLIGHT_PWM、CONFIG_PWM_IMX27 一串全开成 =y。这跟咱们上一篇的架构对比正好接上：DRM_PANEL_SIMPLE 对应的 panel-dpi 通用驱动，就是下一篇设备树里 panel 节点 compatible 要配对的那个驱动。配置不开，设备树写得再对，驱动也不会 probe。点亮屏幕的完整过程，[DRM 显示系统移植](./07_display_drm.md) 有专章。
 
-```bash
-cp defconfig arch/arm/configs/imx6ull_mainline_defconfig
+### 音频：=y 还是 =m，Issue #43 用一场无声换来的答案
+
+第 311 行的 # --- Sound --- 节里，有一行模板作者自己写的注释，值得咱们原样贴出来：
+
+```ini
+# fsl-asoc-card（WM8960 等 machine 驱动）必须 =y：build 不 modules_install，=m 会让声卡整机静音（Issue #43）
+CONFIG_SND_SOC_FSL_ASOC_CARD=y
+CONFIG_SND_SOC_WM8960=y
+CONFIG_SND_IMX_SOC=y
 ```
 
-## 第六步——验证配置
+这四行在模板里并不是连着的一段：SND_IMX_SOC 单独在第 317 行，作者注释与 FSL_ASOC_CARD 相连在第 321、322 行，WM8960 在第 327 行，中间隔着 AC97_CODEC、CS42XX8_I2C 几行别的条目，这里按语义凑成了一块。您去模板里对照时按行号分开找，别当成连续段落。
 
-配置完成后，验证一下关键配置是否正确：
+上游底版里这一项本来是 CONFIG_SND_SOC_FSL_ASOC_CARD=m（第 315 行），模板把它翻成了 =y，背后是笔者这个仓库历史上真摔过的一跤。WM8960 声卡是典型的三件套架构：SAI 接口驱动、codec 驱动、machine 驱动（就是 fsl-asoc-card），底下再由 SDMA 提供 DMA 通道。这条链上任何一个环节以模块形态缺席，板子上就是彻底无声，alsa 连声卡设备都不会注册出来。模块为什么会缺席？本仓库的构建只 make zImage dtbs，不做 modules，也不做 modules_install，编成 =m 的 .ko 没有任何一步会把它们装进 rootfs，等于白编。
 
-```bash
-# 检查 DRM 相关配置
-grep -E "DRM|FB" .config
+同样的取舍也发生在第 416 行的 # --- DMA (i.MX6ULL uses SDMA) --- 节：底版里 CONFIG_IMX_SDMA=m（第 400 行），模板改成 =y，注释写明 alpha 板的 SAI2 音频走 SDMA。这一节咱们还得把固件供给的两条路线辨清楚，别混：SDMA 运行需要的固件文件走 rootfs 的 /lib/firmware，由 rootfs/buildroot/post-build.sh 在构建根文件系统时下载并放进去；模板里 EXTRA_FIRMWARE 嵌进去的 regulatory.db，则是直接打进内核镜像的另一条路。两条路解决的问题不同。
 
-# 应该看到：
-# CONFIG_DRM=y
-# CONFIG_DRM_MXSFB=y
-# CONFIG_DRM_PANEL_SIMPLE=y
-# CONFIG_FB_MXS is not set  ← 这个必须是 not set
+由此咱们可以提炼一条自己改配置时通用的取舍原则：启动早期就要工作的东西，以及构建管线不负责安装模块时的全部关键路径，一律 =y；明确是可选实验件、且 rootfs 里有 modprobe 保障的，才放心 =m。rootfs 挂在 NFS 上的场景把这个逻辑推到极端——内核得先让网卡（FEC）和 NFS 客户端跑起来，才挂得上根文件系统，之后才谈得上从根文件系统里加载模块，所以 ROOT_NFS、FEC 这类启动链上的选项天生就该内置，模板里 CONFIG_ROOT_NFS=y 也是这么来的。
 
-# 检查网络配置
-grep -E "FEC|MICREL" .config
+### 网络：模板里没有的 FEC，与必须写明的 PHY
 
-# 检查触摸屏配置
-grep "GOODIX" .config
-```
+以太网这节（第 90 行，# --- Ethernet (important for i.MX6ULL) ---）最反直觉的点，咱们在 make xxx_defconfig 那一节已经摆过：模板通篇没有 FEC，最终配置里的 FEC=y 由 Kconfig 默认值加 ARCH_MXC=y 贡献。模板真正动手写的是 PHY 一侧：
 
-如果有关键配置缺失，回到 menuconfig 重新配置。
-
-## 第七步——编译测试
-
-配置验证通过后，可以尝试编译：
-
-```bash
-cd ~/linux-kernel/linux-mainline
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
-```
-
-如果配置有错误（比如依赖关系不对），编译时会报错。根据错误信息调整配置，然后重新编译。
-
-## 常见问题排查
-
-### 问题一：配置项找不到
-
-如果你在 menuconfig 里找不到某个配置项，可能是因为：
-
-1. **依赖不满足**：该配置依赖的其他配置没有开启
-2. **架构不对**：该配置只支持特定架构
-3. **名字改了**：新版本内核可能改了配置项名字
-
-解决方法是搜索相关的依赖配置，先开启依赖，再找目标配置。
-
-### 问题二：编译时提示冲突
-
-比如同时开启了 DRM 和旧的 Framebuffer，会报错类似：
-
-```
-error: 'CONFIG_FB_MXS' conflicts with 'CONFIG_DRM_MXSFB'
-```
-
-解决方法是关掉冲突的配置，保留一个。
-
-### 问题三：模块加载失败
-
-如果某个功能编译成模块（`=m`），但启动时没有自动加载，可能需要在 initramfs 或 rootfs 里手动加载：
-
-```bash
-modprobe mxsfb
-```
-
-或者直接编译进内核（`=y`）。
-
-## 完整的 i.MX6ULL 主线 defconfig
-
-这个项目的移植补丁里包含了完整的 `imx_aes_mainline_defconfig`，你可以直接参考。下面列出一些关键配置的完整清单：
-
-```kconfig
-# 架构和 CPU
-CONFIG_ARCH_MXC=y
-CONFIG_SOC_IMX6UL=y
-CONFIG_ARCH_MULTI_V6=y
-
-# DRM 显示
-CONFIG_DRM=y
-CONFIG_DRM_MXSFB=y
-CONFIG_DRM_PANEL=y
-CONFIG_DRM_PANEL_SIMPLE=y
-CONFIG_BACKLIGHT_PWM=y
-CONFIG_PWM_IMX27=y
-
-# 网络
-CONFIG_FEC=y
+```ini
 CONFIG_MICREL_PHY=y
+CONFIG_AT803X_PHY=y
+CONFIG_DP83867_PHY=y
 CONFIG_CAN_FLEXCAN=y
-
-# 触摸屏
-CONFIG_TOUCHSCREEN_GOODIX=y
-
-# 存储
-CONFIG_MMC_SDHCI_ESDHC_IMX=y
-
-# 串口
-CONFIG_SERIAL_IMX=y
-CONFIG_SERIAL_IMX_CONSOLE=y
 ```
 
-## 下一章预告
+咱们阿尔法板两个网口挂的都是 KSZ8081，它属于 Micrel（现 Microchip）PHY 家族，MICREL_PHY 必须开；AT803X 与 DP83867 是底版带来的其它常见 PHY，留着不碍事。CAN 的选项实名是 CONFIG_CAN_FLEXCAN，不是裸的 FLEXCAN，按符号实名去搜，比如 /usr/bin/grep -E '^CONFIG_FLEXCAN=' out/linux/.config，恒为空，这一条验收时还会再撞见。双网口的 PHY 细节与设备树写法，[双网口移植](./09_network_dual_phy.md) 有专章。
 
-到这里，你应该知道了如何配置主线内核。配置文件准备好了，下一步就是设备树迁移。
+## menuconfig：改配置的正规姿势
 
-下一篇文章，我们会详细讲解设备树迁移：
-
-- BSP DTS vs 主线 DTS 的结构差异
-- 如何重写 lcdif 和 panel 节点
-- sim2 节点的添加方法
-- OF graph 连接方式
-- 编译和验证 DTB
-
-设备树是硬件描述的核心，写错了驱动就 probe 不了。我们下一章见。
-
----
-
-**参考命令速查**
+模板管基线，咱们日常调参靠交互界面。内核社区的标准流程，是从现有配置起步进 menuconfig，搜选项、改值，再把改动缩回片段存走：
 
 ```bash
-# 从基础配置开始
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- imx_v6_v7_defconfig
-
-# 打开 menuconfig
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
-
-# 保存为 defconfig
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- savedefconfig
-cp defconfig arch/arm/configs/imx6ull_mainline_defconfig
-
-# 验证配置
-grep -E "DRM|FB" .config
-
-# 编译测试
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
+# 主机 ~/imx-forge
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O="$PWD/out/linux" menuconfig
 ```
 
-**延伸阅读**
+这行命令的 O= 必须写成绝对路径，这个坑咱们在这儿交代清楚。make 的 -C 在读入 Makefile 之前就把工作目录切进了内核源码树，之后的相对路径一律按源码树来解析。您写 O=out/linux，实际落点是 third_party/linux_mainline/out/linux 这个源码树内的新目录，全篇在说的仓库根 out/linux 反而没被碰；menuconfig 打开的也因此成了一份没有 .config 的从零默认配置，跟前文刚分析的那份对不上。写成绝对路径，才能对准仓库根的 out/linux。
 
-- [Kconfig Language Documentation](https://www.kernel.org/doc/html/latest/kbuild/kconfig-language.html) - Kconfig 配置语言文档
-- [Linux Kernel Configuration Guide](https://www.kernel.org/doc/html/latest/admin-guide/README.html) - 内核配置指南
+进了界面，咱们按 / 弹出搜索框，输入选项名或关键词回车，结果列表每个条目前有数字代号，按对应数字直接跳到那一项；光标压在选项上按空格，就在 y、m、not set 之间轮换。搜索结果还会列出该选项的 Depends on 依赖链，哪一项没满足一眼可见。很多朋友都撞过同一个问题：某项搜得到却怎么也改不动，多半就是依赖没开。
+
+咱们改完保存退出，.config 就地更新。想让改动回到可版本管理的形态，就跑 savedefconfig：
+
+```bash
+# 主机 ~/imx-forge
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O="$PWD/out/linux" savedefconfig
+```
+
+它在输出目录 out/linux 下生成 defconfig 文件（O= 构建时不在源码树根），内容是当前 .config 相对全部 Kconfig 默认值的有差异行；这个目录在默认构建里会被整目录删掉，diff 完记得立刻把文件拷出来。575 行模板的来历就是这么个缩法，反着走一遍，咱们的改动也能回到同样的精简形态，合回仓库模板后下次构建自动生效。
+
+::: warning 未实测标注
+本节交互步骤（menuconfig 的按键流转、搜索界面呈现、savedefconfig 的产物内容）是内核社区标准操作，但本环境是无头容器，无法替您真按一遍键盘；具体按键表现以您机器实跑为准，搜索语法与 savedefconfig 行为在内核 7.x 各版本间保持稳定。
+:::
+
+::: warning 坑：改在 .config 里的成果，一觉醒来没了
+out/linux 整个目录是构建产物，构建脚本默认模式开跑就 rm -rf 重建它，直接改产物 .config 的成果会跟着一起蒸发。根因是产物目录与真理源的分工没守住。解法：任何想长期生效的配置改动，走 savedefconfig 缩回片段、合回仓库模板，让构建脚本替咱们展开。
+:::
+
+## 验收：关键项逐个命中
+
+配置做没做对，不靠感觉。咱们一条计数命令打底，再拿关键项对照表逐个过。
+
+```bash
+# 主机 ~/imx-forge
+grep -c '^CONFIG' out/linux/.config
+```
+
+```text
+1839
+```
+
+1839 这个数别当魔数记：内核版本一换、选项增删，它就会漂。咱们验收看的是关键项逐个命中，总数漂了不用慌：
+
+```bash
+# 主机 ~/imx-forge
+/usr/bin/grep -E '^CONFIG_(SOC_IMX6UL|DRM_MXSFB|SND_SOC_WM8960|FEC|MMC_SDHCI_ESDHC_IMX|SERIAL_IMX_CONSOLE|CAN_FLEXCAN|SPI_IMX|TOUCHSCREEN_GOODIX)=' out/linux/.config
+```
+
+```text
+CONFIG_SOC_IMX6UL=y
+CONFIG_FEC=y
+CONFIG_CAN_FLEXCAN=y
+CONFIG_TOUCHSCREEN_GOODIX=y
+CONFIG_SERIAL_IMX_CONSOLE=y
+CONFIG_SPI_IMX=y
+CONFIG_DRM_MXSFB=y
+CONFIG_SND_SOC_WM8960=y
+CONFIG_MMC_SDHCI_ESDHC_IMX=y
+```
+
+| 验收项 | .config 真实行 | 管的是什么 |
+|---|---|---|
+| SOC_IMX6UL | CONFIG_SOC_IMX6UL=y | SoC 级总开关，不开后面全白搭 |
+| DRM_MXSFB | CONFIG_DRM_MXSFB=y | eLCDIF 显示控制器（DRM 家） |
+| SND_SOC_WM8960 | CONFIG_SND_SOC_WM8960=y | WM8960 codec 驱动 |
+| FEC | CONFIG_FEC=y（Kconfig 默认值贡献） | 双网口控制器 |
+| MMC_SDHCI_ESDHC_IMX | CONFIG_MMC_SDHCI_ESDHC_IMX=y | SD/eMMC（uSDHC 主机驱动） |
+| SERIAL_IMX_CONSOLE | CONFIG_SERIAL_IMX_CONSOLE=y | 串口控制台，没它启动日志都看不见 |
+| CAN_FLEXCAN | CONFIG_CAN_FLEXCAN=y | FlexCAN 总线 |
+| SPI_IMX | CONFIG_SPI_IMX=y | ECSPI 控制器 |
+| TOUCHSCREEN_GOODIX | CONFIG_TOUCHSCREEN_GOODIX=y | GT9147 触摸 |
+
+命名陷阱这儿有一个，咱们提前交代：搜错了符号实名，结果恒为空，比如 /usr/bin/grep -E '^CONFIG_(FLEXCAN|MMC_USDHC)=' out/linux/.config。uSDHC 主机驱动在这棵树里走 SDHCI 家族，实名 MMC_SDHCI_ESDHC_IMX；FlexCAN 挂在 CAN 菜单下，实名 CAN_FLEXCAN。名字不对，很容易误判成配置丢了，其实是您搜的词不对。
+
+触摸、显示、网络的逐项移植故事，后面各有专章展开。配置这一步咱们干的事，就是把驱动请进门。
+
+### 配置阶段速查表
+
+| 现象 | 根因 | 解法 |
+|---|---|---|
+| make 报找不到 imx_aes_mainline_defconfig | 模板没生成目标文件，内核树里没有它 | 重跑 build-linux.sh，或手工拷模板加 sed 替换 |
+| 构建断在固件嵌入，报 regulatory.db 找不到 | ${FIRMWARE_DIR} 占位符没被替换 | 检查生成文件末尾两行，grep '${' 应无残留 |
+| 改过的配置重编译后回到旧值 | 改动写在产物 .config 里，被 distclean 清掉 | savedefconfig 缩回片段，合回仓库模板 |
+| 板子起来无声卡设备 | fsl-asoc-card、SDMA 以 =m 存在且无人安装模块 | 模板保持 =y（Issue #43 的答案） |
+| menuconfig 里某项搜到但改不动 | Depends on 依赖没开 | 按搜索界面提示先开依赖项 |
+
+## 继续学习
+
+- 上一篇：[BSP vs 主线对比](./04_bsp_vs_mainline.md)
+- 下一篇：[设备树：从参考板改出 AES 板，编译并首启](./06_dts_migration.md)
+- 跨卷深读：[DRM 显示系统移植](./07_display_drm.md)

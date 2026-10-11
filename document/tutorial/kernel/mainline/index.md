@@ -12,19 +12,21 @@
 
 ## 🖥️ 实测效果
 
-主线 Linux 7.1 已在正点原子阿尔法 i.MX6ULL 上跑通——这不是 PPT，是真实启动画面：
+主线 Linux 7.2.9 已在正点原子阿尔法 i.MX6ULL 上跑通——这不是 PPT，是真实启动画面：
 
 ![主线内核 Linux 7 启动实拍](/linux7.png)
 
 ::: details 构建命令
 ```bash
-# 使用主线内核构建脚本
+# 主机 ~/imx-forge
+# 使用主线内核构建脚本（推荐：自动拷入板级设备树并注册 dtb）
 ./scripts/build_helper/build-linux.sh
 
-# 或手动构建
-cd third_party/linux_mainline
-make imx_aes_mainline_defconfig O=../../out/linux
-make -j8 O=../../out/linux
+# 或手动构建（注意 O= 必须写绝对路径）
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- \
+    O="$PWD/out/linux" imx_aes_mainline_defconfig
+make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- \
+    O="$PWD/out/linux" -j16 zImage dtbs
 ```
 :::
 
@@ -38,11 +40,11 @@ make -j8 O=../../out/linux
 | 文件 | 标题 | 说明 |
 |------|------|------|
 | [01_why_mainline.md](01_why_mainline) | 为什么要折腾主线内核 | NXP BSP vs 主线内核的根本差异 |
-| [02_env_setup.md](02_env_setup) | 从零开始搭建编译环境 | 依赖安装、工具链配置 |
-| [03_source_fetch.md](03_source_fetch) | 获取主线内核源码 | kernel.org 克隆、补丁应用 |
-| [04_bsp_vs_mainline.md](04_bsp_vs_mainline) | BSP vs 主线深度对比 | DRM 显示子系统、设备树 binding 变化 |
-| [05_defconfig.md](05_defconfig) | 主线内核配置 | defconfig 配置、关键选项说明 |
-| [06_dts_migration.md](06_dts_migration) | 设备树迁移 | OF graph 连接、sim2 节点补充 |
+| [02_env_setup.md](02_env_setup) | 从零开始搭建主线内核编译环境 | 依赖安装、工具链配置 |
+| [03_source_fetch.md](03_source_fetch) | 取源码：从 stable 树拉下 v7.2.9 | stable 树与主树的分工、浅克隆、子模块、版本验证 |
+| [04_bsp_vs_mainline.md](04_bsp_vs_mainline) | BSP vs 主线对比 | DRM 显示子系统、设备树 binding 变化 |
+| [05_defconfig.md](05_defconfig) | 内核配置：一份 defconfig 的由来 | defconfig 机制、配置模板、menuconfig、内置与模块取舍 |
+| [06_dts_migration.md](06_dts_migration) | 设备树：从参考板改出 AES 板，编译并首启 | 参考板方法、节点精读、编译、QEMU 15 项断言验收 |
 | [07_display_drm.md](07_display_drm) | DRM 显示系统移植 | LCD 驱动完整迁移指南 |
 | [08_touch_gt9xx.md](08_touch_gt9xx) | 触摸屏移植 | GT9147/Goodix 驱动配置 |
 | [09_network_dual_phy.md](09_network_dual_phy) | 双网口移植 | FEC + KSZ8081 以太网配置 |
@@ -53,7 +55,7 @@ make -j8 O=../../out/linux
 
 1. 阅读 [01_why_mainline.md](01_why_mainline) 了解主线内核的优势和代价
 2. 跟随 [02_env_setup.md](02_env_setup) 搭建编译环境
-3. 参考 [03_source_fetch.md](03_source_fetch) 获取主线源码并应用补丁
+3. 参考 [03_source_fetch.md](03_source_fetch) 从 stable 树拉下 v7.2.9（内核侧没有补丁）
 4. 学习 [04_bsp_vs_mainline.md](04_bsp_vs_mainline) 理解架构差异
 5. 按 [05_defconfig.md](05_defconfig) 和 [06_dts_migration.md](06_dts_migration) 配置内核和设备树
 6. 参考 [07_display_drm.md](07_display_drm)、[08_touch_gt9xx.md](08_touch_gt9xx)、[09_network_dual_phy.md](09_network_dual_phy) 移植具体外设
@@ -71,9 +73,9 @@ make -j8 O=../../out/linux
 - 旧 BSP：`&lcdif { display = <&display0>; display0: display@0 { ... }; }`
 - 主线：`panel: panel-dpi { ... port { panel_in: endpoint { ... }; }; }; &lcdif { port { lcdif_out: endpoint { ... }; }; }`
 
-### sim2 节点
+### 板级设备树
 
-主线内核的 `imx6ul.dtsi` 缺失 sim2 节点定义，移植时需要手动添加。
+内核侧没有补丁：板级 dts/dtsi 的唯一原件在 `driver/device_tree/alpha-board/linux/`，构建脚本每次编译时拷入内核树并注册 dtb。上游 `imx6ul.dtsi` 没有也不需要 sim2 节点，旧补丁里的 sim2 是死代码，v7.2.9 重写时已清理。
 
 ## 硬件平台
 
