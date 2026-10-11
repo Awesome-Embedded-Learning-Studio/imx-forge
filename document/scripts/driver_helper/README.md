@@ -19,7 +19,7 @@
 - **[构建脚本](build_driver.md)** - build_driver.sh详解
 - **[部署脚本](deploy_driver.md)** - deploy_driver.sh详解
 - **[审查脚本](review_driver.md)** - review_driver.sh详解
-- **[设备树脚本](show_device_tree.md)** - show_device_tree.sh详解
+- **[设备树脚本](show_device_tree.sh.md)** - show_device_tree.sh详解
 - **[配置文件](configuration.md)** - driver_helper.conf详解
 - **[构建库](../lib/driver_buildlib.md)** - driver_buildlib.sh详解
 

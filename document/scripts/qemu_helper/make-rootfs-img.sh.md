@@ -23,7 +23,7 @@ QEMU 模拟链路三件套的第一步：
 
 ```text
 make-rootfs-img.sh   →  out/qemu/rootfs.ext4      （本脚本）
-make-qemu-dtb.sh     →  out/qemu/imx6ull-aes-qemu.dtb
+make-qemu-dtb.sh     →  out/qemu/imx6ull-aes.dtb
 run-qemu.sh          →  交互 / --smoke 冒烟
 ```
 

@@ -1,65 +1,106 @@
-# make-qemu-dtb.sh - QEMU 设备树编译脚本详解（真机树 + bootloader fixup）
+# make-qemu-dtb.sh - 给 QEMU 编真板同源 dtb（真机 dts 直编 + fdtput 补 MAC）
 
 ## 脚本概述
 
-`make-qemu-dtb.sh` 编译 QEMU 专用的板级设备树
-`scripts/qemu_helper/imx6ull-aes-qemu.dts` → `out/qemu/imx6ull-aes-qemu.dtb`。
-这份变体在 `imx6ull-aes.dtsi`（真机配置）基础上，**只 disable 在 QEMU
-里会炸内核的节点**，其余板级配置（LED/beep/key、i2c 传感器、ecspi3、
-usdhc、can1、sai2…）原样继承——一份设备树语义同时服务真机叙事和模拟器。
+`make-qemu-dtb.sh` 编译 QEMU 启动用的板级 dtb：直接拿内核树里的真板 dts
+`third_party/linux_mainline/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dts` 编成
+`out/qemu/imx6ull-aes.dtb`，不做任何「QEMU 变体」——QEMU 和真机启动的是
+同一棵设备树，逐字节一致。唯一的改动是用 `fdtput` 往编好的 blob 里补两个
+网口的 `local-mac-address`，干的正是真机上 U-Boot 在 `bootz` 之前干的那件事。
 
-### 为什么需要变体
+一句话记住这个脚本的立场（等价性原则）：**QEMU 拉的就是真板那棵树，唯一
+的差异是 bootloader 本来就会做的那部分修整，而且就在 bootloader 动手的
+位置（编译出来的 blob）上做**。dts/dtsi 保持单一来源，在 QEMU 里验证过的
+结论对真机成立，反过来也一样。
 
-QEMU 的 i.MX6UL SoC 模型（`hw/arm/fsl-imx6ul.c`）实现了 UART/I2C/ECSPI/
-USDHC/FEC/GPIO/GPT/EPIT/WDOG/SNVS；但 stock QEMU 8.2.x 对 mmdc/ocotp/qspi/
-dcp/rngb/usbmisc/lcdif/pxp/csi/tsc 是**地址空洞**（连读 0 桩都没有）——
-这些节点的驱动 probe 时 `readl` 直接触发 external abort，在
-`of_platform_populate` 阶段杀死 PID 1 → kernel panic（表现是完全无串口
-输出，因为死在 uart 完整驱动 probe 之前）。master/11.1+ 补了部分 stub
-（Bin Meng 2026-08 系列），但仍非真模型。
+### 为什么只补 MAC、别的什么都不改
 
-### 变体里被 disable 的节点（12 个）
+板级 `imx6ull-aes.dtsi` 里 `&fec1`/`&fec2` 都没写 `local-mac-address`，
+MAC 走的是 `imx6ul.dtsi` 里挂在 ocotp（eFuse）上的 nvmem cell
+（`fec1_mac_addr: mac-addr@88` / `fec2_mac_addr: mac-addr@8e`）。真机启动
+时 U-Boot 会把 `ethaddr`/`eth1addr` 环境变量盖进 dtb 再 `bootz`；而 QEMU
+这条链是 `-kernel` 直启、中间没有 U-Boot，没人干这个活——内核的
+`of_get_mac_address()` 于是一直等那个 nvmem cell，两个 FEC 全卡在
+deferred probe，网络起不来（e2e 的 net-dhcp-ping 断言就过不去）。
 
-| 节点 | QEMU 8.2.x 状态 | master/11.1+ |
+所以脚本在 dtc 编完之后补两条 `fdtput`，等于替 U-Boot 做了 ethaddr fixup：
+
+| 写入的节点（blob 里的完整路径） | dtsi 里的 label | 写入的 MAC |
 |---|---|---|
-| memory-controller@21b0000 (mmdc) | 空洞 → abort | stub（Bin Meng 系列） |
-| crypto@2280000 (dcp) | 空洞 | 空洞 |
-| rng@2284000 (rngb) | 空洞 | 空洞 |
-| spi@21e0000 (qspi) | 空洞 | stub |
-| lcdif@21c8000 | 空洞 | **真模型（11.1+ 显示可用）** |
-| pxp@21cc000 | 空洞 | 空洞 |
-| csi@21c4000 | 空洞 | 空洞 |
-| touchscreen@2040000 (tsc) | 空洞 | 空洞 |
-| efuse@21bc000 (ocotp) | 空洞 | stub |
-| usb@2184000/2184200/usbmisc | usbmisc 空洞 | stub |
+| `/soc/bus@2000000/ethernet@20b4000` | `&fec2` | `00:11:22:33:44:01` |
+| `/soc/bus@2100000/ethernet@2188000` | `&fec1` | `00:11:22:33:44:02` |
 
-> 注：升级到 QEMU ≥ 11.1 后，lcdif 可从 disable 列表移除（有真显示模型）；
-> 其余节点即使有 stub，驱动也是读 0 软失败，disabled 与否不影响启动。
+> 脚本里的变量名叫 `FEC1_MAC`/`FEC2_MAC`，但按 dtsi 的 label 对不上号
+> （`FEC1_MAC` 实际写进的是 `&fec2` 那个节点）。对表认路径就行，别认
+> 变量名。
 
 ### 在开发工作流中的位置
 
-QEMU 模拟链路三件套的第二步（见 `make-rootfs-img.sh.md`）。设备树源放在
-`scripts/qemu_helper/`（不放内核树内），因为它不需要进内核构建系统；但它
-`#include` 内核树里的 `imx6ull.dtsi` + `imx6ull-aes.dtsi`，**改共享 dtsi
-时这份变体自动跟随**（重跑本脚本即可），符合设备树三处同步纪律。
+QEMU 模拟链路三件套的第二步（见 `make-rootfs-img.sh.md`）：
+
+```text
+make-rootfs-img.sh   →  out/qemu/rootfs.ext4      （第 1 步）
+make-qemu-dtb.sh     →  out/qemu/imx6ull-aes.dtb  （本脚本）
+run-qemu.sh          →  交互 / --smoke 冒烟        （第 3 步）
+```
+
+平时不用手动跑：`run-qemu.sh` 默认启动前自检——dtb 不存在，或内核树
+`nxp/imx/` 下的真板 dts/dtsi 比现有 dtb 新（真机单源，改了 dts/dtsi 重跑
+就生效），就自动调本脚本重建；`e2e-test.sh` 也是借 `run-qemu.sh` 刷新
+产物。手动跑的场景主要是想单独检查编译产物，或第一次排障。
 
 ## 用法示例
 
 ```bash
+# 默认：内核树真板 dts → out/qemu/imx6ull-aes.dtb（run-qemu.sh 默认使用）
 scripts/qemu_helper/make-qemu-dtb.sh
-# → out/qemu/imx6ull-aes-qemu.dtb（run-qemu.sh 默认使用）
+
+# 指定输出路径
+scripts/qemu_helper/make-qemu-dtb.sh --output=out/qemu/my.dtb
 ```
+
+## 参数与环境变量
+
+| 项 | 默认 | 说明 |
+|---|---|---|
+| `--output=PATH` | `out/qemu/imx6ull-aes.dtb` | 输出 dtb 路径 |
+| `-h`, `--help` | — | 打印用法（头注释只提取到 Usage 一行，完整参数以本表为准） |
+| `PROJECT_ROOT` | 自动探测（脚本上两级目录） | 仓库根目录 |
+| `LINUX_SRC` | `third_party/linux_mainline` | 内核源码树，须已初始化 submodule 并打好板级补丁 |
+| `OUT_BUILD` | `out/linux` | 内核 `O=` 构建树，脚本从里面取 `scripts/dtc/dtc`。单跑 `build-linux.sh` 就是默认值；走 `release-all.sh`（如 CI）时内核在 `out/release-latest/linux`，要显式 `export OUT_BUILD=$PWD/out/release-latest/linux` |
 
 ## 关键实现细节
 
-- **cpp 预处理**：内核构建对 dts 先跑 `cpp -x assembler-with-cpp`（处理
-  `#include`），dtc 本身不认 include；脚本镜像 `scripts/Makefile.lib` 的
-  做法，`-I` 指到 `arch/arm/boot/dts/nxp/imx/`（v7.1 里 i.MX dtsi 的实际
-  位置）
-- **用内核自带 dtc**：`out/linux/scripts/dtc/dtc`（与内核构建同
-  版本，避免系统 dtc 与内核 dtc 语法差异）；需要先跑过一次内核构建。
-  构建树位置用 `OUT_BUILD` 环境变量覆盖——单跑 `build-linux.sh`
-  时是默认的 `out/linux`，走 `release-all.sh`（如 CI）时内核在
-  `out/release-latest/linux`，要 `OUT_BUILD=$PWD/out/release-latest/linux`
-- **无 label 节点的引用**：mmdc 节点在 `imx6ul.dtsi` 里没有 label，用完整
-  路径引用 `&{/soc/bus@2100000/memory-controller@21b0000}`
+- **前置检查三条**：真板 dts 存在（否则报「submodule 初始化 + 打补丁了
+  吗」）；内核 dtc 已编出来（`${OUT_BUILD}/scripts/dtc/dtc`，没编过先跑
+  一次 `build-linux.sh`）；系统里有 `fdtput`（没有就
+  `apt install device-tree-compiler`）。缺哪个直接报错退出，不硬撑。
+- **cpp 预处理**：内核构建对 dts 是先过一遍 `cpp -x assembler-with-cpp`
+  展开 `#include`/`#define` 再交 dtc（dtc 本身不认这些，见内核
+  `scripts/Makefile.dtbs` 里的 dtc 规则）；脚本照抄这套做法，`-I` 依次指到
+  `arch/arm/boot/dts/nxp/imx/`
+  （v7.1 里 i.MX dtsi 的实际位置）、`arch/arm/boot/dts/` 及其 `include/`、
+  内核 `include/`、以及 `O=` 构建树下的 `arch/arm/boot/dts/`。预处理中间
+  产物是 `*.pp.dts`（与输出同目录同名），dtc 编完就删，失败时留着方便
+  看卡在哪。
+- **用内核自带 dtc**：`${OUT_BUILD}/scripts/dtc/dtc` 与内核构建同版本，
+  避开系统 dtc 和内核 dtc 的语法差异。`-@` 把 label 编成 `__symbols__`
+  符号表；`-Wno-unit_address_vs_reg` 屏蔽一条已知无伤告警；`-i` 给 dtc
+  补 include 搜索路径。
+- **退出码判定不靠管道**：dtc 输出经 `grep -v '^WARNING'` 过滤后，用
+  `PIPESTATUS[0]` 取真实退出码——只看管道尾的话，一次干净编译（输出全被
+  过滤光、grep 无匹配）会被误判成失败。
+- **fdtput 只动 blob**：两条 `fdtput -t bx`（`-t bx` 表示按十六进制字节
+  序列写入）在编译产物上落 MAC，落点就是 bootloader 修整 dtb 的位置；
+  dts/dtsi 一个字符都不动，真机的构建链不受影响。
+
+## 常见问题
+
+- **报 board dts not found**：submodule 没初始化或板级补丁没打。板级
+  dts 是随补丁打进内核树的，先按构建流程把 `third_party/linux_mainline`
+  备好再跑。
+- **报 kernel dtc not built**：没跑过 `build-linux.sh`；或走了
+  `release-all.sh` 却忘了把 `OUT_BUILD` 指到 `out/release-latest/linux`。
+- **改了 dtsi 但 QEMU 行为没变**：确认改的是内核树
+  `arch/arm/boot/dts/nxp/imx/` 下那份 dts/dtsi（别改到别处的副本），然后
+  让 `run-qemu.sh` 自动重建，或手动重跑本脚本。

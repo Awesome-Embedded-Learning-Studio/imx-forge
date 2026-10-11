@@ -33,7 +33,7 @@ title: 板子硬件接口速查表
 | RTC | SNVS | 实时钟 | [driver/10 rtc](../driver/10_rtc_snvs_driver/) |
 
 ::: tip 引脚去哪查
-您查每个外设的具体引脚复用、电气配置，都在设备树源文件 `imx6ull-aes.dtsi`（NXP 轨）或主线对应 dtsi 里。修改流程见 [driver/01 板级 dts 修改](../driver/01_device_tree_base/09_board_dts_modification.md)。
+您查每个外设的具体引脚复用、电气配置，都在设备树源文件 `imx6ull-aes.dtsi`（NXP 轨）或主线对应 dtsi 里。修改流程见 [driver/01 板级 dts 修改](../driver/01_device_tree_base/04_board_dts_modification.md)。
 :::
 
 ## 启动介质选择
