@@ -18,15 +18,12 @@
 
 ::: details 构建命令
 ```bash
-# 主机 ~/imx-forge
-# 使用主线内核构建脚本（推荐：自动拷入板级设备树并注册 dtb）
-./scripts/build_helper/build-linux.sh
+# 教程从零流程：源码树 ~/experiments/linux-mainline，构建产物进 ~/experiments/linux-build
+make O=~/experiments/linux-build ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- imx6ull_aes_defconfig
+make O=~/experiments/linux-build ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- -j16 zImage nxp/imx/imx6ull-aes.dtb
 
-# 或手动构建（注意 O= 必须写绝对路径）
-make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- \
-    O="$PWD/out/linux" imx_aes_mainline_defconfig
-make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- \
-    O="$PWD/out/linux" -j16 zImage dtbs
+# 仓库工程化：一条命令完成拷贝、配置、构建（见工程化章节）
+./scripts/build_helper/build-linux.sh
 ```
 :::
 
@@ -55,9 +52,9 @@ make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi
 
 1. 阅读 [01_why_mainline.md](01_why_mainline) 了解主线内核的优势和代价
 2. 跟随 [02_env_setup.md](02_env_setup) 搭建编译环境
-3. 参考 [03_source_fetch.md](03_source_fetch) 从 stable 树拉下 v7.2.9（内核侧没有补丁）
+3. 参考 [03_source_fetch.md](03_source_fetch) 在自己的目录里克隆 v7.2.9（内核侧没有补丁）
 4. 学习 [04_bsp_vs_mainline.md](04_bsp_vs_mainline) 理解架构差异
-5. 按 [05_defconfig.md](05_defconfig) 和 [06_dts_migration.md](06_dts_migration) 配置内核和设备树
+5. 按 [05_defconfig.md](05_defconfig) 做出自己板子的 defconfig，再按 [06_dts_migration.md](06_dts_migration) 从参考板改出 AES 板并首启
 6. 参考 [07_display_drm.md](07_display_drm)、[08_touch_gt9xx.md](08_touch_gt9xx)、[09_network_dual_phy.md](09_network_dual_phy) 移植具体外设
 7. 使用 [10_debug_tricks.md](10_debug_tricks) 调试问题
 8. 查阅 [11_common_issues.md](11_common_issues) 解决常见报错
@@ -75,7 +72,7 @@ make -C third_party/linux_mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi
 
 ### 板级设备树
 
-内核侧没有补丁：板级 dts/dtsi 的唯一原件在 `driver/device_tree/alpha-board/linux/`，构建脚本每次编译时拷入内核树并注册 dtb。上游 `imx6ul.dtsi` 没有也不需要 sim2 节点，旧补丁里的 sim2 是死代码，v7.2.9 重写时已清理。
+内核侧没有补丁。教程从零流程在您自己的内核树里创建 `imx6ull-aes.dts`/`imx6ull-aes.dtsi`；仓库工程化则把它们收敛为 `driver/device_tree/alpha-board/linux/` 下的唯一原件，构建时拷入内核树并注册 dtb。上游 `imx6ul.dtsi` 没有也不需要 sim2 节点，旧补丁里的 sim2 是死代码，v7.2.9 重写时已清理。
 
 ## 硬件平台
 
