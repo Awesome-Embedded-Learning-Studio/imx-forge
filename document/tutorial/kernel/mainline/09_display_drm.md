@@ -2,13 +2,13 @@
 
 ## 前言：这是整个移植最复杂的一章
 
-说实话，从 NXP BSP 迁移到主线内核，最难的部分就是显示系统。为什么？因为整个架构都变了：从旧的 Framebuffer 框架迁移到 DRM/KMS 框架，驱动代码位置不同、设备树写法不同、调试方法也不同。
+先说一句实话：从 NXP BSP 迁移到主线内核，笔者认为最难的部分就是显示系统。为什么？因为整个架构都变了：从旧的 Framebuffer 框架迁移到 DRM/KMS 框架，驱动代码位置不同、设备树写法不同、调试方法也不同。
 
-但好消息是，一旦你理解了 DRM 的基本概念，后续的调试就会容易很多。这篇文章会带你完整走过 LCD 驱动的迁移过程，从设备树编写到最终验证。我会尽量解释清楚每一步的原因，而不是只给你一堆命令。
+但好消息是，一旦您理解了 DRM 的基本概念，后续的调试就会容易很多。笔者会带您完整走过 LCD 驱动的迁移过程，从设备树编写到最终验证，并且尽量解释清楚每一步的原因，而不是只丢给您一堆命令。
 
 ## 第一步——理解 DRM 架构
 
-DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用于 3D 图形加速，后来扩展到所有显示设备。对于嵌入式系统，我们主要关心 KMS（Kernel Mode Setting）部分，也就是内核负责设置显示模式的那部分代码。
+DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用于 3D 图形加速，后来扩展到所有显示设备。对嵌入式系统来说，咱们主要关心 KMS（Kernel Mode Setting）部分，也就是内核负责设置显示模式的那部分代码。
 
 ### DRM 的核心组件
 
@@ -29,17 +29,17 @@ DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用�
 - **Connector**：连接器，描述物理连接方式（比如 DPI、LVDS、HDMI）
 - **Panel**：面板，描述屏幕的时序参数和特性
 
-对于 i.MX6ULL 的 eLCDIF 控制器，架构比较简单：CRTC 直接连接 Panel，没有中间的 Encoder。
+对咱们这块 i.MX6ULL 的 eLCDIF 控制器来说，架构比较简单：CRTC 直接连接 Panel，没有中间的 Encoder。
 
 ### 为什么不用 panel-simple 而是 panel-dpi
 
-你可能见过 `panel-simple` 驱动，它支持很多常见的屏幕。但 `panel-simple` 要求屏幕在驱动代码里预定义，而 `panel-dpi` 是一个通用驱动，时序参数完全由设备树的 `panel-timing` 节点指定。
+您可能见过 `panel-simple` 驱动，它支持很多常见的屏幕。但 `panel-simple` 要求屏幕在驱动代码里预定义，而 `panel-dpi` 是一个通用驱动，时序参数完全由设备树的 `panel-timing` 节点指定。
 
-对于我们的 7 寸 1024×600 屏幕，用 `panel-dpi` 最合适，因为时序参数不是标准的。
+咱们这块 7 寸 1024×600 屏，用 `panel-dpi` 最合适，因为它的时序参数不是标准的。
 
 ## 第二步——编写 panel 节点
 
-panel 节点独立于 lcdif 之外，作为根节点的子节点：
+咱们先写 panel 节点。它独立于 lcdif 之外，作为根节点的子节点：
 
 ```dts
 / {
@@ -98,7 +98,7 @@ panel 节点独立于 lcdif 之外，作为根节点的子节点：
 | de-active | 数据使能极性 | 1（高电平有效） |
 | pixelclk-active | 像素时钟极性 | 0（下降沿采样） |
 
-这些参数来自屏幕的数据手册，不同屏幕的值不同。写错了屏幕不会正常显示，甚至可能损坏硬件。
+这些参数来自屏幕的数据手册，不同屏幕的值不同。笔者建议您对着手册逐项核对，写错了屏幕不会正常显示，甚至可能损坏硬件。
 
 ## 第三步——配置背光
 
@@ -118,7 +118,7 @@ panel 节点独立于 lcdif 之外，作为根节点的子节点：
 
 然后在 panel 节点里引用：`backlight = <&backlight_display>;`。
 
-背光驱动会在 `/sys/class/backlight/` 下创建 sysfs 接口，你可以通过修改 `brightness` 文件控制亮度：
+背光驱动会在 `/sys/class/backlight/` 下创建 sysfs 接口，您可以通过修改 `brightness` 文件控制亮度：
 
 ```bash
 echo 255 > /sys/class/backlight/backlight-display/brightness  # 最亮
@@ -127,7 +127,7 @@ echo 0 > /sys/class/backlight/backlight-display/brightness    # 最暗
 
 ## 第四步——配置 lcdif 节点
 
-lcdif 节点需要删除旧的 `display` 属性，并添加 OF graph 连接：
+接下来咱们改 lcdif 节点：删除旧的 `display` 属性，并添加 OF graph 连接：
 
 ```dts
 &lcdif {
@@ -151,19 +151,19 @@ lcdif 节点需要删除旧的 `display` 属性，并添加 OF graph 连接：
 
 ### 为什么需要 /delete-property/ display
 
-`imx6ul.dtsi` 基础文件里的 lcdif 节点定义了 `display = <&display0>` 属性。这是旧写法的遗留，但基础文件我们不能直接修改（它是只读的）。
+`imx6ul.dtsi` 基础文件里的 lcdif 节点定义了 `display = <&display0>` 属性，这是旧写法的遗留。但基础文件咱们不能直接修改（它是只读的）。
 
-在板级设备树里用 `/delete-property/ display;` 可以在编译时覆盖删除这个属性。如果不删除，DTB 编译会报错：
+咱们在板级设备树里用 `/delete-property/ display;`，就能在编译时覆盖删除这个属性。如果不删除，DTB 编译会报错：
 
 ```
 error: phandle_references: Reference to non-existent node display0
 ```
 
-因为 `display0` 节点已经被我们删除了（用新的 panel 节点替代），但 `display` 属性还在引用它，导致悬空引用。
+因为 `display0` 节点已经被咱们删除了（用新的 panel 节点替代），而 `display` 属性还在引用它，就成了悬空引用。
 
 ## 第五步——配置 pinctrl
 
-lcdif 的引脚配置包括数据线和控制线：
+lcdif 的引脚配置包括数据线和控制线两组，咱们直接看写法：
 
 ```dts
 &iomuxc {
@@ -214,7 +214,7 @@ lcdif 的引脚配置包括数据线和控制线：
 - 位 6：PKE（上拉/下拉保持使能）
 - 位 7：ODE（开漏使能，0=禁用）
 
-具体含义参考 i.MX6ULL 参考手册的 IOMUX 章节配置。
+想深究每一位的含义，您可以查 i.MX6ULL 参考手册的 IOMUX 章节。
 
 ## 第六步——编译和烧录
 
@@ -224,17 +224,17 @@ lcdif 的引脚配置包括数据线和控制线：
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 ```
 
-把生成的 `imx6ull-aes.dtb` 烧录到板子。烧录方式取决于你的启动配置（SD 卡、eMMC、NFS 等）。
+把生成的 `imx6ull-aes.dtb` 烧录到板子。烧录方式取决于您的启动配置（SD 卡、eMMC、NFS 等）。
 
 ## 第七步——验证 DRM 驱动加载
 
-启动后，首先检查 dmesg 里的 DRM 相关日志：
+启动后，咱们首先检查 dmesg 里的 DRM 相关日志：
 
 ```bash
 dmesg | grep -E "drm|mxsfb|panel"
 ```
 
-你应该看到类似这样的输出：
+您应该看到类似这样的输出：
 
 ```
 [    0.912345] mxsfb 21c8000.lcdif: Initializing
@@ -245,9 +245,9 @@ dmesg | grep -E "drm|mxsfb|panel"
 [    1.456789] [drm] Initialized mxsfb 1.0.0 for 21c8000.lcdif on minor 0
 ```
 
-关键是 `bound panel-dpi` 这一行，说明驱动成功找到了 panel 设备。
+关键是 `bound panel-dpi` 这一行，您看到它就说明驱动成功找到了 panel 设备。
 
-如果看到 `Cannot connect bridge (-ENODEV)`，说明 OF graph 连接有问题，或者 panel 驱动没有加载。
+如果您看到的却是 `Cannot connect bridge (-ENODEV)`，说明 OF graph 连接有问题，或者 panel 驱动没有加载。
 
 ### 检查 DRM 设备节点
 
@@ -269,7 +269,7 @@ cat /sys/class/drm/card0-HDMI-A-1/modes
 # 应该输出：1024x600
 ```
 
-如果 connector 状态是 `disconnected`，说明 panel 驱动没有正常 probe。
+如果咱们看到 connector 状态是 `disconnected`，说明 panel 驱动没有正常 probe。
 
 ## 第八步——显示测试
 
@@ -283,7 +283,7 @@ apt install fbset
 fbset -i
 ```
 
-你应该看到：
+您应该看到：
 
 ```
 mode "1024x600"
@@ -316,7 +316,7 @@ dd if=/dev/zero of=/dev/fb0
 modetest -M mxsfb
 ```
 
-这会列出所有的 DRM 设备和模式，可以用来调试。
+这会列出所有的 DRM 设备和模式，咱们调试时可以用它。
 
 ## 常见问题排查
 
@@ -333,7 +333,7 @@ modetest -M mxsfb
 
 ### 问题二：屏幕全黑但背光亮
 
-这种情况通常是时序参数错误。用示波器测量 LCD 接口的信号，对比数据手册的时序图。常见错误：
+这种情况通常是时序参数错误。您可以用示波器测量 LCD 接口的信号，对比数据手册的时序图。常见错误：
 
 - clock-frequency 不对
 - hsync/vsync 极性反了
@@ -356,11 +356,11 @@ ls /sys/class/backlight/
 echo 255 > /sys/class/backlight/*/brightness
 ```
 
-如果还不亮，可能是硬件问题（PWM 信号没输出、背光电源没供电）。
+如果这样还不亮，多半是硬件问题（PWM 信号没输出、背光电源没供电），咱们就要往硬件方向查了。
 
 ## 下一章预告
 
-到这里，你应该已经成功让 LCD 显示了。恭喜！这是主线移植最难的一关。
+到这里，您应该已经成功让 LCD 显示了。恭喜！这一关是主线移植里最难的，咱们一起迈过来了。
 
 下一篇文章，我们会讲触摸屏的移植：
 
@@ -370,7 +370,7 @@ echo 255 > /sys/class/backlight/*/brightness
 - GPIO 冲突问题解决
 - 触摸校准与测试
 
-显示有了，触摸也有了，图形界面才能正常工作。我们下一章见。
+显示有了，触摸也有了，图形界面才能正常工作。咱们下一章见。
 
 ---
 

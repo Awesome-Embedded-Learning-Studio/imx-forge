@@ -1,16 +1,16 @@
 # 常见问题与解决方案：移植过程中的坑
 
-## 前言：这篇文章是你的急救包
+## 前言：这一章是您的急救包
 
-说实话，这篇教程系列写到现在，已经涵盖了主线内核移植的主要步骤。但实际移植过程中，你一定会遇到各种奇怪的问题：有些是配置错误，有些是硬件问题，有些是版本差异。
+说实话，这篇教程系列写到现在，已经涵盖了主线内核移植的主要步骤。但实际移植过程中，您一定会遇到各种奇怪的问题：有些是配置错误，有些是硬件问题，有些是版本差异。
 
-这篇文章总结了一些最常见的问题和对应的解决方法。它更像一个"急救包"，当你卡住的时候可以翻一下，看看有没有类似的情况。如果这里没有，那就要靠你的调试能力和搜索引擎了。
+这一章总结了一些最常见的问题和对应的解决方法。它更像一个"急救包"，当您卡住的时候可以翻一下，看看有没有类似的情况。如果这里没有，那就要靠您自己的调试能力和搜索引擎了。
 
 ## 报错速查表
 
 | 报错信息 | 根本原因 | 解决方法 |
 |----------|----------|----------|
-| `Cannot connect bridge (-ENODEV)` | 设备用旧式 `display@0` 写法，缺少 `port/endpoint` | 按 06/07 章修改设备树 |
+| `Cannot connect bridge (-ENODEV)` | 设备用旧式 `display@0` 写法，缺少 `port/endpoint` | 按 07/08 章修改设备树 |
 | `phandle_references: Reference to non-existent node display0` | 删了 display0 但没删 dtsi 里的 `display` 属性 | 加 `/delete-property/ display;` |
 | `pin already requested by 1-005d` | GPIO 冲突，触摸和 SD 卡抢引脚 | 删除 usdhc1 的冲突引脚 |
 | `Panel driver not found` | `CONFIG_DRM_PANEL_SIMPLE` 没开启 | 开启该配置并重新编译 |
@@ -32,7 +32,7 @@
 ls /sys/class/backlight/
 echo 255 > /sys/class/backlight/*/brightness
 ```
-如果还不亮，是硬件问题：背光供电或 PWM 信号。
+如果还不亮，就是硬件问题了：背光供电或 PWM 信号，咱们接着往下查。
 
 2. 检查 PWM 配置：
 ```bash
@@ -48,7 +48,7 @@ dmesg | grep regulator
 
 ### 问题：LCD 不亮，背光亮
 
-**症状**：屏幕能发光，但全是黑色或白色。
+**症状**：屏幕能发光，但您看到的全是黑色或白色。
 
 **排查步骤**：
 
@@ -59,7 +59,7 @@ dmesg | grep -E "mxsfb|panel"
 ```
 
 2. 检查时序参数：
-用示波器测量 LCD 接口的 PCLK、HSYNC、VSYNC 信号，对比数据手册的时序图。常见错误：
+用示波器测量 LCD 接口的 PCLK、HSYNC、VSYNC 信号，咱们对照数据手册的时序图。常见错误：
 - clock-frequency 不对
 - hsync/vsync 极性反了
 - 前肩后肩太小
@@ -68,19 +68,19 @@ dmesg | grep -E "mxsfb|panel"
 ```bash
 cat /dev/urandom > /dev/fb0 & sleep 2; kill %1
 ```
-如果屏幕有反应（花屏），说明驱动工作正常，问题在时序参数。
+如果屏幕有反应（花屏），您就可以确认驱动工作正常，问题在时序参数。
 
 ### 问题：屏幕有花屏
 
-**症状**：屏幕有颜色但不正常，条纹、色块等。
+**症状**：您能看到屏幕有颜色，但显示不正常，条纹、色块等。
 
-**可能原因**：
+**可能原因**：咱们常见这么几种：
 1. 数据线引脚配置错误（检查 pinctrl）
 2. 总线宽度不匹配（24bit vs 18bit）
 3. 时钟频率太高或太低
 
 **解决方法**：
-检查 pinctrl_lcdif_dat 里的引脚配置，确认每个 DATA 引脚都正确配置。
+检查 pinctrl_lcdif_dat 里的引脚配置，咱们确认每个 DATA 引脚都正确配置。
 
 ## 第二类——触摸问题
 
@@ -154,10 +154,10 @@ cat /sys/bus/mdio_bus/devices/2188000.ethernet:02/phy_id
 
 ### 问题：两个网口只有一个能用
 
-**可能原因**：MDIO 总线地址冲突
+**可能原因**：MDIO 总线地址冲突，咱们往下核对地址。
 
 **解决方法**：
-检查设备树里的 PHY 地址：
+检查设备树里的 PHY 地址，咱们逐个核对：
 - ethphy0 应该是 reg = <2>
 - ethphy1 应该是 reg = <1>
 
@@ -165,7 +165,7 @@ cat /sys/bus/mdio_bus/devices/2188000.ethernet:02/phy_id
 
 ## 第四类——GPIO 冲突
 
-这是 i.MX6ULL 开发板最常见的问题之一。
+这是笔者在 i.MX6ULL 开发板上最常碰到的问题之一。
 
 ### 典型报错
 
@@ -176,11 +176,11 @@ pin MX6UL_PAD_GPIO1_IO05 already requested by 1-005d; cannot claim for 2190000.m
 
 ### 原因
 
-GT9147 触摸屏的引脚（GPIO1_IO09 和 GPIO1_IO05）和 SD 卡（usdhc1）的引脚冲突了。两个设备都想用这两个引脚，但 GPIO 只能配置一次。
+GT9147 触摸屏的引脚（GPIO1_IO09 和 GPIO1_IO05）和 SD 卡（usdhc1）的引脚冲突了。两个设备都想用这两个引脚，但咱们只能把 GPIO 配给其中一个。
 
 ### 解决方法
 
-如果不需要 SD 卡，删除 usdhc1 pinctrl 里冲突的引脚：
+如果不需要 SD 卡，咱们就删除 usdhc1 pinctrl 里冲突的引脚：
 
 ```dts
 pinctrl_usdhc1: usdhc1grp {
@@ -193,7 +193,7 @@ pinctrl_usdhc1: usdhc1grp {
 };
 ```
 
-如果 SD 卡必须用，需要调整硬件设计，把触摸屏引脚改到其他 GPIO 上。
+如果 SD 卡必须用，您就得调整硬件设计，把触摸屏引脚改到其他 GPIO 上。
 
 ## 第五类——时钟问题
 
@@ -205,7 +205,7 @@ mxsfb 21c8000.lcdif: failed to get clk: -517
 
 ### 原因
 
-时钟源配置错误，或者时钟驱动没有正确初始化。
+咱们遇到的情况通常是时钟源配置错误，或者时钟驱动没有正确初始化。
 
 ### 解决方法
 
@@ -233,7 +233,7 @@ Failed to allocate memory for DMA
 
 ### 原因
 
-CMA（连续内存分配器）内存不够，DRM 驱动需要大块连续内存。
+CMA（连续内存分配器）内存不够，咱们要知道 DRM 驱动需要大块连续内存。
 
 ### 解决方法
 
@@ -262,7 +262,7 @@ arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi:123.45: error: phandle_references
 
 **解决方法**：
 1. 检查被引用的节点是否存在
-2. 如果不需要，删除引用或使用 `/delete-property/`
+2. 如果不需要，咱们删除引用或使用 `/delete-property/`
 
 ### 问题：内核配置冲突
 
@@ -270,10 +270,10 @@ arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi:123.45: error: phandle_references
 error: 'CONFIG_FB_MXS' conflicts with 'CONFIG_DRM_MXSFB'
 ```
 
-**原因**：同时开启了旧 Framebuffer 和 DRM
+**原因**：咱们同时开启了旧 Framebuffer 和 DRM
 
 **解决方法**：
-关掉旧 Framebuffer：
+咱们关掉旧 Framebuffer：
 ```bash
 # CONFIG_FB_MXS is not set
 # CONFIG_FB_MXC_SYNC_PANEL is not set
@@ -281,26 +281,26 @@ error: 'CONFIG_FB_MXS' conflicts with 'CONFIG_DRM_MXSFB'
 
 ## 社区资源
 
-如果这里没有你的问题，可以尝试以下资源：
+如果这里没有您遇到的问题，咱们可以尝试以下资源：
 
-1. **内核邮件列表**：linux-arm-kernel@lists.infradead.org
+1. **内核邮件列表**：linux-arm-kernel@lists.infradead.org，您可以直接发邮件求助
 2. **Stack Overflow**：搜索 "linux mainline imx6ull"
 3. **NXP 社区论坛**：community.nxp.com
 4. **GitHub Issues**：相关项目的 issue 页面
 
 ## 写在最后
 
-这个教程系列到这里就结束了。我们从为什么选择主线内核开始，一步步讲解了环境搭建、源码获取、配置、设备树迁移、显示系统、触摸屏、网络接口，最后是调试技巧和常见问题。
+这个教程系列到这里就结束了。咱们从为什么选择主线内核开始，一步步讲解了环境搭建、源码获取、配置、设备树迁移、显示系统、触摸屏、网络接口，最后是调试技巧和常见问题。
 
-主线内核的移植不是一件轻松的事，但当你看到屏幕亮起、触摸灵敏、网络通畅的那一刻，所有的辛苦都是值得的。更重要的是，通过这个过程，你真正理解了 Linux 内核的工作原理，这是用厂商 BSP 永远学不到的。
+主线内核的移植不是一件轻松的事，但当您看到屏幕亮起、触摸灵敏、网络通畅的那一刻，所有的辛苦都是值得的。更重要的是，通过这个过程，您真正理解了 Linux 内核的工作原理，这是用厂商 BSP 永远学不到的。
 
-祝你移植顺利！
+祝您移植顺利！
 
 ---
 
 **完整检查清单**
 
-移植完成后，用这个清单验证你的系统：
+移植完成后，用这个清单验证您的系统：
 
 ```bash
 # 1. 内核版本

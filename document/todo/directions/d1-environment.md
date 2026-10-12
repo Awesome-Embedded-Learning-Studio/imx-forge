@@ -54,9 +54,9 @@
 | **Full build workflow from a clean clone** / 从空仓库到完整构建 | [x] | [practical/02 构建系统](../../tutorial/practical/02_build_system.md) |
 | **`out/` directory explanation** / `out/` 目录结构 | [x] | [build/01 out 目录结构](../../tutorial/build/01_out_directory_structure.md) |
 | BSP default build workflow / BSP 默认构建链路 | [x] | [uboot/02](../../tutorial/uboot/02_uboot_compile.md) + [kernel/02](../../tutorial/kernel/02_kernel_compile.md) + [rootfs/02](../../tutorial/rootfs/02_busybox_compile.md) |
-| Mainline build verification workflow / mainline 构建验证 | [x] | [kernel/mainline/](../../tutorial/kernel/mainline/)（11 篇，含 defconfig/dts 迁移/调试） |
+| Mainline build verification workflow / mainline 构建验证 | [x] | [kernel/mainline/](../../tutorial/kernel/mainline/)（13 篇，含 defconfig/dts 迁移/调试） |
 | Patch workflow guide / patch 工作流实战 | [x] | [build/02 patch 工作流](../../tutorial/build/02_patch_workflow_practice.md) |
-| Common build failure troubleshooting / 常见构建失败排查 | [ ] ⚠️ | 部分覆盖 [kernel/mainline/11 常见问题](../../tutorial/kernel/mainline/11_common_issues.md)，缺专门构建排查篇 |
+| Common build failure troubleshooting / 常见构建失败排查 | [ ] ⚠️ | 部分覆盖 [kernel/mainline/13 常见问题](../../tutorial/kernel/mainline/13_common_issues.md)，缺专门构建排查篇 |
 
 #### P0-1: Ubuntu/Linux 基础 (10项 — 已完成 9，基于旧教程 Ch 2)
 
