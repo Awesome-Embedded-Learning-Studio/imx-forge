@@ -70,14 +70,13 @@
 		status = "okay";
 	};
 
+	/* AES 板的 SD 卡电源不受 GPIO1_IO09 控制：这个脚是 GT9147 的触摸中断，
+	   evk 参考板的使能写法不能照搬，只留电源描述 */
 	reg_sd1_vmmc: regulator-sd1-vmmc {
 		compatible = "regulator-fixed";
 		regulator-name = "VSD_3V3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
-		off-on-delay-us = <20000>;
-		enable-active-high;
 	};
 
 	reg_peri_3v3: regulator-peri-3v3 {
