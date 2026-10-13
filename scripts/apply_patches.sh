@@ -11,8 +11,10 @@
 #   ./scripts/apply_patches.sh <component>
 #
 # 示例：
-#   ./scripts/apply_patches.sh linux_mainline
 #   ./scripts/apply_patches.sh uboot-imx
+#
+# 注：linux_mainline 自 2026-10 起不再走补丁（板级设备树由
+# build-linux.sh 从 driver/device_tree/alpha-board/linux/ 拷入）。
 #
 # 说明：脚本会自动进入 third_party/<component> 再打补丁，
 # 因此在仓库根目录或子模块目录下执行均可。
@@ -26,7 +28,7 @@ COMPONENT="$1"
 
 if [[ -z "$COMPONENT" ]]; then
     echo "用法: $0 <component>"
-    echo "示例: $0 linux_mainline"
+    echo "示例: $0 uboot-imx"
     exit 1
 fi
 
@@ -88,7 +90,7 @@ if [[ ${#patch_files[@]} -gt 0 ]]; then
     else
         echo "  ✗ 失败: ${patch_name}" >&2
         echo "" >&2
-        echo "补丁没有打上，后续构建会缺 imx_aes_mainline_defconfig / imx6ull-aes.dts 这类项目自有文件。" >&2
+        echo "补丁没有打上，后续构建会缺补丁引入的项目自有文件。" >&2
         echo "常见原因：" >&2
         echo "  a) 子模块不在仓库锁定的 commit 上（patch 基准漂移）；" >&2
         echo "  b) 此前用旧方式打过补丁（文件只在工作区、未进暂存区），--3way 会拒绝重打。" >&2

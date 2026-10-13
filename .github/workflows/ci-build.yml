@@ -37,7 +37,7 @@ jobs:
               - 'patches/uboot-imx/**'
               - 'scripts/build_helper/build-uboot.sh'
             linux:
-              - 'patches/linux_mainline/**'
+              - 'driver/device_tree/alpha-board/linux/**'
               - 'scripts/build_helper/build-linux.sh'
             driver:
               - 'driver/**'
@@ -121,9 +121,6 @@ jobs:
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
 
-      - name: 应用 Linux Mainline 补丁
-        run: cd third_party/linux_mainline && ../../scripts/apply_patches.sh linux_mainline
-
       - name: 采集内核缓存元信息
         id: kernel-meta
         run: echo "sha=$(git -C third_party/linux_mainline rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -133,8 +130,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out/linux
-          # 命中即跳过内核编译；key 覆盖内核源、defconfig 模板、补丁与构建脚本
-          key: linux-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-linux.sh', 'patches/linux_mainline/**') }}
+          # 命中即跳过内核编译；key 覆盖内核源、defconfig 模板、板级设备树与构建脚本
+          key: linux-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/**', 'scripts/build_helper/build-linux.sh') }}
           restore-keys: |
             linux-tree-${{ steps.kernel-meta.outputs.sha }}-
 
@@ -200,9 +197,6 @@ jobs:
       - name: 初始化 linux-mainline 子模块
         run: git submodule update --init --depth=1 third_party/linux_mainline
 
-      - name: 应用 Linux Mainline 补丁
-        run: cd third_party/linux_mainline && ../../scripts/apply_patches.sh linux_mainline
-
       - name: 采集内核缓存元信息
         id: kernel-meta
         run: echo "sha=$(git -C third_party/linux_mainline rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -212,8 +206,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out/linux
-          # 命中即跳过 16 分钟的内核编译；key 覆盖内核源、defconfig 模板、补丁与构建脚本
-          key: linux-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template', 'scripts/apply_patches.sh', 'scripts/build_helper/build-linux.sh', 'patches/linux_mainline/**') }}
+          # 与 linux job 同键：板级设备树/defconfig 模板/构建脚本任一变化都换缓存
+          key: linux-tree-${{ steps.kernel-meta.outputs.sha }}-${{ hashFiles('driver/device_tree/alpha-board/linux/**', 'scripts/build_helper/build-linux.sh') }}
           restore-keys: |
             linux-tree-${{ steps.kernel-meta.outputs.sha }}-
 
@@ -247,7 +241,8 @@ jobs:
               echo ''
               echo '=== 内核源码检查 ==='
               ls -la third_party/linux_mainline/Makefile
-              ls -la third_party/linux_mainline/arch/arm/configs/imx_aes_mainline_defconfig
+              echo '=== 板级原件检查（唯一真理源）==='
+              ls -la driver/device_tree/alpha-board/linux/
             "
 
       - name: 准备内核环境

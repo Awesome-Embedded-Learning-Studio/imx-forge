@@ -13,7 +13,7 @@ netboot 启动 `imx6ull-aes.dtb` 时，Goodix 触摸屏驱动 probe 失败，串
 
 - 触摸芯片：正点原子 i.MX6ULL AES 板上的 Goodix **GT9147**，挂在 **i2c-1**。
 - 驱动：mainline `drivers/input/touchscreen/goodix.c`（分析型章节路线，拆现成驱动
-  不重写，见 [触摸章节](../tutorial/kernel/mainline/08_touch_gt9xx.md)）。
+  不重写，见 [触摸章节](../tutorial/kernel/10_touch_gt9xx.md)）。
 - 设备树：netboot base 镜像 `imx6ull-aes.dtb` 由 `linux/imx6ull-aes.dts`
   `#include "imx6ull-aes.dtsi"` 编出，goodix 节点就在这个**共享 dtsi** 里。
 
@@ -200,4 +200,4 @@ cat /proc/bus/input/devices
 
 - [2026-06-08 WSL2 NFS Rootfs 排查记录](2026-06-08-wsl2-nfsroot-ganesha-troubleshoot.md) —— 另一个「内核侧症状、根因在 host/配置」的排查范例。
 - [设备树基础](../tutorial/uboot/05_device_tree_basics.md) —— dts/dtsi/dtb 的关系与编译。
-- [触摸章节（mainline goodix 分析）](../tutorial/kernel/mainline/08_touch_gt9xx.md) —— GT9147 驱动分析型章节。
+- [触摸章节（mainline goodix 分析）](../tutorial/kernel/10_touch_gt9xx.md) —— GT9147 驱动分析型章节。

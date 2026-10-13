@@ -44,7 +44,7 @@ title: 调试与排错
 | 要断点单步 | [01 gdbserver 远程调试全链](01_gdbserver_remote_debug.md) | 远程链路是唯一途径 |
 | 板子启动不了、卡在某段 | [03 串口日志阅读路线](03_serial_log_reading.md) | 分段地图先定位卡在哪 |
 | 构建挂了 | [Buildroot 调试与排错](../buildroot/10_debugging.md) | 构建侧排错是它的主场 |
-| 内核态、Oops 深入 | [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md) | kgdb 与内核调试 |
+| 内核态、Oops 深入 | [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md) | kgdb 与内核调试 |
 | 串口连不上 | [串口工具使用](../start/04_serial_tools_minicom.md) | minicom 配置与排障 |
 | NFS、TFTP 起不来 | [WSL2 开发注意事项](../workflow/01_wsl2_env_config.md) 与 [NFS 挂载](../rootfs/05_nfs_wsl_troubleshoot.md) | 网络与挂载 |
 

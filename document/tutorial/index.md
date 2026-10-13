@@ -28,12 +28,12 @@ title: 教程
   </RoadMapPhase>
 
   <RoadMapPhase icon="🔍" title="内核探索" subtitle="Kernel" time="~5 天" :difficulty="3" :num="3">
-    <ChapterLink num="01" href="kernel/01_kernel_overview" variant="sub">内核概述</ChapterLink>
-    <ChapterLink num="02" href="kernel/02_kernel_compile" variant="sub">内核编译</ChapterLink>
-    <ChapterLink num="03" href="kernel/03_kernel_config" variant="sub">内核配置</ChapterLink>
-    <ChapterLink num="04" href="kernel/04_kernel_modules" variant="sub">内核模块</ChapterLink>
-    <ChapterLink num="05" href="kernel/05_kernel_device_tree" variant="sub">设备树详解</ChapterLink>
-    <ChapterLink num="06" href="kernel/08_kernel_boot_debug" variant="sub">启动调试</ChapterLink>
+    <ChapterLink num="01" href="kernel/00_kernel_overview" variant="sub">内核概述</ChapterLink>
+    <ChapterLink num="02" href="kernel/02_env_setup" variant="sub">编译环境与取源码</ChapterLink>
+    <ChapterLink num="03" href="kernel/05_defconfig" variant="sub">内核配置</ChapterLink>
+    <ChapterLink num="04" href="kernel/07_dts_writing" variant="sub">设备树写作</ChapterLink>
+    <ChapterLink num="05" href="kernel/08_dts_build_boot" variant="sub">编译与首启验收</ChapterLink>
+    <ChapterLink num="06" href="kernel/17_kernel_boot_debug" variant="sub">启动调试</ChapterLink>
   </RoadMapPhase>
 
   <RoadMapPhase icon="📦" title="根文件系统" subtitle="RootFS" time="~3 天" :difficulty="2" :num="4">
@@ -61,7 +61,7 @@ title: 教程
   </RoadMapPhase>
 
   <RoadMapPhase icon="🏔️" title="进阶探索" subtitle="Advanced" time="持续" :difficulty="5" :num="7">
-    <ChapterLink num="01" href="kernel/mainline/" variant="sub">主线内核移植</ChapterLink>
+    <ChapterLink num="01" href="kernel/" variant="sub">主线内核移植</ChapterLink>
     <ChapterLink num="02" href="kernel/core-functional/" variant="sub">内核并发机制</ChapterLink>
     <ChapterLink num="03" href="uboot/bonus_qa" variant="sub">U-Boot Q&A</ChapterLink>
     <ChapterLink num="04" href="project/light-meter/" variant="sub">工程实战：light-meter 照度摆件</ChapterLink>
@@ -120,14 +120,24 @@ title: 教程
 ### 内核教程
 
 <ChapterNav>
-  <ChapterLink num="01" href="kernel/01_kernel_overview">内核概述</ChapterLink>
-  <ChapterLink num="02" href="kernel/02_kernel_compile">内核编译</ChapterLink>
-  <ChapterLink num="03" href="kernel/03_kernel_config">内核配置</ChapterLink>
-  <ChapterLink num="04" href="kernel/04_kernel_modules">内核模块</ChapterLink>
-  <ChapterLink num="05" href="kernel/05_kernel_device_tree">设备树详解</ChapterLink>
-  <ChapterLink num="06" href="kernel/06_wsl_network_boot">网络启动</ChapterLink>
-  <ChapterLink num="07" href="kernel/07_driver_basic">驱动基础</ChapterLink>
-  <ChapterLink num="08" href="kernel/08_kernel_boot_debug">启动调试</ChapterLink>
+  <ChapterLink num="00" href="kernel/00_kernel_overview">内核概述</ChapterLink>
+  <ChapterLink num="01" href="kernel/01_why_mainline">为什么要折腾主线内核</ChapterLink>
+  <ChapterLink num="02" href="kernel/02_env_setup">编译环境搭建</ChapterLink>
+  <ChapterLink num="03" href="kernel/03_source_fetch">取源码 v7.2.9</ChapterLink>
+  <ChapterLink num="04" href="kernel/04_bsp_vs_mainline">BSP vs 主线对比</ChapterLink>
+  <ChapterLink num="05" href="kernel/05_defconfig">读懂一份 defconfig</ChapterLink>
+  <ChapterLink num="06" href="kernel/06_defconfig_customize">做出自己的 defconfig</ChapterLink>
+  <ChapterLink num="07" href="kernel/07_dts_writing">设备树写作</ChapterLink>
+  <ChapterLink num="08" href="kernel/08_dts_build_boot">编译与 QEMU 首启</ChapterLink>
+  <ChapterLink num="09" href="kernel/09_display_drm">DRM 显示移植</ChapterLink>
+  <ChapterLink num="10" href="kernel/10_touch_gt9xx">触摸屏移植</ChapterLink>
+  <ChapterLink num="11" href="kernel/11_network_dual_phy">双网口移植</ChapterLink>
+  <ChapterLink num="12" href="kernel/12_debug_tricks">调试技巧</ChapterLink>
+  <ChapterLink num="13" href="kernel/13_common_issues">常见问题</ChapterLink>
+  <ChapterLink num="14" href="kernel/14_kernel_modules">内核模块</ChapterLink>
+  <ChapterLink num="15" href="kernel/15_wsl_network_boot">网络启动</ChapterLink>
+  <ChapterLink num="16" href="kernel/16_driver_basic">驱动基础</ChapterLink>
+  <ChapterLink num="17" href="kernel/17_kernel_boot_debug">启动调试</ChapterLink>
 </ChapterNav>
 
 ### 根文件系统

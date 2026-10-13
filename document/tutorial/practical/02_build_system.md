@@ -84,7 +84,7 @@ file /tmp/test_arm
    - U-Boot 在启动链条中的作用
    - U-Boot 的基本概念和命令
 
-3. **Linux 内核教程** ([../kernel/01_kernel_overview.md](../kernel/01_kernel_overview))
+3. **Linux 内核教程** ([../kernel/00_kernel_overview.md](../kernel/00_kernel_overview))
    - 内核的基本概念
    - 主线内核与厂商BSP的区别
 

@@ -70,14 +70,13 @@
 		status = "okay";
 	};
 
+	/* AES 板的 SD 卡电源不受 GPIO1_IO09 控制：这个脚是 GT9147 的触摸中断，
+	   evk 参考板的使能写法不能照搬，只留电源描述 */
 	reg_sd1_vmmc: regulator-sd1-vmmc {
 		compatible = "regulator-fixed";
 		regulator-name = "VSD_3V3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio1 9 GPIO_ACTIVE_HIGH>;
-		off-on-delay-us = <20000>;
-		enable-active-high;
 	};
 
 	reg_peri_3v3: regulator-peri-3v3 {
@@ -429,31 +428,6 @@
 	status = "okay";
 };
 
-&sim2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_sim2>;
-	assigned-clocks = <&clks IMX6UL_CLK_SIM_SEL>;
-	assigned-clock-parents = <&clks IMX6UL_CLK_SIM_PODF>;
-	assigned-clock-rates = <240000000>;
-	/* GPIO_ACTIVE_HIGH/LOW:sim card voltage control
-	 * NCN8025:Vcc = ACTIVE_HIGH?5V:3V
-	 * TDA8035:Vcc = ACTIVE_HIGH?5V:1.8V
-	 */
-	pinctrl-assert-gpios = <&gpio4 23 GPIO_ACTIVE_HIGH>;
-	port = <1>;
-	sven_low_active;
-	status = "okay";
-};
-
-&tsc {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_tsc>;
-	/* xnur-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>; */
-	measure-delay-time = <0xffff>;
-	pre-charge-time = <0xfff>;
-	status = "okay";
-};
-
 &uart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart1>;
@@ -675,17 +649,6 @@
 	pinctrl_pwm1: pwm1grp {
 		fsl,pins = <
 			MX6UL_PAD_GPIO1_IO08__PWM1_OUT   0x110b0
-		>;
-	};
-
-	pinctrl_sim2: sim2grp {
-		fsl,pins = <
-			MX6UL_PAD_CSI_DATA03__SIM2_PORT1_PD		0xb808
-			MX6UL_PAD_CSI_DATA04__SIM2_PORT1_CLK		0x31
-			MX6UL_PAD_CSI_DATA05__SIM2_PORT1_RST_B		0xb808
-			MX6UL_PAD_CSI_DATA06__SIM2_PORT1_SVEN		0xb808
-			MX6UL_PAD_CSI_DATA07__SIM2_PORT1_TRXD		0xb809
-			MX6UL_PAD_CSI_DATA02__GPIO4_IO23		0x3008
 		>;
 	};
 

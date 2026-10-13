@@ -84,7 +84,7 @@ IPv4 地址 10.147.20.122   子网掩码 255.255.255.0   默认网关 25.255.255
 Mirrored 模式下，Windows 防火墙的过滤会作用到 WSL 这一侧的入站流量，原本能通的端口反而可能被挡掉。本机的 `.wslconfig` 里写的还是 `firewall=false`，但既有的 NFS 排查记录（rootfs/05）表明放行规则一条都省不了。咱们切换完务必按下一节复查防火墙。
 :::
 
-模式原理与 NAT/mirrored 的完整对比，咱们放到 kernel 卷去讲，深读见 [kernel/06_wsl_network_boot](../kernel/06_wsl_network_boot.md)。
+模式原理与 NAT/mirrored 的完整对比，咱们放到 kernel 卷去讲，深读见 [kernel/15_wsl_network_boot](../kernel/15_wsl_network_boot.md)。
 
 ## 二、防火墙放行：TFTP 与 NFS
 
@@ -110,7 +110,7 @@ TFTP 还有一个目录权限的坑：板子以匿名用户访问 TFTP 根目录
 chmod o+x /home/charliechen
 ```
 
-TFTP 服务端的完整配置与启动流程归 [kernel/06_wsl_network_boot](../kernel/06_wsl_network_boot.md)，咱们不在这里重复。
+TFTP 服务端的完整配置与启动流程归 [kernel/15_wsl_network_boot](../kernel/15_wsl_network_boot.md)，咱们不在这里重复。
 
 ### NFS：把随机端口固定住
 
@@ -250,5 +250,5 @@ cat: /proc/fs/nfsd/exports: No such file or directory
 
 - 下一篇：[02_vscode_remote_ssh.md](02_vscode_remote_ssh.md)，环境的地基打好，接着把编辑器搬进 WSL。
 - 深读 NFS 服务端全流程：[../rootfs/05_nfs_wsl_troubleshoot.md](../rootfs/05_nfs_wsl_troubleshoot.md)
-- 深读 TFTP 启动与内核侧网络：[../kernel/06_wsl_network_boot.md](../kernel/06_wsl_network_boot.md)
+- 深读 TFTP 启动与内核侧网络：[../kernel/15_wsl_network_boot.md](../kernel/15_wsl_network_boot.md)
 - WSL2 与 Linux 基础入门：[../linux-basics/](../linux-basics/)

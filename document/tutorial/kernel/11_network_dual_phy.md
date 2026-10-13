@@ -6,24 +6,24 @@ title: 双网口移植
 
 ## 前言：网络是嵌入式开发的命脉
 
-说实话，开发嵌入式板子，串口能用来调试，但网络才是日常工作的主力。你用 NFS 挂载根文件系统、用 SSH 登录、用 wget 下载文件，都离不开网络。正点原子 i.MX6ULL 开发板有两个网口，这也是它的一大卖点。
+说实话，开发嵌入式板子，串口能用来调试，但网络才是咱们日常工作的主力。您用 NFS 挂载根文件系统、用 SSH 登录、用 wget 下载文件，都离不开网络。正点原子 i.MX6ULL 开发板有两个网口，这也是它的一大卖点。
 
-这篇文章讲的是如何配置双网口：i.MX6ULL 有两个 FEC（Fast Ethernet Controller）控制器，每个外接一个 KSZ8081 PHY 芯片。主线内核的 FEC 驱动已经比较成熟了，我们主要是配置设备树和 PHY。
+这一章讲的是如何配置双网口：i.MX6ULL 有两个 FEC（Fast Ethernet Controller）控制器，每个外接一个 KSZ8081 PHY 芯片。主线内核的 FEC 驱动已经比较成熟了，咱们主要是配置设备树和 PHY。
 
 ## 第一步——了解 i.MX6ULL 的以太网架构
 
-i.MX6ULL 有两个独立的 FEC 控制器：
+咱们先把整体架构看清楚，i.MX6ULL 有两个独立的 FEC 控制器：
 
 | 控制器 | 寄存器地址 | PHY 接口 | PHY 芯片 |
 |--------|------------|----------|----------|
 | FEC1 | 0x2188000 | RMII | KSZ8081 (地址 0x02) |
 | FEC2 | 0x20b4000 | RMII | KSZ8081 (地址 0x01) |
 
-两个控制器都支持 RMII（Reduced Media Independent Interface）接口，比 MII 少一半的引脚，适合嵌入式板子。
+两个控制器都支持 RMII（Reduced Media Independent Interface）接口，比 MII 少一半的引脚，对咱们这种引脚紧张的嵌入式板子正合适。
 
 ### RMII 接口信号
 
-RMII 接口只需要 7 根数据线（加上时钟和电源）：
+RMII 接口只需要 7 根数据线（加上时钟和电源），咱们逐根来看：
 
 - TXD1, TXD0：发送数据
 - RXD1, RXD0：接收数据
@@ -33,7 +33,7 @@ RMII 接口只需要 7 根数据线（加上时钟和电源）：
 
 ## 第二步——配置 FEC1 节点
 
-FEC1 是第一个以太网控制器，设备树配置如下：
+FEC1 是第一个以太网控制器，咱们先看它的设备树配置：
 
 ```dts
 &fec1 {
@@ -56,7 +56,7 @@ FEC1 是第一个以太网控制器，设备树配置如下：
 
 ### pinctrl 配置
 
-FEC1 的引脚配置包括 RMII 数据线和 PHY 复位引脚：
+FEC1 的引脚配置包括 RMII 数据线和 PHY 复位引脚，您可以在下面这段里逐行对照：
 
 ```dts
 &iomuxc {
@@ -81,13 +81,13 @@ FEC1 的引脚配置包括 RMII 数据线和 PHY 复位引脚：
 };
 ```
 
-注意 `ENET1_REF_CLK1` 的配置值是 `0x4001b031`，这个配置比较特殊：
+这里有个细节请您留意：`ENET1_REF_CLK1` 的配置值是 `0x4001b031`，这个配置比较特殊：
 - `0x40000000`：表示这个引脚配置了 50MHz 的输入时钟（由 PHY 提供）
 - 其他位是标准的引脚配置
 
 ## 第三步——配置 FEC2 节点
 
-FEC2 的配置类似，但 MDIO 总线通常挂在 FEC2 下面：
+FEC2 的配置类似，区别是 MDIO 总线通常挂在 FEC2 下面，咱们一起看代码：
 
 ```dts
 &fec2 {
@@ -124,16 +124,16 @@ FEC2 的配置类似，但 MDIO 总线通常挂在 FEC2 下面：
 
 ### MDIO 总线
 
-MDIO（Management Data Input/Output）总线用于访问 PHY 芯片的寄存器。它是一个两线总线（MDC 和 MDIO），类似 I2C。
+MDIO（Management Data Input/Output）总线用于访问 PHY 芯片的寄存器。您可以把它理解成一个两线总线（MDC 和 MDIO），类似 I2C。
 
 - `ethphy0`：FEC1 对应的 PHY，地址是 2
 - `ethphy1`：FEC2 对应的 PHY，地址是 1
 
-PHY 地址由硬件上的引脚配置决定，不能随便改。
+PHY 地址由硬件上的引脚配置决定，咱们不能随便改。
 
 ### KSZ8081 特定配置
 
-KSZ8081 是 Micrel 公司（现在被 Microchip 收购了）的 PHY 芯片，驱动需要一些特定配置：
+KSZ8081 是 Micrel 公司（现在被 Microchip 收购了）的 PHY 芯片，咱们要给驱动补一些特定配置：
 
 ```dts
 ethphy0: ethernet-phy@2 {
@@ -180,11 +180,11 @@ FEC2 的引脚配置：
 
 ## 第四步——配置 PHY 复位引脚
 
-PHY 芯片通常有一个复位引脚（RST#），低电平有效。正点原子板子用 GPIO 控制这个引脚。
+PHY 芯片通常有一个复位引脚（RST#），低电平有效。正点原子板子用 GPIO 控制这个引脚，咱们有两种配法。
 
 ### 方法一：使用 GPIO hog
 
-如果复位引脚只需要在启动时复位一次，不需要动态控制，可以用 GPIO hog：
+如果复位引脚只需要在启动时复位一次，不需要动态控制，您可以用 GPIO hog：
 
 ```dts
 &gpio_spi {
@@ -204,11 +204,11 @@ PHY 芯片通常有一个复位引脚（RST#），低电平有效。正点原子
 };
 ```
 
-GPIO hog 是一种在设备树里直接配置 GPIO 的方式，不需要驱动代码。
+GPIO hog 是一种在设备树里直接配置 GPIO 的方式，咱们不需要为此写驱动代码。
 
 ### 方法二：使用 phy-reset-gpios
 
-另一种方法是在 FEC 节点里指定 PHY 复位引脚：
+另一种方法是在 FEC 节点里指定 PHY 复位引脚，您看这个写法：
 
 ```dts
 &fec1 {
@@ -219,7 +219,9 @@ GPIO hog 是一种在设备树里直接配置 GPIO 的方式，不需要驱动�
 };
 ```
 
-但这种方法在主线内核里可能不支持，需要确认驱动版本。
+这套写法主线是支持的，笔者在 v7.2.9 的源码里核实过：FEC 驱动的 fec_reset_phy 函数（drivers/net/ethernet/freescale/fec_main.c）会读 FEC 节点里的三个属性，phy-reset-gpios、phy-reset-duration 和 phy-reset-post-delay，然后用 gpiod 接口拿到复位脚，按住复位、等够时长再放开，复位时序全部由驱动代劳，您写完设备树它就生效。`phy-reset-duration` 的单位是毫秒，超过 1000 会被驱动按 1 毫秒处理，所以上面的 26 是个安全值。
+
+不过主线的 binding 文档（Documentation/devicetree/bindings/net/fsl,fec.yaml）已经把这组属性标记为过时，官方推荐的新写法是给 mdio 下的 PHY 子节点配 reset-gpios，用 reset-assert-us 和 reset-deassert-us 控制时序，再由 phy-handle 指过去。两条路在 v7.2.9 里都有代码路径，都能工作。咱们这套教程实际用的是前面的 hog 写法，AES 板的板级 dtsi 里就是这么写的；phy-reset-gpios 您在网上查 imx6ull 资料时会大量遇到，知道主线认它、同时也知道官方已经把它标为过时，就够了。
 
 ## 第五步——配置 regulator
 
@@ -240,26 +242,26 @@ PHY 芯片需要 3.3V 供电：
 };
 ```
 
-`regulator-always-on` 表示这个 regulator 始终开启，不能被关闭。
+`regulator-always-on` 表示这个 regulator 始终开启，您不能把它关闭。
 
 ## 第六步——验证网络驱动加载
 
-启动后，检查 dmesg 里的网络相关日志：
+启动后，咱们先检查 dmesg 里的网络相关日志：
 
 ```bash
 dmesg | grep -E "fec|net|phy|eth"
 ```
 
-你应该看到类似这样的输出：
+您应该看到类似这样的输出：
 
 ```
-[    1.234567] fec 2188000.ethernet: registered PHY driver [Micrel KSZ8081] (mii_bus:phy_addr=2188000.ethernet:02, irq=POLL)
+[    1.234567] Micrel KSZ8081 or KSZ8091 2188000.ethernet:02: attached PHY driver (mii_bus:phy_addr=2188000.ethernet:02, irq=POLL)
 [    1.345678] fec 2188000.ethernet eth0: Link is Up - 100Mbps/Full - flow control off
-[    2.456789] fec 20b4000.ethernet: registered PHY driver [Micrel KSZ8081] (mii_bus:phy_addr=20b4000.ethernet:01, irq=POLL)
+[    2.456789] Micrel KSZ8081 or KSZ8091 20b4000.ethernet:01: attached PHY driver (mii_bus:phy_addr=20b4000.ethernet:01, irq=POLL)
 [    2.567890] fec 20b4000.ethernet eth1: Link is Up - 100Mbps/Full - flow control off
 ```
 
-关键是 `Link is Up - 100Mbps/Full`，说明 PHY 和链路协商成功。
+关键是 `Link is Up - 100Mbps/Full`，您看到这行就说明 PHY 和链路协商成功了。
 
 ### 检查网络接口
 
@@ -277,7 +279,7 @@ ip addr show
 ### 方法一：ping 测试
 
 ```bash
-# 假设你的电脑 IP 是 192.168.1.100
+# 假设您电脑的 IP 是 192.168.1.100
 ping -c 4 192.168.1.100
 
 # 测试两个网口
@@ -287,14 +289,14 @@ ping -I eth1 -c 4 192.168.1.100
 
 ### 方法二：iperf 测试
 
-如果你的电脑也运行了 iperf 服务器：
+如果您的电脑也运行了 iperf 服务器：
 
 ```bash
 # 板子作为客户端
 iperf3 -c 192.168.1.100 -i 1 -t 10
 ```
 
-这会测试网络吞吐量，100Mbps 的理论值是 12.5MB/s，实际能达到 10-11MB/s 就不错了。
+这会测试网络吞吐量，100Mbps 的理论值是 12.5MB/s，您实际能达到 10-11MB/s 就不错了。
 
 ### 方法三：ethtool 检查
 
@@ -303,7 +305,7 @@ ethtool eth0
 ethtool eth1
 ```
 
-你应该看到 PHY 的详细信息：速度、双工模式、链接状态等。
+您应该看到 PHY 的详细信息：速度、双工模式、链接状态等。
 
 ## 常见问题排查
 
@@ -323,14 +325,14 @@ zcat /proc/config.gz | grep MICREL
 # 应该看到 CONFIG_MICREL_PHY=y
 ```
 
-3. 设备树里的 status 是否为 "okay"
+3. 确认咱们设备树里的 status 是否为 "okay"
 
 ### 问题二：链路不起来（Link is Down）
 
 这种情况通常是硬件问题：
 
 1. 检查网线是否插好
-2. 检查 PHY 供电是否正常（用万用表测 VDD 引脚）
+2. 检查 PHY 供电是否正常（咱们用万用表测 VDD 引脚）
 3. 检查 PHY 复位是否正确（复位引脚应该是高电平）
 4. 检查 RMII 时钟是否正常（示波器测量 REF_CLK）
 
@@ -340,23 +342,23 @@ zcat /proc/config.gz | grep MICREL
 
 1. 中断亲和性：CPU 处理网络中断的速度不够
 2. DMA 配置：FEC 的 DMA 缓冲区设置
-3. 驱动配置：检查 FEC 驱动的配置选项
+3. 驱动配置：咱们检查 FEC 驱动的配置选项
 
 ### 问题四：两个网口只有一个能用
 
-检查 MDIO 总线配置。两个 PHY 共享一个 MDIO 总线，如果地址配置冲突，只有一个能工作。
+咱们先检查 MDIO 总线配置。两个 PHY 共享一个 MDIO 总线，如果地址配置冲突，只有一个能工作。
 
 确认 PHY 地址：
 - ethphy0 应该是地址 2
 - ethphy1 应该是地址 1
 
-这些地址由 PHY 芯片的硬件引脚决定，不能在软件里改。
+这些地址由 PHY 芯片的硬件引脚决定，咱们不能在软件里改。
 
 ## 下一章预告
 
-到这里，三大外设（显示、触摸、网络）都移植完了。你已经有一个基本可用的图形界面开发环境了。
+到这里，三大外设（显示、触摸、网络）都移植完了。您已经有一个基本可用的图形界面开发环境了。
 
-下一篇文章，我们会讲调试技巧：
+下一章，咱们讲调试技巧：
 
 - dmesg 日志分析方法
 - 设备树验证技巧
@@ -364,7 +366,7 @@ zcat /proc/config.gz | grep MICREL
 - 内核配置检查方法
 - 常用调试命令速查
 
-调试是嵌入式开发的必备技能，掌握了这些方法，遇到问题就能快速定位。我们下一章见。
+调试是嵌入式开发的必备技能，掌握了这些方法，您遇到问题就能快速定位。咱们下一章见。
 
 ---
 

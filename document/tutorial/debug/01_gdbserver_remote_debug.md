@@ -377,7 +377,7 @@ gdb 一连就报 warning: unrecognized item "timeout" in "qSupported" response,�
 
 ### 边界：这条链不管内核态
 
-run-qemu.sh 没有配 -s / -S 这类 gdbstub 入口，本篇讲的也始终是用户态进程。咱们要进内核下断点，走 kgdb 路线，见驱动卷的 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与内核卷的 [驱动开发入门](../kernel/07_driver_basic.md);启动阶段的日志怎么读，[内核启动与调试](../kernel/08_kernel_boot_debug.md) 有完整一章。
+run-qemu.sh 没有配 -s / -S 这类 gdbstub 入口，本篇讲的也始终是用户态进程。咱们要进内核下断点，走 kgdb 路线，见驱动卷的 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与内核卷的 [驱动开发入门](../kernel/16_driver_basic.md);启动阶段的日志怎么读，[内核启动与调试](../kernel/17_kernel_boot_debug.md) 有完整一章。
 
 ## 踩坑速查表
 
@@ -394,4 +394,4 @@ run-qemu.sh 没有配 -s / -S 这类 gdbstub 入口，本篇讲的也始终是�
 
 - 上一篇：本卷从这篇开始，调试卷后面各篇咱们都拿这条远程链当地基
 - 下一篇：[02 程序在板上崩了：strace、日志与 coredump](02_strace_log_coredump.md),程序没崩到要断点、但又说不清哪儿不对时,咱们换三件更轻的工具
-- 深读：宿主 gdb 基础回 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md);构建侧选项与 stamp 机制看 [Buildroot 调试与排错](../buildroot/10_debugging.md);内核态 kgdb 转 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md);登板串口操作回 [串口工具使用](../start/04_serial_tools_minicom.md)
+- 深读：宿主 gdb 基础回 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md);构建侧选项与 stamp 机制看 [Buildroot 调试与排错](../buildroot/10_debugging.md);内核态 kgdb 转 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md);登板串口操作回 [串口工具使用](../start/04_serial_tools_minicom.md)

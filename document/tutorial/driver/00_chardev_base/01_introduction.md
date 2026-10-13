@@ -8,7 +8,7 @@
 
 ::: tip 前置知识 · 环境
 - C 语言基础（函数指针、结构体）
-- 了解 Linux 内核的基本概念（见 [内核概述](../../kernel/01_kernel_overview)）
+- 了解 Linux 内核的基本概念（见 [内核概述](../../kernel/00_kernel_overview)）
 :::
 
 ## 前言：我们为什么要折腾这个
