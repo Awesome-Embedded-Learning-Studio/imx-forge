@@ -428,15 +428,6 @@
 	status = "okay";
 };
 
-&tsc {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_tsc>;
-	/* xnur-gpios = <&gpio1 3 GPIO_ACTIVE_LOW>; */
-	measure-delay-time = <0xffff>;
-	pre-charge-time = <0xfff>;
-	status = "okay";
-};
-
 &uart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart1>;

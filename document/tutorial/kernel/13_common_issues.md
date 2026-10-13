@@ -12,7 +12,7 @@
 |----------|----------|----------|
 | `Cannot connect bridge (-ENODEV)` | 设备用旧式 `display@0` 写法，缺少 `port/endpoint` | 按 07/08 章修改设备树 |
 | `phandle_references: Reference to non-existent node display0` | 删了 display0 但没删 dtsi 里的 `display` 属性 | 加 `/delete-property/ display;` |
-| `pin already requested by 1-005d` | GPIO 冲突，触摸和 SD 卡抢引脚（QEMU 侧日志形态，1-005d 是 gt911 模型的固定地址；真板印 1-0014） | 删除 usdhc1 的冲突引脚 |
+| `pin MX6UL_PAD_GPIO1_IO09 already requested by 1-0014` | GPIO 冲突，tsc 遗留节点跟触摸抢 GPIO1_IO09（真板日志形态；QEMU 里 tsc 先死在 xnur 脚上，看不到这行） | 删掉板级 dts 里的 `&tsc` 节点，见第四类 |
 | `Panel driver not found` | `CONFIG_DRM_PANEL_SIMPLE` 没开启 | 开启该配置并重新编译 |
 | `flexcan 2090000.can: failed to get clock` | CAN 驱动 probe 失败 | 检查时钟配置和 regulator |
 | `mmc0: error -110 while initialising SD card` | SD 卡超时，可能是引脚冲突 | 检查 pinctrl 配置 |
@@ -169,37 +169,20 @@ cat /sys/bus/mdio_bus/devices/2188000.ethernet:02/phy_id
 
 ## 第四类——GPIO 冲突
 
-这是笔者在 i.MX6ULL 开发板上最常碰到的问题之一。
-
 ### 典型报错
 
+真板上实测（2026-10-13）：
+
 ```
-pin MX6UL_PAD_GPIO1_IO09 already requested by 1-005d; cannot claim for 2040000.touchscreen
-pin MX6UL_PAD_GPIO1_IO05 already requested by 1-005d; cannot claim for 2190000.mmc
-```
-
-这两行是 QEMU 里的日志形态，1-005d 是 QEMU gt911 模型的固定地址，07 篇战史二讲过这个双轨分歧；您在真板上遇到同样的冲突，日志里印的是 1-0014。地址两边不一样，冲突本身一模一样，咱们排查的思路不用换。
-
-### 原因
-
-GT9147 触摸屏的引脚（GPIO1_IO09 和 GPIO1_IO05）和 SD 卡（usdhc1）的引脚冲突了。两个设备都想用这两个引脚，但咱们只能把 GPIO 配给其中一个。
-
-### 解决方法
-
-如果不需要 SD 卡，咱们就删除 usdhc1 pinctrl 里冲突的引脚：
-
-```dts
-pinctrl_usdhc1: usdhc1grp {
-    fsl,pins = <
-        /* ... 其他引脚 ... */
-        /* 删除下面两行 */
-        /* MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 */
-        /* MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 */
-    >;
-};
+pin MX6UL_PAD_GPIO1_IO09 already requested by 1-0014; cannot claim for 2040000.touchscreen
+imx6ul-tsc 2040000.touchscreen: error -EINVAL: Error applying setting, reverse things back
 ```
 
-如果 SD 卡必须用，您就得调整硬件设计，把触摸屏引脚改到其他 GPIO 上。
+1-0014 是先到先得的 GT9147，来抢脚的是 2040000.touchscreen——imx6ul-tsc，EVK 参考板遗留的电阻触摸控制器。QEMU 里看不到这两行：那边 probe 顺序相反，tsc 先死在 xnur 脚缺失（-2），触摸 12 秒后照常拿到脚。
+
+### 原因与解法
+
+板级 dtsi 里 gt9147 的 pinctrl 借用 tscgrp 这组引脚挂中断（GPIO1_IO09），遗留的 &tsc 节点引的又是同一组——一根脚两个主人，谁先 probe 谁赢。板子用不上电阻触摸，把 &tsc 节点整个删掉即可：主线 imx6ul.dtsi 里 tsc 默认就是 status = "disabled"，删掉等于回归默认，冲突随之消失；pinctrl_tsc 引脚组保留，gt9147 还要用。逐行解读在 [触摸屏移植](10_touch_gt9xx.md) 第五步；这根脚与 SD 电源调节器 reg_sd1_vmmc 的旧案在 07 篇战史三。
 
 ## 第五类——时钟问题
 

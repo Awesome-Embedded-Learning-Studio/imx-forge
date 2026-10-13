@@ -85,7 +85,7 @@ GT9147 挂在 I2C2 总线上，咱们首先确认 I2C2 节点配置：
 };
 ```
 
-请您留意这两个引脚（GPIO1_IO09 和 GPIO1_IO05），它们也是 SD 卡（usdhc1）的复位和 VSELECT 引脚。两个设备同时启用就会产生 GPIO 冲突，怎么解决咱们后面讲。
+请您留意 GPIO1_IO09 这根脚：它在这块板子上有一段争夺史——07 篇战史三里 SD 卡电源调节器占过它，第五步还会遇到另一个争夺者 tsc。先记住它是触摸中断的命根子，第五步细说。
 
 ## 第四步——配置 regulator
 
@@ -113,45 +113,24 @@ GT9147 挂在 I2C2 总线上，咱们首先确认 I2C2 节点配置：
 
 这些 regulator 实际上是由 PMIC 或 LDO 提供的，设备树里只是告诉内核触摸屏需要这些电源，驱动初始化时会调用 regulator API 来获取，咱们不用额外做什么。
 
-## 第五步——解决 GPIO 冲突
+## 第五步——排掉 GPIO 冲突
 
-这是笔者踩过的、GT9147 移植最常见的问题。如果您看到这样的报错：
+GT9147 移植最容易撞上的一类问题，这块板子在真板上第一次启动就遇上了（2026-10-13 实录）：
 
 ```
-pin MX6UL_PAD_GPIO1_IO09 already requested by 1-0014; cannot claim for 2040000.touchscreen
-pin MX6UL_PAD_GPIO1_IO05 already requested by 1-0014; cannot claim for 2190000.mmc
+[    1.952035] imx6ul-pinctrl 20e0000.pinctrl: pin MX6UL_PAD_GPIO1_IO09 already requested by 1-0014; cannot claim for 2040000.touchscreen
+[    1.952168] imx6ul-tsc 2040000.touchscreen: error -EINVAL: Error applying setting, reverse things back
 ```
 
-这就说明 GT9147 的中断/复位引脚和 SD 卡的引脚冲突了。原因是 GT9147 先 probe，占用了这两个引脚，SD 卡（usdhc1）后 probe，发现引脚已被占用，于是失败，咱们就看到了这两行报错。
+逐行读：GPIO1_IO09 已经被 1-0014——真板上的 GT9147，双轨口径见 07 篇战史二——在 1.950 秒申请走了；来抢的 2040000.touchscreen 是 imx6ul-tsc，i.MX6ULL 片内的电阻触摸控制器，不是 SD 卡。它 1.952 秒才到，申请的又是 tscgrp 这组引脚（第三步写的那个，组里唯一激活的脚正是 GPIO1_IO09），整组申请失败，-EINVAL 回退，probe 就此收场。
 
-### 解决方法一：删除 SD 卡的冲突引脚
+tsc 是从 EVK 参考板抄板级文件时跟来的遗留：参考板配的是电阻屏，tsc 节点开着正好；这块板是电容屏，GT9147 走 I2C，电阻触摸控制器根本用不上。它是 GPIO1_IO09 的最后一个前主人——再往前一段是 07 篇战史三里 SD 卡电源调节器 reg_sd1_vmmc 那桩旧案。
 
-如果咱们不需要 SD 卡，或者卡在其他地方（比如用 eMMC 启动），可以直接删除 usdhc1 的 pinctrl 里冲突的引脚：
+### 解法：把 &tsc 节点从板级 dts 里删掉
 
-```dts
-pinctrl_usdhc1: usdhc1grp {
-    fsl,pins = <
-        MX6UL_PAD_SD1_CMD__USDHC1_CMD      0x17059
-        MX6UL_PAD_SD1_CLK__USDHC1_CLK      0x10071
-        MX6UL_PAD_SD1_DATA0__USDHC1_DATA0  0x17059
-        MX6UL_PAD_SD1_DATA1__USDHC1_DATA1  0x17059
-        MX6UL_PAD_SD1_DATA2__USDHC1_DATA2  0x17059
-        MX6UL_PAD_SD1_DATA3__USDHC1_DATA3  0x17059
-        MX6UL_PAD_UART1_RTS_B__GPIO1_IO19  0x17059  /* SD1 CD */
-        /* 删除下面两行，与 GT911 冲突 */
-        /* MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT    0x17059 */
-        /* MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 */
-    >;
-};
-```
+板子不用电阻触摸，&tsc 节点就没有存在的理由，整个删掉即可。主线 imx6ul.dtsi 里 tsc 默认就是 status = "disabled"，删掉等于回归主线默认，设备不再 probe。注意删的是 &tsc 节点本身，pinctrl_tsc 这个引脚组要留下——gt9147 还借着它挂中断脚。
 
-### 解决方法二：调整 probe 顺序
-
-如果 SD 卡必须用，您可以尝试调整 probe 顺序，让 usdhc1 先于 GT9147 probe。但笔者不推荐这个方法，因为硬件上确实冲突了。
-
-### 解决方法三：使用不同的引脚
-
-如果硬件设计允许，可以把触摸屏的中断/复位引脚改到其他 GPIO 上，这样就不和 SD 卡冲突了。不过这得改板子硬件，对咱们来说不太实际。
+删完之后 GPIO1_IO09 只剩触摸一个主人，这几行报错从启动日志里彻底消失，触摸本身不受任何影响——冲突里它从来都是赢家。仓库的板级 dtsi 已经这么改了。同一份 dts 在 QEMU 里症状不同：那边 probe 顺序反过来，tsc 先 probe，死在更早的一步（板级 dtsi 里 xnur-gpios 注释着，驱动要不到这根 GPIO，报 -2 退出），GPIO1_IO09 随后照常归 12 秒才 probe 的 GT911 模型（1-005d）。病根相同、症状不同，删掉 tsc 两边一起痊愈。
 
 ## 第六步——验证触摸驱动加载
 
@@ -161,16 +140,15 @@ pinctrl_usdhc1: usdhc1grp {
 dmesg | grep -E "goodix|gt9147|touch"
 ```
 
-您应该看到类似这样的输出：
+真板上实测的输出是这样（2026-10-13）：
 
 ```
-[    2.123456] goodix 1-0014: ID 0x9147
-[    2.234567] goodix 1-0014: irq 0, flags 0x0
-[    2.345678] goodix 1-0014: Touchscreen registered
-[    2.456789] input: Goodix Capacitive TouchScreen as /devices/soc0/soc/2100000.i2c/i2c-1/1-0014/input/input0
+[    1.950417] Goodix-TS 1-0014: ID 911, version: 1060
+[    1.950711] Goodix-TS 1-0014: Direct firmware load for goodix_911_cfg.bin failed with error -2
+[    2.027235] input: Goodix Capacitive TouchScreen as /devices/platform/soc/2100000.bus/21a4000.i2c/i2c-1/1-0014/input/input1
 ```
 
-关键是 `Touchscreen registered` 这一行，您看到它就说明驱动成功注册了输入设备。日志里每行开头的 1-0014 也值得看一眼：这是真板上的输出，对应双轨口径里真板那个 0x14；同样的检查在 QEMU 里跑，这几行印的是 1-005d，那是 QEMU 模型的固定地址，两边都对。
+关键是最后一行 `input: Goodix Capacitive TouchScreen`——驱动成功注册了输入设备。第一行顺手报了芯片身份：ID 911、固件版本 1060，这是真板 GT9147 的自报家门。中间那行固件加载失败 -2 缺的只是可选配置文件 goodix_911_cfg.bin，不碍事，判读思路 [串口日志阅读](../debug/03_serial_log_reading.md) 第四节专门讲过。行首的 1-0014 对应双轨口径里真板的 0x14；同样的检查在 QEMU 里跑，印的是 1-005d、版本 0020——QEMU 模型的固定地址和固件版本，两边都对，这对版本号还是分辨一份日志出自哪条轨的快速特征。
 
 ### 检查输入设备
 
@@ -187,7 +165,7 @@ cat /proc/bus/input/devices
 I: Bus=0018 Vendor=0000 Product=0000 Version=0000
 N: Name="Goodix Capacitive TouchScreen"
 P: Phys=1-0014/input0
-S: Sysfs=/devices/soc0/soc/2100000.i2c/i2c-1/1-0014/input/input0
+S: Sysfs=/devices/platform/soc/2100000.bus/21a4000.i2c/i2c-1/1-0014/input/input1
 U: Uniq=
 H: Handlers=event0 mouse0
 B: PROP=2
