@@ -8,7 +8,7 @@ title: 串口日志阅读路线：从一行输出找到下一站
 
 ::: tip 前置知识 · 咱们的环境
 - 串口工具的装配与配置(minicom、picocom，115200 8N1 无流控)您回 [串口工具使用](../start/04_serial_tools_minicom.md) 看；首次上电流程与 tee 记日志的手法在 [启动与调试](../practical/03_boot_and_debug.md)
-- 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/08_kernel_boot_debug.md)，U-Boot 阶段的命令在 [U-Boot 调试命令](../uboot/09_debugging_commands.md)
+- 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/17_kernel_boot_debug.md)，U-Boot 阶段的命令在 [U-Boot 调试命令](../uboot/09_debugging_commands.md)
 - 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行；日志样本来自 QEMU 直启(mcimx6ul-evk 机器，run-qemu.sh 那条链)的真跑记录，对应的主线内核构建树是 out/linux,vmlinux 就在 out/linux/vmlinux;交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
 :::
 
@@ -55,7 +55,7 @@ grep -n "Linux version\|command line\|Mounted root\|as init process\|Welcome\|lo
 [    0.000000] Kernel command line: console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw
 ```
 
-Linux version 一行是内核的自动报名：版本 7.1.0-dirty、在哪台主机编的、哪套 gcc 哪天编的。您日后提 Issue 贴日志，环境与版本说明这一行自带，不用手打。Machine model 行核对的是设备树有没有选对，这里就是咱们自己的 AES 板。Kernel command line 一行信息量最大:console=ttymxc0,115200 告诉咱们内核把话往哪个串口说(要是您屏幕上一行都没有，第一个要查的就是它，设备名拼错、波特率不对都归这案)；root=/dev/mmcblk1 交代根设备在哪。同一条参数在实际的板子上带分区号,咱们 practical/03 的真机实录里写的是 root=/dev/mmcblk0p2，QEMU 这张镜像是整盘 ext4 所以没有 pN 后缀；rootwait 让内核老老实实等 SD 卡就绪再挂。卡在这一段之前(连 Booting 都没有)，问题在引导参数或串口本身，[内核启动与调试](../kernel/08_kernel_boot_debug.md) 的问题 3 有完整清单。
+Linux version 一行是内核的自动报名：版本 7.1.0-dirty、在哪台主机编的、哪套 gcc 哪天编的。您日后提 Issue 贴日志，环境与版本说明这一行自带，不用手打。Machine model 行核对的是设备树有没有选对，这里就是咱们自己的 AES 板。Kernel command line 一行信息量最大:console=ttymxc0,115200 告诉咱们内核把话往哪个串口说(要是您屏幕上一行都没有，第一个要查的就是它，设备名拼错、波特率不对都归这案)；root=/dev/mmcblk1 交代根设备在哪。同一条参数在实际的板子上带分区号,咱们 practical/03 的真机实录里写的是 root=/dev/mmcblk0p2，QEMU 这张镜像是整盘 ext4 所以没有 pN 后缀；rootwait 让内核老老实实等 SD 卡就绪再挂。卡在这一段之前(连 Booting 都没有)，问题在引导参数或串口本身，[内核启动与调试](../kernel/17_kernel_boot_debug.md) 的问题 3 有完整清单。
 
 ### 第二段：驱动 probe 的流水账
 
@@ -83,7 +83,7 @@ Linux version 一行是内核的自动报名：版本 7.1.0-dirty、在哪台主
 [    1.841709] Freeing unused kernel image (initmem) memory: 1024K
 ```
 
-命令行里声明的 root=/dev/mmcblk1 与实际块设备在这里对上了号:179:0 是它的 主：次设备号，179 这一位正是 mmc 块设备家族。EXT4 那行还带卷标 UUID,两行互为佐证。反过来，这一段最常见的死法是 VFS: Cannot open root device 一族，root= 写错、分区没烧进去、文件系统类型不对、块设备驱动没编进内核都会走到这里，[内核启动与调试](../kernel/08_kernel_boot_debug.md) 的问题 4 列了四条可能原因,排查命令(mmc part、cat /proc/partitions)也在同一节，咱们查之前先回看第二段里 mmc 有没有认出卡。
+命令行里声明的 root=/dev/mmcblk1 与实际块设备在这里对上了号:179:0 是它的 主：次设备号，179 这一位正是 mmc 块设备家族。EXT4 那行还带卷标 UUID,两行互为佐证。反过来，这一段最常见的死法是 VFS: Cannot open root device 一族，root= 写错、分区没烧进去、文件系统类型不对、块设备驱动没编进内核都会走到这里，[内核启动与调试](../kernel/17_kernel_boot_debug.md) 的问题 4 列了四条可能原因,排查命令(mmc part、cat /proc/partitions)也在同一节，咱们查之前先回看第二段里 mmc 有没有认出卡。
 
 ### 第四段：init 与 rcS 起服务
 
@@ -158,7 +158,7 @@ grep -n "CONFIG_DEBUG_INFO_NONE" out/linux/.config
 6918:CONFIG_DEBUG_INFO_NONE=y
 ```
 
-.debug 段计数为零，配置里 DEBUG_INFO_NONE,这棵主线内核压根没编调试信息，addr2line 只能靠符号表回函数名与文件名，文件名还只有不带目录的 basename,file:line 无从谈起。想要行号，得开 CONFIG_DEBUG_INFO 重编内核再重跑 addr2line。不过实战里这个缺口没那么疼：内核报告自带 kallsyms,PC is at 某某函数+偏移 这一行就是内核替咱们算好的符号；addr2line 的主战场是日志里只剩十六进制地址、或需要精确到源码行的场合。真要单步进内核函数，那已经不是读日志的事，kgdb 在 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md) 等着咱们。
+.debug 段计数为零，配置里 DEBUG_INFO_NONE,这棵主线内核压根没编调试信息，addr2line 只能靠符号表回函数名与文件名，文件名还只有不带目录的 basename,file:line 无从谈起。想要行号，得开 CONFIG_DEBUG_INFO 重编内核再重跑 addr2line。不过实战里这个缺口没那么疼：内核报告自带 kallsyms,PC is at 某某函数+偏移 这一行就是内核替咱们算好的符号；addr2line 的主战场是日志里只剩十六进制地址、或需要精确到源码行的场合。真要单步进内核函数，那已经不是读日志的事，kgdb 在 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md) 等着咱们。
 
 ## 四、噪音与信号：哪些失败行不用管
 
@@ -193,7 +193,7 @@ deferred probe 咱们这份实录里就有这么一行:
 
 您终有一天要拿日志去问人、提 Issue。截得好，一轮往返就定位；截得差，对面只能回一句"贴完整日志"。咱们按四要素自查。环境与版本:Linux version 行自带内核版本、编译器、日期，别把它截掉，虚拟机还是实际的板子也要说明，因为上一节刚讲过，同一个失败行在两种环境里含义相反。完整无删减：从上电或内核第一行，到卡住或崩溃的那一行，带时间戳原样贴；实在太长要省略中间，就在截断处写一行省略标注，悄悄删行是大忌，线索往往就藏在被删的那几行里。复现步骤：干了什么、敲了什么命令、第几步出的事。期望与实际：您预期看到什么，实际看到什么，一句话各说清。
 
-记录手法前面的章节教过，咱们直接给命令:实际串口用 `picocom -b 115200 /dev/ttyUSB0 | tee boot.log`,细节在 [启动与调试](../practical/03_boot_and_debug.md);QEMU 直启的串口走的是进程 stdout,交互跑 run-qemu.sh,输出只在终端上滚动，不产生任何文件;要留档，用 `run-qemu.sh --smoke --log=路径` 把串口收进文件(默认写进 out/qemu/uart.log)，或像 e2e-test.sh 那样做整段重定向，本篇的 qemu-e2e.log 就是这么收下来的。提 Issue 前把这四要素凑齐。[内核启动与调试](../kernel/08_kernel_boot_debug.md) 收尾也强调遇到问题先看日志;本篇给它补上的,就是怎么看的那一半操作细节。
+记录手法前面的章节教过，咱们直接给命令:实际串口用 `picocom -b 115200 /dev/ttyUSB0 | tee boot.log`,细节在 [启动与调试](../practical/03_boot_and_debug.md);QEMU 直启的串口走的是进程 stdout,交互跑 run-qemu.sh,输出只在终端上滚动，不产生任何文件;要留档，用 `run-qemu.sh --smoke --log=路径` 把串口收进文件(默认写进 out/qemu/uart.log)，或像 e2e-test.sh 那样做整段重定向，本篇的 qemu-e2e.log 就是这么收下来的。提 Issue 前把这四要素凑齐。[内核启动与调试](../kernel/17_kernel_boot_debug.md) 收尾也强调遇到问题先看日志;本篇给它补上的,就是怎么看的那一半操作细节。
 
 ## 速查表：看到什么，去哪章
 
@@ -201,8 +201,8 @@ deferred probe 咱们这份实录里就有这么一行:
 |---|---|---|
 | 上电后串口零输出 | 串口接线、波特率、烧写问题 | [串口工具使用](../start/04_serial_tools_minicom.md)、[U-Boot 调试命令](../uboot/09_debugging_commands.md) |
 | 卡在 U-Boot 或 tftp 超时 | 环境变量、网络、镜像加载 | [U-Boot 调试命令](../uboot/09_debugging_commands.md) |
-| Starting kernel 后无输出 | console 参数、设备树、早期初始化 | [内核启动与调试](../kernel/08_kernel_boot_debug.md) |
-| VFS: Cannot open root device | root= 参数、分区、块设备驱动 | [内核启动与调试](../kernel/08_kernel_boot_debug.md)、[Buildroot 调试与排错](../buildroot/10_debugging.md) |
+| Starting kernel 后无输出 | console 参数、设备树、早期初始化 | [内核启动与调试](../kernel/17_kernel_boot_debug.md) |
+| VFS: Cannot open root device | root= 参数、分区、块设备驱动 | [内核启动与调试](../kernel/17_kernel_boot_debug.md)、[Buildroot 调试与排错](../buildroot/10_debugging.md) |
 | probe failed 单行，系统继续走 | 多为噪音，按第四节判链路 | 本篇第四节、[内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) |
 | Oops 或 panic 现场报告 | PC 定函数，地址落回源码 | 本篇第三节、[内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) |
 | login 后程序行为异常 | 用户态问题，strace 或断点 | [strace、日志与 coredump](02_strace_log_coredump.md)、[gdbserver 远程调试](01_gdbserver_remote_debug.md) |
@@ -212,4 +212,4 @@ deferred probe 咱们这份实录里就有这么一行:
 
 - 上一篇:[02 程序在板上崩了：strace、日志与 coredump](02_strace_log_coredump.md),三件更轻的工具，本篇 login 之后的那半场归它
 - 下一篇：调试卷到这里收尾。三篇合起来是一整套分工：日志定方向，strace 看系统调用，gdbserver 下断点；回 [调试卷目录](index.md) 可以整体回顾。接下来咱们的学习主线进驱动开发卷与工程实战，把调试功夫用在真刀真枪的代码上
-- 深读:启动全流程的逐阶段机制看 [内核启动与调试](../kernel/08_kernel_boot_debug.md);引导阶段的命令箱是 [U-Boot 调试命令](../uboot/09_debugging_commands.md);内核态深入(dmesg、动态调试、kgdb)在 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/07_driver_basic.md);崩溃报告三路互证的完整演绎在 [QEMU 板级模拟卷](../emu/)
+- 深读:启动全流程的逐阶段机制看 [内核启动与调试](../kernel/17_kernel_boot_debug.md);引导阶段的命令箱是 [U-Boot 调试命令](../uboot/09_debugging_commands.md);内核态深入(dmesg、动态调试、kgdb)在 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md);崩溃报告三路互证的完整演绎在 [QEMU 板级模拟卷](../emu/)

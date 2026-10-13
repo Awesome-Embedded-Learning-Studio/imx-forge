@@ -18,7 +18,7 @@ title: 板子硬件接口速查表
 | 接口 | 说明 | 用途 | 对应教程 |
 |------|------|------|----------|
 | Debug 串口 UART1 | 板载 USB 转串口，115200 8N1 | 看启动日志、命令行 | [串口工具](04_serial_tools_minicom.md) |
-| 网口 | FEC1 + LAN8720A PHY | 网络启动/NFS/调试 | [kernel/06 网络启动](../kernel/06_wsl_network_boot.md) |
+| 网口 | FEC1 + LAN8720A PHY | 网络启动/NFS/调试 | [kernel/06 网络启动](../kernel/15_wsl_network_boot.md) |
 | USB OTG | USB OTG1 | UUU 烧录、设备模式 | [flash/10 uuu/ums](../flash/10_uuu_ums_emmc_flashing.md) |
 | SD 卡 | USDHC1 | SD 卡启动 | [flash/09 SD 烧录](../flash/09_sd_card_flashing.md) |
 | eMMC | USDHC2 | eMMC 启动/量产 | [flash/10](../flash/10_uuu_ums_emmc_flashing.md) |

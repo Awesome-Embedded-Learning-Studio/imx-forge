@@ -11,7 +11,7 @@ title: Rootfs 概述
 :::
 
 ::: tip 前置知识 · 环境
-- 了解内核启动流程（见 [内核概述](../kernel/01_kernel_overview)）
+- 了解内核启动流程（见 [内核概述](../kernel/00_kernel_overview)）
 - 工具链已就绪
 :::
 

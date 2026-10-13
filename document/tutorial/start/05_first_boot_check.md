@@ -91,5 +91,5 @@ imx6ull login:
 - 串口工具：[串口工具使用（minicom）](04_serial_tools_minicom.md)
 - 启动流程详解：[flash/04 启动流程与偏移](../flash/04_imx6ull_boot_flow_and_offsets.md)
 - 实战启动调试：[practical/03 启动与调试](../practical/03_boot_and_debug.md)
-- 启动失败排查：[kernel/mainline/13 常见问题](../kernel/mainline/13_common_issues.md)
+- 启动失败排查：[kernel/13 常见问题](../kernel/13_common_issues.md)
 - 出问题了从哪篇读起：[调试与排错卷的路标表](../debug/)

@@ -9,7 +9,7 @@ title: 程序在板上崩了：strace、日志与 coredump 的最小够用集
 ::: tip 前置知识 · 咱们的环境
 - menuconfig 里开软件包与 QEMU 直启这两件事，[01 gdbserver 远程调试全链](01_gdbserver_remote_debug.md) 已经走通，本篇直接沿用
 - 宿主 gdb 的基础操作（含 core 文件分析入门）回 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md)；构建侧排错与 stamp 机制看 [Buildroot 调试与排错](../buildroot/10_debugging.md)
-- 串口登录回 [串口工具使用](../start/04_serial_tools_minicom.md)；内核侧的 printk 级别与 bootargs 见 [内核启动与调试](../kernel/08_kernel_boot_debug.md)
+- 串口登录回 [串口工具使用](../start/04_serial_tools_minicom.md)；内核侧的 printk 级别与 bootargs 见 [内核启动与调试](../kernel/17_kernel_boot_debug.md)
 - 路径上下文：宿主操作都在仓库根 ~/imx-forge 下进行，构建树是 out/release-latest/buildroot，rootfs 目录是 out/release-latest/rootfs，QEMU 用的 ext4 镜像在 out/qemu/rootfs.ext4，交叉工具链装在 /opt/arm-gnu-toolchain（Arm GNU Toolchain 15.2.Rel1）
 :::
 
@@ -119,7 +119,7 @@ dmesg | tail -4
 dmesg | grep -i -E "error|fail"
 ```
 
-咱们的判据先看问题出在哪一层：驱动 probe 失败、挂载报错、OOM 这类内核态的问题，dmesg 是第一现场；crond、dropbear 这类 S 脚本起的用户态守护进程出事，去 /var/log/messages 翻。两处都查过再说没日志，别只看了 logread 就下结论。内核日志的级别体系与 bootargs 里 loglevel 的调法，[内核启动与调试](../kernel/08_kernel_boot_debug.md) 有完整一章，这里不占用篇幅。
+咱们的判据先看问题出在哪一层：驱动 probe 失败、挂载报错、OOM 这类内核态的问题，dmesg 是第一现场；crond、dropbear 这类 S 脚本起的用户态守护进程出事，去 /var/log/messages 翻。两处都查过再说没日志，别只看了 logread 就下结论。内核日志的级别体系与 bootargs 里 loglevel 的调法，[内核启动与调试](../kernel/17_kernel_boot_debug.md) 有完整一章，这里不占用篇幅。
 
 ## 三、strace：在系统调用层看它卡在哪
 
@@ -465,4 +465,4 @@ pc             0x10450             0x10450 <poke_null+16>
 
 - 上一篇：[01 gdbserver 远程调试全链](01_gdbserver_remote_debug.md)，断点打在板上程序里的能力在那里备好，与本篇三件工具互补
 - 下一篇：[03 串口日志阅读](03_serial_log_reading.md)，启动与运行期的日志在串口上怎么读、怎么留档
-- 深读：宿主 gdb 与 core 文件分析的入门在 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md)；构建侧的调试选项与 stamp 机制看 [Buildroot 调试与排错](../buildroot/10_debugging.md)；内核侧的 printk 级别与启动日志读法看 [内核启动与调试](../kernel/08_kernel_boot_debug.md)
+- 深读：宿主 gdb 与 core 文件分析的入门在 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md)；构建侧的调试选项与 stamp 机制看 [Buildroot 调试与排错](../buildroot/10_debugging.md)；内核侧的 printk 级别与启动日志读法看 [内核启动与调试](../kernel/17_kernel_boot_debug.md)

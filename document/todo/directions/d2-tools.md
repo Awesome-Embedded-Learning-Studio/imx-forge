@@ -55,7 +55,7 @@
 | [ ] U-Boot common issues / U-Boot 常见问题排查 | `document/tutorial/debug/` |
 | [ ] Serial console no-output troubleshooting / 串口无输出排查 | [start/04](../../tutorial/start/04_serial_tools_minicom.md) 排障节部分覆盖；其余按上方对齐注收敛，不逐条立篇 |
 | [ ] Network boot troubleshooting / 网络启动问题排查 | `document/tutorial/debug/` |
-| [ ] Kernel panic common issues / Kernel panic 常见问题排查 | 机制在 [kernel/08](../../tutorial/kernel/08_kernel_boot_debug.md)，读法在 [debug/03 §三](../../tutorial/debug/03_serial_log_reading.md)，不另立篇 |
+| [ ] Kernel panic common issues / Kernel panic 常见问题排查 | 机制在 [kernel/17](../../tutorial/kernel/17_kernel_boot_debug.md)，读法在 [debug/03 §三](../../tutorial/debug/03_serial_log_reading.md)，不另立篇 |
 | [ ] DTB mismatch troubleshooting / DTB 不匹配问题排查 | `document/tutorial/debug/` |
 | [ ] Rootfs and init failure troubleshooting / Rootfs 与 init 失败排查 | `document/tutorial/debug/` |
 | [ ] NFS / TFTP troubleshooting / NFS / TFTP 常见问题排查 | 已由 [workflow/01](../../tutorial/workflow/01_wsl2_env_config.md) + [rootfs/05](../../tutorial/rootfs/05_nfs_wsl_troubleshoot.md) 覆盖，不另立篇 |
@@ -87,9 +87,9 @@
 | CMake cross-compilation / CMake 交叉编译 | [ ] | 缺 |
 | CMakeLists.txt writing / CMakeLists.txt 编写 | [ ] | 缺 |
 | CMake with Qt cross-compilation / CMake 与 Qt 交叉编译 | [ ] | 缺 |
-| menuconfig principles and usage / menuconfig 原理与使用 | [x] | [kernel/03 内核配置](../../tutorial/kernel/03_kernel_config.md) |
+| menuconfig principles and usage / menuconfig 原理与使用 | [x] | [kernel/05 读懂 defconfig](../../tutorial/kernel/05_defconfig.md) |
 | Kconfig syntax / Kconfig 语法 | [ ] ⚠️ | 缺专篇 |
-| Kernel/U-Boot configuration practice / 内核/uboot 配置实战 | [x] | [kernel/03](../../tutorial/kernel/03_kernel_config.md) + [uboot/02](../../tutorial/uboot/02_uboot_compile.md) |
+| Kernel/U-Boot configuration practice / 内核/uboot 配置实战 | [x] | [kernel/06](../../tutorial/kernel/06_defconfig_customize.md) + [uboot/02](../../tutorial/uboot/02_uboot_compile.md) |
 | VIM quick start / VIM 快速入门 | [x] | [ch12 vim](../../tutorial/linux-basics/03-text/ch12-vim.md) |
 | VIM modes and operations / VIM 模式与操作 | [x] | [ch12 vim](../../tutorial/linux-basics/03-text/ch12-vim.md) |
 | VIM configuration and plugins / VIM 配置与插件 | [ ] ⚠️ | ch12 覆盖基础，插件待补 |
