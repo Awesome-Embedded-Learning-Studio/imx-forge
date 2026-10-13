@@ -219,7 +219,9 @@ GPIO hog 是一种在设备树里直接配置 GPIO 的方式，咱们不需要�
 };
 ```
 
-但这种方法在主线内核里可能不支持，咱们需要确认驱动版本。
+这套写法主线是支持的，笔者在 v7.2.9 的源码里核实过：FEC 驱动的 fec_reset_phy 函数（drivers/net/ethernet/freescale/fec_main.c）会读 FEC 节点里的三个属性，phy-reset-gpios、phy-reset-duration 和 phy-reset-post-delay，然后用 gpiod 接口拿到复位脚，按住复位、等够时长再放开，复位时序全部由驱动代劳，您写完设备树它就生效。`phy-reset-duration` 的单位是毫秒，超过 1000 会被驱动按 1 毫秒处理，所以上面的 26 是个安全值。
+
+不过主线的 binding 文档（Documentation/devicetree/bindings/net/fsl,fec.yaml）已经把这组属性标记为过时，官方推荐的新写法是给 mdio 下的 PHY 子节点配 reset-gpios，用 reset-assert-us 和 reset-deassert-us 控制时序，再由 phy-handle 指过去。两条路在 v7.2.9 里都有代码路径，都能工作。咱们这套教程实际用的是前面的 hog 写法，AES 板的板级 dtsi 里就是这么写的；phy-reset-gpios 您在网上查 imx6ull 资料时会大量遇到，知道主线认它、同时也知道官方已经把它标为过时，就够了。
 
 ## 第五步——配置 regulator
 
@@ -253,9 +255,9 @@ dmesg | grep -E "fec|net|phy|eth"
 您应该看到类似这样的输出：
 
 ```
-[    1.234567] fec 2188000.ethernet: registered PHY driver [Micrel KSZ8081] (mii_bus:phy_addr=2188000.ethernet:02, irq=POLL)
+[    1.234567] Micrel KSZ8081 or KSZ8091 2188000.ethernet:02: attached PHY driver (mii_bus:phy_addr=2188000.ethernet:02, irq=POLL)
 [    1.345678] fec 2188000.ethernet eth0: Link is Up - 100Mbps/Full - flow control off
-[    2.456789] fec 20b4000.ethernet: registered PHY driver [Micrel KSZ8081] (mii_bus:phy_addr=20b4000.ethernet:01, irq=POLL)
+[    2.456789] Micrel KSZ8081 or KSZ8091 20b4000.ethernet:01: attached PHY driver (mii_bus:phy_addr=20b4000.ethernet:01, irq=POLL)
 [    2.567890] fec 20b4000.ethernet eth1: Link is Up - 100Mbps/Full - flow control off
 ```
 
@@ -277,7 +279,7 @@ ip addr show
 ### 方法一：ping 测试
 
 ```bash
-# 假设你的电脑 IP 是 192.168.1.100
+# 假设您电脑的 IP 是 192.168.1.100
 ping -c 4 192.168.1.100
 
 # 测试两个网口

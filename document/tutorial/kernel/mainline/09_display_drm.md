@@ -1,12 +1,12 @@
 # DRM 显示系统移植：LCD 驱动完整迁移指南
 
-## 前言：这是整个移植最复杂的一章
+## 前言：这是显示链最深的一章
 
-先说一句实话：从 NXP BSP 迁移到主线内核，笔者认为最难的部分就是显示系统。为什么？因为整个架构都变了：从旧的 Framebuffer 框架迁移到 DRM/KMS 框架，驱动代码位置不同、设备树写法不同、调试方法也不同。
+先说一句实话：这条从零移植的路上，笔者认为最难啃的部分就是显示系统。为什么？因为从旧 NXP BSP 的 Framebuffer 老写法到主线的 DRM/KMS 框架，整个架构都换了：驱动代码位置不同、设备树写法不同、调试方法也不同。
 
-但好消息是，一旦您理解了 DRM 的基本概念，后续的调试就会容易很多。笔者会带您完整走过 LCD 驱动的迁移过程，从设备树编写到最终验证，并且尽量解释清楚每一步的原因，而不是只丢给您一堆命令。
+好在本卷把动手的部分放在了前面：您在 07 篇已经把 lcdif、panel、背光这条链的设备树亲手写进 imx6ull-aes.dtsi，08 篇也让它在 QEMU 里点了亮。本篇咱们放慢速度深读这条链：每个部件在 DRM 框架里站在哪个位置，probe 时按什么顺序咬合，验证与排障分别怎么下手。笔者会尽量解释清楚每一步的原因，而不是只丢给您一堆命令。
 
-## 第一步——理解 DRM 架构
+## 第一步：理解 DRM 架构
 
 DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用于 3D 图形加速，后来扩展到所有显示设备。对嵌入式系统来说，咱们主要关心 KMS（Kernel Mode Setting）部分，也就是内核负责设置显示模式的那部分代码。
 
@@ -19,7 +19,7 @@ DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用�
        ↓
   mxsfb CRTC (drivers/gpu/drm/mxsfb/)
        ↓  [OF graph: lcdif port → panel port]
-  panel-dpi (drivers/gpu/drm/panel/panel-dpi.c)
+  panel-dpi (drivers/gpu/drm/panel/panel-simple.c 里的 panel-dpi 兼容)
        ↓  [物理并行 RGB 信号]
   LCD 屏幕硬件
 ```
@@ -29,7 +29,7 @@ DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用�
 - **Connector**：连接器，描述物理连接方式（比如 DPI、LVDS、HDMI）
 - **Panel**：面板，描述屏幕的时序参数和特性
 
-对咱们这块 i.MX6ULL 的 eLCDIF 控制器来说，架构比较简单：CRTC 直接连接 Panel，没有中间的 Encoder。
+对咱们这块 i.MX6ULL 的 eLCDIF 控制器来说，链路很短：CRTC 出来的信号经一个很薄的桥直接到 Panel，设备树里就是 lcdif 的 port 连 panel 的 port 这一条边。后面日志里会出现的 Bridge 一词，说的就是 panel 以 bridge 身份挂进链路这件事。
 
 ### 为什么不用 panel-simple 而是 panel-dpi
 
@@ -37,9 +37,9 @@ DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用�
 
 咱们这块 7 寸 1024×600 屏，用 `panel-dpi` 最合适，因为它的时序参数不是标准的。
 
-## 第二步——编写 panel 节点
+## 第二步：panel 节点逐字段拆
 
-咱们先写 panel 节点。它独立于 lcdif 之外，作为根节点的子节点：
+panel 节点您在 07 篇已经写进 imx6ull-aes.dtsi 了，本节把它抄出来逐字段拆开看。它独立于 lcdif 之外，作为根节点的子节点：
 
 ```dts
 / {
@@ -82,7 +82,7 @@ DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用�
 
 每个参数的含义：
 
-| 参数 | 含义 | 我们的值 |
+| 参数 | 含义 | 咱们用的值 |
 |------|------|----------|
 | clock-frequency | 像素时钟频率 | 51.2 MHz |
 | hactive | 水平有效像素 | 1024 |
@@ -96,13 +96,13 @@ DRM（Direct Rendering Manager）是 Linux 内核的图形子系统，最初用�
 | hsync-active | 水平同步极性 | 0（低电平有效） |
 | vsync-active | 垂直同步极性 | 0（低电平有效） |
 | de-active | 数据使能极性 | 1（高电平有效） |
-| pixelclk-active | 像素时钟极性 | 0（下降沿采样） |
+| pixelclk-active | 像素时钟极性 | 0（下降沿驱动数据、上升沿采样） |
 
 这些参数来自屏幕的数据手册，不同屏幕的值不同。笔者建议您对着手册逐项核对，写错了屏幕不会正常显示，甚至可能损坏硬件。
 
-## 第三步——配置背光
+## 第三步：背光节点
 
-背光用 PWM 控制，节点在根节点下：
+背光节点您在 07 篇也写过了，它挂在根节点下：
 
 ```dts
 / {
@@ -125,9 +125,11 @@ echo 255 > /sys/class/backlight/backlight-display/brightness  # 最亮
 echo 0 > /sys/class/backlight/backlight-display/brightness    # 最暗
 ```
 
-## 第四步——配置 lcdif 节点
+您在 sysfs 里看到的那个目录名，就是背光节点名 backlight-display；label backlight_display 里的下划线只在 dts 内部当 phandle 别名用，咱们起机后在 /sys/class/backlight/ 下看到的是连字符的节点名。
 
-接下来咱们改 lcdif 节点：删除旧的 `display` 属性，并添加 OF graph 连接：
+## 第四步：lcdif 节点与 OF graph 连线
+
+lcdif 节点您在 07 篇写的是这样：把控制器打开、引脚和时钟配好，再用 OF graph 跟 panel 牵手：
 
 ```dts
 &lcdif {
@@ -137,10 +139,6 @@ echo 0 > /sys/class/backlight/backlight-display/brightness    # 最暗
     pinctrl-0 = <&pinctrl_lcdif_dat &pinctrl_lcdif_ctrl>;
     status = "okay";
 
-    /* 删除基础文件里的 display 属性 */
-    /delete-property/ display;
-
-    /* OF graph 连接 */
     port {
         lcdif_out: endpoint {
             remote-endpoint = <&panel_in>;
@@ -149,21 +147,15 @@ echo 0 > /sys/class/backlight/backlight-display/brightness    # 最暗
 };
 ```
 
-### 为什么需要 /delete-property/ display
+### 主线基础文件里没有旧式 display 属性
 
-`imx6ul.dtsi` 基础文件里的 lcdif 节点定义了 `display = <&display0>` 属性，这是旧写法的遗留。但基础文件咱们不能直接修改（它是只读的）。
+网上不少讲 i.MX 显示移植的资料会教您在板级里写 `/delete-property/ display;`，那是针对旧 NXP BSP 内核的：那些树的 lcdif 带着 `display = <&display0>` 这种旧式引用，display0 是一个把时序表写死在节点里的老式面板描述。主线 v7.2.9 的 `imx6ul.dtsi` 里 lcdif 节点只有寄存器、中断、时钟三样，status 默认 disabled，既没有 display 属性，display0 也无处定义，所以主线树上不需要任何 /delete-property/，旧资料里见到这类步骤可以直接跳过。
 
-咱们在板级设备树里用 `/delete-property/ display;`，就能在编译时覆盖删除这个属性。如果不删除，DTB 编译会报错：
+咱们在板级真正要做的只剩把链子两头接上：port 里那句 `remote-endpoint = <&panel_in>;`。接错了也不怕，dtc 在您编译时就会抓出来，报错形如 `ERROR (phandle_references): Reference to non-existent node or label "display0"`，指向不存在或没定义的引用，不用等上机才发现。
 
-```
-error: phandle_references: Reference to non-existent node display0
-```
+## 第五步：pinctrl 引脚配置
 
-因为 `display0` 节点已经被咱们删除了（用新的 panel 节点替代），而 `display` 属性还在引用它，就成了悬空引用。
-
-## 第五步——配置 pinctrl
-
-lcdif 的引脚配置包括数据线和控制线两组，咱们直接看写法：
+lcdif 的引脚配置包括数据线和控制线两组，您在 07 篇已经抄进 dtsi，咱们这里把写法和配置值拆开讲：
 
 ```dts
 &iomuxc {
@@ -207,83 +199,95 @@ lcdif 的引脚配置包括数据线和控制线两组，咱们直接看写法�
 };
 ```
 
-配置值 `0x49` 的含义：
-- 位 0-3：驱动强度（0x9 = 强驱动）
-- 位 4：PEED（快速使能）
-- 位 5：PUE（上拉/下拉使能）
-- 位 6：PKE（上拉/下拉保持使能）
-- 位 7：ODE（开漏使能，0=禁用）
+咱们把配置值 `0x49` 写成二进制是 0100 1001，按 i.MX6ULL 参考手册 IOMUXC 章的 SW_PAD_CTL_PAD 寄存器拆开读：bit0 的 SRE 为 1（快速翻转），bit5-3 的 DSE 为 001（驱动强度档位），bit7-6 的 SPEED 为 01（低带宽档），上下拉三件套 PUS、PUE、PKE 与开漏 ODE 全是 0。LCD 数据线方向单一，靠使能信号对齐时序，不需要上下拉兜底，这正是您看到那几位留 0 的原因。
 
-想深究每一位的含义，您可以查 i.MX6ULL 参考手册的 IOMUX 章节。
+想逐位深究，您可以查 i.MX6ULL 参考手册的 IOMUXC 章节。
 
-## 第六步——编译和烧录
+## 第六步：编译与部署
 
-设备树写好后，编译 DTB：
+设备树写好后，您编 DTB 还是 08 篇那条 O= 命令，目标要带 nxp/imx/ 前缀：
 
 ```bash
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- dtbs
+make O=/home/charliechen/experiments/linux-build ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- nxp/imx/imx6ull-aes.dtb
 ```
 
-把生成的 `imx6ull-aes.dtb` 烧录到板子。烧录方式取决于您的启动配置（SD 卡、eMMC、NFS 等）。
+部署咱们沿用 08 篇的 QEMU 流程：起机前 fdtput 往 dtb 副本补 MAC 那一步，记得做在新编出来的这份上，QEMU 用 -dtb 参数加载它。设备树是起机时一次性读进内核的，您换了 dtb 就得重新起机才生效，热着改没有用。
 
-## 第七步——验证 DRM 驱动加载
+## 第七步：验证 DRM 驱动加载
 
-启动后，咱们首先检查 dmesg 里的 DRM 相关日志：
+起机后，咱们先看内核日志里的显示链：
 
 ```bash
 dmesg | grep -E "drm|mxsfb|panel"
 ```
 
-您应该看到类似这样的输出：
+咱们在 08 篇同一套 QEMU 环境（mcimx6ul-evk 机型）里实测，输出如下：
 
 ```
-[    0.912345] mxsfb 21c8000.lcdif: Initializing
-[    0.987654] panel-dpi: panel enabled
-[    1.123456] mxsfb 21c8000.lcdif: bound panel-dpi (ops panel_dpi_ops)
-[    1.234567] drm drm: GMA500 GEM enabled
-[    1.345678] mxsfb 21c8000.lcdif: registered panic notifier
-[    1.456789] [drm] Initialized mxsfb 1.0.0 for 21c8000.lcdif on minor 0
+[    0.112796] /soc/bus@2100000/lcdif@21c8000: Fixed dependency cycle(s) with /panel-dpi
+[    0.112870] /panel-dpi: Fixed dependency cycle(s) with /soc/bus@2100000/lcdif@21c8000
+[    0.296075] panel-simple panel-dpi: Specify missing bus_format
+[    0.296124] panel-simple panel-dpi: Expected bpc in {6,8} but got: 0
+[    0.310886] [drm] Initialized mxsfb-drm 1.0.0 for 21c8000.lcdif on minor 0
+[    0.326685] mxsfb 21c8000.lcdif: Bridge does not provide bus format, assuming MEDIA_BUS_FMT_RGB888_1X24.
+[    0.388288] mxsfb 21c8000.lcdif: [drm] fb0: mxsfb-drmdrmfb frame buffer device
 ```
 
-关键是 `bound panel-dpi` 这一行，您看到它就说明驱动成功找到了 panel 设备。
+成功的标志是最下面两行：Initialized mxsfb-drm 1.0.0 for 21c8000.lcdif on minor 0 说明 DRM 设备注册完成，占到了 minor 0；fb0 那行说明 fbdev 兼容层建好了。名字 mxsfb-drmdrmfb 里重复的 drm 不是笔者笔误，是内核把驱动名和 drmfb 后缀直接拼接出来的，内核源码注释自己都吐槽这个名字已经成了用户态接口，想改都改不了。
 
-如果您看到的却是 `Cannot connect bridge (-ENODEV)`，说明 OF graph 连接有问题，或者 panel 驱动没有加载。
+中间两条 panel-simple 的告警别当失败，也别想着把日志修饰干净。要解释它，最直接的办法是去读您自己树里的 drivers/gpu/drm/panel/panel-simple.c。panel-dpi 并不是一个独立的驱动文件，它是 panel-simple.c 里的一条 compatible（声明在文件尾部的 of_device_id 表里）：probe 时 panel_dpi_probe() 只读三样东西，panel-timing 子节点、width-mm、height-mm，装描述符的结构体用 kzalloc 分配，bus_format 和 bpc 两个成员从头到尾没人赋值，天然就是 0；随后 probe 流程给 DPI 类型的连接器做体检，bus_format 为 0 就打印 Specify missing bus_format，bpc 不在 {6,8} 里就打印 Expected bpc in {6,8} but got: 0。换句话说，这两条告警是 panel-dpi 这种写法的固有产物，您写的节点没毛病。
+
+那格式最后怎么定的？看告警下面那行：Bridge does not provide bus format, assuming MEDIA_BUS_FMT_RGB888_1X24（出自 drivers/gpu/drm/mxsfb/mxsfb_kms.c）。panel 作为桥挂到 lcdif 上时没上报总线格式，mxsfb 就按最通用的 24 位 RGB888 兜底，恰好对上咱们 24 根数据线的接法，不影响点亮。
+
+最上面两条 Fixed dependency cycle(s) 您也不用管：那是内核在理清 lcdif 与 panel 互相引用时的探测顺序说明，属于正常过程输出。
+
+想顺着源码把这两条告警亲眼核一遍：
+
+```bash
+/usr/bin/grep -n 'bus_format\|bpc' drivers/gpu/drm/panel/panel-simple.c
+```
+
+您如果看到的却是 Cannot connect bridge 加 -ENODEV 这样的报错，说明 OF graph 连接有问题，或者 panel 驱动没编进内核，排障见本章末尾问题一。
 
 ### 检查 DRM 设备节点
 
 ```bash
+ls /sys/class/drm/
+# 实测输出：card0  card0-DPI-1  version
+
 ls /dev/dri/
-# 应该看到：card0  renderD128
+# 只有 card0。没有 renderD128 是正常的：那是带 3D 渲染能力的 GPU 才有的渲染节点，
+# mxsfb 注册的驱动特性只有 GEM、MODESET、ATOMIC，不含 RENDER，所以只出 card0。
 
 ls /dev/fb*
-# 应该看到：fb0  （DRM 的兼容层）
+# 只有 fb0，就是 dmesg 里 fb0 那行建出来的 fbdev 兼容设备
 ```
 
 ### 检查 connector 状态
 
-```bash
-cat /sys/class/drm/card0-HDMI-A-1/status
-# 应该输出：connected
+咱们这块板的连接器不是 HDMI 那类可插拔接口：屏固定接在并行 RGB 总线上，内核按 DPI 类型给它注册连接器，您看到的名字是 card0-DPI-1。DPI 这个类型是 panel-simple 替 panel-dpi 定死的，panel_dpi_probe() 里那句注释原话是不知道这个节点对应什么连接器、猜一个，猜的就是 DPI；尾巴上的 1 是 DRM 给同类型连接器的编号，从 1 起数。固定面板没有热插拔的概念，status 恒为 connected，也不存在插拔事件。
 
-cat /sys/class/drm/card0-HDMI-A-1/modes
-# 应该输出：1024x600
+```bash
+cat /sys/class/drm/card0-DPI-1/status
+# 实测输出：connected
+
+cat /sys/class/drm/card0-DPI-1/modes
+# 实测输出：1024x600
 ```
 
-如果咱们看到 connector 状态是 `disconnected`，说明 panel 驱动没有正常 probe。
+您在 modes 里看到的 1024x600，就是 panel-timing 那串参数拼出来的唯一一条固定模式。这两个文件哪个是空的或者压根不存在，多半是 panel 没 probe 成功，咱们回头上一节看 dmesg。
 
-## 第八步——显示测试
+## 第八步：显示测试
 
 ### 方法一：fbset 测试
 
 ```bash
-# 安装 fbset
-apt install fbset
-
-# 查看 framebuffer 信息
 fbset -i
 ```
 
-您应该看到：
+::: warning 未实测标注
+咱们这套环境的 rootfs 不是标准发行版，没有包管理器，fbset 不一定在场。下面这份输出是带 fbset 的系统上的典型样子，像素格式按 DRM fbdev 默认的 xrgb8888 排，供您对照字段含义用，以实际输出为准。
+:::
 
 ```
 mode "1024x600"
@@ -297,7 +301,7 @@ endmode
 ### 方法二：写屏幕测试
 
 ```bash
-# 显示随机颜色（花屏）
+# 往帧缓冲里灌随机字节，有屏的话表现为噪点花屏
 cat /dev/urandom > /dev/fb0 &
 sleep 2
 kill %1
@@ -306,17 +310,17 @@ kill %1
 dd if=/dev/zero of=/dev/fb0
 ```
 
-如果屏幕有反应，说明显示系统工作正常。
+咱们这套 QEMU 环境没有真屏可看，这两个命令的意义在通路验证：命令不报错，说明从用户态到 fb0 再到驱动的整条写入路径是通的；屏幕上真的出现噪点或变黑，要等您在实际的板子上看。反过来，命令报了错那就是驱动或设备节点的问题，回头查第七步。
 
 ### 方法三：modetest 测试
 
-如果安装了 `modetest` 工具：
+如果 rootfs 里带了 `modetest` 工具：
 
 ```bash
-modetest -M mxsfb
+modetest -M mxsfb-drm
 ```
 
-这会列出所有的 DRM 设备和模式，咱们调试时可以用它。
+-M 后面跟的是 DRM 驱动名，mxsfb 注册的名字是 mxsfb-drm，跟您在 dmesg 里看到的 Initialized mxsfb-drm 那行同款，写成 mxsfb 会报找不到驱动。它会列出 connector、encoder、CRTC 全套信息和模式，咱们调试显示时非常好用。
 
 ## 常见问题排查
 
@@ -353,16 +357,17 @@ modetest -M mxsfb
 
 ```bash
 ls /sys/class/backlight/
-echo 255 > /sys/class/backlight/*/brightness
+# 实测输出：backlight-display
+echo 255 > /sys/class/backlight/backlight-display/brightness
 ```
 
-如果这样还不亮，多半是硬件问题（PWM 信号没输出、背光电源没供电），咱们就要往硬件方向查了。
+如果目录在、命令也不报错，咱们在 QEMU 里就别往硬件方向想了：QEMU 没有真灯可亮，背光设备在位（08 篇断言表里 BL 那一项）就说明驱动链是通的，亮度对屏的实际作用要等您在实际的板子上看；目录都不在，才是 pwm-backlight 没 probe 成功，回头查设备树。
 
 ## 下一章预告
 
 到这里，您应该已经成功让 LCD 显示了。恭喜！这一关是主线移植里最难的，咱们一起迈过来了。
 
-下一篇文章，我们会讲触摸屏的移植：
+下一篇文章咱们讲触摸屏的移植：
 
 - GT9147 驱动配置
 - I2C 设备树编写
@@ -381,19 +386,20 @@ echo 255 > /sys/class/backlight/*/brightness
 dmesg | grep -E "drm|mxsfb|panel"
 
 # 检查设备节点
-ls /dev/dri/ /dev/fb*
+ls /sys/class/drm/        # 实测：card0  card0-DPI-1  version
+ls /dev/dri/ /dev/fb*     # card0 无 renderD128 属正常；fb0 是 fbdev 兼容层
 
 # 检查 connector 状态
-cat /sys/class/drm/card0-HDMI-A-1/status
-cat /sys/class/drm/card0-HDMI-A-1/modes
+cat /sys/class/drm/card0-DPI-1/status    # 实测：connected
+cat /sys/class/drm/card0-DPI-1/modes     # 实测：1024x600
 
 # 显示测试
 cat /dev/urandom > /dev/fb0 & sleep 2; kill %1
 dd if=/dev/zero of=/dev/fb0
 
 # 背光控制
-ls /sys/class/backlight/
-echo 255 > /sys/class/backlight/*/brightness
+ls /sys/class/backlight/                  # 实测：backlight-display
+echo 255 > /sys/class/backlight/backlight-display/brightness
 ```
 
 **延伸阅读**

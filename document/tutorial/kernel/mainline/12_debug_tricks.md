@@ -1,8 +1,8 @@
-# 主线内核调试技巧：那些让你少走弯路的方法
+# 主线内核调试技巧：那些让您少走弯路的方法
 
 ## 前言：调试是嵌入式开发的日常
 
-说实话，移植主线内核没有一次就成功的。至少笔者的经历是这样的：编译通过了 → 烧录 → 启动 → 报错 → 改代码 → 再编译 → 再报错……循环好几次，直到所有问题都解决。
+说实话，移植主线内核没有一次就成功的。至少笔者的经历是这样的：编译通过了 → 部署 → 启动 → 报错 → 改代码 → 再编译 → 再报错……循环好几次，直到所有问题都解决。
 
 调试的过程其实是理解系统的过程。每解决一个问题，您就对内核的工作原理多了一分理解。这一章总结了笔者在调试主线内核时常用的方法，希望能帮您少走一些弯路。
 
@@ -168,20 +168,20 @@ cat /sys/class/graphics/fb0/mode
 
 ### modetest 工具
 
-如果安装了 `modetest`：
+如果 rootfs 里带了 `modetest`：
 
 ```bash
 # 列出所有设备
 modetest
 
-# 只测试 mxsfb
-modetest -M mxsfb
+# 只测试 mxsfb 这一路
+modetest -M mxsfb-drm
 
 # 测试模式设置
-modetest -M mxsfb -s 1024x600@RG24
+modetest -M mxsfb-drm -s 1024x600@RG24
 ```
 
-modetest 会显示所有 connector、encoder、CRTC 的信息，咱们还能用它直接设置模式测试显示。
+modetest 会显示所有 connector、encoder、CRTC 的信息，咱们还能用它直接设置模式测试显示。-M 后面跟的是 DRM 驱动名，mxsfb 注册的名字是 mxsfb-drm，写成 mxsfb 会报找不到驱动，09 篇讲过这里的来龙去脉。
 
 ## 第四类技巧——内核配置检查
 
@@ -248,22 +248,21 @@ echo 1 > /sys/class/gpio/gpio49/value
 
 ### I2C 设备检查
 
-```bash
-# 安装 i2c-tools
-apt install i2c-tools
+先确认 i2c-tools 在不在场：咱们这套 rootfs 不是标准发行版，没有包管理器，工具可能是编译 rootfs 时就放进去的，也可能压根没有；标准发行版上一条 `apt install i2c-tools` 就有。
 
+```bash
 # 扫描 I2C 总线
 i2cdetect -y 0
 i2cdetect -y 1
 
-# 读取 I2C 寄存器
-i2cget -y 1 0x5d 0x00
+# 读取 I2C 寄存器（GT9147 真板地址 0x14）
+i2cget -y 1 0x14 0x00
 
 # 写入 I2C 寄存器
-i2cset -y 1 0x5d 0x00 0x01
+i2cset -y 1 0x14 0x00 0x01
 ```
 
-GT9147 的 I2C 地址是 0x5d，您如果用 `i2cdetect -y 1` 能在 0x5d 位置看到设备，就说明 I2C 通信正常。
+GT9147 的 I2C 地址这里得按双轨口径说：真板上实测这颗芯片挂在总线 1 的 0x14（7 位地址）；QEMU 的 gt911 模型把地址硬编码在 0x5d，来龙去脉 07 篇战史二讲过。本节示例按真板语境写 0x14，您在 QEMU 里做同样的检查，就把命令里的 0x14 换成 0x5d。用 `i2cdetect -y 1` 在对应位置能看到设备，就说明 I2C 通信正常。
 
 ### 网络接口检查
 
@@ -307,7 +306,7 @@ ftrace 能帮咱们分析函数调用关系和执行时间，对理解内核行�
 |------|----------|----------|
 | LCD 不亮，背光也不亮 | 背光供电问题 | 检查 `cat /sys/class/backlight/*/brightness` |
 | LCD 不亮，背光亮 | 时序参数错误 | 用示波器测 LCD 接口信号 |
-| 触摸没反应 | I2C 通信失败 | `i2cdetect -y 1` 检查 0x5d |
+| 触摸没反应 | I2C 通信失败 | `i2cdetect -y 1`：真板看 0x14，QEMU 看 0x5d |
 | 网口不通 | PHY 链路问题 | `ethtool eth0` 检查链接状态 |
 | dmesg 里全是 defer probe | 依赖设备未就绪 | 等待几秒后检查，或检查设备树顺序 |
 | 编译报头文件找不到 | 依赖没装 | 检查 `make menuconfig` 配置 |
@@ -378,9 +377,9 @@ modetest -M mxsfb
 zcat /proc/config.gz | grep DRM
 zcat /proc/config.gz | grep PANEL
 
-# I2C 检查
+# I2C 检查（GT9147 真板 0x14，QEMU 侧 0x5d）
 i2cdetect -y 1
-i2cget -y 1 0x5d 0x00
+i2cget -y 1 0x14 0x00
 
 # 网络检查
 ethtool eth0

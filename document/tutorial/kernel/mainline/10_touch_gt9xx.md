@@ -19,7 +19,7 @@ GT9147 是 I2C 接口的电容触摸芯片，咱们先看它在正点原子板�
 | VDD | 3.3V | 电源 |
 | AVDD | 2.8V | 模拟电源 |
 
-I2C 地址是 0x5d（7 位地址）。您要是看到有些文档写的是 0xba，那是 8 位地址（包含读写位），内核里用 7 位地址，所以是 0x5d。
+I2C 地址这件事，本章得先把双轨口径立起来，后面所有的验证输出都跟它有关。真实的正点原子板子上，这颗芯片实测挂在 0x14（7 位地址，笔者拿 i2cdetect 在 I2C2 上扫出来的）；有些资料写 0xba，那是把读写位也算进去的 8 位形式，对应 7 位的 0x28，内核和设备树里只认 7 位地址。QEMU 那边是另一条轨：gt911 模型把地址硬编码在 0x5d，改不了，来龙去脉 07 篇的战史二已经讲过，修复排在 QEMU 的 gt911 模型支持改地址之后。所以您在 QEMU 里 i2cdetect 看到 1-005d、在真板上看到 1-0014，两个都是对的，没有谁写错；设备树也各写各的，本章的板级 dts 伺候真板，写 0x14，08 篇 QEMU 验收那套写 0x5d。
 
 ## 第二步——配置 I2C 总线
 
@@ -33,9 +33,10 @@ GT9147 挂在 I2C2 总线上，咱们首先确认 I2C2 节点配置：
     status = "okay";
 
     /* GT9147 触摸屏节点 */
-    gt9147: gt9147@5d {
+    gt9147: gt9147@14 {
         compatible = "goodix,gt9147", "goodix,gt9xx";
-        reg = <0x5d>;
+        /* 真板实测地址 0x14；QEMU 的 gt911 模型硬编码 0x5d，QEMU 那套 dts 写 0x5d */
+        reg = <0x14>;
         pinctrl-names = "default";
         pinctrl-0 = <&pinctrl_tsc &pinctrl_tsc_reset>;
         interrupt-parent = <&gpio1>;
@@ -54,7 +55,7 @@ GT9147 挂在 I2C2 总线上，咱们首先确认 I2C2 节点配置：
 | 属性 | 说明 |
 |------|------|
 | compatible | 兼容字符串，`goodix,gt9xx` 是 fallback |
-| reg | I2C 地址（7 位） |
+| reg | I2C 地址（7 位）。真板写 0x14，QEMU 那套 dts 写 0x5d |
 | interrupt-parent | 中断控制器的 phandle |
 | interrupts | 中断号（GPIO1_IO09 = GPIO1 的第 9 号） |
 | reset-gpios | 复位引脚 |
@@ -117,8 +118,8 @@ GT9147 挂在 I2C2 总线上，咱们首先确认 I2C2 节点配置：
 这是笔者踩过的、GT9147 移植最常见的问题。如果您看到这样的报错：
 
 ```
-pin MX6UL_PAD_GPIO1_IO09 already requested by 1-005d; cannot claim for 2040000.touchscreen
-pin MX6UL_PAD_GPIO1_IO05 already requested by 1-005d; cannot claim for 2190000.mmc
+pin MX6UL_PAD_GPIO1_IO09 already requested by 1-0014; cannot claim for 2040000.touchscreen
+pin MX6UL_PAD_GPIO1_IO05 already requested by 1-0014; cannot claim for 2190000.mmc
 ```
 
 这就说明 GT9147 的中断/复位引脚和 SD 卡的引脚冲突了。原因是 GT9147 先 probe，占用了这两个引脚，SD 卡（usdhc1）后 probe，发现引脚已被占用，于是失败，咱们就看到了这两行报错。
@@ -163,13 +164,13 @@ dmesg | grep -E "goodix|gt9147|touch"
 您应该看到类似这样的输出：
 
 ```
-[    2.123456] goodix 1-005d: ID 0x9147
-[    2.234567] goodix 1-005d: irq 0, flags 0x0
-[    2.345678] goodix 1-005d: Touchscreen registered
-[    2.456789] input: Goodix Capacitive TouchScreen as /devices/soc0/soc/2100000.i2c/i2c-1/1-005d/input/input0
+[    2.123456] goodix 1-0014: ID 0x9147
+[    2.234567] goodix 1-0014: irq 0, flags 0x0
+[    2.345678] goodix 1-0014: Touchscreen registered
+[    2.456789] input: Goodix Capacitive TouchScreen as /devices/soc0/soc/2100000.i2c/i2c-1/1-0014/input/input0
 ```
 
-关键是 `Touchscreen registered` 这一行，您看到它就说明驱动成功注册了输入设备。
+关键是 `Touchscreen registered` 这一行，您看到它就说明驱动成功注册了输入设备。日志里每行开头的 1-0014 也值得看一眼：这是真板上的输出，对应双轨口径里真板那个 0x14；同样的检查在 QEMU 里跑，这几行印的是 1-005d，那是 QEMU 模型的固定地址，两边都对。
 
 ### 检查输入设备
 
@@ -185,8 +186,8 @@ cat /proc/bus/input/devices
 ```
 I: Bus=0018 Vendor=0000 Product=0000 Version=0000
 N: Name="Goodix Capacitive TouchScreen"
-P: Phys=1-005d/input0
-S: Sysfs=/devices/soc0/soc/2100000.i2c/i2c-1/1-005d/input/input0
+P: Phys=1-0014/input0
+S: Sysfs=/devices/soc0/soc/2100000.i2c/i2c-1/1-0014/input/input0
 U: Uniq=
 H: Handlers=event0 mouse0
 B: PROP=2
@@ -261,8 +262,8 @@ ls /dev/input/event*
 ```
 
 如果您没有看到 `/dev/input/event0`，或者 dmesg 里有报错，检查：
-1. I2C 地址是否正确（0x5d）
-2. I2C 总线是否工作（`i2cdetect -y 1`）
+1. I2C 地址是否正确（真板实测 0x14；QEMU 侧模型固定 0x5d）
+2. I2C 总线是否工作（`i2cdetect -y 1`，真板这颗芯片出现在 0x14，QEMU 里在 0x5d）
 3. 中断引脚是否正确
 
 ### 问题二：触摸坐标偏移
@@ -299,7 +300,7 @@ CONFIG_INPUT_TOUCHSCREEN=y
 
 到这里，您应该已经有了显示和触摸，图形界面的硬件基础就完整了。
 
-下一篇文章，我们会讲双网口的移植：
+下一篇文章，咱们会讲双网口的移植：
 
 - i.MX6ULL 双 FEC 控制器架构
 - KSZ8081 PHY 驱动配置
@@ -318,7 +319,7 @@ CONFIG_INPUT_TOUCHSCREEN=y
 dmesg | grep -E "goodix|gt9147|touch"
 ls /dev/input/event*
 
-# 检查 I2C 设备
+# 检查 I2C 设备（真板 GT9147 在 0x14，QEMU 里是 0x5d）
 i2cdetect -y 1
 
 # 触摸测试

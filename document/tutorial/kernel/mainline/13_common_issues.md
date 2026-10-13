@@ -12,7 +12,7 @@
 |----------|----------|----------|
 | `Cannot connect bridge (-ENODEV)` | 设备用旧式 `display@0` 写法，缺少 `port/endpoint` | 按 07/08 章修改设备树 |
 | `phandle_references: Reference to non-existent node display0` | 删了 display0 但没删 dtsi 里的 `display` 属性 | 加 `/delete-property/ display;` |
-| `pin already requested by 1-005d` | GPIO 冲突，触摸和 SD 卡抢引脚 | 删除 usdhc1 的冲突引脚 |
+| `pin already requested by 1-005d` | GPIO 冲突，触摸和 SD 卡抢引脚（QEMU 侧日志形态，1-005d 是 gt911 模型的固定地址；真板印 1-0014） | 删除 usdhc1 的冲突引脚 |
 | `Panel driver not found` | `CONFIG_DRM_PANEL_SIMPLE` 没开启 | 开启该配置并重新编译 |
 | `flexcan 2090000.can: failed to get clock` | CAN 驱动 probe 失败 | 检查时钟配置和 regulator |
 | `mmc0: error -110 while initialising SD card` | SD 卡超时，可能是引脚冲突 | 检查 pinctrl 配置 |
@@ -91,7 +91,7 @@ cat /dev/urandom > /dev/fb0 & sleep 2; kill %1
 1. 检查 I2C 通信：
 ```bash
 i2cdetect -y 1
-# 应该在 0x5d 位置看到设备
+# 真板在 0x14 位置看到设备；QEMU 的 gt911 模型地址固定，在 0x5d
 ```
 
 2. 检查驱动加载：
@@ -115,6 +115,10 @@ cat /proc/bus/input/devices
 fbset -i
 # 确认分辨率是 1024x600
 ```
+
+::: warning 未实测标注
+咱们这套环境的 rootfs 不是标准发行版，没有包管理器，fbset 不一定在场。带 fbset 的系统上，这条命令的输出像素格式按 DRM fbdev 默认的 xrgb8888 排，分辨率按 1024x600 典型值给出，仅供对照字段含义，以实际输出为准。
+:::
 
 2. 用 tslib 校准：
 ```bash
@@ -173,6 +177,8 @@ cat /sys/bus/mdio_bus/devices/2188000.ethernet:02/phy_id
 pin MX6UL_PAD_GPIO1_IO09 already requested by 1-005d; cannot claim for 2040000.touchscreen
 pin MX6UL_PAD_GPIO1_IO05 already requested by 1-005d; cannot claim for 2190000.mmc
 ```
+
+这两行是 QEMU 里的日志形态，1-005d 是 QEMU gt911 模型的固定地址，07 篇战史二讲过这个双轨分歧；您在真板上遇到同样的冲突，日志里印的是 1-0014。地址两边不一样，冲突本身一模一样，咱们排查的思路不用换。
 
 ### 原因
 
@@ -290,7 +296,7 @@ error: 'CONFIG_FB_MXS' conflicts with 'CONFIG_DRM_MXSFB'
 
 ## 写在最后
 
-这个教程系列到这里就结束了。咱们从为什么选择主线内核开始，一步步讲解了环境搭建、源码获取、配置、设备树迁移、显示系统、触摸屏、网络接口，最后是调试技巧和常见问题。
+这个教程系列到这里就结束了。咱们从为什么选择主线内核开始，一步步讲解了环境搭建、源码获取、设备树写作、编译与 QEMU 首启验收、显示系统、触摸屏、网络接口，最后是调试技巧和常见问题。
 
 主线内核的移植不是一件轻松的事，但当您看到屏幕亮起、触摸灵敏、网络通畅的那一刻，所有的辛苦都是值得的。更重要的是，通过这个过程，您真正理解了 Linux 内核的工作原理，这是用厂商 BSP 永远学不到的。
 
@@ -305,7 +311,7 @@ error: 'CONFIG_FB_MXS' conflicts with 'CONFIG_DRM_MXSFB'
 ```bash
 # 1. 内核版本
 uname -r
-# 应该显示 7.1.0 或类似
+# 应该显示 7.2.9 或类似
 
 # 2. DRM 设备
 ls /dev/dri/card0
