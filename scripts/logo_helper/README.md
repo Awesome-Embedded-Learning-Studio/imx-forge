@@ -22,7 +22,7 @@
 |------|--------|------|
 | 尺寸 | `1024x600` | BMP 输出尺寸（强制缩放） |
 | 输入 | `document/logo/logo.png` | 源 PNG 文件路径 |
-| 输出 | `third_party/uboot-imx/tools/logos/denx.bmp` | 目标 BMP 文件路径 |
+| 输出 | `third_party/uboot-mainline/tools/logos/denx.bmp` | 目标 BMP 文件路径 |
 
 ## 依赖
 

@@ -5,7 +5,7 @@ set -e
 TEMP_BMP=".tmp.logo.bmp"
 TARGET_SIZE="${1:-800x480}"
 INPUT_PNG="${2:-document/logo/logo.png}"
-TARGET_BMP="${3:-third_party/uboot-imx/tools/logos/denx.bmp}"
+TARGET_BMP="${3:-third_party/uboot-mainline/tools/logos/denx.bmp}"
 
 # ===== 查找项目根目录 =====
 find_repo_root() {

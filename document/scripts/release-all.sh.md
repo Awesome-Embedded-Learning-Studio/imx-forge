@@ -42,7 +42,7 @@ release-all.sh
     ├─ scripts/lib/logging.sh
     ├─ scripts/lib/release.sh   (build-*.sh --release 调用的 release 编排库)
     └─ third_party/
-        ├─ uboot-imx/
+        ├─ uboot-mainline/
         ├─ linux_mainline/
         └─ buildroot/
 ```
@@ -137,7 +137,7 @@ release-all.sh
 
 #### ensure_submodules_initialized()
 
-按要跑的 stage，检查所需子模块是否初始化（`third_party/uboot-imx`、`third_party/linux_mainline`、`third_party/buildroot`）。缺失则提示 `git submodule update --init --recursive <path>` 并退出。
+按要跑的 stage，检查所需子模块是否初始化（`third_party/uboot-mainline`、`third_party/linux_mainline`、`third_party/buildroot`）。缺失则提示 `git submodule update --init --recursive <path>` 并退出。
 
 #### stage_1_uboot()
 

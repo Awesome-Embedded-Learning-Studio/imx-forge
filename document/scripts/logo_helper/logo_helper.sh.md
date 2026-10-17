@@ -35,7 +35,7 @@
 │  1. Logo准备阶段                                             │
 │     ┌───────────────────────────────────────────────────┐   │
 │     │  logo_helper.sh                                  │   │
-│     │    PNG → BMP → third_party/uboot-imx/tools/logos/│   │
+│     │    PNG → BMP → third_party/uboot-mainline/tools/logos/│   │
 │     └───────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                             ↓
@@ -91,7 +91,7 @@ logo_helper.sh
 |---------|------|--------|------|
 | `$1` | 目标BMP尺寸（宽x高） | `800x480` | `1024x600` |
 | `$2` | 输入PNG文件路径（相对于项目根目录） | `document/logo/logo.png` | `custom/mylogo.png` |
-| `$3` | 输出BMP文件路径（相对于项目根目录） | `third_party/uboot-imx/tools/logos/denx.bmp` | `custom/output.bmp` |
+| `$3` | 输出BMP文件路径（相对于项目根目录） | `third_party/uboot-mainline/tools/logos/denx.bmp` | `custom/output.bmp` |
 
 **注意**：
 - 尺寸参数使用 `!` 强制调整，不保持宽高比
@@ -182,7 +182,7 @@ find_repo_root() {
 ```bash
 TARGET_SIZE="${1:-800x480}"
 INPUT_PNG="${2:-document/logo/logo.png}"
-TARGET_BMP="${3:-third_party/uboot-imx/tools/logos/denx.bmp}"
+TARGET_BMP="${3:-third_party/uboot-mainline/tools/logos/denx.bmp}"
 ```
 
 **参数说明**：
@@ -200,7 +200,7 @@ Parameter            Value
 ---------            -----
 Target Size          800x480
 Input PNG            /path/to/imx-forge/document/logo/logo.png
-Target BMP           /path/to/imx-forge/third_party/uboot-imx/tools/logos/denx.bmp
+Target BMP           /path/to/imx-forge/third_party/uboot-mainline/tools/logos/denx.bmp
 ==============================================================
 ```
 
@@ -338,7 +338,7 @@ file "$TARGET_PATH"
 **输出示例**：
 
 ```
-third_party/uboot-imx/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x 480 x 8
+third_party/uboot-mainline/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x 480 x 8
 ```
 
 **为什么需要验证**：
@@ -357,7 +357,7 @@ third_party/uboot-imx/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x
 TEMP_BMP=".tmp.logo.bmp"
 TARGET_SIZE="${1:-800x480}"
 INPUT_PNG="${2:-document/logo/logo.png}"
-TARGET_BMP="${3:-third_party/uboot-imx/tools/logos/denx.bmp}"
+TARGET_BMP="${3:-third_party/uboot-mainline/tools/logos/denx.bmp}"
 ```
 
 ### 默认路径说明
@@ -367,7 +367,7 @@ TARGET_BMP="${3:-third_party/uboot-imx/tools/logos/denx.bmp}"
 | 临时文件 | `.tmp.logo.bmp` | 项目根目录的隐藏文件 |
 | 目标尺寸 | `800x480` | 常见的7寸LCD分辨率 |
 | 输入PNG | `document/logo/logo.png` | 项目Logo目录 |
-| 输出BMP | `third_party/uboot-imx/tools/logos/denx.bmp` | U-Boot默认Logo位置 |
+| 输出BMP | `third_party/uboot-mainline/tools/logos/denx.bmp` | U-Boot默认Logo位置 |
 
 ### 目录结构
 
@@ -377,7 +377,7 @@ PROJECT_ROOT/
 │   └── logo/
 │       └── logo.png             # 输入：源PNG文件
 ├── third_party/
-│   └── uboot-imx/
+│   └── uboot-mainline/
 │       └── tools/
 │           └── logos/
 │               └── denx.bmp     # 输出：U-Boot Logo
@@ -429,18 +429,18 @@ Parameter            Value
 ---------            -----
 Target Size          800x480
 Input PNG            /home/user/imx-forge/document/logo/logo.png
-Target BMP           /home/user/imx-forge/third_party/uboot-imx/tools/logos/denx.bmp
+Target BMP           /home/user/imx-forge/third_party/uboot-mainline/tools/logos/denx.bmp
 ==============================================================
 
 Found PNG: /home/user/imx-forge/document/logo/logo.png
 Generated temporary BMP: .tmp.logo.bmp
-Creating target directory: third_party/uboot-imx/tools/logos
-Copied to: third_party/uboot-imx/tools/logos/denx.bmp
+Creating target directory: third_party/uboot-mainline/tools/logos
+Copied to: third_party/uboot-mainline/tools/logos/denx.bmp
 Cleaned up temporary file
-third_party/uboot-imx/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x 480 x 8
+third_party/uboot-mainline/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x 480 x 8
 
 ==================== Convert Success! ====================
-See third_party/uboot-imx/tools/logos/denx.bmp to check!
+See third_party/uboot-mainline/tools/logos/denx.bmp to check!
 ==========================================================
 ```
 
@@ -454,17 +454,17 @@ Parameter            Value
 ---------            -----
 Target Size          800x480
 Input PNG            /home/charliechen/imx-forge/document/logo/logo.png
-Target BMP           /home/charliechen/imx-forge/third_party/uboot-imx/tools/logos/denx.bmp
+Target BMP           /home/charliechen/imx-forge/third_party/uboot-mainline/tools/logos/denx.bmp
 ==============================================================
 
 Found PNG: /home/charliechen/imx-forge/document/logo/logo.png
 Generated temporary BMP: .tmp.logo.bmp
-Copied to: /home/charliechen/imx-forge/third_party/uboot-imx/tools/logos/denx.bmp
+Copied to: /home/charliechen/imx-forge/third_party/uboot-mainline/tools/logos/denx.bmp
 Cleaned up temporary file
-third_party/uboot-imx/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x 480 x 8
+third_party/uboot-mainline/tools/logos/denx.bmp: PC bitmap, Windows 3.x format, 800 x 480 x 8
 
 ==================== Convert Success! ====================
-See third_party/uboot-imx/tools/logos/denx.bmp to check!
+See third_party/uboot-mainline/tools/logos/denx.bmp to check!
 ==========================================================
 ```
 
@@ -659,13 +659,13 @@ convert: attempt to perform an operation not allowed by the security policy `PDF
 
 ```bash
 # 检查BMP格式
-file third_party/uboot-imx/tools/logos/denx.bmp
+file third_party/uboot-mainline/tools/logos/denx.bmp
 
 # 应该看到类似
 # PC bitmap, Windows 3.x format, 800 x 480 x 8
 
 # 检查BMP详细信息
-identify third_party/uboot-imx/tools/logos/denx.bmp
+identify third_party/uboot-mainline/tools/logos/denx.bmp
 ```
 
 **期望输出**：
@@ -910,7 +910,7 @@ fi
 
 ```bash
 # 检查文件头
-hexdump -C third_party/uboot-imx/tools/logos/denx.bmp | head -n 5
+hexdump -C third_party/uboot-mainline/tools/logos/denx.bmp | head -n 5
 
 # 应该看到
 # 00000000  42 4d ...                           <- BM魔数

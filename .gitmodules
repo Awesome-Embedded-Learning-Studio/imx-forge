@@ -3,9 +3,9 @@
 	url = https://github.com/mirror/busybox.git
 	shallow = true
 	ignore = dirty
-[submodule "third_party/uboot-imx"]
-	path = third_party/uboot-imx
-	url = https://github.com/nxp-imx/uboot-imx.git
+[submodule "third_party/uboot-mainline"]
+	path = third_party/uboot-mainline
+	url = https://github.com/u-boot/u-boot.git
 	shallow = true
 	ignore = dirty
 [submodule "third_party/linux_mainline"]

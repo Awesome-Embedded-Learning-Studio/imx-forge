@@ -69,7 +69,7 @@ IMX-Forge 是一个面向 NXP i.MX6ULL 开发板的开源构建系统，它将�
 │                                                               │
 │  交叉编译工具链 (ARM GNU Toolchain 15.2)                     │
 │         ↓                                                     │
-│  U-Boot (NXP uboot-imx) → u-boot-dtb.imx                     │
+│  U-Boot (v2026.10) → u-boot-dtb.imx                          │
 │         ↓                                                     │
 │  Linux Kernel (mainline 单轨)                                 │
 │    └── linux_mainline (上游内核 7.1) → zImage + .dtb          │
@@ -91,7 +91,7 @@ patches/
 ```
 
 - **mainline**：上游主线内核，长期维护，可向上游贡献；项目已在真板实测启动，CI 持续构建验证。
-- 早期的 NXP linux-imx vendor 轨已移除（历史迁移对比见教程 kernel 卷）；U-Boot 仍使用 NXP uboot-imx。
+- 早期的 NXP linux-imx vendor 轨已移除（历史迁移对比见教程 kernel 卷）；U-Boot 同样走上游主线（`third_party/uboot-mainline`，pin v2026.10）。
 
 ### 适合谁
 
@@ -342,13 +342,13 @@ imx-forge/
 │   ├── release-all.sh      # 一键构建所有组件
 │   └── patch_maker.sh      # 补丁生成工具
 ├── third_party/            # 第三方源码（子模块）
-│   ├── uboot-imx/          # U-Boot NXP fork
+│   ├── uboot-mainline/     # 上游 U-Boot (v2026.10)
 │   ├── linux_mainline/     # Linux Kernel 上游主线
 │   ├── busybox/            # BusyBox
 │   └── qt-compile-pipeline/  # QT 交叉编译流水线
 ├── patches/                # 补丁文件（按组件分目录）
 │   ├── linux_mainline/     # 主线内核补丁
-│   └── uboot-imx/          # U-Boot 补丁
+│   └── uboot-mainline/     # U-Boot 补丁
 ├── driver/                 # 驱动源码与板级设备树
 │   ├── device_tree/alpha-board/  # 板级设备树（.dts）
 │   ├── base_driver/             # 基础驱动框架
@@ -464,7 +464,7 @@ export ARCH=arm
 export CROSS_COMPILE=arm-none-linux-gnueabihf-
 
 # 进入源码目录
-cd third_party/uboot-imx
+cd third_party/uboot-mainline
 
 # 配置
 make mx6ull_aes_emmc_defconfig O=../../out/uboot
@@ -871,7 +871,7 @@ ping 192.168.1.100  # 替换为开发板 IP
 # 方法一：递归初始化
 git submodule update --init --recursive
 
-# 方法二：单独初始化某个模块（<name> 换成 linux_mainline / uboot-imx 等）
+# 方法二：单独初始化某个模块（<name> 换成 linux_mainline / uboot-mainline 等）
 git submodule update --init third_party/<name>
 ```
 

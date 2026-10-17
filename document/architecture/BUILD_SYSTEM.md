@@ -443,7 +443,7 @@ log_error "构建失败！"
 
 - 执行可重现的 U-Boot 发布构建
 - 重置 U-Boot 子模块到上游默认分支的纯净状态
-- 应用补丁 `patches/uboot-imx/charlies_board.patch`
+- 应用补丁 `patches/uboot-mainline/charlies_board.patch`
 - 创建发布分支 `release-build-YYYYMMDD-<short-sha>`
 - 生成构建信息文件 `build_info.txt`
 
@@ -454,10 +454,10 @@ log_error "构建失败！"
 ```bash
 # release_prepare "uboot":
 #   1. 设 SOURCE_DATE_EPOCH(默认当前时间) + LC_ALL=C
-#   2. reset 子模块到 origin 默认分支(lf_v2025.04 回退) + git clean -ffdx
+#   2. reset 子模块到仓库锁定的 commit (gitlink) + git clean -ffdx
 #   3. 捕获 commit / version / branch
 #   4. 创建 release-build-YYYYMMDD-<short-sha> 分支
-#   5. 应用 patches/uboot-imx/charlies_board.patch(git apply,失败回退 --3way)
+#   5. 应用 patches/uboot-mainline/charlies_board.patch(git apply,失败回退 --3way)
 # —— 随后走编译流程 distclean → configure → build → verify ——
 # release_finalize "uboot":
 #   6. 写 ${OUTPUT_DIR}/build_info.txt
@@ -484,8 +484,8 @@ Source Date Epoch: 1609459200
 U-Boot Information:
 -------------------
 Commit: a1b2c3d4e5f6...
-Version: lf_v2025.04-rc1
-Branch: lf_v2025.04
+Version: v2026.10
+Branch: main
 
 Patch Information:
 ------------------
@@ -565,7 +565,7 @@ Toolchain: arm-none-linux-gnueabihf-
 ./scripts/logo_helper/logo_helper.sh \
     800x480 \
     document/logo/logo.png \
-    third_party/uboot-imx/tools/logos/denx.bmp
+    third_party/uboot-mainline/tools/logos/denx.bmp
 ```
 
 **处理步骤**：
@@ -776,7 +776,7 @@ make -C third_party/linux_mainline \
     dtbs
 
 # U-Boot 设备树
-make -C third_party/uboot-imx \
+make -C third_party/uboot-mainline \
     ARCH=arm \
     CROSS_COMPILE=arm-none-linux-gnueabihf- \
     O=out/uboot \
@@ -1272,8 +1272,8 @@ convert document/logo/logo.png -resize 800x480! -alpha off -depth 8 bmp3:test.bm
 
 | 组件 | 配置文件类型 | 位置 |
 |------|-------------|------|
-| U-Boot | defconfig | `third_party/uboot-imx/configs/mx6ull_aes_emmc_defconfig` |
-| U-Boot | 设备树 | `third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-emmc.dts` |
+| U-Boot | defconfig | `third_party/uboot-mainline/configs/mx6ull_aes_emmc_defconfig` |
+| U-Boot | 设备树 | `third_party/uboot-mainline/arch/arm/dts/imx6ull-14x14-evk-emmc.dts` |
 | Linux | defconfig | `third_party/linux_mainline/arch/arm/configs/imx_aes_mainline_defconfig` |
 | Linux | 设备树 | `third_party/linux_mainline/arch/arm/boot/dts/` |
 | BusyBox | defconfig | `third_party/busybox/configs/defconfig` |

@@ -482,7 +482,7 @@ jobs:
           path: out/release-latest/
 ```
 
-两个示例都走 release-all.sh 一键入口，产物目录统一指到 out/release-latest/，与本地的权威路径一致；要拆细就换成分步脚本逐个调，效果相同。还有一处咱们别漏：本仓库的构建强依赖 third_party/ 下的子模块，GitLab 默认不拉子模块，所以上面配了 `GIT_SUBMODULE_STRATEGY: recursive`——GitHub 那边的 `submodules: recursive` 干的是同一件事；少了这步，头一个编 U-Boot 的阶段一开场就会在 third_party/uboot-imx 上摔跤。
+两个示例都走 release-all.sh 一键入口，产物目录统一指到 out/release-latest/，与本地的权威路径一致；要拆细就换成分步脚本逐个调，效果相同。还有一处咱们别漏：本仓库的构建强依赖 third_party/ 下的子模块，GitLab 默认不拉子模块，所以上面配了 `GIT_SUBMODULE_STRATEGY: recursive`——GitHub 那边的 `submodules: recursive` 干的是同一件事；少了这步，头一个编 U-Boot 的阶段一开场就会在 third_party/uboot-mainline 上摔跤。
 
 ::: warning 未实测标注
 两段流水线配置没有在本环境的 CI 上实际跑过（本机没有可用的 CI 执行环境）；字段语法以 GitLab 与 GitHub 当前文档为准，镜像地址换成您仓库实际可拉取的来源。

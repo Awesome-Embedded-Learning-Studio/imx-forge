@@ -703,7 +703,7 @@ fi
 # === Project Structure ===
 check_info "Checking project structure..."
 
-if [ -d "third_party/uboot-imx" ]; then
+if [ -d "third_party/uboot-mainline" ]; then
     check_pass "U-Boot source: found"
 else
     check_warn "U-Boot source: not found (run git submodule update)"
@@ -982,7 +982,7 @@ export CROSS_COMPILE="arm-none-linux-gnueabihf-"
 export ARCH="arm"
 
 # Project Shortcuts
-export UBOOT_SRC="$IMX_FORGE_ROOT/third_party/uboot-imx"
+export UBOOT_SRC="$IMX_FORGE_ROOT/third_party/uboot-mainline"
 export LINUX_SRC="$IMX_FORGE_ROOT/third_party/linux_mainline"
 export BUSYBOX_SRC="$IMX_FORGE_ROOT/third_party/busybox"
 

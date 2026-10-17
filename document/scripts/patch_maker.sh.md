@@ -33,7 +33,7 @@
 ```
 patch_maker.sh
     ├─ git (版本控制工具)
-    └─ 子模块目录 (third_party/linux_mainline, uboot-imx, busybox)
+    └─ 子模块目录 (third_party/linux_mainline, uboot-mainline, busybox)
 ```
 
 ## 参数说明
@@ -58,10 +58,10 @@ patch_maker.sh
 |----------|----------|
 | `linux_mainline` | `linux_mainline` |
 | `third_party/linux_mainline` | `linux_mainline` (移除前缀) |
-| `uboot-imx` | `uboot-imx` |
+| `uboot-mainline` | `uboot-mainline` |
 | `busybox` | `busybox` |
 
-脚本先按输入的原始名字找 `third_party/` 下的目录；找不到时才尝试把下划线换成连字符再找一次（兼容 `uboot-imx` 这类连字符目录）。`linux_mainline` 目录本身就是下划线命名，保持原名不动。脚本 usage 列出的子模块只有 `linux_mainline`、`uboot-imx`、`busybox` 三个。
+脚本先按输入的原始名字找 `third_party/` 下的目录；找不到时才尝试把下划线换成连字符再找一次（兼容 `uboot-mainline` 这类连字符目录）。`linux_mainline` 目录本身就是下划线命名，保持原名不动。脚本 usage 列出的子模块只有 `linux_mainline`、`uboot-mainline`、`busybox` 三个。
 
 ### 输出目录规则
 
@@ -172,7 +172,7 @@ fi
 |------|----------------|---------------------|
 | `linux_mainline` | `linux_mainline` | `PROJECT_ROOT/third_party/linux_mainline` |
 | `third_party/linux_mainline` | `linux_mainline` | `PROJECT_ROOT/third_party/linux_mainline` |
-| `third_party/uboot-imx` | `uboot-imx` | `PROJECT_ROOT/third_party/uboot-imx` |
+| `third_party/uboot-mainline` | `uboot-mainline` | `PROJECT_ROOT/third_party/uboot-mainline` |
 
 **为什么需要规范化**：
 
@@ -302,7 +302,7 @@ PATCH_FILENAME="${SUBMODULE_NAME}-${CURRENT_BRANCH}-${DATE}.patch"
 | 子模块 | 分支 | 日期 | 文件名 |
 |--------|------|------|--------|
 | `linux_mainline` | `feature-uart` | `20250315` | `linux_mainline-feature-uart-20250315.patch` |
-| `uboot-imx` | `fix-emmc` | `20250315` | `uboot-imx-fix-emmc-20250315.patch` |
+| `uboot-mainline` | `fix-emmc` | `20250315` | `uboot-mainline-fix-emmc-20250315.patch` |
 
 **为什么这种命名格式**：
 
@@ -332,8 +332,8 @@ PATCH_FILENAME="${SUBMODULE_NAME}-${CURRENT_BRANCH}-${DATE}.patch"
 # 使用完整路径（自动去除前缀）
 ./scripts/patch_maker.sh --submodule_path=third_party/linux_mainline
 
-# 连字符目录（如 uboot-imx）直接用连字符名
-./scripts/patch_maker.sh --submodule_path=uboot-imx
+# 连字符目录（如 uboot-mainline）直接用连字符名
+./scripts/patch_maker.sh --submodule_path=uboot-mainline
 ```
 
 ### 输出示例
@@ -409,13 +409,13 @@ PROJECT_ROOT/
 │   ├── linux_mainline/
 │   │   ├── linux_mainline-feature-xxx-20250315.patch
 │   │   └── linux_mainline-fix-yyy-20250316.patch
-│   ├── uboot-imx/
-│   │   └── uboot-imx-feature-zzz-20250315.patch
+│   ├── uboot-mainline/
+│   │   └── uboot-mainline-feature-zzz-20250315.patch
 │   └── busybox/
 │       └── busybox-config-20250315.patch
 └── third_party/
     ├── linux_mainline/    # 子模块
-    ├── uboot-imx/    # 子模块
+    ├── uboot-mainline/    # 子模块
     └── busybox/      # 子模块
 ```
 
@@ -424,7 +424,7 @@ PROJECT_ROOT/
 | 名称 | 说明 |
 |------|------|
 | `linux_mainline` | 上游主线 Linux 内核 |
-| `uboot-imx` | NXP U-Boot |
+| `uboot-mainline` | NXP U-Boot |
 | `busybox` | BusyBox 工具集 |
 
 ## 故障排除

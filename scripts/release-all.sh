@@ -189,7 +189,7 @@ ensure_submodules_initialized() {
     for stage in "${stages[@]}"; do
         case "${stage}" in
             1)
-                required+=("third_party/uboot-imx:U-Boot")
+                required+=("third_party/uboot-mainline:U-Boot")
                 ;;
             2)
                 required+=("third_party/linux_mainline:Linux mainline")
