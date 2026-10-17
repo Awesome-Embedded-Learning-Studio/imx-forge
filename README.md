@@ -2,7 +2,7 @@
 > **2026-09 起，内核全面切到上游主线：NXP linux-imx 内核轨正式退役。**
 > 笔者在这里！！！需要提示的是 imx-forge正在进行深度的教程二次优化，还请谨慎参考，预计大致到国庆后完成大部分文档的维护
 >
-> 仓库不再构建、不再维护 linux-imx 内核，所有脚本与教程统一收敛到主线内核（mainline Linux，当前 `v7.1`，真板实测启动）。文档里涉及 imx 内核的地方只留参考引用（NXP 官方仓库链接与 git 历史）；照着旧教程操作时，内核路径一律以 `third_party/linux_mainline` + `out/linux` 为准。U-Boot 侧不受影响，仍使用 NXP uboot-imx。
+> 仓库不再构建、不再维护 linux-imx 内核，所有脚本与教程统一收敛到主线内核（mainline Linux，当前 `v7.1`，真板实测启动）。文档里涉及 imx 内核的地方只留参考引用（NXP 官方仓库链接与 git 历史）；照着旧教程操作时，内核路径一律以 `third_party/linux_mainline` + `out/linux` 为准。U-Boot 同样已收敛到上游主线（`third_party/uboot-mainline`，pin v2026.10）。
 
 <div align="center">
 
@@ -121,7 +121,7 @@ docker run -it --rm -v $(pwd):/workspace ghcr.io/awesome-embedded-learning-studi
 
 ## 📄 开源协议
 
-MIT —— 详见 [LICENSE](LICENSE)。若补丁源自 GPL 授权的 NXP U-Boot，则保留其原始 GPL-2.0 许可证。
+MIT —— 详见 [LICENSE](LICENSE)。若补丁源自 GPL 授权的上游 U-Boot，则保留其原始 GPL-2.0 许可证。
 
 ---
 

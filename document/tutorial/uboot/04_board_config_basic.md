@@ -46,7 +46,7 @@ Kconfig 系统的语法是这样的：每个目录下都可以有一个 Kconfig 
 
 ## board/ 目录结构和板级初始化代码
 
-说完了 defconfig，我们来看 board/ 目录。U-Boot 的 board/ 目录是按厂商和板型组织的，比如 `board/freescale/mx6ul_14x14_evk/` 就是 Freescale（现在是 NXP）的 mx6ull_14x14_evk 板。
+说完了 defconfig，我们来看 board/ 目录。U-Boot 的 board/ 目录是按厂商和板型组织的，比如 `board/nxp/mx6ul_14x14_evk/` 就是 NXP 的 mx6ul_14x14_evk 板（这棵目录同时伺候 mx6ul 和 mx6ull 两颗芯片；老版本 U-Boot 里它在 `board/freescale/` 下，Freescale 并入 NXP 后整体搬到了 `board/nxp/`）。
 
 一个典型的板级目录包含这些文件：Kconfig 定义了板子相关的配置选项，比如 `SYS_BOARD`、`SYS_VENDOR`、`SYS_CONFIG_NAME` 这些变量。Makefile 指定了要编译的源文件，通常是 `obj-y := mx6ul_14x14_evk.o`。MAINTAINERS 声明了这个板子的维护者和相关文件路径。imximage.cfg 是 NXP i.MX 系列专用的镜像头配置文件，定义了 DCD（Device Configuration Data）和各种初始化参数。而 `.c` 文件就是真正的板级初始化代码。
 
@@ -109,7 +109,7 @@ config TARGET_MX6ULL_AES_EMMC
 
 这一步的作用是告诉 Kconfig 系统：有一个新的板型叫 mx6ull_aes_emmc，它依赖 MX6ULL，并且需要这些基础配置。没有这一步，你在 make menuconfig 里根本找不到这个选项。
 
-第二步是创建板级目录和文件。复制 `board/freescale/mx6ul_14x14_evk/` 到 `board/freescale/mx6ull_aes_emmc/`，然后修改里面的文件。
+第二步是创建板级目录和文件。复制 `board/nxp/mx6ul_14x14_evk/` 到 `board/nxp/mx6ull_aes_emmc/`，然后修改里面的文件。
 
 先改 Kconfig，把所有 `mx6ul_14x14_evk` 替换成 `mx6ull_aes_emmc`：
 
@@ -120,13 +120,13 @@ config SYS_BOARD
     default "mx6ull_aes_emmc"
 
 config SYS_VENDOR
-    default "freescale"
+    default "nxp"
 
 config SYS_CONFIG_NAME
     default "mx6ull_aes_emmc"
 
 config IMX_CONFIG
-    default "board/freescale/mx6ull_aes_emmc/imximage.cfg"
+    default "board/nxp/mx6ull_aes_emmc/imximage.cfg"
 
 config TEXT_BASE
     default 0x87800000
@@ -149,7 +149,7 @@ MAINTAINERS 文件声明了维护者和相关文件，可以改成你的名字�
 AES IMX6ULL Board
 M:	CharlieChen <725610365@qq.com>
 S:	Maintained
-F:	board/freescale/mx6ull_aes_emmc/
+F:	board/nxp/mx6ull_aes_emmc/
 F:	include/configs/mx6ull_aes_emmc.h
 F:	configs/mx6ull_aes_emmc_defconfig
 ```

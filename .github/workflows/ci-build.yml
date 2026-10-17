@@ -34,7 +34,7 @@ jobs:
           filters: |
             uboot:
               - 'patches/uboot/**'
-              - 'patches/uboot-imx/**'
+              - 'patches/uboot-mainline/**'
               - 'scripts/build_helper/build-uboot.sh'
             linux:
               - 'driver/device_tree/alpha-board/linux/**'
@@ -58,13 +58,13 @@ jobs:
           submodules: false
 
       - name: 初始化 U-Boot 子模块
-        run: git submodule update --init --depth=1 third_party/uboot-imx
+        run: git submodule update --init --depth=1 third_party/uboot-mainline
 
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .
 
       - name: 应用 U-Boot 补丁
-        run: cd third_party/uboot-imx && ../../scripts/apply_patches.sh uboot-imx
+        run: cd third_party/uboot-mainline && ../../scripts/apply_patches.sh uboot-mainline
 
       - name: Cache ccache for U-Boot
         uses: actions/cache@v4

@@ -1,9 +1,9 @@
 diff --git a/arch/arm/dts/imx6ull-aes.dts b/arch/arm/dts/imx6ull-aes.dts
 new file mode 100644
-index 00000000000..17b55f496f1
+index 00000000..454140d0
 --- /dev/null
 +++ b/arch/arm/dts/imx6ull-aes.dts
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,44 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +//
 +// Copyright (C) 2016 Freescale Semiconductor, Inc.
@@ -33,7 +33,6 @@ index 00000000000..17b55f496f1
 +	status = "okay";
 +};
 +
-+/delete-node/ &sim2;
 +
 +/*
 +	usdhc2 is assigned from arch/arm/dts/imx6ull-14x14-evk-emmc.dts
@@ -51,10 +50,10 @@ index 00000000000..17b55f496f1
 +
 diff --git a/arch/arm/dts/imx6ull-aes.dtsi b/arch/arm/dts/imx6ull-aes.dtsi
 new file mode 100644
-index 00000000000..03e0951d31d
+index 00000000..ee6907be
 --- /dev/null
 +++ b/arch/arm/dts/imx6ull-aes.dtsi
-@@ -0,0 +1,754 @@
+@@ -0,0 +1,729 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
 +// Copyright (C) 2015 Freescale Semiconductor, Inc.
@@ -392,21 +391,6 @@ index 00000000000..03e0951d31d
 +	status = "okay";
 +};
 +
-+&sim2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_sim2>;
-+	assigned-clocks = <&clks IMX6UL_CLK_SIM_SEL>;
-+	assigned-clock-parents = <&clks IMX6UL_CLK_SIM_PODF>;
-+	assigned-clock-rates = <240000000>;
-+	/* GPIO_ACTIVE_HIGH/LOW:sim card voltage control
-+	 * NCN8025:Vcc = ACTIVE_HIGH?5V:3V
-+	 * TDA8035:Vcc = ACTIVE_HIGH?5V:1.8V
-+	 */
-+	pinctrl-assert-gpios = <&gpio4 23 GPIO_ACTIVE_HIGH>;
-+	port = <1>;
-+	sven_low_active;
-+	status = "okay";
-+};
 +
 +&tsc {
 +	pinctrl-names = "default";
@@ -636,16 +620,6 @@ index 00000000000..03e0951d31d
 +		>;
 +	};
 +
-+	pinctrl_sim2: sim2grp {
-+		fsl,pins = <
-+			MX6UL_PAD_CSI_DATA03__SIM2_PORT1_PD		0xb808
-+			MX6UL_PAD_CSI_DATA04__SIM2_PORT1_CLK		0x31
-+			MX6UL_PAD_CSI_DATA05__SIM2_PORT1_RST_B		0xb808
-+			MX6UL_PAD_CSI_DATA06__SIM2_PORT1_SVEN		0xb808
-+			MX6UL_PAD_CSI_DATA07__SIM2_PORT1_TRXD		0xb809
-+			MX6UL_PAD_CSI_DATA02__GPIO4_IO23		0x3008
-+		>;
-+	};
 +
 +	pinctrl_spi4: spi4grp {
 +		fsl,pins = <
@@ -809,12 +783,31 @@ index 00000000000..03e0951d31d
 +		>;
 +	};
 +};
+diff --git a/arch/arm/include/asm/arch-mx6/imx-regs.h b/arch/arm/include/asm/arch-mx6/imx-regs.h
+index 7f216c70..23616e77 100644
+--- a/arch/arm/include/asm/arch-mx6/imx-regs.h
++++ b/arch/arm/include/asm/arch-mx6/imx-regs.h
+@@ -286,6 +286,14 @@
+ #define IP2APB_PERFMON2_BASE_ADDR   (AIPS2_OFF_BASE_ADDR + 0x48000)
+ #define MX6UL_LCDIF1_BASE_ADDR      (AIPS2_OFF_BASE_ADDR + 0x48000)
+ #define MX6ULL_LCDIF1_BASE_ADDR     (AIPS2_OFF_BASE_ADDR + 0x48000)
++#if (defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL))
++/*
++ * Base address expected by drivers/video/mxsfb.c (VIDEO_MXS). The mx6ul(l)
++ * eLCDIF register layout matches the one the driver implements; other SoCs
++ * define this macro in their own arch headers.
++ */
++#define MXS_LCDIF_BASE              MX6ULL_LCDIF1_BASE_ADDR
++#endif
+ #ifdef CONFIG_MX6SX
+ #define DEBUG_MONITOR_BASE_ADDR     (AIPS2_OFF_BASE_ADDR + 0x4C000)
+ #else
 diff --git a/arch/arm/mach-imx/mx6/Kconfig b/arch/arm/mach-imx/mx6/Kconfig
-index 7fd9e295f55..9ad446adc74 100644
+index cc6369db..a9819e1e 100644
 --- a/arch/arm/mach-imx/mx6/Kconfig
 +++ b/arch/arm/mach-imx/mx6/Kconfig
-@@ -579,6 +579,17 @@ config TARGET_MX6ULL_14X14_EVK
- 	select OF_SYSTEM_SETUP
+@@ -458,6 +458,15 @@ config TARGET_MX6ULL_14X14_EVK
+ 	select IOMUX_LPSR
  	imply CMD_DM
  
 +config TARGET_MX6ULL_AES_EMMC
@@ -824,26 +817,24 @@ index 7fd9e295f55..9ad446adc74 100644
 +	select DM
 +	select DM_THERMAL
 +	select IOMUX_LPSR
-+	select IMX_MODULE_FUSE
-+	select OF_SYSTEM_SETUP
 +	imply CMD_DM
 +
  config TARGET_MX6ULZ_SMM_M2
  	bool "Support imx6ulz_smm_m2"
  	depends on MX6ULL
-@@ -827,6 +838,7 @@ source "board/freescale/mx6sxsabresd/Kconfig"
- source "board/freescale/mx6sxsabreauto/Kconfig"
- source "board/freescale/mx6ul_14x14_evk/Kconfig"
- source "board/freescale/mx6ullevk/Kconfig"
-+source "board/freescale/mx6ull_aes_emmc/Kconfig"
+@@ -728,6 +737,7 @@ source "board/nxp/mx6sxsabresd/Kconfig"
+ source "board/nxp/mx6sxsabreauto/Kconfig"
+ source "board/nxp/mx6ul_14x14_evk/Kconfig"
+ source "board/nxp/mx6ullevk/Kconfig"
++source "board/nxp/mx6ull_aes_emmc/Kconfig"
  source "board/bosch/acc/Kconfig"
  source "board/grinn/liteboard/Kconfig"
  source "board/phytec/pcm058/Kconfig"
-diff --git a/board/freescale/mx6ull_aes_emmc/Kconfig b/board/freescale/mx6ull_aes_emmc/Kconfig
+diff --git a/board/nxp/mx6ull_aes_emmc/Kconfig b/board/nxp/mx6ull_aes_emmc/Kconfig
 new file mode 100644
-index 00000000000..72fab1d01cd
+index 00000000..239b186e
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/Kconfig
++++ b/board/nxp/mx6ull_aes_emmc/Kconfig
 @@ -0,0 +1,17 @@
 +if TARGET_MX6ULL_AES_EMMC
 +
@@ -851,51 +842,51 @@ index 00000000000..72fab1d01cd
 +	default "mx6ull_aes_emmc"
 +
 +config SYS_VENDOR
-+	default "freescale"
++	default "nxp"
 +
 +config SYS_CONFIG_NAME
 +	default "mx6ull_aes_emmc"
 +
 +config IMX_CONFIG
-+	default "board/freescale/mx6ull_aes_emmc/imximage.cfg"
++	default "board/nxp/mx6ull_aes_emmc/imximage.cfg"
 +
 +config TEXT_BASE
 +	default 0x87800000
 +endif
-diff --git a/board/freescale/mx6ull_aes_emmc/MAINTAINERS b/board/freescale/mx6ull_aes_emmc/MAINTAINERS
+diff --git a/board/nxp/mx6ull_aes_emmc/MAINTAINERS b/board/nxp/mx6ull_aes_emmc/MAINTAINERS
 new file mode 100644
-index 00000000000..b14fe788628
+index 00000000..ffbd0938
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/MAINTAINERS
++++ b/board/nxp/mx6ull_aes_emmc/MAINTAINERS
 @@ -0,0 +1,6 @@
 +AES IMX6ULL Board
 +M:	CharlieChen <725610365@qq.com>
 +S:	Maintained
-+F:	board/freescale/mx6ull_aes_emmc/
++F:	board/nxp/mx6ull_aes_emmc/
 +F:	include/configs/mx6ull_aes_emmc.h
-+F:	configs/mx6ull_aes_imx6ull_defconfig
-diff --git a/board/freescale/mx6ull_aes_emmc/Makefile b/board/freescale/mx6ull_aes_emmc/Makefile
++F:	configs/mx6ull_aes_emmc_defconfig
+diff --git a/board/nxp/mx6ull_aes_emmc/Makefile b/board/nxp/mx6ull_aes_emmc/Makefile
 new file mode 100644
-index 00000000000..00222288292
+index 00000000..00222288
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/Makefile
++++ b/board/nxp/mx6ull_aes_emmc/Makefile
 @@ -0,0 +1,4 @@
 +# SPDX-License-Identifier: GPL-2.0+
 +# (C) Copyright 2016 Freescale Semiconductor, Inc.
 +
 +obj-y  := mx6ull_aes_emmc.o
-diff --git a/board/freescale/mx6ull_aes_emmc/imximage.cfg b/board/freescale/mx6ull_aes_emmc/imximage.cfg
+diff --git a/board/nxp/mx6ull_aes_emmc/imximage.cfg b/board/nxp/mx6ull_aes_emmc/imximage.cfg
 new file mode 100644
-index 00000000000..6e8a9187dcf
+index 00000000..4c40aa9d
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/imximage.cfg
++++ b/board/nxp/mx6ull_aes_emmc/imximage.cfg
 @@ -0,0 +1,120 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
 + * Copyright (C) 2016 Freescale Semiconductor, Inc.
 + * Copyright 2017 NXP
 + *
-+ * Refer doc/imx/mkimage/imximage.txt for more details about how-to configure
++ * Refer doc/imx/mkimage/imximage.rst for more details about how-to configure
 + * and create imximage boot image
 + *
 + * The syntax is taken as close as possible with the kwbimage
@@ -922,7 +913,7 @@ index 00000000000..6e8a9187dcf
 +
 +#ifdef CONFIG_USE_IMXIMG_PLUGIN
 +/*PLUGIN    plugin-binary-file    IRAM_FREE_START_ADDR*/
-+PLUGIN	board/freescale/mx6ullevk/plugin.bin 0x00907000
++PLUGIN	board/nxp/mx6ull_aes_emmc/plugin.bin 0x00907000
 +#else
 +
 +#ifdef CONFIG_IMX_HAB
@@ -1010,11 +1001,11 @@ index 00000000000..6e8a9187dcf
 +DATA 4 0x021B001C 0x00000000
 +
 +#endif
-diff --git a/board/freescale/mx6ull_aes_emmc/imximage_lpddr2.cfg b/board/freescale/mx6ull_aes_emmc/imximage_lpddr2.cfg
+diff --git a/board/nxp/mx6ull_aes_emmc/imximage_lpddr2.cfg b/board/nxp/mx6ull_aes_emmc/imximage_lpddr2.cfg
 new file mode 100644
-index 00000000000..23d770eb564
+index 00000000..23d770eb
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/imximage_lpddr2.cfg
++++ b/board/nxp/mx6ull_aes_emmc/imximage_lpddr2.cfg
 @@ -0,0 +1,125 @@
 +/*
 + * Copyright (C) 2016 Freescale Semiconductor, Inc.
@@ -1141,16 +1132,20 @@ index 00000000000..23d770eb564
 +DATA 4 0x021B0404 0x00011006
 +DATA 4 0x021B001C 0x00000000
 +#endif
-diff --git a/board/freescale/mx6ull_aes_emmc/mx6ull_aes_emmc.c b/board/freescale/mx6ull_aes_emmc/mx6ull_aes_emmc.c
+diff --git a/board/nxp/mx6ull_aes_emmc/mx6ull_aes_emmc.c b/board/nxp/mx6ull_aes_emmc/mx6ull_aes_emmc.c
 new file mode 100644
-index 00000000000..e2fc476466c
+index 00000000..df5622a5
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/mx6ull_aes_emmc.c
-@@ -0,0 +1,341 @@
++++ b/board/nxp/mx6ull_aes_emmc/mx6ull_aes_emmc.c
+@@ -0,0 +1,163 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright (C) 2016 Freescale Semiconductor, Inc.
 + * Copyright 2017 NXP
++ *
++ * Awesome Embedded Studio i.MX6ULL AES eMMC board.
++ * Ported from the NXP lf vendor tree to upstream U-Boot; the board file
++ * keeps only what the AES board actually uses (dual FEC, QSPI, LCD).
 + */
 +
 +// clang-format off
@@ -1165,107 +1160,15 @@ index 00000000000..e2fc476466c
 +#include <asm/gpio.h>
 +#include <asm/mach-imx/iomux-v3.h>
 +#include <asm/mach-imx/boot_mode.h>
-+#include <asm/mach-imx/mxc_i2c.h>
 +#include <asm/io.h>
 +#include <config.h>
 +#include <env.h>
-+#include <fsl_esdhc_imx.h>
-+#include <i2c.h>
-+#include <miiphy.h>
 +#include <linux/sizes.h>
-+#include <linux/delay.h>
 +#include <mmc.h>
 +#include <miiphy.h>
-+#include <power/pmic.h>
-+#include <power/pfuze3000_pmic.h>
-+#include "../common/pfuze.h"
 +// clang-format on
 +
 +DECLARE_GLOBAL_DATA_PTR;
-+
-+#define I2C_PAD_CTRL                                                           \
-+  (PAD_CTL_PKE | PAD_CTL_PUE | PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED |       \
-+   PAD_CTL_DSE_40ohm | PAD_CTL_HYS | PAD_CTL_ODE)
-+
-+#define LCD_PAD_CTRL                                                           \
-+  (PAD_CTL_HYS | PAD_CTL_PUS_100K_UP | PAD_CTL_PUE | PAD_CTL_PKE |             \
-+   PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm)
-+
-+#define GPMI_PAD_CTRL0 (PAD_CTL_PKE | PAD_CTL_PUE | PAD_CTL_PUS_100K_UP)
-+#define GPMI_PAD_CTRL1                                                         \
-+  (PAD_CTL_DSE_40ohm | PAD_CTL_SPEED_MED | PAD_CTL_SRE_FAST)
-+#define GPMI_PAD_CTRL2 (GPMI_PAD_CTRL0 | GPMI_PAD_CTRL1)
-+
-+#ifdef CONFIG_DM_PMIC
-+int power_init_board(void) {
-+  struct udevice *dev;
-+  int ret, dev_id, rev_id;
-+  unsigned int reg;
-+
-+  ret = pmic_get("pfuze3000@8", &dev);
-+  if (ret == -ENODEV)
-+    return 0;
-+  if (ret != 0)
-+    return ret;
-+
-+  dev_id = pmic_reg_read(dev, PFUZE3000_DEVICEID);
-+  rev_id = pmic_reg_read(dev, PFUZE3000_REVID);
-+  printf("PMIC: PFUZE3000 DEV_ID=0x%x REV_ID=0x%x\n", dev_id, rev_id);
-+
-+  /* disable Low Power Mode during standby mode */
-+  reg = pmic_reg_read(dev, PFUZE3000_LDOGCTL);
-+  reg |= 0x1;
-+  pmic_reg_write(dev, PFUZE3000_LDOGCTL, reg);
-+
-+  /* SW1B step ramp up time from 2us to 4us/25mV */
-+  pmic_reg_write(dev, PFUZE3000_SW1BCONF, 0x40);
-+
-+  /* SW1B mode to APS/PFM */
-+  pmic_reg_write(dev, PFUZE3000_SW1BMODE, 0xc);
-+
-+  /* SW1B standby voltage set to 0.975V */
-+  pmic_reg_write(dev, PFUZE3000_SW1BSTBY, 0xb);
-+
-+  return 0;
-+}
-+
-+#ifdef CONFIG_LDO_BYPASS_CHECK
-+void ldo_mode_set(int ldo_bypass) {
-+  unsigned int value;
-+  u32 vddarm;
-+  struct udevice *dev;
-+  int ret;
-+
-+  ret = pmic_get("pfuze3000@8", &dev);
-+  if (ret == -ENODEV) {
-+    printf("No PMIC found!\n");
-+    return;
-+  }
-+
-+  /* switch to ldo_bypass mode */
-+  if (ldo_bypass) {
-+    prep_anatop_bypass();
-+    /* decrease VDDARM to 1.275V */
-+    value = pmic_reg_read(dev, PFUZE3000_SW1BVOLT);
-+    value &= ~0x1f;
-+    value |= PFUZE3000_SW1AB_SETP(12750);
-+    pmic_reg_write(dev, PFUZE3000_SW1BVOLT, value);
-+
-+    set_anatop_bypass(1);
-+    vddarm = PFUZE3000_SW1AB_SETP(11750);
-+
-+    value = pmic_reg_read(dev, PFUZE3000_SW1BVOLT);
-+    value &= ~0x1f;
-+    value |= vddarm;
-+    pmic_reg_write(dev, PFUZE3000_SW1BVOLT, value);
-+
-+    finish_anatop_bypass();
-+
-+    printf("switch to ldo_bypass mode!\n");
-+  }
-+}
-+#endif
-+#endif
 +
 +int dram_init(void) {
 +  gd->ram_size = imx_ddr_size();
@@ -1276,67 +1179,11 @@ index 00000000000..e2fc476466c
 +int board_mmc_get_env_dev(int devno) { return devno; }
 +
 +#ifdef CONFIG_FSL_QSPI
-+
-+#ifndef CONFIG_DM_SPI
-+#define QSPI_PAD_CTRL1                                                         \
-+  (PAD_CTL_SRE_FAST | PAD_CTL_SPEED_MED | PAD_CTL_PKE | PAD_CTL_PUE |          \
-+   PAD_CTL_PUS_47K_UP | PAD_CTL_DSE_120ohm)
-+
-+static iomux_v3_cfg_t const quadspi_pads[] = {
-+    MX6_PAD_NAND_WP_B__QSPI_A_SCLK | MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-+    MX6_PAD_NAND_READY_B__QSPI_A_DATA00 | MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-+    MX6_PAD_NAND_CE0_B__QSPI_A_DATA01 | MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-+    MX6_PAD_NAND_CE1_B__QSPI_A_DATA02 | MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-+    MX6_PAD_NAND_CLE__QSPI_A_DATA03 | MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-+    MX6_PAD_NAND_DQS__QSPI_A_SS0_B | MUX_PAD_CTRL(QSPI_PAD_CTRL1),
-+};
-+#endif
-+
 +static int board_qspi_init(void) {
-+#ifndef CONFIG_DM_SPI
-+  /* Set the iomux */
-+  imx_iomux_v3_setup_multiple_pads(quadspi_pads, ARRAY_SIZE(quadspi_pads));
-+#endif
-+  /* Set the clock */
++  /* Set the clock; pads come from the device tree (DM SPI). */
 +  enable_qspi_clk(0);
 +
 +  return 0;
-+}
-+#endif
-+
-+#ifdef CONFIG_NAND_MXS
-+static iomux_v3_cfg_t const nand_pads[] = {
-+    MX6_PAD_NAND_DATA00__RAWNAND_DATA00 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA01__RAWNAND_DATA01 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA02__RAWNAND_DATA02 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA03__RAWNAND_DATA03 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA04__RAWNAND_DATA04 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA05__RAWNAND_DATA05 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA06__RAWNAND_DATA06 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DATA07__RAWNAND_DATA07 | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_CLE__RAWNAND_CLE | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_ALE__RAWNAND_ALE | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_CE0_B__RAWNAND_CE0_B | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_CE1_B__RAWNAND_CE1_B | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_RE_B__RAWNAND_RE_B | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_WE_B__RAWNAND_WE_B | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_WP_B__RAWNAND_WP_B | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_READY_B__RAWNAND_READY_B | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+    MX6_PAD_NAND_DQS__RAWNAND_DQS | MUX_PAD_CTRL(GPMI_PAD_CTRL2),
-+};
-+
-+static void setup_gpmi_nand(void) {
-+  struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
-+
-+  /* config gpmi nand iomux */
-+  imx_iomux_v3_setup_multiple_pads(nand_pads, ARRAY_SIZE(nand_pads));
-+
-+  setup_gpmi_io_clk((MXC_CCM_CS2CDR_ENFC_CLK_PODF(0) |
-+                     MXC_CCM_CS2CDR_ENFC_CLK_PRED(3) |
-+                     MXC_CCM_CS2CDR_ENFC_CLK_SEL(3)));
-+
-+  /* enable apbh clock gating */
-+  setbits_le32(&mxc_ccm->CCGR0, MXC_CCM_CCGR0_APBHDMA_MASK);
 +}
 +#endif
 +
@@ -1355,20 +1202,16 @@ index 00000000000..e2fc476466c
 +   * Use 50M anatop loopback REF_CLK2 for ENET2,
 +   * clear gpr1[14], set gpr1[18].
 +   */
-+  if (!check_module_fused(MODULE_ENET2)) {
-+    clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC2_MASK,
-+                    IOMUX_GPR1_FEC2_CLOCK_MUX1_SEL_MASK);
-+  }
++  clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC2_MASK,
++                  IOMUX_GPR1_FEC2_CLOCK_MUX1_SEL_MASK);
 +
 +  ret = enable_fec_anatop_clock(0, ENET_50MHZ);
 +  if (ret)
 +    return ret;
 +
-+  if (!check_module_fused(MODULE_ENET2)) {
-+    ret = enable_fec_anatop_clock(1, ENET_50MHZ);
-+    if (ret)
-+      return ret;
-+  }
++  ret = enable_fec_anatop_clock(1, ENET_50MHZ);
++  if (ret)
++    return ret;
 +
 +  enable_enet_clk(1);
 +
@@ -1396,12 +1239,6 @@ index 00000000000..e2fc476466c
 +
 +  imx_iomux_v3_setup_multiple_pads(lcd_pads, ARRAY_SIZE(lcd_pads));
 +
-+  /* Reset the LCD */
-+  // gpio_request(IMX_GPIO_NR(5, 9), "lcd reset");
-+  // gpio_direction_output(IMX_GPIO_NR(5, 9), 0);
-+  // udelay(500);
-+  // gpio_direction_output(IMX_GPIO_NR(5, 9), 1);
-+
 +  /* Set Brightness to high */
 +  gpio_request(IMX_GPIO_NR(1, 8), "backlight");
 +  gpio_direction_output(IMX_GPIO_NR(1, 8), 1);
@@ -1426,10 +1263,6 @@ index 00000000000..e2fc476466c
 +  board_qspi_init();
 +#endif
 +
-+#ifdef CONFIG_NAND_MXS
-+  setup_gpmi_nand();
-+#endif
-+
 +  return 0;
 +}
 +
@@ -1448,32 +1281,12 @@ index 00000000000..e2fc476466c
 +  add_board_boot_modes(board_boot_modes);
 +#endif
 +
-+  env_set("tee", "no");
-+#ifdef CONFIG_IMX_OPTEE
-+  env_set("tee", "yes");
-+#endif
-+
 +#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-+  env_set("board_name", "EVK");
-+
-+  if (is_mx6ull_9x9_evk())
-+    env_set("board_rev", "9X9");
-+  else
-+    env_set("board_rev", "14X14");
-+
-+  if (is_cpu_type(MXC_CPU_MX6ULZ)) {
-+    env_set("board_name", "ULZ-EVK");
-+    env_set("usb_net_cmd", "usb start");
-+  }
++  env_set("board_name", "AES");
++  env_set("board_rev", "14X14");
 +#endif
 +
 +  setup_lcd();
-+
-+#ifdef CONFIG_ENV_IS_IN_MMC
-+  board_late_mmc_env_init();
-+#endif
-+
-+  set_wdog_reset((struct wdog_regs *)WDOG1_BASE_ADDR);
 +
 +  return 0;
 +}
@@ -1488,11 +1301,11 @@ index 00000000000..e2fc476466c
 +  enable_lcdif_clock(LCDIF1_BASE_ADDR, 0);
 +#endif
 +}
-diff --git a/board/freescale/mx6ull_aes_emmc/plugin.S b/board/freescale/mx6ull_aes_emmc/plugin.S
+diff --git a/board/nxp/mx6ull_aes_emmc/plugin.S b/board/nxp/mx6ull_aes_emmc/plugin.S
 new file mode 100644
-index 00000000000..812088d13c1
+index 00000000..812088d1
 --- /dev/null
-+++ b/board/freescale/mx6ull_aes_emmc/plugin.S
++++ b/board/nxp/mx6ull_aes_emmc/plugin.S
 @@ -0,0 +1,263 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
@@ -1759,63 +1572,68 @@ index 00000000000..812088d13c1
 +#include <asm/arch/mx6_plugin.S>
 diff --git a/configs/mx6ull_aes_emmc_defconfig b/configs/mx6ull_aes_emmc_defconfig
 new file mode 100644
-index 00000000000..724cdc4f83b
+index 00000000..dd404d75
 --- /dev/null
 +++ b/configs/mx6ull_aes_emmc_defconfig
-@@ -0,0 +1,118 @@
+@@ -0,0 +1,102 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_MX6=y
-+CONFIG_DISPLAY_BOARDINFO=y
 +CONFIG_SYS_MALLOC_LEN=0x1000000
 +CONFIG_NR_DRAM_BANKS=1
-+CONFIG_SYS_MEMTEST_START=0x80000000
-+CONFIG_SYS_MEMTEST_END=0x88000000
++CONFIG_SF_DEFAULT_SPEED=40000000
 +CONFIG_ENV_SIZE=0x2000
 +CONFIG_ENV_OFFSET=0xE0000
 +CONFIG_MX6ULL=y
 +CONFIG_TARGET_MX6ULL_AES_EMMC=y
-+# CONFIG_LDO_BYPASS_CHECK is not set
-+CONFIG_SYS_I2C_MXC_I2C1=y
-+CONFIG_SYS_I2C_MXC_I2C2=y
 +CONFIG_DM_GPIO=y
 +CONFIG_DEFAULT_DEVICE_TREE="imx6ull-aes"
++CONFIG_SYS_MEMTEST_START=0x80000000
++CONFIG_SYS_MEMTEST_END=0x88000000
 +CONFIG_SUPPORT_RAW_INITRD=y
++CONFIG_BOOTDELAY=-1
 +CONFIG_USE_BOOTCOMMAND=y
 +CONFIG_BOOTCOMMAND="echo Current do not autoboot"
-+CONFIG_BOOTDELAY=-1
++CONFIG_SYS_PBSIZE=532
 +# CONFIG_CONSOLE_MUX is not set
 +CONFIG_SYS_CONSOLE_IS_IN_ENV=y
 +CONFIG_BOARD_EARLY_INIT_F=y
 +CONFIG_HUSH_PARSER=y
 +CONFIG_SYS_MAXARGS=32
-+CONFIG_SYS_PBSIZE=532
 +CONFIG_CMD_BOOTZ=y
-+# CONFIG_CMD_IMLS is not set
++CONFIG_CRC32_VERIFY=y
 +CONFIG_CMD_MEMTEST=y
 +CONFIG_CMD_GPIO=y
 +CONFIG_CMD_I2C=y
 +CONFIG_CMD_MMC=y
-+CONFIG_CMD_SF=y
 +CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
 +CONFIG_CMD_DHCP=y
 +CONFIG_CMD_PING=y
 +CONFIG_CMD_BMP=y
 +CONFIG_CMD_CACHE=y
-+CONFIG_CMD_NET=y
++CONFIG_CMD_RNG=y
 +CONFIG_CMD_EXT2=y
 +CONFIG_CMD_EXT4=y
 +CONFIG_CMD_EXT4_WRITE=y
 +CONFIG_CMD_FAT=y
 +CONFIG_CMD_FS_GENERIC=y
++CONFIG_EFI_PARTITION=y
 +CONFIG_OF_CONTROL=y
 +CONFIG_ENV_OVERWRITE=y
 +CONFIG_ENV_IS_IN_MMC=y
-+CONFIG_SYS_RELOC_GD_ENV_ADDR=y
-+CONFIG_SYS_MMC_ENV_DEV=1
++CONFIG_ENV_RELOC_GD_ENV_ADDR=y
++CONFIG_ENV_MMC_DEVICE_INDEX=1
 +CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
 +CONFIG_USE_ETHPRIME=y
 +CONFIG_ETHPRIME="eth1"
 +CONFIG_BOUNCE_BUFFER=y
++CONFIG_FSL_DCP_RNG=y
++CONFIG_USB_FUNCTION_FASTBOOT=y
++CONFIG_FASTBOOT_BUF_ADDR=0x83800000
++CONFIG_FASTBOOT_BUF_SIZE=0x40000000
++CONFIG_FASTBOOT_FLASH=y
++CONFIG_FASTBOOT_UUU_SUPPORT=y
++CONFIG_FASTBOOT_FLASH_MMC_DEV=1
 +CONFIG_DM_74X164=y
 +CONFIG_DM_I2C=y
 +CONFIG_SYS_I2C_MXC=y
@@ -1823,19 +1641,19 @@ index 00000000000..724cdc4f83b
 +CONFIG_FSL_USDHC=y
 +CONFIG_MTD=y
 +CONFIG_DM_SPI_FLASH=y
-+CONFIG_SF_DEFAULT_SPEED=40000000
 +CONFIG_SPI_FLASH_STMICRO=y
-+CONFIG_PHYLIB=y
-+CONFIG_PHY_MICREL=y
-+CONFIG_PHY_MICREL_KSZ8XXX=y
 +CONFIG_DM_ETH_PHY=y
 +CONFIG_FEC_MXC=y
 +CONFIG_MII=y
++CONFIG_PHYLIB=y
++CONFIG_PHY_MICREL=y
++CONFIG_PHY_MICREL_KSZ8XXX=y
 +CONFIG_PINCTRL=y
 +CONFIG_PINCTRL_IMX6=y
 +CONFIG_DM_REGULATOR=y
 +CONFIG_DM_REGULATOR_FIXED=y
 +CONFIG_DM_REGULATOR_GPIO=y
++CONFIG_DM_RNG=y
 +CONFIG_DM_SERIAL=y
 +CONFIG_MXC_UART=y
 +CONFIG_SPI=y
@@ -1843,56 +1661,35 @@ index 00000000000..724cdc4f83b
 +CONFIG_FSL_QSPI=y
 +CONFIG_SOFT_SPI=y
 +CONFIG_IMX_THERMAL=y
-+CONFIG_ARCH_MISC_INIT=y
-+CONFIG_DM_RNG=y
-+CONFIG_CMD_RNG=y
-+CONFIG_FSL_DCP_RNG=y
 +CONFIG_USB=y
-+CONFIG_USB_MAX_CONTROLLER_COUNT=2
 +CONFIG_USB_STORAGE=y
-+CONFIG_CMD_USB_MASS_STORAGE=y
 +CONFIG_USB_HOST_ETHER=y
 +CONFIG_USB_ETHER_ASIX=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="FSL"
++CONFIG_USB_GADGET_VENDOR_NUM=0x1fc9
++CONFIG_USB_GADGET_PRODUCT_NUM=0x0152
++CONFIG_CI_UDC=y
 +CONFIG_VIDEO=y
-+CONFIG_VIDEO_LINK=y
 +CONFIG_VIDEO_LOGO=y
-+CONFIG_VIDEO_CONSOLE=y
 +CONFIG_SYS_WHITE_ON_BLACK=y
 +CONFIG_VIDEO_MXS=y
 +CONFIG_SPLASH_SCREEN=y
 +CONFIG_SPLASH_SCREEN_ALIGN=y
 +CONFIG_BMP_24BPP=y
 +CONFIG_BMP_32BPP=y
-+
-+CONFIG_USB_GADGET=y
-+CONFIG_USB_GADGET_DOWNLOAD=y
-+CONFIG_USB_GADGET_MANUFACTURER="FSL"
-+CONFIG_USB_GADGET_VENDOR_NUM=0x1fc9
-+CONFIG_USB_GADGET_PRODUCT_NUM=0x0152
-+CONFIG_CI_UDC=y
-+
-+CONFIG_CMD_FASTBOOT=y
-+CONFIG_USB_FUNCTION_FASTBOOT=y
-+CONFIG_FASTBOOT_UUU_SUPPORT=y
-+CONFIG_FASTBOOT=y
-+CONFIG_FASTBOOT_BUF_ADDR=0x83800000
-+CONFIG_FASTBOOT_BUF_SIZE=0x40000000
-+CONFIG_FASTBOOT_FLASH=y
-+CONFIG_EFI_PARTITION=y
-+CONFIG_CMD_CRC32=y
-+CONFIG_CRC32_VERIFY=y
 diff --git a/include/configs/mx6ull_aes_emmc.h b/include/configs/mx6ull_aes_emmc.h
 new file mode 100644
-index 00000000000..01690e92645
+index 00000000..ef45dc49
 --- /dev/null
 +++ b/include/configs/mx6ull_aes_emmc.h
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,143 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
 + * Copyright (C) 2016 Freescale Semiconductor, Inc.
 + * Copyright 2017 NXP
 + *
-+ * Configuration settings for the Freescale i.MX6ULL AES EMMC board.
++ * Configuration settings for the Awesome Embedded Studio i.MX6ULL AES eMMC board.
 + */
 +#ifndef __MX6ULL_AES_EMMC_CONFIG_H
 +#define __MX6ULL_AES_EMMC_CONFIG_H
@@ -1902,17 +1699,13 @@ index 00000000000..01690e92645
 +#include <linux/stringify.h>
 +#include "mx6_common.h"
 +#include <asm/mach-imx/gpio.h>
-+#include <env/nxp/imx_env.h>
-+
-+#define is_mx6ull_9x9_evk()	0
-+#define is_mx6ul_9x9_evk()	0
 +
 +#define CFG_MXC_UART_BASE		UART1_BASE
 +
 +/* MMC Configs */
 +#ifdef CONFIG_FSL_USDHC
 +#define CFG_SYS_FSL_ESDHC_ADDR	USDHC2_BASE_ADDR
-+#define CONFIG_SYS_FSL_USDHC_NUM	2
++#define CFG_SYS_FSL_USDHC_NUM	2
 +#endif
 +
 +// Notings: These places are we specified the
@@ -1947,12 +1740,12 @@ index 00000000000..01690e92645
 +	"console=ttymxc0\0" \
 +	"fdt_high=0xffffffff\0" \
 +	"initrd_high=0xffffffff\0" \
-+	"fdt_file=imx6ull-14x14-evk-emmc.dtb\0" \
++	"fdt_file=imx6ull-aes.dtb\0" \
 +	"fdt_addr=0x83000000\0" \
 +	"boot_fdt=try\0" \
 +	"ip_dyn=yes\0" \
 +	"splashimage=0x8c000000\0" \
-+	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
++	"mmcdev="__stringify(CONFIG_ENV_MMC_DEVICE_INDEX)"\0" \
 +	"mmcpart=1\0" \
 +	"mmcroot=/dev/mmcblk1p2 rootwait rw\0" \
 +	"mmcautodetect=yes\0" \
@@ -2030,7 +1823,7 @@ index 00000000000..01690e92645
 +#define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
 +
 +#define CFG_SYS_SDRAM_BASE		PHYS_SDRAM
-+#define CFG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
-+#define CFG_SYS_INIT_RAM_SIZE	IRAM_SIZE
++#define CFG_SYS_INIT_RAM_ADDR		IRAM_BASE_ADDR
++#define CFG_SYS_INIT_RAM_SIZE		IRAM_SIZE
 +
 +#endif

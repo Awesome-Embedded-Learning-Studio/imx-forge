@@ -27,7 +27,7 @@ patches/
 ├── linux_mainline/
 ├── qemu/
 ├── uboot/
-└── uboot-imx/
+└── uboot-mainline/
 ```
 
 每个组件对应一个补丁目录，存放针对该组件的补丁文件。这种组织方式的好处是补丁按组件分类，一目了然，内核和 U-Boot 的补丁各归各的目录，互不干扰。
@@ -406,7 +406,7 @@ jobs:
       - name: Apply patches
         run: |
           ./scripts/apply_patches.sh linux_mainline
-          ./scripts/apply_patches.sh uboot-imx
+          ./scripts/apply_patches.sh uboot-mainline
 
       - name: Build
         run: ./scripts/release-all.sh
@@ -453,7 +453,7 @@ on:
 
 ```
 linux_mainline-fix-ethernet-20260917.patch
-uboot-imx-add-spi-driver-20260917.patch
+uboot-mainline-add-spi-driver-20260917.patch
 busybox-enable-telnet-20260917.patch
 ```
 
@@ -547,7 +547,7 @@ cd /home/charliechen/imx-forge
 ```gitignore
 # 子模块的修改应该通过补丁管理，不直接提交
 third_party/linux_mainline/
-third_party/uboot-imx/
+third_party/uboot-mainline/
 third_party/busybox/
 ```
 

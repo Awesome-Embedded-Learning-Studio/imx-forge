@@ -33,7 +33,7 @@ Examples:
 
 Available submodules:
   - linux_mainline
-  - uboot-imx
+  - uboot-mainline
   - busybox
 EOF
     exit 1

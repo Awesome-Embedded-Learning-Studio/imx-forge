@@ -108,11 +108,11 @@ U-Boot 是板子上电后运行的第一个程序，它的正确性直接决定�
 
 ### 获取 U-Boot 源码
 
-U-Boot 源码在 `third_party/uboot-imx/` 目录下，以 Git Submodule 的形式管理：
+U-Boot 源码在 `third_party/uboot-mainline/` 目录下，以 Git Submodule 的形式管理：
 
 ```bash
 cd /home/charliechen/imx-forge
-git submodule update --init --remote third_party/uboot-imx
+git submodule update --init --remote third_party/uboot-mainline
 ```
 
 ### 运行构建脚本
@@ -178,7 +178,7 @@ All required toolchain components found
 
 ```bash
 [INFO] Configuring U-Boot with mx6ull_aes_emmc_defconfig...
-make -C third_party/uboot-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/uboot mx6ull_aes_emmc_defconfig
+make -C third_party/uboot-mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/uboot mx6ull_aes_emmc_defconfig
 ```
 
 这里使用了 `mx6ull_aes_emmc_defconfig` 配置，适配正点原子阿尔法开发板的 eMMC 版本。
@@ -193,7 +193,7 @@ make -C third_party/uboot-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O
 
 ```bash
 [INFO] Building U-Boot...
-make -C third_party/uboot-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/uboot -j8
+make -C third_party/uboot-mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=/home/charliechen/imx-forge/out/uboot -j8
 ```
 
 `-j8` 表示使用 8 个并行任务，根据你的 CPU 核心数调整。
@@ -247,7 +247,7 @@ cd /home/charliechen/imx-forge/out/uboot
 ls -lh u-boot.bin u-boot-dtb.imx
 
 # 查看镜像信息
-../third_party/uboot-imx/tools/mkimage -l u-boot-dtb.imx
+../third_party/uboot-mainline/tools/mkimage -l u-boot-dtb.imx
 
 # 反汇编设备树
 dtc -I dtb -O dts u-boot.dtb | head -50

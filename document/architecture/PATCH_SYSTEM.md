@@ -34,7 +34,7 @@ IMX-Forge 项目采用 **Git Submodule + Patch** 的混合管理模式，将第�
                     │         Git Submodule 引用          │
                     │  ┌───────────────────────────────┐  │
                     │  │ third_party/linux_mainline     │  │
-                    │  │ third_party/uboot-imx         │  │
+                    │  │ third_party/uboot-mainline         │  │
                     │  │ third_party/busybox           │  │
                     │  └───────────────────────────────┘  │
                     └──────────────────────────────────────┘
@@ -42,7 +42,7 @@ IMX-Forge 项目采用 **Git Submodule + Patch** 的混合管理模式，将第�
                     ┌──────────────▼──────────────────────┐
                     │       补丁应用流程 (Patch Apply)     │
                     │  patches/linux_mainline/*.patch       │
-                    │  patches/uboot-imx/*.patch           │
+                    │  patches/uboot-mainline/*.patch           │
                     │  patches/busybox/*.patch             │
                     └──────────────────────────────────────┘
 ```
@@ -184,8 +184,8 @@ IMX-Forge 采用严格的补丁命名规范，确保可读性和可管理性。
 [mainline]-002-clock-imx6ull-fix.patch
 
 # U-Boot 补丁
-[uboot-imx]-001-spl-board-init.patch
-[uboot-imx]-002-mmc-support.patch
+[uboot-mainline]-001-spl-board-init.patch
+[uboot-mainline]-002-mmc-support.patch
 
 # 仓库中的实际文件名由 patch_maker.sh 生成，格式为
 # <子模块名>-<分支名>-<日期>.patch，例如:
@@ -196,7 +196,7 @@ linux_mainline-feat-imx6ull_patches-20260828.patch
 
 | 部分 | 说明 | 取值范围 | 示例 |
 |------|------|----------|------|
-| **轨道标签** | 标识补丁所属轨道 | `[mainline]`, `[uboot-imx]` | `[mainline]` |
+| **轨道标签** | 标识补丁所属轨道 | `[mainline]`, `[uboot-mainline]` | `[mainline]` |
 | **序号** | 三位数字，控制应用顺序 | 001-999 | `001` |
 | **组件** | 受影响的子系统 | `ethernet`, `gpio`, `mmc`, `dts` | `ethernet` |
 | **描述** | 简短描述补丁目的 | 小写英文，用连字符连接 | `fec-driver` |
@@ -214,7 +214,7 @@ patches/
 │   └── linux_mainline-feat-imx6ull_patches-20260828.patch
 ├── qemu/                       # QEMU 板级模拟补丁
 ├── uboot/                      # 主线 U-Boot 补丁（预留）
-└── uboot-imx/                  # NXP U-Boot 补丁
+└── uboot-mainline/                  # 上游 U-Boot 补丁
     └── charlies_board.patch
 ```
 
@@ -227,7 +227,7 @@ patches/
 ```
 patches/
 ├── linux_mainline/    # Linux 内核主线 (torvalds 上游，git.kernel.org)
-├── uboot-imx/         # NXP 官方 uboot-imx 仓库
+├── uboot-mainline/         # NXP 官方 uboot-mainline 仓库
 ├── uboot/             # U-Boot 主线 (denx.de，预留)
 └── qemu/              # QEMU 上游
 ```
@@ -273,7 +273,7 @@ patches/linux_mainline/
 | 标签 | 用途 | 对应上游 | 优先级 |
 |------|------|----------|--------|
 | `[mainline]` | Linux 主线内核 | git.kernel.org (torvalds) | 高（唯一内核轨） |
-| `[uboot-imx]` | NXP U-Boot | github.com/nxp-imx/uboot-imx | 高（当前默认） |
+| `[uboot-mainline]` | U-Boot 上游 | github.com/u-boot/u-boot | 高（当前默认） |
 | `[uboot]` | U-Boot 主线 | denx.de/u-boot | 低（未来支持） |
 
 ---
@@ -480,9 +480,9 @@ git commit
 ##### 示例 3: 为 U-Boot 生成补丁
 
 ```bash
-./scripts/patch_maker.sh --submodule_path=uboot-imx
+./scripts/patch_maker.sh --submodule_path=uboot-mainline
 
-# 输出到 patches/uboot-imx/uboot-imx-<branch>-<date>.patch
+# 输出到 patches/uboot-mainline/uboot-mainline-<branch>-<date>.patch
 ```
 
 ##### 示例 4: 生成 Busybox 补丁
@@ -590,8 +590,8 @@ fi
 # 应用 mainline 内核补丁（组件名风格，项目实际用法）
 ./scripts/apply_patches.sh linux_mainline
 
-# 应用 uboot-imx 补丁
-./scripts/apply_patches.sh uboot-imx
+# 应用 uboot-mainline 补丁
+./scripts/apply_patches.sh uboot-mainline
 ```
 
 ---

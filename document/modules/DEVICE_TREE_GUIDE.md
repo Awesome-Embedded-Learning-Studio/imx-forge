@@ -1232,7 +1232,7 @@ stty -F /dev/ttySTM0 -a
 
 ```bash
 # 在U-Boot设备树目录创建新板卡
-cd third_party/uboot-imx/arch/arm/dts/
+cd third_party/uboot-mainline/arch/arm/dts/
 cp imx6ull-aes.dts imx6ull-myboard.dts
 cp imx6ull-aes.dtsi imx6ull-myboard.dtsi
 
@@ -1350,7 +1350,7 @@ memory@80000000 {
 
 ```bash
 # 编译U-Boot设备树
-cd third_party/uboot-imx
+cd third_party/uboot-mainline
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- imx6ull-myboard.dtb
 
 # 编译Linux设备树
@@ -1612,7 +1612,7 @@ pinctrl-0 = <&pinctrl_nonexistent>;
 
 ```bash
 # 方法1：使用U-Boot Makefile
-cd third_party/uboot-imx
+cd third_party/uboot-mainline
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- \
     imx6ull-myboard.dtb
 
