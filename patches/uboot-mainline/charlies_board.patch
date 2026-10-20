@@ -50,10 +50,10 @@ index 00000000..454140d0
 +
 diff --git a/arch/arm/dts/imx6ull-aes.dtsi b/arch/arm/dts/imx6ull-aes.dtsi
 new file mode 100644
-index 00000000..ee6907be
+index 00000000..ee6110e4
 --- /dev/null
 +++ b/arch/arm/dts/imx6ull-aes.dtsi
-@@ -0,0 +1,729 @@
+@@ -0,0 +1,735 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
 +// Copyright (C) 2015 Freescale Semiconductor, Inc.
@@ -102,6 +102,7 @@ index 00000000..ee6907be
 +		 * - ov5640 camera
 +		 */
 +		regulator-always-on;
++		regulator-boot-on;
 +	};
 +
 +	reg_can_3v3: regulator-can-3v3 {
@@ -215,7 +216,7 @@ index 00000000..ee6907be
 +
 +&fec1 {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_enet1>;
++	pinctrl-0 = <&pinctrl_enet1 &pinctrl_enet1_reset>;
 +	phy-mode = "rmii";
 +	phy-handle = <&ethphy0>;
 +	phy-reset-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>;
@@ -227,7 +228,7 @@ index 00000000..ee6907be
 +
 +&fec2 {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_enet2>;
++	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_reset>;
 +	phy-mode = "rmii";
 +	phy-handle = <&ethphy1>;
 +	phy-reset-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
@@ -374,7 +375,7 @@ index 00000000..ee6907be
 +
 +&sai2 {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_sai2>;
++	pinctrl-0 = <&pinctrl_sai2 &pinctrl_hp_det>;
 +	assigned-clocks = <&clks IMX6UL_CLK_SAI2_SEL>,
 +			  <&clks IMX6UL_CLK_SAI2>;
 +	assigned-clock-parents = <&clks IMX6UL_CLK_PLL4_AUDIO_DIV>;
@@ -604,13 +605,6 @@ index 00000000..ee6907be
 +			MX6UL_PAD_JTAG_TRST_B__SAI2_TX_DATA	0x11088
 +			MX6UL_PAD_JTAG_TCK__SAI2_RX_DATA	0x11088
 +			MX6UL_PAD_JTAG_TMS__SAI2_MCLK		0x17088
-+			MX6UL_PAD_SNVS_TAMPER4__GPIO5_IO04	0x17059
-+		>;
-+	};
-+
-+	pinctrl_peri_3v3: peri3v3grp {
-+		fsl,pins = <
-+			MX6UL_PAD_SNVS_TAMPER2__GPIO5_IO02	0x1b0b0
 +		>;
 +	};
 +
@@ -620,17 +614,6 @@ index 00000000..ee6907be
 +		>;
 +	};
 +
-+
-+	pinctrl_spi4: spi4grp {
-+		fsl,pins = <
-+			MX6UL_PAD_BOOT_MODE0__GPIO5_IO10	0x70a1
-+			MX6UL_PAD_BOOT_MODE1__GPIO5_IO11	0x70a1
-+			/* disabled the corruptions pin sets
-+			MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x70a1
-+			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x80000000 
-+			*/
-+		>;
-+	};
 +
 +	pinctrl_tsc: tscgrp {
 +		fsl,pins = <
@@ -770,16 +753,39 @@ index 00000000..ee6907be
 +			MX6UL_PAD_LCD_RESET__WDOG1_WDOG_ANY    0x30b0
 +		>;
 +	};
++};
++
++/* i.MX6ULL SNVS pads belong to the separate 0x02290000 controller. */
++&iomuxc_snvs {
++
++	pinctrl_peri_3v3: peri3v3grp {
++		fsl,pins = <
++			MX6ULL_PAD_SNVS_TAMPER2__GPIO5_IO02	0x1b0b0
++		>;
++	};
++
++	pinctrl_spi4: spi4grp {
++		fsl,pins = <
++			MX6ULL_PAD_BOOT_MODE0__GPIO5_IO10	0x70a1
++			MX6ULL_PAD_BOOT_MODE1__GPIO5_IO11	0x70a1
++		>;
++	};
 +
 +	pinctrl_enet1_reset: enet1resetgrp {
 +		fsl,pins = <
-+			MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07		0x10B0
++			MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07		0x10B0
 +		>;
 +	};
 +
 +	pinctrl_enet2_reset: enet2resetgrp {
 +		fsl,pins = <
-+			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08		0x10B0
++			MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08		0x10B0
++		>;
++	};
++
++	pinctrl_hp_det: hpdetgrp {
++		fsl,pins = <
++			MX6ULL_PAD_SNVS_TAMPER4__GPIO5_IO04 0x17059
 +		>;
 +	};
 +};
@@ -1134,10 +1140,10 @@ index 00000000..23d770eb
 +#endif
 diff --git a/board/nxp/mx6ull_aes_emmc/mx6ull_aes_emmc.c b/board/nxp/mx6ull_aes_emmc/mx6ull_aes_emmc.c
 new file mode 100644
-index 00000000..df5622a5
+index 00000000..741e2814
 --- /dev/null
 +++ b/board/nxp/mx6ull_aes_emmc/mx6ull_aes_emmc.c
-@@ -0,0 +1,163 @@
+@@ -0,0 +1,165 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright (C) 2016 Freescale Semiconductor, Inc.
@@ -1297,9 +1303,11 @@ index 00000000..df5622a5
 +}
 +
 +void board_quiesce_devices(void) {
-+#if defined(CONFIG_VIDEO_MXS)
-+  enable_lcdif_clock(LCDIF1_BASE_ADDR, 0);
-+#endif
++  /*
++   * bootm_final() calls this before dm_remove_devices_active(). Keep LCDIF
++   * clocked until mxs_video_remove() has stopped and reset the controller.
++   * Gating it here makes the driver's remaining MMIO accesses unsafe.
++   */
 +}
 diff --git a/board/nxp/mx6ull_aes_emmc/plugin.S b/board/nxp/mx6ull_aes_emmc/plugin.S
 new file mode 100644
@@ -1572,17 +1580,18 @@ index 00000000..812088d1
 +#include <asm/arch/mx6_plugin.S>
 diff --git a/configs/mx6ull_aes_emmc_defconfig b/configs/mx6ull_aes_emmc_defconfig
 new file mode 100644
-index 00000000..dd404d75
+index 00000000..1a224bd6
 --- /dev/null
 +++ b/configs/mx6ull_aes_emmc_defconfig
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,105 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_MX6=y
 +CONFIG_SYS_MALLOC_LEN=0x1000000
 +CONFIG_NR_DRAM_BANKS=1
 +CONFIG_SF_DEFAULT_SPEED=40000000
 +CONFIG_ENV_SIZE=0x2000
-+CONFIG_ENV_OFFSET=0xE0000
++# Keep the environment beyond the U-Boot image (including the built-in logo).
++CONFIG_ENV_OFFSET=0x400000
 +CONFIG_MX6ULL=y
 +CONFIG_TARGET_MX6ULL_AES_EMMC=y
 +CONFIG_DM_GPIO=y
@@ -1642,6 +1651,8 @@ index 00000000..dd404d75
 +CONFIG_MTD=y
 +CONFIG_DM_SPI_FLASH=y
 +CONFIG_SPI_FLASH_STMICRO=y
++# Both FECs share the MDIO bus; let DM manage its lifetime during OS handoff.
++CONFIG_DM_MDIO=y
 +CONFIG_DM_ETH_PHY=y
 +CONFIG_FEC_MXC=y
 +CONFIG_MII=y
@@ -1680,10 +1691,10 @@ index 00000000..dd404d75
 +CONFIG_BMP_32BPP=y
 diff --git a/include/configs/mx6ull_aes_emmc.h b/include/configs/mx6ull_aes_emmc.h
 new file mode 100644
-index 00000000..ef45dc49
+index 00000000..384b0921
 --- /dev/null
 +++ b/include/configs/mx6ull_aes_emmc.h
-@@ -0,0 +1,143 @@
+@@ -0,0 +1,142 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
 + * Copyright (C) 2016 Freescale Semiconductor, Inc.
@@ -1730,8 +1741,7 @@ index 00000000..ef45dc49
 +	"initrd_high=0xffffffff\0" \
 +	"emmc_dev=1\0"\
 +	"emmc_ack=1\0"\
-+	"sd_dev=0\0" \
-+	"\0"\
++	"sd_dev=0\0"
 +
 +#define CFG_EXTRA_ENV_SETTINGS \
 +	CFG_MFG_ENV_SETTINGS \

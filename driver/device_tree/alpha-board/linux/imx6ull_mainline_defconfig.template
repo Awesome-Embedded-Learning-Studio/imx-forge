@@ -235,6 +235,8 @@ CONFIG_MFD_STMPE=y
 CONFIG_MFD_ROHM_BD71828=y
 
 # --- Regulator ---
+# Required for the board DT supplies; child selections alone are ignored.
+CONFIG_REGULATOR=y
 CONFIG_REGULATOR_FIXED_VOLTAGE=y
 CONFIG_REGULATOR_ANATOP=y
 CONFIG_REGULATOR_BD71815=y
