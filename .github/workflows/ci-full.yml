@@ -72,7 +72,7 @@ jobs:
           submodules: false
 
       - name: 初始化 U-Boot 子模块
-        run: git submodule update --init --depth=1 third_party/uboot-imx
+        run: git submodule update --init --depth=1 third_party/uboot-mainline
 
       - name: 构建 Docker 镜像
         run: cd docker && docker build -t ${{ env.DOCKER_IMAGE }} .

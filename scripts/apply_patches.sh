@@ -11,7 +11,7 @@
 #   ./scripts/apply_patches.sh <component>
 #
 # 示例：
-#   ./scripts/apply_patches.sh uboot-imx
+#   ./scripts/apply_patches.sh uboot-mainline
 #
 # 注：linux_mainline 自 2026-10 起不再走补丁（板级设备树由
 # build-linux.sh 从 driver/device_tree/alpha-board/linux/ 拷入）。
@@ -28,7 +28,7 @@ COMPONENT="$1"
 
 if [[ -z "$COMPONENT" ]]; then
     echo "用法: $0 <component>"
-    echo "示例: $0 uboot-imx"
+    echo "示例: $0 uboot-mainline"
     exit 1
 fi
 
@@ -40,9 +40,9 @@ if [[ ! -d "${PATCH_DIR}" ]]; then
 fi
 
 # 组件名 → third_party 子目录（与 release.sh 的 _release_submodule_path 保持一致；
-# 同时兼容 CI 里使用的 linux_mainline/uboot-imx 写法）
+# 同时兼容 CI 里使用的 linux_mainline/uboot-mainline 写法）
 case "$COMPONENT" in
-    uboot|uboot-imx)      SRC_DIR="third_party/uboot-imx" ;;
+    uboot|uboot-mainline)      SRC_DIR="third_party/uboot-mainline" ;;
     linux_mainline|linux-mainline) SRC_DIR="third_party/linux_mainline" ;;
     *)                    SRC_DIR="third_party/${COMPONENT}" ;;
 esac

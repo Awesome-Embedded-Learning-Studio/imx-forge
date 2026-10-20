@@ -98,6 +98,7 @@
 		 * - wm8960 audio codec
 		 * - ov5640 camera
 		 */
+		regulator-boot-on;
 		regulator-always-on;
 	};
 
@@ -114,7 +115,6 @@
 		regulator-name = "VDDIO";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		regulator-enable-high = <1>;
 	};
 
 	reg_avdd28: regulator-avdd28 {
@@ -122,7 +122,6 @@
 		regulator-name = "AVDD28";
 		regulator-min-microvolt = <2800000>;
 		regulator-max-microvolt = <2800000>;
-		regulator-enable-high = <1>;
 	};
 
 	sound-wm8960 {
@@ -218,18 +217,21 @@
 	pinctrl-0 = <&pinctrl_i2c2>;
 	status = "okay";
 
-	gt9147: gt9147@5d {
-		compatible = "goodix,gt9147", "goodix,gt9xx";
-		reg = <0x5d>;
+	gt9147: touchscreen@14 {
+		compatible = "goodix,gt9147";
+		reg = <0x14>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_tsc &pinctrl_tsc_reset>;
 		interrupt-parent = <&gpio1>;
-		interrupts = <9 0>;
-		reset-gpios = <&gpio1 5 GPIO_ACTIVE_LOW>;
-		irq-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
+		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
+		/* goodix.c drives logical 0/1 as physical levels during reset:
+		 * RESET low, INT high (0x14), then RESET high. Do not invert.
+		 */
+		reset-gpios = <&gpio1 5 GPIO_ACTIVE_HIGH>;
+		irq-gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;
 		status = "okay";
-		vdd-supply = <&reg_vddio>;
-		avdd-supply = <&reg_avdd28>;
+		VDDIO-supply = <&reg_vddio>;
+		AVDD28-supply = <&reg_avdd28>;
 	};
 
 	ov5640: ov5640@3c {
@@ -394,7 +396,7 @@
 
 &sai2 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_sai2>;
+	pinctrl-0 = <&pinctrl_sai2 &pinctrl_hp_det>;
 	assigned-clocks = <&clks IMX6UL_CLK_SAI2_SEL>,
 			  <&clks IMX6UL_CLK_SAI2>;
 	assigned-clock-parents = <&clks IMX6UL_CLK_PLL4_AUDIO_DIV>;
@@ -636,28 +638,12 @@
 			MX6UL_PAD_JTAG_TRST_B__SAI2_TX_DATA	0x11088
 			MX6UL_PAD_JTAG_TCK__SAI2_RX_DATA	0x11088
 			MX6UL_PAD_JTAG_TMS__SAI2_MCLK		0x17088
-			MX6UL_PAD_SNVS_TAMPER4__GPIO5_IO04	0x17059
-		>;
-	};
-
-	pinctrl_peri_3v3: peri3v3grp {
-		fsl,pins = <
-			MX6UL_PAD_SNVS_TAMPER2__GPIO5_IO02	0x1b0b0
 		>;
 	};
 
 	pinctrl_pwm1: pwm1grp {
 		fsl,pins = <
 			MX6UL_PAD_GPIO1_IO08__PWM1_OUT   0x110b0
-		>;
-	};
-
-	pinctrl_spi4: spi4grp {
-		fsl,pins = <
-			MX6UL_PAD_BOOT_MODE0__GPIO5_IO10	0x70a1
-			MX6UL_PAD_BOOT_MODE1__GPIO5_IO11	0x70a1
-			/* MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x70a1
-			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x80000000 */
 		>;
 	};
 
@@ -807,28 +793,10 @@
 		>;
 	};
 
-	pinctrl_enet1_reset: enet1resetgrp {
-		fsl,pins = <
-			MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07		0x10B0
-		>;
-	};
-
-	pinctrl_enet2_reset: enet2resetgrp {
-		fsl,pins = <
-			MX6UL_PAD_SNVS_TAMPER8__GPIO5_IO08		0x10B0
-		>;
-	};
-
 	/* 教程外设 pinctrl（LED / 蜂鸣器 / 按键 / ECSPI3-ICM20608）*/
 	pinctrl_aes_led: led_grp {
 		fsl,pins = <
 			MX6UL_PAD_GPIO1_IO03__GPIO1_IO03    0x10B0
-		>;
-	};
-
-	pinctrl_beep: beep_grp {
-		fsl,pins = <
-			MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
 		>;
 	};
 
@@ -844,6 +812,47 @@
 			MX6UL_PAD_UART2_RX_DATA__ECSPI3_SCLK  0x10b1  /* SCLK */
 			MX6UL_PAD_UART2_RTS_B__ECSPI3_MISO    0x10b1  /* MISO */
 			MX6UL_PAD_UART2_CTS_B__ECSPI3_MOSI    0x10b1  /* MOSI */
+		>;
+	};
+};
+
+/* SNVS registers use offsets relative to 0x02290000, not IOMUXC. */
+&iomuxc_snvs {
+
+	pinctrl_peri_3v3: peri3v3grp {
+		fsl,pins = <
+			MX6ULL_PAD_SNVS_TAMPER2__GPIO5_IO02	0x1b0b0
+		>;
+	};
+
+	pinctrl_spi4: spi4grp {
+		fsl,pins = <
+			MX6ULL_PAD_BOOT_MODE0__GPIO5_IO10	0x70a1
+			MX6ULL_PAD_BOOT_MODE1__GPIO5_IO11	0x70a1
+		>;
+	};
+
+	pinctrl_enet1_reset: enet1resetgrp {
+		fsl,pins = <
+			MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07		0x10B0
+		>;
+	};
+
+	pinctrl_enet2_reset: enet2resetgrp {
+		fsl,pins = <
+			MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08		0x10B0
+		>;
+	};
+
+	pinctrl_beep: beep_grp {
+		fsl,pins = <
+			MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
+		>;
+	};
+
+	pinctrl_hp_det: hpdetgrp {
+		fsl,pins = <
+			MX6ULL_PAD_SNVS_TAMPER4__GPIO5_IO04 0x17059
 		>;
 	};
 };

@@ -18,7 +18,7 @@
 
 | 变更路径 | 触发的构建 |
 |----------|------------|
-| `patches/uboot/**`、`patches/uboot-imx/**` | U-Boot |
+| `patches/uboot/**`、`patches/uboot-mainline/**` | U-Boot |
 | `scripts/build_helper/build-uboot.sh` | U-Boot |
 | `patches/linux_mainline/**` | Linux (Mainline) |
 | `scripts/build_helper/build-linux.sh` | Linux (Mainline) |

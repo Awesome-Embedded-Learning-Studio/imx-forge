@@ -31,7 +31,7 @@ build-uboot.sh
     ├─ scripts/lib/progress.sh (buildmeter 进度条接入)
     ├─ scripts/init/env-init.sh (依赖检查库)
     ├─ scripts/logo_helper/logo_helper.sh (Logo 生成工具)
-    ├─ third_party/uboot-imx (U-Boot 源码子模块)
+    ├─ third_party/uboot-mainline (U-Boot 源码子模块)
     ├─ third_party/buildmeter (进度条工具子模块,可选)
     └─ arm-none-linux-gnueabihf-gcc (交叉编译工具链)
 ```
@@ -187,7 +187,7 @@ ${UBOOT_SRC_DIR}/arch/arm/dts/${DEFAULT_DEVICE_TREE}.dts
 对于默认配置，完整路径是：
 
 ```
-third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
+third_party/uboot-mainline/arch/arm/dts/imx6ull-aes.dts
 ```
 
 **同时检查基础设备树**：
@@ -198,8 +198,8 @@ third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
 
 ```
 [INFO] Checking device tree...
-[INFO] Device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
-[INFO] Base device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dtsi
+[INFO] Device tree found: third_party/uboot-mainline/arch/arm/dts/imx6ull-aes.dts
+[INFO] Base device tree found: third_party/uboot-mainline/arch/arm/dts/imx6ull-aes.dtsi
 ```
 
 #### check_defconfig()
@@ -215,7 +215,7 @@ ${UBOOT_SRC_DIR}/configs/${DEFCONFIG}
 对于默认配置，完整路径是：
 
 ```
-third_party/uboot-imx/configs/mx6ull_aes_emmc_defconfig
+third_party/uboot-mainline/configs/mx6ull_aes_emmc_defconfig
 ```
 
 #### do_distclean()
@@ -373,7 +373,7 @@ CROSS_COMPILE=arm-none-linux-gnueabihf-
 DEFCONFIG=mx6ull_aes_emmc_defconfig
 DEFAULT_DEVICE_TREE="imx6ull-aes"
 
-UBOOT_SRC_DIR="${PROJECT_ROOT}/third_party/uboot-imx"
+UBOOT_SRC_DIR="${PROJECT_ROOT}/third_party/uboot-mainline"
 OUTPUT_DIR="${PROJECT_ROOT}/out/uboot"
 ```
 
@@ -382,7 +382,7 @@ OUTPUT_DIR="${PROJECT_ROOT}/out/uboot"
 ```
 PROJECT_ROOT/
 ├── third_party/
-│   └── uboot-imx/                    # U-Boot 源码（子模块）
+│   └── uboot-mainline/                    # U-Boot 源码（子模块）
 │       ├── arch/arm/dts/
 │       │   └── imx6ull-aes.dts
 │       └── configs/
@@ -441,10 +441,10 @@ DEBUG=1 ./scripts/build_helper/build-uboot.sh
 [INFO] Toolchain found: arm-none-linux-gnueabihf-gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 [INFO] All required toolchain components found
 [INFO] Checking device tree...
-[INFO] Device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
-[INFO] Base device tree found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dtsi
+[INFO] Device tree found: third_party/uboot-mainline/arch/arm/dts/imx6ull-aes.dts
+[INFO] Base device tree found: third_party/uboot-mainline/arch/arm/dts/imx6ull-aes.dtsi
 [INFO] Checking defconfig...
-[INFO] Defconfig found: third_party/uboot-imx/configs/mx6ull_aes_emmc_defconfig
+[INFO] Defconfig found: third_party/uboot-mainline/configs/mx6ull_aes_emmc_defconfig
 [INFO] ========================================
 [INFO] All checks passed, starting build...
 [INFO] ========================================
@@ -452,12 +452,12 @@ DEBUG=1 ./scripts/build_helper/build-uboot.sh
 [INFO] Running distclean... Using Remove All as to make all clear!
 [INFO]   Removing out/uboot
 [INFO] Configuring U-Boot with mx6ull_aes_emmc_defconfig...
-[CMD] make -C third_party/uboot-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/uboot mx6ull_aes_emmc_defconfig
+[CMD] make -C third_party/uboot-mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/uboot mx6ull_aes_emmc_defconfig
 #
 # configuration written to out/uboot/.config
 #
 [INFO] Building U-Boot...
-[CMD] make -C third_party/uboot-imx ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/uboot -j8
+[CMD] make -C third_party/uboot-mainline ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf- O=out/uboot -j8
 [INFO] Pre-scanning dry-run (make -n -k) for progress total…
 buildmeter
 :: ▓▓▓▓▓▓░░░░  62% • 1280/2064 units • 1:12 elapsed • CC arch/arm/lib/cache.o
@@ -521,7 +521,7 @@ sudo apt install python3-pyelftools
 #### 错误 3：设备树文件不存在
 
 ```
-[ERROR] Device tree file not found: third_party/uboot-imx/arch/arm/dts/imx6ull-aes.dts
+[ERROR] Device tree file not found: third_party/uboot-mainline/arch/arm/dts/imx6ull-aes.dts
 ```
 
 **可能原因**：
@@ -536,7 +536,7 @@ sudo apt install python3-pyelftools
 git submodule update --init --recursive
 
 # 检查可用的设备树
-ls third_party/uboot-imx/arch/arm/dts/imx6ull*.dts
+ls third_party/uboot-mainline/arch/arm/dts/imx6ull*.dts
 ```
 
 #### 错误 4：mkimage 格式检查失败
@@ -554,10 +554,10 @@ ls third_party/uboot-imx/arch/arm/dts/imx6ull*.dts
 
 ```bash
 # 手动检查 mkimage
-./third_party/uboot-imx/tools/mkimage -l out/uboot/u-boot-dtb.imx
+./third_party/uboot-mainline/tools/mkimage -l out/uboot/u-boot-dtb.imx
 
 # 手动重新生成
-./third_party/uboot-imx/tools/mkimage -A arm -O linux -T firmware \
+./third_party/uboot-mainline/tools/mkimage -A arm -O linux -T firmware \
     -C none -a 0x87800000 -e 0x87800000 -n "U-Boot" \
     -d out/uboot/u-boot.bin out/uboot/u-boot.imx
 ```
@@ -638,10 +638,10 @@ DEFAULT_DEVICE_TREE="imx6ull-my-board"
 
 ```bash
 # 编辑脚本，找到这一行
-"${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 800x480 document/logo/logo.png third_party/uboot-imx/tools/logos/denx.bmp
+"${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 800x480 document/logo/logo.png third_party/uboot-mainline/tools/logos/denx.bmp
 
 # 修改尺寸参数
-"${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 1024x600 document/logo/logo.png third_party/uboot-imx/tools/logos/denx.bmp
+"${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 1024x600 document/logo/logo.png third_party/uboot-mainline/tools/logos/denx.bmp
 ```
 
 ### 禁用 Logo
@@ -651,7 +651,7 @@ DEFAULT_DEVICE_TREE="imx6ull-my-board"
 ```bash
 # 准备 logo before build
 # log_info "Preparing logo..."
-# "${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 800x480 document/logo/logo.png third_party/uboot-imx/tools/logos/denx.bmp
+# "${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 800x480 document/logo/logo.png third_party/uboot-mainline/tools/logos/denx.bmp
 ```
 
 ## 相关文档

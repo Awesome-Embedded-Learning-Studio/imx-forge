@@ -156,7 +156,7 @@
 
 | 组件 | 来源分支 | 版本策略 | 状态 |
 |------|---------|---------|------|
-| U-Boot | `uboot-imx` (NXP fork) | 跟随 NXP 官方 BSP | 当前 |
+| U-Boot | `uboot-mainline` (上游 u-boot/u-boot) | pin 上游 tag (v2026.10) | 当前 |
 | Linux Kernel | `linux_mainline` (Torvalds 上游) | pin v7.1 tag | 唯一内核轨 |
 | BusyBox | `mirror/busybox` | 官方稳定版 | 当前 |
 
@@ -246,7 +246,7 @@ patches/
 │   └── linux_mainline-feat-imx6ull_patches-20260828.patch
 ├── qemu/                   # QEMU 板级模拟补丁
 ├── uboot/                  # U-Boot mainline 补丁（预留）
-└── uboot-imx/              # U-Boot NXP fork 补丁
+└── uboot-mainline/              # U-Boot 上游补丁
     └── charlies_board.patch
 ```
 
@@ -270,7 +270,7 @@ patches/
 │  │                                                                   │
 │  ├── build_helper/                                                  │
 │  │   ├── build-linux.sh  ────▶ third_party/linux_mainline/       │
-│  │   ├── build-uboot.sh   ────▶ third_party/uboot-imx/             │
+│  │   ├── build-uboot.sh   ────▶ third_party/uboot-mainline/             │
 │  │   └── build-busybox.sh ────▶ third_party/busybox/               │
 │  │                                                                   │
 │  ├── patch_maker.sh  ────▶ 生成 patches/*.patch                     │
@@ -285,11 +285,11 @@ patches/
 │                                   ▼                                   │
 │  driver/device_tree/alpha-board/                                     │
 │  │   ├── linux/  ────▶ third_party/linux_mainline/arch/arm/boot/    │
-│  │   └── uboot/  ────▶ third_party/uboot-imx/arch/arm/dts/          │
+│  │   └── uboot/  ────▶ third_party/uboot-mainline/arch/arm/dts/          │
 │                                                                      │
 │  patches/                                                            │
 │  │   ├── linux_mainline/  ────▶ third_party/linux_mainline/         │
-│  │   ├── uboot-imx/   ────▶ third_party/uboot-imx/                  │
+│  │   ├── uboot-mainline/   ────▶ third_party/uboot-mainline/              │
 │  │   └── busybox/     ────▶ third_party/busybox/                    │
 │                                                                      │
 │  out/  ◀─── 所有构建脚本的输出目录                                    │
@@ -353,9 +353,9 @@ patches/
 ```
 .gitmodules 配置:
 ┌─────────────────────────────────────────────────────────────────────┐
-│  [submodule "third_party/uboot-imx"]                                │
-│      path = third_party/uboot-imx                                   │
-│      url = https://github.com/nxp-imx/uboot-imx.git                 │
+│  [submodule "third_party/uboot-mainline"]                                │
+│      path = third_party/uboot-mainline                                   │
+│      url = https://github.com/u-boot/u-boot.git                     │
 │      ignore = dirty                                                 │
 │                                                                      │
 │  [submodule "third_party/linux_mainline"]                           │
@@ -575,7 +575,7 @@ imx-forge/
 │   │   └── linux_mainline-feat-imx6ull_patches-20260828.patch
 │   ├── qemu/                   # QEMU 板级模拟补丁
 │   ├── uboot/                  # U-Boot mainline 补丁（预留）
-│   └── uboot-imx/              # U-Boot NXP fork 补丁
+│   └── uboot-mainline/              # U-Boot 上游补丁
 │       └── charlies_board.patch
 ├── rootfs/                     # 根文件系统
 │   ├── nfs/                    # NFS Rootfs
@@ -617,7 +617,7 @@ imx-forge/
 │   ├── buildmeter/             # 构建进度条工具
 │   ├── linux_mainline/         # 上游主线 Linux 内核 (pin v7.1)
 │   ├── qemu/                   # QEMU 模拟器源码
-│   └── uboot-imx/              # NXP U-Boot fork
+│   └── uboot-mainline/              # 上游 U-Boot (v2026.10)
 ├── tools/                      # 工具集合
 │   └── third_party/            # 第三方工具
 ├── LICENSE                     # 开源协议
@@ -711,7 +711,7 @@ cat ../../patches/linux_mainline/*.patch | patch -p1
 
 项目需要集成多个第三方大型代码库：
 - linux_mainline (~1GB+)
-- uboot-imx (~500MB+)
+- uboot-mainline (~500MB+)
 - busybox (~50MB+)
 
 **决策选项对比**
@@ -899,7 +899,7 @@ Rootfs 需要包含库文件、配置文件、初始化脚本等，手动维护�
 │                                                                      │
 │  U-Boot 构建配置                                                     │
 │  ┌──────────────────────────────────────────────────────────────┐  │
-│  │  UBOOT_SRC_DIR=${PROJECT_ROOT}/third_party/uboot-imx         │  │
+│  │  UBOOT_SRC_DIR=${PROJECT_ROOT}/third_party/uboot-mainline         │  │
 │  │  OUTPUT_DIR=${PROJECT_ROOT}/out/uboot                        │  │
 │  │  DEFCONFIG=...                                               │  │
 │  └──────────────────────────────────────────────────────────────┘  │
@@ -1018,10 +1018,10 @@ Rootfs 需要包含库文件、配置文件、初始化脚本等，手动维护�
 | 路径 | 说明 |
 |-----|------|
 | `third_party/linux_mainline` | Linux 内核源码 (pin v7.1) |
-| `third_party/uboot-imx` | U-Boot 源码 |
+| `third_party/uboot-mainline` | U-Boot 源码 |
 | `third_party/busybox` | BusyBox 源码 |
 | `patches/linux_mainline` | Linux 内核补丁 |
-| `patches/uboot-imx` | U-Boot 补丁 |
+| `patches/uboot-mainline` | U-Boot 补丁 |
 | `out/linux` | Linux 构建输出 |
 | `out/uboot` | U-Boot 构建输出 |
 | `out/busybox` | BusyBox 构建输出 |
@@ -1059,12 +1059,12 @@ scripts/build_helper/build-linux.sh --fast-build
 
 轨道类型:
   - [mainline]    主线内核轨道补丁（唯一内核轨）
-  - [uboot-imx]   U-Boot NXP fork 补丁
+  - [uboot-mainline]   U-Boot 上游补丁
   - [uboot-main]  U-Boot 主线补丁
 
 示例:
   [mainline] arm: dts: add imx6ull aes board support
-  [uboot-imx] board: enable alpha board
+  [uboot-mainline] board: enable alpha board
 ```
 
 #### B.2 Commit 规范

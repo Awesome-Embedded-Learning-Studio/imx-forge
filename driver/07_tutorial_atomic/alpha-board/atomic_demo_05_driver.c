@@ -27,6 +27,7 @@
 #include <linux/atomic.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/string.h>
 #include <linux/delay.h>
 #include <linux/of.h>
 #include <linux/mod_devicetable.h>
@@ -95,15 +96,19 @@ static int parse_command(const char __user *buf, size_t count,
     space = strchr(kbuf, ' ');
     if (space) {
         *space = '\0';
-        strncpy(op, kbuf, 15);
-        op[15] = '\0';
+        /*
+         * op is the caller's 16-byte buffer (char op[16] in atomic_demo_write).
+         * strscpy copies at most size-1 chars and always NUL-terminates, which
+         * is the drop-in replacement for the old strncpy(op, kbuf, 15) +
+         * op[15] = '\0' pair (this kernel no longer declares strncpy).
+         */
+        strscpy(op, kbuf, 16);
 
         ret = kstrtoint(space + 1, 10, value);
         if (ret)
             return ret;
     } else {
-        strncpy(op, kbuf, 15);
-        op[15] = '\0';
+        strscpy(op, kbuf, 16);
         *value = 0;
     }
 

@@ -40,8 +40,8 @@ netboot 启动 `imx6ull-aes.dtb` 时，Goodix 触摸屏驱动 probe 失败，串
 - **`-6 = -ENXIO`** = I2C 传输层最经典的「**No ACK**」：master 在 0x5d 发起读，
   总线上**没有任何设备在那个地址应答**。
 
-所以问题不在驱动、不在中断、不在供电时序——而是**驱动去找设备的那个地址上没有设备**。
-最该先做的一步不是读代码，是**扫总线**。
+`-ENXIO` 本身不能区分地址错误、供电缺失或复位未释放。先核对驱动使用的地址、
+供电与 RESET/INT 时序，再按需扫描总线。尤其不能仅凭扫描到 0x14，就断定只改 `reg` 足够。
 
 ## Investigation
 
@@ -81,110 +81,62 @@ Goodix GT9xx 系列的 **7-bit I2C 从地址不是固定的**，由 **RESET 上�
 
 | INT @ RESET 上升沿 | 7-bit 地址 | 8-bit 写/读 |
 |---|---|---|
-| 高 | `0x5d` | `0xBA / 0xBB` |
-| **低** | **`0x14`** | `0x28 / 0x29` |
+| **高** | **`0x14`** | `0x28 / 0x29` |
+| 低 | `0x5d` | `0xBA / 0xBB` |
 
-本板的 INT 网络在复位瞬间是低电平 → 芯片落在 **0x14**。很多教程/NXP EVK 的 dts
-默认写 0x5d（INT 上拉的情况），照抄到这块板就对不上。**换板子或改 INT/RESET 上拉，
-地址就可能变**——这正是要写这篇笔记的原因。
+主线 `goodix_reset_no_int_sync()` 会先拉低 RESET，再按 `client->addr == 0x14`
+驱动 INT，最后拉高 RESET。因此 RESET 和 INT 的 GPIO 描述都用
+`GPIO_ACTIVE_HIGH`，使逻辑值对应实际电平；这里不能按“复位低有效”直接写
+`GPIO_ACTIVE_LOW`，否则驱动序列被反相。此前表格写反，已于 2026-10-20 更正。
+
+依据：[主线 Goodix 驱动](https://github.com/torvalds/linux/blob/master/drivers/input/touchscreen/goodix.c)
+和 [设备树绑定](https://github.com/torvalds/linux/blob/master/Documentation/devicetree/bindings/input/touchscreen/goodix.yaml)。
 
 ## Root Cause
 
 设备树 goodix 节点 `reg = <0x5d>` 与芯片实际地址 `0x14` 不符 → 驱动在 0x5d 读
 Product ID 寄存器（0x8140）得不到 ACK → `-ENXIO` → probe 失败。
 
-## Fix
+## 当前修复与构建（2026-10-20）
 
-把 `reg` 和节点名 `@` 后的地址从 `0x5d` 改成 `0x14`。**netboot base 镜像的源在三处，
-要同步改**（光改一处会被构建流程覆盖回去）：
+本次完整 SD 启动排查、regulator 延迟探测修复及真板/QEMU 验证边界，见
+[2026-10-20 启动修复记录](2026-10-20-uboot-shared-mdio-handoff.md)。
 
-1. **patch**（构建真正 `git apply` 的，最权威）：
-   `patches/linux_mainline/linux_mainline-feat-imx6ull_patches-20260616.patch`
-2. **镜像副本**（人读的工作源）：
-   `driver/device_tree/alpha-board/linux/imx6ull-aes.dtsi`
-3. **树里已 apply 的副本**（重编前必改这个，否则编出的还是旧的）：
-   `third_party/linux_mainline/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtsi`
+板级设备树的唯一维护源是
+`driver/device_tree/alpha-board/linux/imx6ull-aes.dtsi`；
+`scripts/build_helper/build-linux.sh` 会将它复制进内核树，并由同目录的
+`imx6ull_mainline_defconfig.template` 生成 defconfig。旧版 Linux patch 三处
+同步的流程已停用。
 
-三处都是：
+当前节点使用 `touchscreen@14` / `reg = <0x14>`，并同时修正：
 
-```diff
--		gt9147: gt9147@5d {
-+		gt9147: gt9147@14 {
- 			compatible = "goodix,gt9147", "goodix,gt9xx";
--			reg = <0x5d>;
-+			reg = <0x14>;
-```
+- RESET GPIO1_IO05、INT GPIO1_IO09 都用 `GPIO_ACTIVE_HIGH`，匹配主线复位序列。
+- 电源属性使用区分大小写的 `VDDIO-supply`、`AVDD28-supply`。
+- 移除绑定不支持的 `goodix,gt9xx` 备用兼容串。
+- SD 固定电源没有 GPIO1_IO09 控制，避免和触摸中断争用。
+- 模板启用 `CONFIG_REGULATOR=y`，使固定电源驱动及其供应关系实际生效。
 
-> 节点名 `@5d`→`@14` 不是内核必需（内核用 `reg`），但 dtc 会因 unit-address 与
-> `reg` 不一致而 warning，顺手改干净。label `gt9147:` 不变，`&gt9147` 引用不受影响。
-
-### 快速重编 dtb（不用整编内核、不用交叉工具链）
+从项目根目录同步并增量重编：
 
 ```bash
-cd third_party/linux_mainline
-make ARCH=arm imx_aes_mainline_defconfig        # 一次性生成 .config
-make ARCH=arm nxp/imx/imx6ull-aes.dtb           # ⚠ 必须带 nxp/imx/ 子路径
+scripts/build_helper/build-linux.sh --fast-build
 ```
 
-> **坑**：mainline 7.1 把 imx 的 dts 挪到了 `arch/arm/boot/dts/nxp/imx/` 子目录，
-> 裸 `make imx6ull-aes.dtb` 会报
-> `No rule to make target 'arch/arm/boot/dts/imx6ull-aes.dtb'`。目标名得带子路径。
-> 编 dtb 只用到 host 的 dtc，不需要 `CROSS_COMPILE`，几十秒完成。
+该命令同时重编内核和 DTB。原先内核没有 regulator 支持，本次不能仅替换 DTB。
+不要将 `third_party/linux_mainline` 中的构建副本当作长期维护源。
 
-### 部署 + 验证
+真板重启后验证：
 
-```bash
-# 备份旧 dtb（沿用 -before-*-fix 命名习惯）
-cp -n /home/charliechen/tftp/imx6ull-aes.dtb \
-      /home/charliechen/tftp/imx6ull-aes-before-goodix-fix.dtb
-# 拷新的上去
-cp arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb /home/charliechen/tftp/imx6ull-aes.dtb
-# 验证 reg 已变
-dtc -I dtb -O dts /home/charliechen/tftp/imx6ull-aes.dtb 2>/dev/null | grep -A2 'gt9147@'
-```
-
-然后**重启板子**（netboot 开机才重新 tftp 拉 dtb，各章 dtb 互斥，见
-[DTB Deploy & Boot](../../document/notes/) 相关约定）。
-
-## Operational Rule（真正的 takeaway）
-
-1. **Goodix 报 `-6`，第一步永远是 `i2cdetect -y <bus>`**，看芯片实际在哪个地址。
-   别急着翻驱动、查中断、调时序——地址不对一切白搭。
-2. **Goodix 地址由 INT@RESET 决定**，0x5d / 0x14（乃至 0x5e / 0x15）都合法。换板、
-   换上电时序后地址可能变，**以 `i2cdetect` 实测为准**，别迷信 dts/教程里的值。
-3. 改 netboot base 镜像的节点，**patch + 镜像 + 树里副本三处同步**，否则构建回退。
-4. 改完只编单个 dtb 走 `make ARCH=arm nxp/imx/imx6ull-aes.dtb`，拷 tftp，重启板子。
-
-## Triage One-Liner
-
-> `Goodix-TS <bus>-<addr>: Error reading ... -6` → `-6 = ENXIO = 没 ACK`。
-> 先 `i2cdetect -y <bus>` 看芯片真实地址，再 `dtc` 反编译 dtb 对 `reg`。两边对不上
-> 就是地址写错——别查驱动、别查中断。
-
-## Command Cheat-Sheet
-
-```bash
-# 1) 扫总线，看 Goodix 实际在哪个地址（排查首选）
-i2cdetect -y 1
-
-# 2) 反编译正在 boot 的 dtb，看 goodix 节点 reg
-dtc -I dtb -O dts /home/charliechen/tftp/imx6ull-aes.dtb 2>/dev/null | grep -A3 'gt9147@'
-
-# 3) 改完三处源后，快速重编单个 dtb
-cd third_party/linux_mainline
-make ARCH=arm imx_aes_mainline_defconfig
-make ARCH=arm nxp/imx/imx6ull-aes.dtb
-
-# 4) 备份 + 部署 + 验证
-cp -n /home/charliechen/tftp/imx6ull-aes.dtb /home/charliechen/tftp/imx6ull-aes-before-goodix-fix.dtb
-cp arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb /home/charliechen/tftp/imx6ull-aes.dtb
-dtc -I dtb -O dts /home/charliechen/tftp/imx6ull-aes.dtb 2>/dev/null | grep -A2 'gt9147@'
-
-# 5) 重启板子后，确认 probe 成功
-dmesg | grep -i goodix          # 期望 Goodix-TS 1-0014，无 -6
-ls /dev/input/event*
+```sh
+dmesg | grep -i goodix
 cat /proc/bus/input/devices
+cat /proc/interrupts
 ```
+
+期望出现 `Goodix-TS 1-0014: ID ...`、`Goodix Capacitive TouchScreen` 输入设备。
+实际触摸时还需确认对应 GPIO 中断计数增长且事件节点产生数据。
+I2C 设备已绑定时，扫描结果可能显示 `UU`；驱动绑定、芯片识别和触摸事件
+比单独扫描更能说明问题。新镜像的实际触摸仍需真板复测。
 
 ## Verified (2026-06-29)
 

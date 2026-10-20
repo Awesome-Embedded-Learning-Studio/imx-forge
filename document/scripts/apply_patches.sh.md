@@ -18,7 +18,7 @@
 ./scripts/apply_patches.sh linux_mainline
 
 # 示例 - 应用 U-Boot 补丁
-./scripts/apply_patches.sh uboot-imx
+./scripts/apply_patches.sh uboot-mainline
 
 # 示例 - 在子模块目录中调用
 cd third_party/linux_mainline
@@ -33,7 +33,7 @@ cd third_party/linux_mainline
 
 支持的组件名称：
 - `linux_mainline` - 主线内核补丁
-- `uboot-imx` - U-Boot 补丁
+- `uboot-mainline` - U-Boot 补丁
 - `busybox` - BusyBox 补丁
 
 ## 执行流程

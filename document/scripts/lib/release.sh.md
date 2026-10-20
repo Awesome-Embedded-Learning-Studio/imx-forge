@@ -33,7 +33,7 @@ release_finalize "<component>" "<output-dir>" ["<release-version>"]
 
 | component | reset 策略 | SOURCE_DATE_EPOCH | patch 处理 |
 |-----------|-----------|-------------------|-----------|
-| `uboot` | 跟 `origin` 默认分支（`lf_v2025.04` 回退） | 默认当前时间（banner 匹配构建时间） | 必需：`patches/uboot-imx/charlies_board.patch` |
+| `uboot` | 跟 `origin` 默认分支（`lf_v2025.04` 回退） | 默认当前时间（banner 匹配构建时间） | 必需：`patches/uboot-mainline/charlies_board.patch` |
 | `linux` | 锁定到超项目 gitlink commit（`git rev-parse HEAD:third_party/linux_mainline`） | 固定 `1609459200`（2021-01-01） | 取目录最新：`patches/linux_mainline/*.patch` |
 
 `patch-arg` 对 `uboot` 是 patch 文件路径，对 `linux` 是 patch 目录路径。`project-root` 仅 `linux` 需要（解析 gitlink）。

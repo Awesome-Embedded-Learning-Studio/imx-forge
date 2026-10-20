@@ -337,7 +337,7 @@ setenv splashpos 100,50
 ./scripts/logo_helper/logo_helper.sh 800x480 document/logo/my_logo.png
 
 # 指定输出位置
-./scripts/logo_helper/logo_helper.sh 800x480 document/logo/logo.png third_party/uboot-imx/tools/logos/custom.bmp
+./scripts/logo_helper/logo_helper.sh 800x480 document/logo/logo.png third_party/uboot-mainline/tools/logos/custom.bmp
 ```
 
 ### 5.3 工作原理
@@ -496,7 +496,7 @@ bmp info ${splashimage}
 他们的配置通常在：
 
 ```c
-// board/freescale/mx6ullevk/mx6ullevk.c
+// board/nxp/mx6ullevk/mx6ullevk.c
 #ifdef CONFIG_VIDEO_MXS
 static int setup_lcd(void)
 {
@@ -623,10 +623,10 @@ convert document/logo/logo.png \
     -resize 1024x600! \
     -alpha off \
     -depth 8 \
-    bmp3:third_party/uboot-imx/tools/logos/denx.bmp
+    bmp3:third_party/uboot-mainline/tools/logos/denx.bmp
 
 # 4. 拷贝到SD卡
-cp third_party/uboot-imx/tools/logos/denx.bmp /mnt/logo.bmp
+cp third_party/uboot-mainline/tools/logos/denx.bmp /mnt/logo.bmp
 ```
 
 ## 九、写在最后

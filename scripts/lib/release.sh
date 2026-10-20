@@ -93,7 +93,7 @@ release_prepare() {
 # 组件 → 超项目内子模块路径(用于解析 gitlink commit)
 _release_submodule_path() {
     case "$1" in
-        uboot) echo "third_party/uboot-imx" ;;
+        uboot) echo "third_party/uboot-mainline" ;;
         linux) echo "third_party/linux_mainline" ;;
         *) return 1 ;;
     esac

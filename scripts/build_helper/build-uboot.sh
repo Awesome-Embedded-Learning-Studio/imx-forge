@@ -61,7 +61,7 @@ DEFCONFIG=mx6ull_aes_emmc_defconfig
 DEFAULT_DEVICE_TREE="imx6ull-aes"
 
 # Directories
-UBOOT_SRC_DIR="${PROJECT_ROOT}/third_party/uboot-imx"
+UBOOT_SRC_DIR="${PROJECT_ROOT}/third_party/uboot-mainline"
 : "${OUTPUT_DIR:=${PROJECT_ROOT}/out/uboot}"
 
 # Ensure output directory exists
@@ -280,7 +280,7 @@ main() {
     if [[ ${RELEASE_MODE} -eq 1 ]]; then
         source "${SCRIPT_LIB_DIR}/release.sh"
         release_prepare "uboot" "${UBOOT_SRC_DIR}" \
-            "${PROJECT_ROOT}/patches/uboot-imx/charlies_board.patch" "${PROJECT_ROOT}"
+            "${PROJECT_ROOT}/patches/uboot-mainline/charlies_board.patch" "${PROJECT_ROOT}"
         log_info "========================================"
     fi
 
@@ -296,7 +296,7 @@ main() {
 
     # Prepare logo before build
     log_info "Preparing logo..."
-    "${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 800x480 document/logo/logo.png third_party/uboot-imx/tools/logos/denx.bmp
+    "${SCRIPT_DIR}/../logo_helper/logo_helper.sh" 800x480 document/logo/logo.png third_party/uboot-mainline/tools/logos/denx.bmp
 
     # Build process
     do_distclean

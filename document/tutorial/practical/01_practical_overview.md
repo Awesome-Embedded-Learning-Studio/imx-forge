@@ -195,14 +195,14 @@ arm-none-linux-gnueabihf-gcc
 ## 各组件版本选择说明
 
 ### U-Boot 版本
-我们使用 NXP 维护的 U-Boot 分支，基于 **v2025.04**：
+我们使用上游主线 U-Boot，基于 **v2026.10**：
 
 ```
-仓库：nxp-imx/uboot-imx
-分支：lf_v2025.04
+仓库：github.com/u-boot/u-boot
+标签：v2026.10
 ```
 
-为什么用 NXP 分支而不是主线？因为 NXP 分支包含了 i.MX6ULL 的特定支持，比如 DDR 初始化代码、电源管理、特定的外设驱动等。主线 U-Boot 也在逐步加入这些支持，但可能还不够完善。
+U-Boot 主线已经包含 i.MX6ULL 需要的全部基础支持——DDR 初始化通过 imximage 的 DCD 表描述、eMMC/SD、串口、网卡、LCD 都有现成驱动，选择上与内核的 mainline 策略保持一致。NXP 维护的 `uboot-imx` 分支仍然存在，主要面向 HAB 量产签名和新芯片首发这类产品化需求，本项目不依赖它。
 
 ### Linux 内核版本
 我们使用上游主线 **mainline Linux**，版本 **v7.1**：
