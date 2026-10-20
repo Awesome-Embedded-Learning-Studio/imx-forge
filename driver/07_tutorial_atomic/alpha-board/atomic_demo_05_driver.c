@@ -27,6 +27,7 @@
 #include <linux/atomic.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/string.h>
 #include <linux/delay.h>
 #include <linux/of.h>
 #include <linux/mod_devicetable.h>
