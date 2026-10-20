@@ -207,9 +207,9 @@ Linux/DTB；从 `sdbootaes` 移除 `keep_bootcon`，消除正式串口接管后�
 
 | 维护文件 | 本次内容 |
 | --- | --- |
-| [U-Boot 板级补丁](../../patches/uboot-mainline/charlies_board.patch) | SNVS、环境偏移、默认环境 NUL、DM MDIO、LCDIF 时钟清理顺序 |
-| [Linux 板级 DTS](../../driver/device_tree/alpha-board/linux/imx6ull-aes.dtsi) | SNVS、Goodix 地址与 GPIO 极性、电源属性和启动状态 |
-| [Linux 配置模板](../../driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template) | 补开 CONFIG_REGULATOR，使已有子驱动选项生效 |
+| [U-Boot 板级补丁](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/blob/main/patches/uboot-mainline/charlies_board.patch) | SNVS、环境偏移、默认环境 NUL、DM MDIO、LCDIF 时钟清理顺序 |
+| [Linux 板级 DTS](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/blob/main/driver/device_tree/alpha-board/linux/imx6ull-aes.dtsi) | SNVS、Goodix 地址与 GPIO 极性、电源属性和启动状态 |
+| [Linux 配置模板](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/blob/main/driver/device_tree/alpha-board/linux/imx6ull_mainline_defconfig.template) | 补开 CONFIG_REGULATOR，使已有子驱动选项生效 |
 | [Goodix 历史排查笔记](2026-06-29-goodix-touch-i2c-addr-0x14.md) | 更正 INT 地址选择表，更新主线 GPIO 语义和现行构建流程 |
 
 Linux 的长期维护源是超项目中的 DTS 与配置模板；构建脚本将它们复制、生成到
