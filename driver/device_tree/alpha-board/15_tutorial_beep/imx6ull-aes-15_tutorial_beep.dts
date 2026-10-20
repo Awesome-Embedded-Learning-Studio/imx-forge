@@ -27,16 +27,12 @@
 	};
 };
 
-&iomuxc {
-    // 使用pinctrl子系统添加的LED节点驱动
-    // &iomuxc        : 引用追加语法，必须这样写
-    // pinctrl_beep: 标签(label)，供其他节点引用 pinctrl-0 = <&pinctrl_beep>
-    // beep_grp        : 节点名，命名可自由选择
-    // fsl,pins       : NXP i.MX pinctrl绑定定义的必需属性名
-    // fsl, pins等是IMX SOC系列的关键字，不是通用的，这说明的是
-    pinctrl_beep: beep_grp {
-        fsl,pins = <
-            MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01    0x10B0
-        >;
-    };
-};
+/*
+ * pinctrl_beep 这个 pinctrl 组由共享的 imx6ull-aes.dtsi 提供（搜 pinctrl_beep:
+ * beep_grp）：SNVS_TAMPER1 属于 SNVS 引脚组，归 iomuxc_snvs（bus@2000000）管，
+ * 主 iomuxc（bus@2200000）管不到它。以前这里在 &iomuxc 下重复定义过一份，
+ * 标签和 base 里的撞车（dtc 报 duplicate_label，本章 dtb 一直没编出来），
+ * 而且把 SNVS 引脚挂在主 iomuxc 下，引脚复用本身也不会生效。
+ * 引用追加语法（&iomuxc { ... }）、label、beep_grp 节点名、fsl,pins 这些
+ * 关键字的样子，去 base dtsi 的 iomuxc_snvs 段看，就是刚才那段的标准写法。
+ */
