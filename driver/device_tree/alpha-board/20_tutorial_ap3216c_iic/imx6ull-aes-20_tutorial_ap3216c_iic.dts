@@ -9,18 +9,16 @@
 };
 
 /*
- * base dtsi 的 &i2c1 下挂着 NXP EVK 的 mag3110 和 fxls8471，但咱们这块 alpha 板子上
- * 一个都没有。更要命的是 fxls8471 的地址就是 0x1e，和 AP3216C 撞车——同一条 I2C 总线
- * 上两个节点都声明 0x1e，i2c 核心在实例化第二个 client 的时候会直接报 EBUSY，咱们的
- * 驱动就永远 probe 不上。
+ * NXP EVK 参考板的 I2C1 上挂着 mag3110@0x0e 和 fxls8471@0x1e，但咱们这块 alpha 板子
+ * 上一个都没有。更要命的是 fxls8471 的地址就是 0x1e，和 AP3216C 撞车——同一条 I2C
+ * 总线上两个节点都声明 0x1e，i2c 核心在实例化第二个 client 的时候会直接报 EBUSY，
+ * 咱们的驱动就永远 probe 不上。
  *
- * 这俩节点在 base dtsi 里没有 label，没法用 /delete-node/ &label 的常规写法干掉，
- * 只能按完整路径删。/soc/bus@2100000/i2c@21a0000 是 imx6ul.dtsi 里 i2c1 的固定位置
- * （i2c1 挂在 aips2/bus@2100000 下，不是 aips1）。
- * （base dtsi 是共享文件、会被工作流覆盖回去，所以这种板级裁剪放在每章独立的 dts 里做。）
+ * 这块板级裁剪已经收进共享的 imx6ull-aes.dtsi：EVK 的两颗传感器不再出现，
+ * ap3216c@1e 直接写在 base 的 &i2c1 里。这里不用再按完整路径 /delete-node/
+ * （路径不存在时 dtc 会直接报错挂构建），下面的声明和 base 里的同名同址，
+ * dtc 合并成一个节点，不冲突。
  */
-/delete-node/ &{/soc/bus@2100000/i2c@21a0000/magnetometer@e};
-/delete-node/ &{/soc/bus@2100000/i2c@21a0000/fxls8471@1e};
 
 &i2c1 {
 	/*
