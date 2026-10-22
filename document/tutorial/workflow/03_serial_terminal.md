@@ -29,7 +29,7 @@ MobaXterm 的图形界面操作在 Windows 桌面完成，本环境是 WSL2 终�
 
 ## 三、通道二：usbipd 把串口透进 WSL
 
-另一条通道手续多几步，换来的东西很实在：串口数据直接进 Linux 工具链。完整流程 docker 卷写过两遍，[Docker 基础知识](../docker/01_docker_basics.md) 的 usbipd 段（L526 到 L535）与 [IMX-Forge Docker 开发指南](../docker/02_imx_forge_docker_guide.md) 的 WSL2 USB 直通节（L525 到 L538）各有一份，咱们这里收编成串口场景的顺序，细节回那两章看。
+另一条通道手续多几步，换来的东西很实在：串口数据直接进 Linux 工具链。完整流程 docker 卷写过两遍，[Docker 基础知识](../docker/01_docker_basics.md) 的 usbipd 段（L526 到 L535）与 [IMX-Forge Docker 开发指南](../docker/02_imx_forge_docker_guide.md) 的 WSL2 USB 直通节（L525 到 L538）各有一份，咱们这里收编成串口场景的顺序，细节回那两章看；想跟着截图一步步点的话，来稿卷的[WSL（Ubuntu）连接 Windows 的 USB 设备](../contrib/02-wsl2-usbipd.md)是同一套流程的图文版，含 winget 升级与常见坑，本节与它互为索引。
 
 ```powershell
 # Windows PowerShell（管理员）
