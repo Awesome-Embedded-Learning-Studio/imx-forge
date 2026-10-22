@@ -252,7 +252,7 @@ docker run -it --rm -v $(pwd):/workspace imx-forge:latest
 
 文件互访也有讲究：Windows 的 C 盘挂在 `/mnt/c/` 下，源码和构建目录咱们别放那儿——跨文件系统的 I/O 慢好几倍，实测数据在刚才那篇 WSL2 环境配置里。
 
-USB 串口设备要进 WSL2，咱们得靠 Windows 侧的 usbipd 把设备绑过来（需要 Windows 11 或较新的 Windows 10，微软官方 WSL 文档的 connect-usb 一节有完整说明）；容器再用它，run 时加 `--device=/dev/ttyUSB0`，烧录这类要碰底层设备的场景，`docker/README.md` 给的是 `--privileged` 配 `-v /dev:/dev` 的组合。usbipd 的安装绑定全套步骤与串口终端的选用，见工作流卷的[串口终端：开发台的第二块屏幕](../workflow/03_serial_terminal.md)和 start 卷的[串口工具使用（minicom）](../start/04_serial_tools_minicom.md)：
+USB 串口设备要进 WSL2，咱们得靠 Windows 侧的 usbipd 把设备绑过来（需要 Windows 11 或较新的 Windows 10，微软官方 WSL 文档的 connect-usb 一节有完整说明）；容器再用它，run 时加 `--device=/dev/ttyUSB0`，烧录这类要碰底层设备的场景，`docker/README.md` 给的是 `--privileged` 配 `-v /dev:/dev` 的组合。usbipd 的安装绑定全套步骤与串口终端的选用，见工作流卷的[串口终端：开发台的第二块屏幕](../workflow/03_serial_terminal.md)和 start 卷的[串口工具使用（minicom）](../start/04_serial_tools_minicom.md)；要跟着截图一步步点的版本，见来稿卷的[WSL（Ubuntu）连接 Windows 的 USB 设备](../contrib/02-wsl2-usbipd.md)：
 
 ```bash
 # 主机 ~/(WSL 内)

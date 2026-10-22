@@ -260,6 +260,13 @@ title: 教程
   <ChapterLink num="03" href="build/03_rootfs_overlay_guide">RootFS Overlay</ChapterLink>
 </ChapterNav>
 
+### 来稿精选
+
+<ChapterNav>
+  <ChapterLink num="01" href="contrib/01-wsl2-environment">想要真 Linux——WSL2 加 VS Code 环境搭建</ChapterLink>
+  <ChapterLink num="02" href="contrib/02-wsl2-usbipd">WSL（Ubuntu）连接 Windows 的 USB 设备</ChapterLink>
+</ChapterNav>
+
 ::: tip 遇到问题？
 提交 [GitHub Issue](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/issues) 或查阅项目 [快速开始](../QUICK_START)。
 :::

@@ -22,6 +22,11 @@
 - **GitHub**: [Leon19960120](https://github.com/Leon19960120)
 - **贡献**: 环境初始化阶段相关文档与脚本优化
 
+### xiaoshuaijie
+
+- **GitHub**: [xiaoshuaijie](https://github.com/xiaoshuaijie)
+- **贡献**: 来稿两篇并授权收录——《想要真 Linux——WSL2 加 VS Code 环境搭建》与《WSL（Ubuntu）连接 Windows 的 USB 设备》，见[教程 · 来稿卷](document/tutorial/contrib/)
+
 ### Anonymous
 - Anonymous (via email: 85.hear.blimps@icloud.com)
 - **贡献**: 指出了 U-Boot 教程中关于自定义命令添加的文档疏漏，包括 Makefile 配置和头文件引用问题

@@ -23,7 +23,7 @@ function humanize(name: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-// 学习顺序：Linux基础(预备营) → 入门准备 → Docker → U-Boot → 内核 → 文件系统 → Buildroot 根文件系统 → 驱动 → 实战 → 调试与排错 → 工程实战项目 → 镜像烧录 → 命令速查 → 构建进阶 → 开发环境配置 → 第三方
+// 学习顺序：Linux基础(预备营) → 入门准备 → Docker → U-Boot → 内核 → 文件系统 → Buildroot 根文件系统 → 驱动 → 实战 → 调试与排错 → 工程实战项目 → 镜像烧录 → 命令速查 → 构建进阶 → 开发环境配置 → 第三方 → 来稿
 const LEARNING_ORDER = [
   'linux-basics',
   'start',
@@ -42,6 +42,7 @@ const LEARNING_ORDER = [
   'build',
   'workflow',
   'third_party',
+  'contrib',
 ]
 
 function sortEntries(a: string, b: string): number {

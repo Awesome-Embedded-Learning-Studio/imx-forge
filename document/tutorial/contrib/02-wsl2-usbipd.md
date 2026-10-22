@@ -1,8 +1,7 @@
 ---
 title: "WSL（Ubuntu）连接 Windows 的 USB 设备"
 description: "WSL2 默认看不到 Windows 上的 USB 设备：用 usbipd-win 把串口、开发板等设备共享并附加进 Ubuntu，含安装、升级、bind/attach 与常见坑"
-chapter: 14
-order: 8
+order: 2
 platform: host
 difficulty: beginner
 cpp_standard: [17, 20]
@@ -13,6 +12,17 @@ tags:
   - beginner
   - 工具链
 reading_time_minutes: 10
+contributors:
+  - github: xiaoshuaijie
+    roles: [author]
+    note:
+      zh: 撰写并投稿原稿
+      en: Wrote and submitted the original article
+  - github: Charliechen114514
+    roles: [revision, review]
+    note:
+      zh: 收录与站内链接适配
+      en: Integration and in-site link adaptation
 ---
 
 # WSL（Ubuntu）连接 Windows 的 USB 设备
@@ -52,7 +62,7 @@ reading_time_minutes: 10
 - 拥有管理员权限的用户账号（安装时需要管理员身份运行 PowerShell）。
 - 稳定的网络（安装过程中需要下载文件）。
 - x64 或 ARM64 处理器的机器（usbipd-win 目前不支持 x86）。
-- WSL 已安装并设置为最新版本（可以查看 [想要真 Linux——WSL2 加 VS Code 环境搭建](https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeModernCPP/getting-started/07-wsl2-environment) 完成这个任务）。
+- WSL 已安装并设置为最新版本（可以查看本卷上一篇 [想要真 Linux——WSL2 加 VS Code 环境搭建](01-wsl2-environment.md) 完成这个任务）。
 - 已安装 Linux 发行版并设置为 WSL 2（一般默认为 wsl2）。
 
 如果你不确定你的版本是否为最新版本，可以先关闭 wsl：

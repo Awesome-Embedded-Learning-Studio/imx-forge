@@ -312,6 +312,8 @@ attach 完成后咱们回 WSL 侧 `ls /dev/ttyUSB*` 就能看到设备，容器�
 usbipd 的命令要在 Windows PowerShell（管理员）里执行，本环境是 WSL2 终端，进不了 PowerShell 没法实测；上面的命令顺序与示例输出口径出自微软 WSL 文档与 docker 卷旧版的记载，您本机跑的时候，busid 以 `usbipd list` 的实际输出为准。
 :::
 
+想跟着截图一步步点的版本，见来稿卷的[WSL（Ubuntu）连接 Windows 的 USB 设备](../contrib/02-wsl2-usbipd.md)。
+
 ### 串口终端
 
 设备透进来后，咱们在容器里直接开 picocom：
@@ -530,4 +532,4 @@ picocom -b 115200 /dev/ttyUSB0                  # 串口终端
 
 - 上一篇：[Docker 基础知识](01_docker_basics.md)，容器、镜像与卷这些概念的地基
 - 下一篇：Docker 卷到本篇收尾，rootfs 的构建细节接着去 [Buildroot 根文件系统](../buildroot/) 补全，那边从工作原理一路讲到 Qt6 集成
-- 深读：串口通道选型与 usbipd 全流程见 [串口终端：开发台的第二块屏幕](../workflow/03_serial_terminal.md)；板卡接口与启动介质见 [板子硬件接口速查表](../start/03_hardware_quick_reference.md)；项目整体上手路线见 [IMX-Forge 快速入门指南](../../QUICK_START.md)
+- 深读：串口通道选型与 usbipd 全流程见 [串口终端：开发台的第二块屏幕](../workflow/03_serial_terminal.md)，截图版逐步演示见来稿卷的 [WSL（Ubuntu）连接 Windows 的 USB 设备](../contrib/02-wsl2-usbipd.md)；板卡接口与启动介质见 [板子硬件接口速查表](../start/03_hardware_quick_reference.md)；项目整体上手路线见 [IMX-Forge 快速入门指南](../../QUICK_START.md)

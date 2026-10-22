@@ -1,8 +1,7 @@
 ---
 title: "想要真 Linux——WSL2 加 VS Code 环境搭建"
 description: "Windows 11 上装 WSL2、隔离 Windows PATH、配镜像网络共用 Windows 代理，再用 VS Code 接入 WSL 与远程 SSH"
-chapter: 14
-order: 7
+order: 1
 platform: host
 difficulty: beginner
 cpp_standard: [17, 20]
@@ -20,7 +19,6 @@ contributors:
     note:
       zh: 撰写并投稿原稿
       en: Wrote and submitted the original article
-    pr: 276
   - github: Charliechen114514
     roles: [revision, review]
     note:
