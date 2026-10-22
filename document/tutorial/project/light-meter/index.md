@@ -16,9 +16,9 @@ title: 照度护眼摆件 light-meter
 
 废话不多说,这就是这套教程带你造出来的东西,完整跑起来是这样:
 
-<video controls muted playsinline preload="metadata" poster="/imx-forge/light-meter/demo-poster.png" style="width:100%;max-width:720px;border-radius:12px;border:1px solid var(--vp-c-divider);margin:16px auto;">
-  <source src="/imx-forge/light-meter/demo.mp4" type="video/mp4" />
-  你的浏览器不支持 video 标签,可 <a href="/imx-forge/light-meter/demo.mp4">直接下载视频</a> 看。
+<video controls muted playsinline preload="metadata" poster="demo-poster.png" style="width:100%;max-width:720px;border-radius:12px;border:1px solid var(--vp-c-divider);margin:16px auto;">
+  <source src="demo.mp4" type="video/mp4" />
+  你的浏览器不支持 video 标签,可 <a href="demo.mp4">直接下载视频</a> 看。
 </video>
 
 桌面 Mock 阶段 Windows 和 Linux 双平台能跑,翻一个 CMake 开关接上 AP3216C,板子上就是视频里这样:折线随环境光实时起伏、跌破阈值翻红告警、手靠近唤醒、无接近 10 秒息屏。
