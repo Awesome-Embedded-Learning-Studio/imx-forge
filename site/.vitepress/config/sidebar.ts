@@ -1,7 +1,7 @@
 import type { DefaultTheme } from 'vitepress'
 import { readdirSync, statSync, readFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import type { ProjectConfig, VolumeConfig } from './schema'
+import type { ProjectConfig, TutorialSection, VolumeConfig } from './schema'
 
 type SidebarItem = DefaultTheme.SidebarItem
 
@@ -123,6 +123,71 @@ export function volumeSidebar(
   ]
 }
 
+// ── 教程分区 ─────────────────────────────────────────────────
+// 一个「学习分区」横跨多个物理目录(如「系统构建」= start + uboot + kernel + …)。
+// 做法:把该分区内所有目录合并成一份侧栏数组,再挂到分区 slug 与每个目录的
+// 路径前缀上。VitePress 的 getSidebar() 按「路径段数」降序取首个命中前缀,
+// 因此 `/tutorial/uboot/`(4 段)必压过 `/tutorial/`(3 段),分区视图得以生效。
+//
+// 注意:跨目录的侧栏必须用绝对路径 —— 同一份数组要挂到多个不同前缀上,
+// VitePress 的 base 相对写法在这里无法成立。
+export function sectionSidebar(
+  docsRoot: string,
+  section: TutorialSection
+): DefaultTheme.SidebarItem[] {
+  const items: DefaultTheme.SidebarItem[] = [
+    {
+      text: section.overviewText ?? `${section.title} · 分区总览`,
+      link: `/tutorial/${section.slug}/`,
+    },
+  ]
+
+  // 不拥有物理目录的分区(如「快速上手」):总览页是跨目录精选,入口靠手工声明。
+  if (section.links?.length) {
+    items.push({
+      text: section.linksText ?? '精选入口',
+      collapsed: false,
+      items: section.links.map(link => ({ text: link.text, link: link.link })),
+    })
+  }
+
+  for (const dir of section.dirs) {
+    const dirPath = join(docsRoot, 'tutorial', dir)
+    if (!existsSync(dirPath)) continue
+
+    const indexPath = join(dirPath, 'index.md')
+    const hasIndex = existsSync(indexPath)
+    const subItems = scanDir(dirPath, `/tutorial/${dir}`, 0)
+
+    if (subItems.length === 0 && !hasIndex) continue
+
+    items.push({
+      text: extractTitle(indexPath) || humanize(dir),
+      link: hasIndex ? `/tutorial/${dir}/` : undefined,
+      items: subItems.length > 0 ? subItems : undefined,
+      // 分区内各章默认折叠:进入任一页先看到分区骨架,而非上百个章节。
+      collapsed: true,
+    })
+  }
+
+  return items
+}
+
+/** 把分区侧栏注册到 slug 与每个目录前缀上,返回 { 前缀: 侧栏 } 映射。 */
+export function buildSectionSidebars(
+  docsRoot: string,
+  sections: TutorialSection[]
+): Record<string, DefaultTheme.SidebarItem[]> {
+  const map: Record<string, DefaultTheme.SidebarItem[]> = {}
+  for (const section of sections) {
+    const sidebarItems = sectionSidebar(docsRoot, section)
+    for (const prefix of [section.slug, ...section.dirs]) {
+      map[`/tutorial/${prefix}/`] = sidebarItems
+    }
+  }
+  return map
+}
+
 export function buildSidebar(
   docsRoot: string,
   config: ProjectConfig
@@ -135,6 +200,12 @@ export function buildSidebar(
 
   if (config.sidebar.extra) {
     Object.assign(sidebar, config.sidebar.extra)
+  }
+
+  // 教程分区:必须放在 extra 之后 —— extra 里的 '/tutorial/' 是分区导航总览,
+  // 而分区侧栏的前缀恒为 4 段(更深),两者互不覆盖。
+  if (config.sidebar.sections?.length) {
+    Object.assign(sidebar, buildSectionSidebars(docsRoot, config.sidebar.sections))
   }
 
   // Build sidebar for non-default locales

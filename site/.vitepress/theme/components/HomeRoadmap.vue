@@ -18,7 +18,7 @@ const statusMeta: Record<RoadmapStatus, { mark: string; label: string; cls: stri
 <template>
   <section id="roadmap" class="home-roadmap">
     <div class="home-roadmap__card">
-      <h2 class="home-roadmap__title">{{ roadmap.title ?? '📍 学习路线图' }}</h2>
+      <h2 class="home-roadmap__title">{{ roadmap.title ?? '学习路线图' }}</h2>
 
       <div class="home-roadmap__legend">
         <span

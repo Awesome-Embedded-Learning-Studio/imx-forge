@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
-  icon: string
+  // 可选:不传则不渲染图标槽,避免留下空白方块
+  icon?: string
   title: string
   description: string
 }>()
@@ -8,7 +9,7 @@ defineProps<{
 
 <template>
   <div class="page-header">
-    <span class="page-header-icon">{{ icon }}</span>
+    <span v-if="icon" class="page-header-icon">{{ icon }}</span>
     <div class="page-header-body">
       <h1 class="page-header-title">{{ title }}</h1>
       <p class="page-header-desc">{{ description }}</p>

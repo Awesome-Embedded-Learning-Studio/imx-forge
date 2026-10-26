@@ -14,24 +14,108 @@ export default defineProject({
     { code: 'zh-CN', label: '中文', default: true },
   ],
 
+  // 顶层导航 = 7 个学习分区 + 速查 + 更多，与侧栏分区（见 sidebar.sections）一一对应。
+  // 读者向（教程）与维护者向（架构/CI/脚本/发布）分开，后者统一收进「更多」。
+  // 顶层导航 = 7 个学习分区 + 更多。每个分区项「文字」是链接(点击直达分区总览),
+  // 「右侧箭头」展开二级菜单(列出该分区包含的章节)。这是主题覆盖后的复合行为
+  // (见 site/.vitepress/theme/components/NavSplitItem.vue):VitePress 内置版
+  // 只要项里有 link 就会丢掉 items,所以必须覆盖。
   nav: {
     'zh-CN': [
       { text: '首页', link: '/' },
-      { text: '教程', link: '/tutorial/' },
-      { text: 'CI/CD', link: '/ci/' },
-      { text: '架构', link: '/architecture/' },
-      { text: '脚本', link: '/scripts/' },
-      { text: '发布', link: '/release/' },
-      { text: '参考', link: '/reference/' },
-      { text: '贡献者', link: '/team/' },
+      {
+        text: '快速上手',
+        link: '/tutorial/getting-started/',
+        activeMatch: '^/tutorial/(getting-started)/',
+        items: [
+          { text: '学习路线图', link: '/tutorial/start/00_roadmap' },
+          { text: 'Docker 一键环境', link: '/tutorial/docker/' },
+          { text: '没有板子？QEMU 直启', link: '/tutorial/emu/01_why_emulation' },
+          { text: '硬件清单与接线', link: '/tutorial/start/03_hardware_quick_reference' },
+          { text: '首次上电验收', link: '/tutorial/start/05_first_boot_check' },
+          { text: '全部教程总览', link: '/tutorial/' },
+        ],
+      },
+      {
+        text: '环境与基础',
+        link: '/tutorial/foundations/',
+        activeMatch: '^/tutorial/(foundations|linux-basics|docker|workflow)/',
+        items: [
+          { text: 'Linux 基础预备营', link: '/tutorial/linux-basics/' },
+          { text: 'Docker 教程', link: '/tutorial/docker/' },
+          { text: '开发环境配置', link: '/tutorial/workflow/' },
+        ],
+      },
+      {
+        text: '系统构建',
+        link: '/tutorial/system-build/',
+        activeMatch: '^/tutorial/(system-build|start|uboot|kernel|rootfs|buildroot|practical)/',
+        items: [
+          { text: '入门准备', link: '/tutorial/start/' },
+          { text: 'U-Boot 移植', link: '/tutorial/uboot/' },
+          { text: '内核移植', link: '/tutorial/kernel/' },
+          { text: '根文件系统', link: '/tutorial/rootfs/' },
+          { text: 'Buildroot 构建', link: '/tutorial/buildroot/' },
+          { text: '实战演练', link: '/tutorial/practical/' },
+        ],
+      },
+      {
+        text: '驱动与实战',
+        link: '/tutorial/driver-dev/',
+        activeMatch: '^/tutorial/(driver-dev|driver|project)/',
+        items: [
+          { text: '驱动开发', link: '/tutorial/driver/' },
+          { text: '应用项目 light-meter', link: '/tutorial/project/' },
+        ],
+      },
+      {
+        text: '模拟与调试',
+        link: '/tutorial/emulation/',
+        activeMatch: '^/tutorial/(emulation|emu|debug)/',
+        items: [
+          { text: 'QEMU 板级模拟', link: '/tutorial/emu/' },
+          { text: '调试与排错', link: '/tutorial/debug/' },
+        ],
+      },
+      {
+        text: '烧录与进阶',
+        link: '/tutorial/flashing/',
+        activeMatch: '^/tutorial/(flashing|flash|build)/',
+        items: [
+          { text: '镜像与烧录', link: '/tutorial/flash/' },
+          { text: '构建进阶', link: '/tutorial/build/' },
+        ],
+      },
+      {
+        text: '速查',
+        link: '/tutorial/cheatsheet/',
+        activeMatch: '^/tutorial/(cheatsheet|commands|third_party)/',
+        items: [
+          { text: '命令速查', link: '/tutorial/commands/' },
+          { text: '第三方支持', link: '/tutorial/third_party/' },
+        ],
+      },
+      {
+        text: '更多',
+        items: [
+          { text: '项目架构', link: '/architecture/' },
+          { text: 'CI/CD', link: '/ci/' },
+          { text: '脚本手册', link: '/scripts/' },
+          { text: '发布流程', link: '/release/' },
+          { text: '参考手册', link: '/reference/' },
+          { text: '技术笔记', link: '/notes/' },
+          { text: '来稿', link: '/tutorial/contrib/' },
+          { text: '贡献者', link: '/team/' },
+        ],
+      },
       { text: 'GitHub', link: 'https://github.com/Awesome-Embedded-Learning-Studio/imx-forge' },
     ],
   },
 
   sidebar: {
+    // tutorial 卷已移除:整个教程区改由 sections 按学习分区注册（见下）。
+    // 其余顶端目录仍是「一目录一卷」的自动扫描。
     volumes: [
-      { name: 'tutorial', srcDir: 'tutorial', urlPrefix: '/tutorial' },
-      { name: 'emu', srcDir: 'tutorial/emu', urlPrefix: '/tutorial/emu' },
       { name: 'architecture', srcDir: 'architecture', urlPrefix: '/architecture' },
       { name: 'ci', srcDir: 'ci', urlPrefix: '/ci' },
       { name: 'scripts', srcDir: 'scripts', urlPrefix: '/scripts' },
@@ -43,6 +127,50 @@ export default defineProject({
       { name: 'qa', srcDir: 'qa', urlPrefix: '/qa' },
       { name: 'todo', srcDir: 'todo', urlPrefix: '/todo' },
       { name: 'reference', srcDir: 'reference', urlPrefix: '/reference' },
+    ],
+
+    // /tutorial/ 总览页的侧栏:只列 7 个分区与来稿,不再展开 18 个目录 288 篇。
+    extra: {
+      '/tutorial/': [
+        { text: '教程总览', link: '/tutorial/' },
+        { text: '快速上手', link: '/tutorial/getting-started/' },
+        { text: '环境与基础', link: '/tutorial/foundations/' },
+        { text: '系统构建', link: '/tutorial/system-build/' },
+        { text: '驱动与实战', link: '/tutorial/driver-dev/' },
+        { text: '模拟与调试', link: '/tutorial/emulation/' },
+        { text: '烧录与进阶', link: '/tutorial/flashing/' },
+        { text: '速查与参考', link: '/tutorial/cheatsheet/' },
+        { text: '来稿', link: '/tutorial/contrib/' },
+      ],
+    },
+
+    // 学习分区:每个分区横跨若干物理目录,同一份侧栏数组挂到各目录前缀上。
+    // VitePress 按路径段数降序匹配前缀，故 4 段的 /tutorial/<dir>/ 恒优先于 3 段的 /tutorial/。
+    sections: [
+      {
+        slug: 'getting-started',
+        title: '快速上手',
+        // 不拥有物理目录:总览页是跨目录精选,侧栏入口手工列出。
+        dirs: [],
+        links: [
+          { text: '学习路线图', link: '/tutorial/start/00_roadmap' },
+          { text: 'Docker 一键环境', link: '/tutorial/docker/' },
+          { text: '没有板子？QEMU 直启', link: '/tutorial/emu/01_why_emulation' },
+          { text: '硬件清单与接线', link: '/tutorial/start/03_hardware_quick_reference' },
+          { text: '首次上电验收', link: '/tutorial/start/05_first_boot_check' },
+          { text: '全部教程总览', link: '/tutorial/' },
+        ],
+      },
+      { slug: 'foundations', title: '环境与基础', dirs: ['linux-basics', 'docker', 'workflow'] },
+      {
+        slug: 'system-build',
+        title: '系统构建',
+        dirs: ['start', 'uboot', 'kernel', 'rootfs', 'buildroot', 'practical'],
+      },
+      { slug: 'driver-dev', title: '驱动与实战', dirs: ['driver', 'project'] },
+      { slug: 'emulation', title: '模拟与调试', dirs: ['emu', 'debug'] },
+      { slug: 'flashing', title: '烧录与进阶', dirs: ['flash', 'build'] },
+      { slug: 'cheatsheet', title: '速查与参考', dirs: ['commands', 'third_party'] },
     ],
   },
 
@@ -123,117 +251,71 @@ export default defineProject({
 
   // 首页学习路线图:阶段卡 + 状态徽标 + 章数。
   homeRoadmap: {
-    title: '📍 学习路线图',
+    title: '学习路线图',
     next:
-      '推荐顺序:Linux 基础 → 开发环境(Docker)→ 开发工作流 → U-Boot → 内核 → 根文件系统 → Buildroot → 驱动开发(重头戏)→ QEMU 模拟 → 工程实战。各阶段可按需跳读,但驱动开发依赖前面所有基础;没有板子的朋友可以从 QEMU 模拟阶段开始体验。',
+      '推荐顺序:快速上手 → 环境与基础 → 系统构建 → 驱动与实战。模拟与调试、烧录与进阶可按需穿插;没有板子的朋友从「快速上手」里的 QEMU 直启进入即可。速查与参考随时翻。',
     stages: [
       {
-        no: '阶段 0',
-        name: 'Linux 基础预备营',
-        dir: 'linux-basics',
-        chapters: 36,
-        desc: 'Ubuntu 命令行、Shell、文件系统、进程、网络与交叉编译入门,为零基础读者打底,无缝衔接嵌入式开发。',
-        status: 'done',
-        link: '/tutorial/linux-basics/',
-      },
-      {
         no: '阶段 1',
-        name: '开发环境',
-        dir: 'docker',
-        chapters: 3,
-        desc: 'Docker 一键部署 ARM GNU Toolchain 15.2,WSL2 深度友好,告别环境配置地狱。',
+        name: '快速上手',
+        dir: 'getting-started',
+        desc: '三条最短路径:有板走硬件速查与首启验收,无板走 Docker + QEMU 直启,已配环境直接进系统构建。',
         status: 'done',
-        link: '/tutorial/docker/',
+        link: '/tutorial/getting-started/',
       },
       {
         no: '阶段 2',
-        name: '开发环境配置',
-        dir: 'workflow',
-        chapters: 7,
-        desc: 'WSL2 环境配置、VSCode Remote-SSH 远程开发、串口终端双通道、clangd 索引、tasks 模板与主机-板端传文件,把开发台一块块配齐。',
+        name: '环境与基础',
+        dir: 'foundations',
+        chapters: 48,
+        desc: 'Ubuntu 命令行、Shell、文件系统、进程、网络打底;Docker 一键部署 ARM GNU Toolchain 15.2;WSL2/远程/串口/传文件把开发台配齐。',
         status: 'done',
-        link: '/tutorial/workflow/',
+        link: '/tutorial/foundations/',
       },
       {
         no: '阶段 3',
-        name: 'U-Boot 移植',
-        dir: 'uboot',
-        chapters: 11,
-        desc: 'Bootloader 原理、Makefile 结构、板级配置、驱动 LCD 与网卡,把 i.MX6ULL 引导起来。',
+        name: '系统构建',
+        dir: 'system-build',
+        chapters: 75,
+        desc: '工具链与入门准备 → U-Boot 移植 → 主线内核 → BusyBox 手搓 rootfs → Buildroot 工程化 → 完整系统实战启动。',
         status: 'done',
-        link: '/tutorial/uboot/',
+        link: '/tutorial/system-build/',
       },
       {
         no: '阶段 4',
-        name: '内核移植',
-        dir: 'kernel',
-        chapters: 33,
-        desc: '主线单轨:统一收敛到上游 Mainline Linux(当前 v7.1,真板实测启动)。设备树、Kconfig、编译与烧写。',
-        status: 'done',
-        link: '/tutorial/kernel/',
+        name: '驱动与实战',
+        dir: 'driver-dev',
+        chapters: 128,
+        desc: '字符设备 → 设备树 → pinctrl/GPIO → I2C/SPI/RTC/触摸/音频,再到 light-meter 完整产品级项目 —— 本教程的核心重头戏。',
+        status: 'reviewing',
+        link: '/tutorial/driver-dev/',
       },
       {
         no: '阶段 5',
-        name: '根文件系统',
-        dir: 'rootfs',
-        chapters: 8,
-        desc: 'BusyBox 手搓最小 rootfs,init 流程、库依赖、NFS 开发流、模块自动加载。',
+        name: '模拟与调试',
+        dir: 'emulation',
+        chapters: 13,
+        desc: '没板子也能跑:mcimx6ul-evk + 16 个外设模型补丁;gdbserver 远程调试、strace/core dump、串口日志读法。',
         status: 'done',
-        link: '/tutorial/rootfs/',
+        link: '/tutorial/emulation/',
       },
       {
         no: '阶段 6',
-        name: 'Buildroot 构建',
-        dir: 'buildroot',
-        chapters: 13,
-        desc: '现行 rootfs 方案:br2-external 树、自定义包、Qt6 集成、ccache 与调试,从手搓迁移到工程化。',
+        name: '烧录与进阶',
+        dir: 'flashing',
+        chapters: 15,
+        desc: '存储介质与分区、i.MX6ULL 启动流程与偏移、整包镜像设计、SD/UUU+eMMC 烧录;构建目录、patch 工作流与 rootfs overlay。',
         status: 'done',
-        link: '/tutorial/buildroot/',
+        link: '/tutorial/flashing/',
       },
       {
         no: '阶段 7',
-        name: '驱动开发',
-        dir: 'driver',
-        chapters: 122,
-        desc: '从字符设备到 pinctrl/gpio,再到 I2C/SPI/RTC/触摸/音频 —— 本教程的核心重头戏,持续扩张中。',
-        status: 'reviewing',
-        link: '/tutorial/driver/',
-      },
-      {
-        no: '阶段 8',
-        name: 'QEMU 板级模拟',
-        dir: 'emu',
-        chapters: 9,
-        desc: '没有板子也能跑:mcimx6ul-evk + 16 个外设模型补丁,e2e 断言体检,真机同一份设备树。',
+        name: '速查与参考',
+        dir: 'cheatsheet',
+        chapters: 6,
+        desc: '镜像构建/检查/存储/烧录命令速查,第三方组件说明,以及脚本手册与参考手册索引。',
         status: 'done',
-        link: '/tutorial/emu/',
-      },
-      {
-        no: '阶段 9',
-        name: '实战演练',
-        dir: 'practical',
-        chapters: 5,
-        desc: '完整系统构建与调试,从零到一的嵌入式项目实战,把前面所有知识串起来。',
-        status: 'planned',
-        link: '/tutorial/practical/',
-      },
-      {
-        no: '阶段 10',
-        name: '工程实战项目',
-        dir: 'project',
-        chapters: 13,
-        desc: '工程终点:light-meter 照度护眼摆件,从空 CMakeLists 到真板产品的完整方法论。',
-        status: 'done',
-        link: '/tutorial/project/',
-      },
-      {
-        no: '阶段 11',
-        name: '构建系统',
-        dir: 'build',
-        chapters: 4,
-        desc: 'Bash + Make 自动化构建、CI/CD 验证、一键发布,把手工流程变成可信工程。',
-        status: 'done',
-        link: '/tutorial/build/',
+        link: '/tutorial/cheatsheet/',
       },
     ],
   },
@@ -241,7 +323,7 @@ export default defineProject({
   // 首页社区区块:QQ 交流群。留空/不设则首页不渲染(与 homeScreenshots/homeRoadmap 同开关约定)。
   // qrCode 走 public/ 相对路径,组件内 withBase 补 base。
   community: {
-    title: '💬 技术交流',
+    title: '技术交流',
     qq: {
       group: '645248275',
       link: 'https://qm.qq.com/q/tEsFhL8eB2',
@@ -253,6 +335,6 @@ export default defineProject({
   favicon: '/imx-forge/Awesome-Embedded.ico',
 
   homeBanner: {
-    'zh-CN': '🚀 新手必读：不知道从哪里开始？请先查看 <a href="/imx-forge/tutorial/start/00_roadmap">学习路线图</a>，了解嵌入式Linux的学习路径和项目结构。',
+    'zh-CN': '新手必读：不知道从哪里开始？请先查看 <a href="/imx-forge/tutorial/start/00_roadmap">学习路线图</a>，了解嵌入式Linux的学习路径和项目结构。',
   },
 })

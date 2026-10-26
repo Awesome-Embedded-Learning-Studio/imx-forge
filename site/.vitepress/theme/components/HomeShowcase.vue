@@ -20,7 +20,7 @@ const shots = [
   <section class="home-showcase">
     <div class="home-showcase-inner">
       <header class="home-showcase-header">
-        <h2 class="home-showcase-title">📸 实测成果</h2>
+        <h2 class="home-showcase-title">实测成果</h2>
         <p class="home-showcase-desc">不是 PPT，是正点原子阿尔法 i.MX6ULL 上的真实运行画面</p>
       </header>
 

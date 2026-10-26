@@ -16,6 +16,32 @@ export interface VolumeConfig {
   urlPrefix: string
 }
 
+/**
+ * 教程分区:把一个「学习分区」映射到 tutorial 下的若干物理目录。
+ *
+ * 动机见 site/.vitepress/config/sidebar.ts:VitePress 的多侧栏按「路径段数」
+ * 匹配,所以只要为分区下每个目录前缀都注册同一份侧栏数组,就能让 18 个目录
+ * 各归其位、而无需移动任何正文文件(URL 保持不变)。
+ */
+export interface TutorialSection {
+  /** 分区落地页所在目录名,/tutorial/<slug>/ 即分区总览。 */
+  slug: string
+  /** 分区显示名,用于侧栏首项与导航。 */
+  title: string
+  /** 该分区覆盖的 tutorial 子目录名(不含 slug 自身)。 */
+  dirs: string[]
+  /** 侧栏首项文案,缺省 `${title} · 分区总览`。 */
+  overviewText?: string
+  /**
+   * 手工补充的侧栏入口。用于 `dirs: []` 的分区(如「快速上手」):这类分区
+   * 不拥有任何物理目录,总览页本身是跨目录的精选导航,需要显式列出入口,
+   * 否则侧栏只剩「分区总览」一项。
+   */
+  links?: { text: string; link: string }[]
+  /** `links` 分组标题,缺省「精选入口」。 */
+  linksText?: string
+}
+
 /** 正文字号档位,由 FontSizeSwitcher 切换并持久化到 localStorage('vp-font-size')。 */
 export type FontTier = 'xxsmall' | 'small' | 'normal' | 'large' | 'xxlarge'
 
@@ -76,6 +102,19 @@ export interface CommunityConfig {
   qq: CommunityQqConfig
 }
 
+/**
+ * 顶栏导航项:既可直接跳转(link)、又可展开二级菜单(items)。
+ *
+ * VitePress 的 NavItem 是两个互斥的联合成员,对象字面量里同时写 link 与 items
+ * 会被多余属性检查拒掉;主题侧已覆盖 VPNavBarMenu 支持这种形态(见
+ * theme/components/NavSplitItem.vue),这里同步补上类型。
+ */
+export type NavItemWithLinkAndItems = DefaultTheme.NavItemWithLink & {
+  items: DefaultTheme.NavItem[]
+}
+
+export type ProjectNavItem = DefaultTheme.NavItem | NavItemWithLinkAndItems
+
 export interface ProjectConfig {
   name: string
   title: Record<string, string>
@@ -88,10 +127,12 @@ export interface ProjectConfig {
 
   locales: LocaleConfig[]
 
-  nav: Record<string, DefaultTheme.NavItem[]>
+  nav: Record<string, ProjectNavItem[]>
   sidebar: {
     volumes: VolumeConfig[]
     extra?: Record<string, DefaultTheme.SidebarItem[]>
+    /** 教程分区:每个分区会覆盖其 slug 与 dirs 的全部路径前缀侧栏。 */
+    sections?: TutorialSection[]
   }
 
   github: {
