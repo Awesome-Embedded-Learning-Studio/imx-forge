@@ -26,17 +26,38 @@ function normalize(link: string): string {
   return link.replace(/\.md$/, '').replace(/\/index$/, '/').replace(/\/$/, '')
 }
 
+// 与 VitePress getSidebar() 同款解析：sidebar 为对象时，按 key 的路径段数
+// 降序排列，取第一个命中当前页路径的前缀。
+function resolveSidebar(sidebar: any, relPath: string): any[] | null {
+  if (Array.isArray(sidebar)) return sidebar
+  if (!sidebar || typeof sidebar !== 'object') return null
+
+  const path = '/' + relPath
+  const key = Object.keys(sidebar)
+    .sort((a, b) => b.split('/').length - a.split('/').length)
+    .find(k => path.startsWith(k.startsWith('/') ? k : '/' + k))
+
+  if (!key) return null
+  const group = sidebar[key]
+  return Array.isArray(group) ? group : null
+}
+
 const navInfo = computed(() => {
   const sidebar = theme.value.sidebar
   if (!sidebar) return null
 
   const relPath = page.value.relativePath // e.g. "tutorial/uboot/07_network_porting.md"
 
-  // 只在当前页面所属的 volume（顶级目录）内做上一篇/下一篇导航，
-  // 避免读完一篇教程后跨主题跳到架构/脚本等不相关章节。
-  const topSegment = relPath.slice(0, relPath.indexOf('/'))
-  const group = sidebar[`/${topSegment}/`]
-  if (!Array.isArray(group)) return null
+  // 只在当前页面所属的侧栏分组内做上一篇/下一篇导航，避免读完一篇教程后
+  // 跨主题跳到架构/脚本等不相关章节。
+  //
+  // 取法与 VitePress 的 getSidebar() 保持一致：按 key 的路径段数降序取首个
+  // 命中前缀。教程区改成「学习分区」后，一个分区横跨多个目录（如
+  // /tutorial/uboot/ 与 /tutorial/kernel/ 共用「系统构建」侧栏），
+  // 若仍按顶级目录取 sidebar['/tutorial/']，取到的是分区导航总览，
+  // 上下篇就会指到分区而不是章节。
+  const group = resolveSidebar(theme.value.sidebar, relPath)
+  if (!group) return null
 
   const allPages: FlatPage[] = flattenSidebar(group, [])
   if (allPages.length === 0) return null

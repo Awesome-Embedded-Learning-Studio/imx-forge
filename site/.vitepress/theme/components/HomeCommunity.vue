@@ -10,7 +10,7 @@ defineProps<{ community: CommunityConfig }>()
 <template>
   <section id="community" class="home-community">
     <div class="home-community__card">
-      <h2 class="home-community__title">{{ community.title ?? '💬 技术交流' }}</h2>
+      <h2 class="home-community__title">{{ community.title ?? '技术交流' }}</h2>
 
       <div class="home-community__body">
         <a
@@ -45,7 +45,7 @@ defineProps<{ community: CommunityConfig }>()
             :href="community.qq.link"
             target="_blank"
             rel="noopener"
-          >💬 加入群聊</a>
+          >加入群聊</a>
         </div>
       </div>
     </div>

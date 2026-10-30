@@ -6,6 +6,7 @@ import { articleCodeThemes } from './article-code-theme'
 import { getBuildInfo } from './build-info'
 import type { ProjectConfig } from './schema'
 import { resolve } from 'path'
+import { fileURLToPath } from 'node:url'
 
 // ── Load project config ──────────────────────────────────
 // This file is the VitePress entry point. It reads the user's
@@ -31,16 +32,37 @@ const editPatternBase = `${githubUrl}/edit/${projectConfig.github.branch}/${proj
 const buildInfo = getBuildInfo()
 
 // Resolve docsRoot relative to this file (site/.vitepress/config/)
-const docsRoot = new URL(`../../../${projectConfig.documentsDir}`, import.meta.url).pathname.replace(/\/$/, '')
+// 必须用 fileURLToPath 而不是 URL.pathname：后者在 Windows 上给出 "/D:/project/..."
+// 这种带前导斜杠的形态，Node 的 win32 路径处理会把它当成当前盘根目录下的相对路径，
+// 于是 readdirSync / existsSync 全部失败 —— 而 sidebar.ts 里的 scanDir / extractTitle
+// 都有 try-catch 兜底，症状是「侧栏只剩标题、子项全空」且不报任何错。
+const docsRoot = fileURLToPath(
+  new URL(`../../../${projectConfig.documentsDir}`, import.meta.url)
+).replace(/\/$/, '')
 
-// 覆盖 vitepress 内置搜索盒:VPLocalSearchBox 只被 VPNavBarSearch 以
-// './VPLocalSearchBox.vue' 这一精确 specifier 引用,alias 按 specifier 命中,
-// 把它指到我们的覆盖版(索引构建+查询挪进 Web Worker,防大索引下搜索一开
-// 页面就冻住主线程;方案自姊妹项目 TAMCPP 移植)。
-const localSearchBoxAlias = {
+// 覆盖 vitepress 内置组件(alias 按 specifier 命中,写法与内置 import 完全一致):
+//
+// 1. VPLocalSearchBox:VPLocalSearchBox 只被 VPNavBarSearch 以
+//    './VPLocalSearchBox.vue' 这一精确 specifier 引用,把它指到我们的覆盖版
+//    (索引构建+查询挪进 Web Worker,防大索引下搜索一开页面就冻住主线程;
+//    方案自姊妹项目 TAMCPP 移植)。
+// 2. VPNavBarMenu:内置版用 `'link' in item` 做判定,同项既有 link 又有 items
+//    时只渲染链接、丢掉二级菜单。覆盖版让文字可跳转、箭头可展开子分类。
+// 3. VPNavScreenMenu:手机端导航屏,内置版同样 `'link' in item` 优先,复合项
+//    退化成纯链接。覆盖版交给内置手风琴 VPNavScreenMenuGroup,组首插入
+//    「分区总览」链接,与桌面端行为对齐。
+const componentAlias = {
   './VPLocalSearchBox.vue': resolve(
     __dirname,
     '../theme/components/VPLocalSearchBox.vue'
+  ),
+  './VPNavBarMenu.vue': resolve(
+    __dirname,
+    '../theme/components/VPNavBarMenu.vue'
+  ),
+  './VPNavScreenMenu.vue': resolve(
+    __dirname,
+    '../theme/components/VPNavScreenMenu.vue'
   ),
 }
 
@@ -163,7 +185,7 @@ export default defineConfig({
   vite: {
     publicDir: resolve(__dirname, '../public'),
     resolve: {
-      alias: localSearchBoxAlias,
+      alias: componentAlias,
     },
     // mermaid / @panzoom/panzoom 都只在客户端动态 import(mermaid 渲染时、panzoom
     // 点全屏放大后),SSR 构建时外置,避免 SSR bundle 打包浏览器侧重依赖(会因 DOM
