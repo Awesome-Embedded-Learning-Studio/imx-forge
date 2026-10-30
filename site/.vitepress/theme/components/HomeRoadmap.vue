@@ -51,7 +51,6 @@ const statusMeta: Record<RoadmapStatus, { mark: string; label: string; cls: stri
           </div>
           <h3 class="rm-stage__name">{{ s.name }}</h3>
           <p class="rm-stage__desc">{{ s.desc }}</p>
-          <span v-if="s.chapters != null" class="rm-stage__meta">{{ s.chapters }} 章</span>
         </a>
       </div>
 
@@ -212,14 +211,6 @@ const statusMeta: Record<RoadmapStatus, { mark: string; label: string; cls: stri
   line-height: 1.7;
   color: var(--vp-c-text-2);
   flex: 1;
-}
-
-.rm-stage__meta {
-  align-self: flex-start;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vp-c-brand-1);
-  font-variant-numeric: tabular-nums;
 }
 
 .home-roadmap__next {

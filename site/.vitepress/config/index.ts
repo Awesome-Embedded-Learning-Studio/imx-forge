@@ -48,6 +48,9 @@ const docsRoot = fileURLToPath(
 //    方案自姊妹项目 TAMCPP 移植)。
 // 2. VPNavBarMenu:内置版用 `'link' in item` 做判定,同项既有 link 又有 items
 //    时只渲染链接、丢掉二级菜单。覆盖版让文字可跳转、箭头可展开子分类。
+// 3. VPNavScreenMenu:手机端导航屏,内置版同样 `'link' in item` 优先,复合项
+//    退化成纯链接。覆盖版交给内置手风琴 VPNavScreenMenuGroup,组首插入
+//    「分区总览」链接,与桌面端行为对齐。
 const componentAlias = {
   './VPLocalSearchBox.vue': resolve(
     __dirname,
@@ -56,6 +59,10 @@ const componentAlias = {
   './VPNavBarMenu.vue': resolve(
     __dirname,
     '../theme/components/VPNavBarMenu.vue'
+  ),
+  './VPNavScreenMenu.vue': resolve(
+    __dirname,
+    '../theme/components/VPNavScreenMenu.vue'
   ),
 }
 

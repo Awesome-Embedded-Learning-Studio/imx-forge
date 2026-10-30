@@ -72,7 +72,6 @@ export interface RoadmapStage {
   no: string
   name: string
   dir?: string
-  chapters?: number
   desc: string
   status: RoadmapStatus
   link: string
@@ -108,8 +107,15 @@ export interface CommunityConfig {
  * VitePress 的 NavItem 是两个互斥的联合成员,对象字面量里同时写 link 与 items
  * 会被多余属性检查拒掉;主题侧已覆盖 VPNavBarMenu 支持这种形态(见
  * theme/components/NavSplitItem.vue),这里同步补上类型。
+ *
+ * 注意:不能写成 `NavItemWithLink & { items: NavItem[] }` —— 内置 NavItemWithLink
+ * 的 `items?: never` 是判别字段,交叉后 items 归并为 never,该类型实际不可用,
+ * 字面量检查必然报「多余属性」。先 Omit 掉判别字段,再补真实子目录类型。
  */
-export type NavItemWithLinkAndItems = DefaultTheme.NavItemWithLink & {
+export type NavItemWithLinkAndItems = Omit<
+  DefaultTheme.NavItemWithLink,
+  'items'
+> & {
   items: DefaultTheme.NavItem[]
 }
 
