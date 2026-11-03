@@ -21,7 +21,8 @@
 #                     Default expectation "buildroot login:" can be overridden
 #                     with --expect="PATTERN" (grep -E, may repeat).
 #   --expect=PATTERN  (with --smoke) grep -E pattern the UART log must contain
-#   --timeout=SEC     (with --smoke) give up after SEC seconds (default 180)
+#   --timeout=SEC     (with --smoke) give up after SEC seconds (default 180);
+#                     pass exits early once every --expect pattern matched
 #   --log=PATH        (with --smoke) UART log path (default: out/qemu/uart.log)
 #   -h, --help        Show this help message
 #
@@ -231,13 +232,40 @@ mkdir -p "$(dirname "${LOG_PATH}")"
 
 log "smoke test: timeout ${TIMEOUT}s, expecting: ${EXPECTS[*]}"
 set +e
-timeout --foreground "${TIMEOUT}" "${QEMU_BIN}" "${QEMU_ARGS[@]}" \
-    -nographic -no-reboot >"${LOG_PATH}" 2>&1
-QEMU_RC=$?
+# Poll the UART log instead of timeout(1): all patterns matched => kill QEMU
+# and pass right away (a full 1500s wait per green CI run burns runner
+# minutes for nothing). rc=124 keeps the old timeout(1) convention.
+"${QEMU_BIN}" "${QEMU_ARGS[@]}" -nographic -no-reboot >"${LOG_PATH}" 2>&1 &
+QEMU_PID=$!
+DEADLINE=$(( SECONDS + TIMEOUT ))
+EARLY_PASS=0
+while kill -0 "${QEMU_PID}" 2>/dev/null; do
+    ALL_MATCHED=1
+    for pat in "${EXPECTS[@]}"; do
+        grep -qE -- "${pat}" "${LOG_PATH}" 2>/dev/null || { ALL_MATCHED=0; break; }
+    done
+    if [[ "${ALL_MATCHED}" -eq 1 ]]; then
+        EARLY_PASS=1
+        break
+    fi
+    if (( SECONDS >= DEADLINE )); then
+        break
+    fi
+    sleep 2
+done
+if kill -0 "${QEMU_PID}" 2>/dev/null; then
+    # deadline hit or patterns matched — stop the guest either way
+    kill "${QEMU_PID}" 2>/dev/null
+    wait "${QEMU_PID}" 2>/dev/null
+    QEMU_RC=124
+else
+    wait "${QEMU_PID}"
+    QEMU_RC=$?
+fi
 set -e
 
-# timeout(1) exits 124 on timeout; QEMU killed by our timeout is the normal
-# smoke-test end (a successful boot idles at the login prompt forever).
+# QEMU killed by our deadline is the normal smoke-test end (a successful
+# boot idles at the login prompt forever); rc=0 is the -no-reboot guest exit.
 case "${QEMU_RC}" in
     0|124) ;;
     *) die "QEMU exited with rc=${QEMU_RC}, see ${LOG_PATH}" ;;

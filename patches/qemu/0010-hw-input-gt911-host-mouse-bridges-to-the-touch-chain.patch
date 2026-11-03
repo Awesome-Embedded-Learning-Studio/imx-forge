@@ -31,9 +31,10 @@ diff --git a/hw/input/gt911.c b/hw/input/gt911.c
 index ba06a95..5c0bb9f 100644
 --- a/hw/input/gt911.c
 +++ b/hw/input/gt911.c
-@@ -14,6 +14,7 @@
+@@ -14,7 +14,8 @@
  #include "qemu/osdep.h"
  #include "hw/input/gt911.h"
+ #include "hw/core/irq.h"
  #include "qemu/module.h"
 +#include "ui/input.h"
  
@@ -135,7 +136,7 @@ index ba06a95..5c0bb9f 100644
 +                                                   &gt911_input_handler);
  }
  
- static void gt911_class_init(ObjectClass *klass, void *data)
+ static void gt911_class_init(ObjectClass *klass, const void *data)
 diff --git a/include/hw/input/gt911.h b/include/hw/input/gt911.h
 index 4b37710..da198c5 100644
 --- a/include/hw/input/gt911.h

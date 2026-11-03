@@ -89,7 +89,7 @@ index bcad55a..2ed73ba 100644
      depends on I2C
 diff --git a/hw/sensor/icm20608.c b/hw/sensor/icm20608.c
 new file mode 100644
-index 0000000..e8532ea
+index 0000000..f7be62b
 --- /dev/null
 +++ b/hw/sensor/icm20608.c
 @@ -0,0 +1,150 @@
@@ -219,7 +219,7 @@ index 0000000..e8532ea
 +{
 +}
 +
-+static void icm20608_class_init(ObjectClass *klass, void *data)
++static void icm20608_class_init(ObjectClass *klass, const void *data)
 +{
 +    SSIPeripheralClass *k = SSI_PERIPHERAL_CLASS(klass);
 +    ResettableClass *rc = RESETTABLE_CLASS(klass);
