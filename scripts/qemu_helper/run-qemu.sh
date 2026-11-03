@@ -18,6 +18,7 @@
 #   --no-build        Skip the automatic dtb/rootfs-image rebuild below
 #   --smoke           Non-interactive boot test: capture UART to log, assert
 #                     boot reaches the login prompt, exit 0/1 accordingly.
+#                     A kernel panic in the log fails immediately.
 #                     Default expectation "buildroot login:" can be overridden
 #                     with --expect="PATTERN" (grep -E, may repeat).
 #   --expect=PATTERN  (with --smoke) grep -E pattern the UART log must contain
@@ -239,7 +240,15 @@ set +e
 QEMU_PID=$!
 DEADLINE=$(( SECONDS + TIMEOUT ))
 EARLY_PASS=0
+PANIC_HIT=0
 while kill -0 "${QEMU_PID}" 2>/dev/null; do
+    # kernel panic => the boot is dead; -no-reboot leaves QEMU sitting on the
+    # dead screen, so fail fast instead of idling out the whole deadline
+    if grep -q "Kernel panic - not syncing" "${LOG_PATH}" 2>/dev/null; then
+        PANIC_HIT=1
+        log "kernel panic detected, stopping early"
+        break
+    fi
     ALL_MATCHED=1
     for pat in "${EXPECTS[@]}"; do
         grep -qE -- "${pat}" "${LOG_PATH}" 2>/dev/null || { ALL_MATCHED=0; break; }
@@ -270,6 +279,12 @@ case "${QEMU_RC}" in
     0|124) ;;
     *) die "QEMU exited with rc=${QEMU_RC}, see ${LOG_PATH}" ;;
 esac
+
+if [[ "${PANIC_HIT}" -eq 1 ]]; then
+    log "FAIL: kernel panic in UART log (${LOG_PATH}):"
+    tail -n 40 "${LOG_PATH}" >&2 || true
+    exit 1
+fi
 
 FAILED=0
 for pat in "${EXPECTS[@]}"; do
