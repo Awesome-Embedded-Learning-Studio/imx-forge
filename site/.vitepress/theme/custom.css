@@ -256,6 +256,16 @@ html {
   }
 }
 
+/* ── Doc Footer(#132) ────────────────────────────────────────── */
+
+/* 文档页脚的上下篇导航已由 doc-after 槽里的 DocNavCards 卡片接管,
+   默认主题的 prev/next pager 藏掉,否则页脚出现两套跳转(#132)。
+   .pager 只在 VPDocFooter 里出现;隐藏副本仍留在 DOM 中(SEO 无损),
+   pager 同层的 last-updated / 编辑链接不受影响。 */
+.pager {
+  display: none;
+}
+
 /* ── Features Grid ───────────────────────────────────────────── */
 
 /* VitePress 默认渲染的首页卡网格整体隐藏:网格已由 HomeFeatureGrid
