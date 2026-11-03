@@ -409,17 +409,21 @@ Arrow keys navigate the menu.  <Enter> selects submenus --->.
 
 ### 常用配置项
 
-1. **Settings → Build Options**
-   - `Build BusyBox as a static binary`：静态链接（推荐用于 Rootfs）
-   - `Cross compiler prefix`：设置交叉编译器前缀
+::: tip menuconfig 搜索
+在 menuconfig 里按 `/` 可以搜索配置项（支持正则），搜索词要和菜单里显示的名字一致，比如 `Command line editing`；直接输符号名（如 `FEATURE_EDITING`）也能搜到。
+:::
+
+1. **Settings**
+   - `Build Options → Build BusyBox as a static binary`：静态链接（推荐用于 Rootfs）
+   - `Build Options → Cross compiler prefix`：设置交叉编译器前缀
+   - `Command line editing`：命令行编辑，方向键、退格可用；符号名是 `FEATURE_EDITING`，就挂在 Settings 顶层，不在 Shells 里
 
 2. **Init Utilities**
    - `init`：必须启用，系统启动需要
-   - `Support for running an init from within an shell`：调试时有用
+   - `linuxrc: support running init from initrd (not initramfs)`：老式 initrd 的兼容支持，让 linuxrc 能充当 init；走 initramfs/rootfs 的流程用不到它
 
 3. **Shells**
-   - `ash`：推荐，功能比 sh 强，比 bash 小
-   - `Feature: Editing mode`：命令行编辑功能
+   - `ash`：默认 shell，`sh` 是它的别名，同一个东西；比 bash 小得多
 
 4. **Networking Utilities**
    - `ifconfig`：网络配置
