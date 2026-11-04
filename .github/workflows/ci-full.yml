@@ -315,12 +315,19 @@ jobs:
           # subproject 编成共享库，构建时的 RPATH 只指向 build 目录；缓存只存裸二进制，
           # 恢复到新 runner 后 RPATH 失效，没有它 QEMU 起不来 rc=127，run 33701714661）
 
+      - name: 解析 qemu 子模块钉子（缓存键成分）
+        id: qemu-pin
+        run: echo "sha=$(git ls-tree HEAD third_party/qemu | awk '{print $3}')" >> "$GITHUB_OUTPUT"
+
       - name: 恢复自建 QEMU 缓存（v11.1 + 板级补丁）
         id: qemu-cache
         uses: actions/cache@v4
         with:
           path: out/qemu/build/qemu-system-arm
-          key: qemu-arm-v11.1.0-${{ hashFiles('patches/qemu/*.patch', '.gitmodules') }}
+          # 键只盯 qemu 自己的两样东西：子模块钉子 + 板级补丁。
+          # 别把 .gitmodules 整个哈希进来——uboot/linux 换源会误伤这个缓存，
+          # 10-20 起的每次 push 都因此现编 QEMU（run 历史 39375313617 起）。
+          key: qemu-arm-v11.1.0-${{ steps.qemu-pin.outputs.sha }}-${{ hashFiles('patches/qemu/*.patch') }}
 
       - name: 构建自建 QEMU（仅缓存未命中时）
         if: steps.qemu-cache.outputs.cache-hit != 'true'
@@ -348,7 +355,7 @@ jobs:
             --kernel=qemu-assets/zImage \
             --dtb=qemu-assets/imx6ull-aes.dtb \
             --rootfs-img=qemu-assets/rootfs.ext4 \
-            --timeout=300 \
+            --timeout=1500 \
             --append=earlycon \
             --log=qemu-assets/uart.log
 

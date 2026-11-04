@@ -90,7 +90,7 @@ index 1543ee6..fdbd367 100644
  
 diff --git a/hw/misc/imx6ul_pwm.c b/hw/misc/imx6ul_pwm.c
 new file mode 100644
-index 0000000..61c63a4
+index 0000000..54a7154
 --- /dev/null
 +++ b/hw/misc/imx6ul_pwm.c
 @@ -0,0 +1,140 @@
@@ -210,7 +210,7 @@ index 0000000..61c63a4
 +    object_property_add_uint16_ptr(obj, "period", &s->pwmpr, OBJ_PROP_FLAG_READ);
 +}
 +
-+static void imx6ul_pwm_class_init(ObjectClass *klass, void *data)
++static void imx6ul_pwm_class_init(ObjectClass *klass, const void *data)
 +{
 +    DeviceClass *dc = DEVICE_CLASS(klass);
 +    ResettableClass *rc = RESETTABLE_CLASS(klass);

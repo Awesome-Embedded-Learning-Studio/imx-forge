@@ -92,7 +92,7 @@ index 5c0bb9f..fbb1516 100644
 +    /* the command register is plain storage: accepted, not verified */
  }
  
- static void gt911_event(I2CSlave *i2c, enum i2c_event event)
+ static int gt911_event(I2CSlave *i2c, enum i2c_event event)
 @@ -184,6 +222,7 @@ static void gt911_reset_hold(Object *obj, ResetType type)
      GT911State *s = GT911(obj);
  

@@ -162,10 +162,10 @@ index 2154cbd..24b239f 100644
 +system_ss.add(when: 'CONFIG_WM8960', if_true: files('wm8960.c'))
 diff --git a/hw/audio/wm8960.c b/hw/audio/wm8960.c
 new file mode 100644
-index 0000000..6ed3f1e
+index 0000000..164c4ff
 --- /dev/null
 +++ b/hw/audio/wm8960.c
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,122 @@
 +/*
 + * Wolfson/Cirrus WM8960 audio codec — control-plane teaching model (I2C).
 + *
@@ -243,13 +243,14 @@ index 0000000..6ed3f1e
 +    return 0;
 +}
 +
-+static void wm8960_event(I2CSlave *i2c, enum i2c_event event)
++static int wm8960_event(I2CSlave *i2c, enum i2c_event event)
 +{
 +    WM8960State *s = WM8960(i2c);
 +
 +    if (event == I2C_START_SEND) {
 +        s->first_byte = true;
 +    }
++    return 0;
 +}
 +
 +static void wm8960_reset_hold(Object *obj, ResetType type)
@@ -263,7 +264,7 @@ index 0000000..6ed3f1e
 +    s->first_byte = true;
 +}
 +
-+static void wm8960_class_init(ObjectClass *klass, void *data)
++static void wm8960_class_init(ObjectClass *klass, const void *data)
 +{
 +    I2CSlaveClass *k = I2C_SLAVE_CLASS(klass);
 +    ResettableClass *rc = RESETTABLE_CLASS(klass);
@@ -301,10 +302,10 @@ index a116cb8..65e744d 100644
 +    depends on I2C
 diff --git a/hw/input/gt911.c b/hw/input/gt911.c
 new file mode 100644
-index 0000000..ba06a95
+index 0000000..283fcab
 --- /dev/null
 +++ b/hw/input/gt911.c
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,171 @@
 +/*
 + * Goodix GT911 capacitive touchscreen controller — teaching model.
 + * See include/hw/input/gt911.h for the design rationale.
@@ -320,6 +321,7 @@ index 0000000..ba06a95
 +
 +#include "qemu/osdep.h"
 +#include "hw/input/gt911.h"
++#include "hw/core/irq.h"
 +#include "qemu/module.h"
 +
 +/* coordinate report at 0x814e, 8-byte contact format (little-endian x/y):
@@ -371,13 +373,14 @@ index 0000000..ba06a95
 +     * not verified — a fresh chip accepts config the same way */
 +}
 +
-+static void gt911_event(I2CSlave *i2c, enum i2c_event event)
++static int gt911_event(I2CSlave *i2c, enum i2c_event event)
 +{
 +    GT911State *s = GT911(i2c);
 +
 +    if (event == I2C_START_SEND || event == I2C_START_RECV) {
 +        s->addr_bytes = 0;
 +    }
++    return 0;
 +}
 +
 +static uint8_t gt911_recv(I2CSlave *i2c)
@@ -449,7 +452,7 @@ index 0000000..ba06a95
 +    qdev_init_gpio_out_named(DEVICE(s), &s->int_line, "gt911-int", 1);
 +}
 +
-+static void gt911_class_init(ObjectClass *klass, void *data)
++static void gt911_class_init(ObjectClass *klass, const void *data)
 +{
 +    I2CSlaveClass *k = I2C_SLAVE_CLASS(klass);
 +    ResettableClass *rc = RESETTABLE_CLASS(klass);

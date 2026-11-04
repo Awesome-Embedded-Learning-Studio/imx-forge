@@ -92,10 +92,10 @@ index bc6331b..bcad55a 100644
      depends on I2C
 diff --git a/hw/sensor/ap3216c.c b/hw/sensor/ap3216c.c
 new file mode 100644
-index 0000000..1d69f71
+index 0000000..0387075
 --- /dev/null
 +++ b/hw/sensor/ap3216c.c
-@@ -0,0 +1,140 @@
+@@ -0,0 +1,141 @@
 +/*
 + * AP3216C ambient light / proximity / IR sensor — teaching model.
 + *
@@ -141,13 +141,14 @@ index 0000000..1d69f71
 +    }
 +}
 +
-+static void ap3216c_event(I2CSlave *i2c, enum i2c_event event)
++static int ap3216c_event(I2CSlave *i2c, enum i2c_event event)
 +{
 +    AP3216CState *s = AP3216C(i2c);
 +
 +    if (event == I2C_START_SEND) {
 +        s->first_byte = true;
 +    }
++    return 0;
 +}
 +
 +static uint8_t ap3216c_recv(I2CSlave *i2c)
@@ -211,7 +212,7 @@ index 0000000..1d69f71
 +                                   OBJ_PROP_FLAG_READWRITE);
 +}
 +
-+static void ap3216c_class_init(ObjectClass *klass, void *data)
++static void ap3216c_class_init(ObjectClass *klass, const void *data)
 +{
 +    I2CSlaveClass *k = I2C_SLAVE_CLASS(klass);
 +    ResettableClass *rc = RESETTABLE_CLASS(klass);
