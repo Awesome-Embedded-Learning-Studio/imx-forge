@@ -372,17 +372,136 @@
   background: var(--article-code-header);
 }
 
+/* ── CodeLoc 出处卡(::: code-loc 项目 路径) ──────────────────
+   外层卡 = 头带(项目徽章 + 可点复制的路径) + 内层原生代码卡摊平。
+   与代码卡同一张面(边框/圆角/投影/令牌),头带色带与代码卡 44px 顶栏同源;
+   明暗全走 --article-* 令牌。组件本体在 theme/components/CodeLoc.vue,
+   容器由 plugins/code-loc-plugin.ts 构建期生成。 */
+.vp-code-loc {
+  margin: 24px 0;
+  border: 1px solid var(--article-code-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--article-code-bg);
+  box-shadow: var(--article-code-shadow);
+}
+
+.vp-code-loc .vp-cl-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--article-code-border);
+  background: var(--article-code-header);
+}
+
+/* 项目徽章:与语言徽章(.lang)同款底色和字重,一眼分清「哪个仓库」。 */
+.vp-code-loc .vp-cl-project {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: var(--article-code-badge);
+  color: var(--article-code-accent);
+  font: 600 11px/18px var(--vp-font-family-base);
+  letter-spacing: 0.025em;
+}
+
+/* 路径是整段可点的复制按钮:hover 显边框,复制成功换强调描边。 */
+.vp-code-loc .vp-cl-path {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--vp-c-text-1);
+  font-family: var(--article-code-font);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.vp-code-loc .vp-cl-path:hover {
+  border-color: var(--article-code-border);
+  background: var(--article-code-badge);
+}
+
+.vp-code-loc .vp-cl-path:focus-visible {
+  outline: 2px solid var(--article-code-accent);
+  outline-offset: 2px;
+}
+
+.vp-code-loc .vp-cl-path--copied {
+  border-color: var(--article-code-accent);
+}
+
+.vp-code-loc .vp-cl-path code {
+  overflow: hidden;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 复制提示:平时只露路径,hover 或复制成功才现身,不打扰正文。 */
+.vp-code-loc .vp-cl-hint {
+  flex-shrink: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--article-code-border);
+  color: var(--article-code-accent);
+  font: 500 11px/18px var(--vp-font-family-base);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.vp-code-loc .vp-cl-path:hover .vp-cl-hint,
+.vp-code-loc .vp-cl-path--copied .vp-cl-hint {
+  opacity: 1;
+}
+
+/* 内层摊平:出处卡自带卡面,内层代码卡/fold 卡/code-group 去掉重复的
+   边框圆角投影,只留各自的顶栏横带(语言徽章 + 复制按钮)作块间分段。 */
+.vp-code-loc .vp-cl-body > div[class*='language-'],
+.vp-code-loc .vp-cl-body > .vp-code-fold {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* 容器内多个块(源码 + 输出面板、多个代码卡)之间留呼吸,不加线:
+   每块的顶栏横带本身已是分段视觉。 */
+.vp-code-loc .vp-cl-body > * + * {
+  margin-top: 12px;
+}
+
+/* 容器里的说明文字别贴边,给左右内边距。 */
+.vp-code-loc .vp-cl-body > p {
+  margin-right: 16px;
+  margin-left: 16px;
+}
+
 /* ── hover 上浮 ───────────────────────────────────────────────
-   只浮最外层卡面(:not 排除 code-group/折叠卡/引用块里的嵌套块),
+   只浮最外层卡面(:not 排除 code-group/折叠卡/code-loc/引用块里的嵌套块),
    否则嵌套块跟父卡一起浮会二次位移;触屏和无障碍偏好关掉动画的场景直接不浮。 */
 @media screen and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .vp-doc div[class*='language-']:not(.vp-code-fold *, .vp-code-group *, blockquote *),
-  .vp-doc .vp-code-fold:not(blockquote *) {
+  .vp-doc div[class*='language-']:not(.vp-code-fold *, .vp-code-group *, .vp-code-loc *, blockquote *),
+  .vp-doc .vp-code-fold:not(blockquote *),
+  .vp-doc .vp-code-loc:not(blockquote *) {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  .vp-doc div[class*='language-']:not(.vp-code-fold *, .vp-code-group *, blockquote *):hover,
-  .vp-doc .vp-code-fold:not(blockquote *):hover {
+  .vp-doc div[class*='language-']:not(.vp-code-fold *, .vp-code-group *, .vp-code-loc *, blockquote *):hover,
+  .vp-doc .vp-code-fold:not(blockquote *):hover,
+  .vp-doc .vp-code-loc:not(blockquote *):hover {
     transform: translateY(-2px);
     box-shadow: var(--article-code-hover-shadow);
   }
@@ -392,13 +511,22 @@
    639px 以下:圆角/行号列收窄,summary 内边距压缩,保证小屏不溢出。 */
 @media (max-width: 639px) {
   .vp-doc div[class*='language-'],
-  .vp-doc .vp-code-fold {
+  .vp-doc .vp-code-fold,
+  .vp-doc .vp-code-loc {
     border-radius: 10px;
   }
   .vp-doc .vp-code-fold > details > summary {
     gap: 10px;
     padding-right: 14px;
     padding-left: 14px;
+  }
+  .vp-doc .vp-code-loc .vp-cl-head {
+    gap: 8px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .vp-doc .vp-code-loc .vp-cl-path {
+    font-size: 12px;
   }
   .vp-doc div[class*='language-'].line-numbers-mode {
     padding-left: 32px;
@@ -413,7 +541,8 @@
    否则纸面上这段内容就丢了;复制按钮在纸上不可点,一并隐藏。 */
 @media print {
   .vp-doc div[class*='language-'],
-  .vp-doc .vp-code-fold {
+  .vp-doc .vp-code-fold,
+  .vp-doc .vp-code-loc {
     box-shadow: none;
   }
   .vp-doc .vp-code-fold {
@@ -426,6 +555,15 @@
     display: block !important;
   }
   .vp-doc [class*='language-'] > button.copy {
+    display: none;
+  }
+  /* 路径复制按钮在纸上不可点:去掉按钮相,保留完整路径文字;提示一并隐藏。 */
+  .vp-doc .vp-code-loc .vp-cl-path {
+    border: 0;
+    background: none;
+    cursor: default;
+  }
+  .vp-doc .vp-code-loc .vp-cl-hint {
     display: none;
   }
 }

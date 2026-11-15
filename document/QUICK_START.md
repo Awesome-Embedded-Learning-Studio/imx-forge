@@ -683,8 +683,10 @@ Out:    serial
 Err:    serial
 Net:   ethernet@02188000
 
-Hit any key to stop autoboot...  3  2  1
+=>
 ```
+
+看到 `=>` 提示符，说明 U-Boot 已经起来了。项目镜像的 U-Boot 不自动启动（板级配置 `CONFIG_BOOTDELAY=-1`），上电后会停在这个提示符等你输入，没有 autoboot 倒计时。手动引导内核的做法见 [SD 卡烧录实战](tutorial/flash/09_sd_card_flashing.md) 与 [UUU + UMS eMMC 烧录](tutorial/flash/10_uuu_ums_emmc_flashing.md)。
 
 ### Linux 内核启动验证
 

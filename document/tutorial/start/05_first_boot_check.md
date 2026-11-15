@@ -34,12 +34,12 @@ U-Boot 2024.x ...
 CPU: Freescale i.MX6ULL
 DRAM: 512 MiB
 ...
-Hit any key to stop autoboot:  0
+=>
 ```
 
 - **没有 U-Boot 输出** → 串口接错 / 波特率错 / 流控没关 / 拨码启动介质错
 - **卡在 DRAM** → 硬件问题（内存）
-- **autoboot 倒计时** → 按 Enter 进 U-Boot 命令行调试
+- **停在 `=>` 提示符** → 正常落点，项目镜像不自动启动（`CONFIG_BOOTDELAY=-1`），调试命令直接敲（见下）
 
 ### 2. 内核阶段
 
@@ -83,7 +83,7 @@ imx6ull login:
 | 串口乱码 | 波特率不是 115200 |
 
 ::: tip 救命稻草：U-Boot 命令行
-咱们在启动倒计时时按 Enter 进入 U-Boot 命令行，可以 `printenv` 看环境变量、`bootd` 重新启动、手动 `tftp`/`load` 测试镜像。见 [U-Boot 教程](../uboot/)。
+项目镜像不自动启动（板级配置 `CONFIG_BOOTDELAY=-1`），上电后 U-Boot 会停在 `=>` 提示符等你输入，这里就是救命稻草：`printenv` 看环境变量、`bootd` 重新启动、手动 `tftp`/`load` 测试镜像。见 [U-Boot 教程](../uboot/)。
 :::
 
 ## 继续学习

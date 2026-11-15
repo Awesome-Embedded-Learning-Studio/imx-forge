@@ -141,7 +141,9 @@ export default defineConfig({
   base: projectConfig.base,
   cleanUrls: true,
   lastUpdated: true,
-  ignoreDeadLinks: false,
+  // 精确豁免:boot-chain 卷连载中的预告性链接(指向尚未写出的篇目)。
+  // 对应篇目落地后删掉对应条目,恢复整卷的死链拦截。
+  ignoreDeadLinks: ['./08_spl_sidebar'],
 
   // VitePress 内置 sitemap:只有给了 hostname 才会在 dist 根生成 sitemap.xml
   // (public/robots.txt 的 Sitemap: 行指向它)。hostname 必须带 base 且以 /

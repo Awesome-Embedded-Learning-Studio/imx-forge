@@ -8,7 +8,7 @@ title: 串口日志阅读路线：从一行输出找到下一站
 
 ::: tip 前置知识 · 咱们的环境
 - 串口工具的装配与配置(minicom、picocom，115200 8N1 无流控)您回 [串口工具使用](../start/04_serial_tools_minicom.md) 看；首次上电流程与 tee 记日志的手法在 [启动与调试](../practical/03_boot_and_debug.md)
-- 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/17_kernel_boot_debug.md)，U-Boot 阶段的命令在 [U-Boot 调试命令](../uboot/09_debugging_commands.md)
+- 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/17_kernel_boot_debug.md)，U-Boot 阶段的命令在 [调试命令速查](../uboot/14_debug_reference.md)
 - 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行；日志样本来自 QEMU 直启(mcimx6ul-evk 机器，run-qemu.sh 那条链)的真跑记录，对应的主线内核构建树是 out/linux,vmlinux 就在 out/linux/vmlinux;交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
 :::
 
@@ -18,7 +18,7 @@ title: 串口日志阅读路线：从一行输出找到下一站
 
 工具层面咱们不在本篇重复：minicom 的菜单配置、dialout 权限、硬件流控那颗雷，[串口工具使用](../start/04_serial_tools_minicom.md) 讲过;`picocom -b 115200 /dev/ttyUSB0 | tee boot.log` 这种边看边写进文件的手法，[启动与调试](../practical/03_boot_and_debug.md) 有现成命令。本篇假设您手上已经有一份完整的 boot.log,咱们专心解决读的问题。
 
-本篇分段地图与噪音判读引用的日志，全部来自同一条 QEMU 直启会话的串口记录，全份 371 行，从内核第一行一直到登录后敲命令，原文照 emu 卷的惯例收在本卷 `assets/qemu-e2e.log`，您随时可以对照复核；第三节那段 Oops 实录是唯一例外，引自模拟卷打地鼠那一章的串口记录。QEMU 直启(-kernel 直接引导)没有 U-Boot 阶段，日志从内核第一行开始；实际的板子上，这份记录前面还躺着 U-Boot 的一段——2026-10-13 的真板产线卡启动实录里，它依次是一行 U-Boot 2025.04 横幅、CPU 与内存自报、`Hit any key to stop autoboot: 0` 倒计时、`Booting AES from SD ...`、两行 ext4load 读数、`Starting kernel ...`，然后才轮到内核第一行；这块板子的 ROM 阶段没有输出，实录从 U-Boot 横幅直接开始。那个阶段怎么读，[U-Boot 调试命令](../uboot/09_debugging_commands.md) 与 [启动与调试](../practical/03_boot_and_debug.md) 有逐行讲解，咱们不在这里重抄。
+本篇分段地图与噪音判读引用的日志，全部来自同一条 QEMU 直启会话的串口记录，全份 371 行，从内核第一行一直到登录后敲命令，原文照 emu 卷的惯例收在本卷 `assets/qemu-e2e.log`，您随时可以对照复核；第三节那段 Oops 实录是唯一例外，引自模拟卷打地鼠那一章的串口记录。QEMU 直启(-kernel 直接引导)没有 U-Boot 阶段，日志从内核第一行开始；实际的板子上，这份记录前面还躺着 U-Boot 的一段——2026-10-13 的真板产线卡启动实录里，它依次是一行 U-Boot 2025.04 横幅、CPU 与内存自报、`Hit any key to stop autoboot: 0` 倒计时、`Booting AES from SD ...`、两行 ext4load 读数、`Starting kernel ...`，然后才轮到内核第一行。那张卡跑的是 2025.04 旧一轮镜像，倒计时在旧镜像上是开着的。现树的 defconfig 写了 `CONFIG_BOOTDELAY=-1`，这行倒计时在现在的镜像上不会出现，机制讲解见 [env 加载与倒计时：接管前的最后准备](../uboot/boot-chain/12_env_and_autoboot.md)。这块板子的 ROM 阶段没有输出，实录从 U-Boot 横幅直接开始。那个阶段怎么读，[调试命令速查](../uboot/14_debug_reference.md) 与 [启动与调试](../practical/03_boot_and_debug.md) 有逐行讲解，咱们不在这里重抄。
 
 ::: warning 实测口径
 本篇贴出的启动日志均出自 QEMU 直启链，命令参数在 emu 卷有完整记录；U-Boot 阶段的形态以 2026-10-13 真板 SD 产线卡启动实录为据，printenv 与命令箱的实测输出在 uboot/09。
@@ -201,8 +201,8 @@ deferred probe 的机制，这份实录给了一整套证据。驱动侧的失�
 
 | 看到什么 | 根因方向 | 去哪章 |
 |---|---|---|
-| 上电后串口零输出 | 串口接线、波特率、烧写问题 | [串口工具使用](../start/04_serial_tools_minicom.md)、[U-Boot 调试命令](../uboot/09_debugging_commands.md) |
-| 卡在 U-Boot 或 tftp 超时 | 环境变量、网络、镜像加载 | [U-Boot 调试命令](../uboot/09_debugging_commands.md) |
+| 上电后串口零输出 | 串口接线、波特率、烧写问题 | [串口工具使用](../start/04_serial_tools_minicom.md)、[调试命令速查](../uboot/14_debug_reference.md) |
+| 卡在 U-Boot 或 tftp 超时 | 环境变量、网络、镜像加载 | [调试命令速查](../uboot/14_debug_reference.md) |
 | Starting kernel 后无输出 | console 参数、设备树、早期初始化 | [内核启动与调试](../kernel/17_kernel_boot_debug.md) |
 | VFS: Cannot open root device | root= 参数、分区、块设备驱动 | [内核启动与调试](../kernel/17_kernel_boot_debug.md)、[Buildroot 调试与排错](../buildroot/10_debugging.md) |
 | probe failed 单行，系统继续走 | 多为噪音，按第四节判链路 | 本篇第四节、[内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) |
@@ -214,4 +214,4 @@ deferred probe 的机制，这份实录给了一整套证据。驱动侧的失�
 
 - 上一篇:[02 程序在板上崩了：strace、日志与 coredump](02_strace_log_coredump.md),三件更轻的工具，本篇 login 之后的那半场归它
 - 下一篇：调试卷到这里收尾。三篇合起来是一整套分工：日志定方向，strace 看系统调用，gdbserver 下断点；回 [调试卷目录](index.md) 可以整体回顾。接下来咱们的学习主线进驱动开发卷与工程实战，把调试功夫用在真刀真枪的代码上
-- 深读:启动全流程的逐阶段机制看 [内核启动与调试](../kernel/17_kernel_boot_debug.md);引导阶段的命令箱是 [U-Boot 调试命令](../uboot/09_debugging_commands.md);内核态深入(dmesg、动态调试、kgdb)在 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md);崩溃报告三路互证的完整演绎在 [QEMU 板级模拟卷](../emu/)
+- 深读:启动全流程的逐阶段机制看 [内核启动与调试](../kernel/17_kernel_boot_debug.md);引导阶段的命令箱是 [调试命令速查](../uboot/14_debug_reference.md);内核态深入(dmesg、动态调试、kgdb)在 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md);崩溃报告三路互证的完整演绎在 [QEMU 板级模拟卷](../emu/)

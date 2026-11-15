@@ -17,12 +17,16 @@ import StatusTag from './components/StatusTag.vue'
 import StepFlow from './components/StepFlow.vue'
 import StepItem from './components/StepItem.vue'
 import InfoCard from './components/InfoCard.vue'
+import CodeLoc from './components/CodeLoc.vue'
+import HexHeaderViewer from './components/HexHeaderViewer.vue'
+import MemLayoutBar from './components/MemLayoutBar.vue'
 import RoadMap from './components/RoadMap.vue'
 import RoadMapPhase from './components/RoadMapPhase.vue'
 import DocNavCards from './components/DocNavCards.vue'
 import FontSizeSwitcher from './components/FontSizeSwitcher.vue'
 import ResizableSidebar from './components/ResizableSidebar.vue'
 import ReadingProgress from './components/ReadingProgress.vue'
+import StatusToast from './components/StatusToast.vue'
 import { setupMermaid } from './mermaid-client'
 import { setupDevFakeLag } from './dev-fake-lag'
 import projectConfig from '../../../project.config.ts'
@@ -80,6 +84,9 @@ const Layout = defineComponent({
       const items: VNodeChild[] = [h(NavSpinner)]
       if (projectConfig.plugins.mermaid) items.push(h(MermaidLightbox))
       if (projectConfig.plugins.readingUX) items.push(h(ReadingProgress), h(ResizableSidebar))
+      // StatusToast：frontmatter 带 current_status 的页面进站时弹 MC 成就风提示，
+      // 未配该字段的页面组件内部 v-if 不渲染，故常挂，不设配置开关。
+      items.push(h(StatusToast))
       return items
     }
 
@@ -112,6 +119,9 @@ export default {
     app.component('StepFlow', StepFlow)
     app.component('StepItem', StepItem)
     app.component('InfoCard', InfoCard)
+    app.component('CodeLoc', CodeLoc)
+    app.component('HexHeaderViewer', HexHeaderViewer)
+    app.component('MemLayoutBar', MemLayoutBar)
     app.component('RoadMap', RoadMap)
     app.component('RoadMapPhase', RoadMapPhase)
   }

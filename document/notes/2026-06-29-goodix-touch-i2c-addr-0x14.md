@@ -151,5 +151,5 @@ I2C 设备已绑定时，扫描结果可能显示 `UU`；驱动绑定、芯片�
 ## See Also
 
 - [2026-06-08 WSL2 NFS Rootfs 排查记录](2026-06-08-wsl2-nfsroot-ganesha-troubleshoot.md) —— 另一个「内核侧症状、根因在 host/配置」的排查范例。
-- [设备树基础](../tutorial/uboot/05_device_tree_basics.md) —— dts/dtsi/dtb 的关系与编译。
+- [设备树基础](../tutorial/uboot/08_device_tree_aes.md) —— dts/dtsi/dtb 的关系与编译。
 - [触摸章节（mainline goodix 分析）](../tutorial/kernel/10_touch_gt9xx.md) —— GT9147 驱动分析型章节。

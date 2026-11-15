@@ -112,7 +112,6 @@ Out:   serial
 Err:   serial
 Net:   ethernet@02188000
 
-Hit any key to stop autoboot...  3  2  1
 =>
 ```
 
@@ -215,24 +214,24 @@ Net:   ethernet@02188000
 
 显示检测到的以太网控制器。i.MX6ULL 有两个以太网控制器（FEC），这里显示的是其中一个。
 
-#### 10. 倒计时
+#### 10. 命令行提示符
 
 ```
-Hit any key to stop autoboot...  3  2  1
+=>
 ```
 
-自动启动倒计时，默认 3 秒。期间按任意键可以进入 U-Boot 命令行。
+`=>` 是 U-Boot 的命令行提示符，能看到它就说明 U-Boot 活着、串口收发都通。项目镜像不自动启动（板级配置 `CONFIG_BOOTDELAY=-1`），没有倒计时，Net 那行打完直接停在这里等人敲命令。
 
-**经验**：如果你总是来不及按键，可以在 `bootdelay` 环境变量中增加延迟：
+**经验**：想要板子上电自动引导，把 `bootdelay` 设成正值再保存：
 
 ```
-=> setenv bootdelay 5
+=> setenv bootdelay 3
 => saveenv
 ```
 
 ### U-Boot 命令行操作
 
-如果倒计时内按了键，你会进入 U-Boot 命令行：
+上电后 U-Boot 会直接停在命令行：
 
 ```
 =>

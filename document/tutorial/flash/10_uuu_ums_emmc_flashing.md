@@ -97,6 +97,8 @@ out/release-latest/uboot/u-boot-dtb.imx
 
 当然，现场已经是旧环境也不是完全没救。只要还能进 U-Boot 命令行，或者旧 U-Boot 里还有 `ums` 命令，就可以先把 eMMC 暴露出来，手动热更新 boot 分区里的内核/设备树，再把新的 `u-boot-dtb.imx` 写回 raw U-Boot 区域。
 
+这里的“还能进 U-Boot 命令行”门槛很低：串口终端提前开好（工具见[串口工具使用](../start/04_serial_tools_minicom.md)），项目镜像不自动启动，板子一上电就停在 `=>` 提示符。
+
 这里一定要分清楚两件事：
 
 ```text
@@ -123,6 +125,8 @@ bootcmd_mfg=... mmc dev ${emmc_dev}; ums 0 mmc ${emmc_dev};
 ## 旧 U-Boot 下的热更新方法
 
 这节适合这种情况：板子里现在跑的是旧 U-Boot，`bootcmd_mfg` 还不对，没法优雅地自动进入 UMS，但你还能进 U-Boot 命令行。
+
+进命令行的办法上面说过：串口终端开好，上电后停在提示符直接敲。
 
 先在 U-Boot 里手动暴露 eMMC：
 
