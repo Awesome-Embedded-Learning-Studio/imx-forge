@@ -163,6 +163,8 @@ export interface ProjectConfig {
     readingUX?: boolean
     /** 长代码块(超 readingDefaults.codeFoldLines 行)自动折叠为 <details>。默认 true。 */
     codeFold?: boolean
+    /** CodeLoc 出处卡(::: code-loc 项目 路径,包住围栏展示代码出处)。默认 true。 */
+    codeLoc?: boolean
     /** Mermaid 图表渲染(markdown-it 插件 + 按需 CDN 客户端)。默认 false(离线零影响)。 */
     mermaid?: boolean
   }
@@ -198,6 +200,7 @@ export function defineProject(config: ProjectConfig): ProjectConfig {
   // 这样旧的 project.config.ts 不写新字段也能拿到合理行为,主题保持「写少即可用」。
   if (config.plugins.readingUX === undefined) config.plugins.readingUX = true
   if (config.plugins.codeFold === undefined) config.plugins.codeFold = true
+  if (config.plugins.codeLoc === undefined) config.plugins.codeLoc = true
   if (config.plugins.mermaid === undefined) config.plugins.mermaid = false
 
   return config

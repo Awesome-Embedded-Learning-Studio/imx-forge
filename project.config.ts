@@ -195,6 +195,9 @@ export default defineProject({
     // readingUX / codeFold 不写也默认 true(defineProject 兜底),这里显式写明意图。
     readingUX: true,
     codeFold: true,
+    // CodeLoc 出处卡:开启 —— ::: code-loc 项目 路径 容器把围栏包成「项目徽章 +
+    // 文件路径(可点复制)」的出处卡,容器内围栏走原生渲染链(高亮/复制/行号)。
+    codeLoc: true,
     // Mermaid 图表:开启 —— ```mermaid 块渲染为 SVG(客户端 npm mermaid 按需加载,打进
     // 独立懒加载 chunk,离线可用;当前页真有图才下载)。需关闭时改 false。
     mermaid: true,

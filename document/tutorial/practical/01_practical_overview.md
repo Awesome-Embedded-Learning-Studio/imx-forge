@@ -243,8 +243,6 @@ Loading Environment from MMC...
 
 Net:   ethernet@02188000
 
-Hit any key to stop autoboot...  3
-
 =>
 
 # 启动内核
@@ -318,7 +316,7 @@ Swap:            0B          0B          0B
 2. U-Boot 教程 (document/tutorial/uboot/)
    - 01_what_is_uboot.md
    - 02_uboot_compile.md
-   - 04_board_config_basic.md
+   - 07_board_porting.md
    ↓
 3. Linux 内核教程 (document/tutorial/kernel/)
 4. Rootfs 教程 (document/tutorial/rootfs/)

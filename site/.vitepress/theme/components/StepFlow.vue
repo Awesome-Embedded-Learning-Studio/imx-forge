@@ -23,7 +23,10 @@ withDefaults(defineProps<{
   flex-direction: row;
   align-items: flex-start;
   overflow-x: auto;
-  padding-bottom: 4px;
+  /* 圆形图标 hover 时 scale(1.08),向上下各溢出约 2px;overflow-x 一旦非 visible,
+     overflow-y 会被一并强制成裁剪,不留余量放大冒出的圆边就会被削平。
+     上 3px 供给放大溢出,下 7px = 滚动条余量 4px + 溢出 3px。 */
+  padding: 3px 0 7px;
 }
 
 .step-flow--vertical {

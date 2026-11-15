@@ -29,10 +29,13 @@ const HTML_TAGS = new Set([
 
 // Only skip actual registered Vue components, not all PascalCase patterns
 const VUE_COMPONENTS = new Set([
-  'ChapterNav', 'ChapterLink', 'HomeTipBanner', 'Badge', 
+  'ChapterNav', 'ChapterLink', 'HomeTipBanner', 'Badge',
   'PageHeader', 'StatusTag', 'StepFlow', 'StepItem', 'InfoCard',
   'RoadMap', 'RoadMapPhase',
   'HomeArchDiagram',
+  'CodeLoc',
+  'HexHeaderViewer',
+  'MemLayoutBar',
 ])
 
 function looksLikeCppTemplate(inner: string): boolean {

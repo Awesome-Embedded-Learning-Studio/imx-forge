@@ -4,6 +4,7 @@ import { cppTemplateEscapePlugin } from './escape-cpp-templates'
 import { kbdPlugin } from './kbd-plugin'
 import { languageAliasPlugin } from './language-aliases'
 import { codeFoldPlugin } from './code-fold-plugin'
+import { codeLocPlugin } from './code-loc-plugin'
 import { mermaidPlugin } from './mermaid-plugin'
 
 export function resolvePlugins(md: MarkdownIt, config: ProjectConfig): void {
@@ -18,6 +19,11 @@ export function resolvePlugins(md: MarkdownIt, config: ProjectConfig): void {
   if (config.plugins.codeFold) {
     const lines = config.readingDefaults?.codeFoldLines ?? 20
     md.use(codeFoldPlugin(lines))
+  }
+  // CodeLoc 出处卡:解析 ::: code-loc 容器,把内部围栏包进 <CodeLoc>(项目 + 路径)。
+  // 只新增容器 token,不动 fence 渲染链,与 code-fold/mermaid 互不干扰。
+  if (config.plugins.codeLoc) {
+    md.use(codeLocPlugin)
   }
   // Mermaid:用 core ruler 把 ```mermaid fence 改型为 mermaid_diagram(交给客户端 CDN 渲染)。
   // 与 code-fold 无注册顺序要求:mermaid 在 core 阶段(渲染前)就把 token 类型改掉,
