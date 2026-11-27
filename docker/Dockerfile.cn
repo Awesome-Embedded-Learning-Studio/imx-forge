@@ -81,6 +81,10 @@ RUN sed -i 's@//.*archive.ubuntu.com@//mirrors.aliyun.com@g' /etc/apt/sources.li
     libts-dev \
     libpulse-dev \
     libasound2-dev \
+    wget \
+    curl \
+    ca-certificates \
+    ccache \
     unzip \
     which \
     bzip2 \
