@@ -8,7 +8,7 @@ title: QEMU 板级模拟
 
 咱们这个项目一路走来,所有验证都压在一件事上:手边得有真板。内核编完,烧板看串口;驱动写完,挂板量引脚;CI 只查「文件在不在、像不像 ARM 镜像」,至于产物能不能开机,机器替咱们试不了。没有板子的朋友更是被挡在门外——教程看得再明白,`insmod` 敲下去是什么手感,想象不出来。
 
-这个卷解决的就是这件事:把 AES 板「搬」进 QEMU,跑咱们自己的 mainline 内核、自己的设备树、Buildroot 的 rootfs。这条路笔者在 2026 年 8 月完整走了一遍,从串口零输出,到 `buildroot login:` 登录进去跑命令,中间踩了一整串坑。本卷五章就是这次折腾的复盘,写法上偏向「跟着敲」:每一章的关键结论,前面都有一条咱们自己敲过的命令和它吐出来的真实输出兜底——打地鼠九轮的原始串口日志(`qemu3.log` 到 `qemu11.log`)、干净启动(`boot-clean.log`)、登录会话(`session-login.log`)全收在本卷 `assets/` 目录里,欢迎对照着读。
+这个卷解决的就是这件事:把 AES 板「搬」进 QEMU,跑咱们自己的 mainline 内核、自己的设备树、Buildroot 的 rootfs。这条路笔者在 2026 年 8 月完整走了一遍,从串口零输出,到 `buildroot login:` 登录进去跑命令,中间踩了一整串坑。本卷前五章就是这次折腾的复盘,写法上偏向「跟着敲」:每一章的关键结论,前面都有一条咱们自己敲过的命令和它吐出来的真实输出兜底——打地鼠九轮的原始串口日志(`qemu3.log` 到 `qemu11.log`)、干净启动(`boot-clean.log`)、登录会话(`session-login.log`)全收在本卷 `assets/` 目录里,欢迎对照着读。
 
 ## 章节目录
 
@@ -36,5 +36,5 @@ title: QEMU 板级模拟
 01-05 章覆盖「直启链路」,06-08 章覆盖 2026-08 下旬的「外设模型 + 等价性」阶段:自建 QEMU v11.1(16 个 patch 序列)、七个教学外设模型(PWM/gpio_set/ap3216c/icm20608/gt911/wm8960/FlexCAN)、gt911 触摸的四个真 bug 排查(REG_END 窗口截断/释放语义/手指-报告状态混淆/INT 电平)、以及消灭变体设备树回到真机单源。开机冒烟已接进 CI(ci-full 的 QEMU Boot Smoke job,`run-qemu.sh --smoke` 验证 mainline 内核 + rootfs 能启动到登录提示符,串口日志存 qemu-boot-log artifact);全量 13 项外设断言(e2e-test.sh)仍是本地脚本,接入 CI 待后续,教程章待补。触摸链路至发稿时可用(按下/松开/拖动全配对),剩余一个双 Begin 装饰性伪影待修——根因(poll 间隙 INT idle 电平)已定位。
 
 ::: info 配套产物
-本卷所有脚本已进仓库 `scripts/qemu_helper/`(三个脚本的用法详解见 [run-qemu.sh 文档](../../scripts/qemu_helper/run-qemu.sh.md)、[make-rootfs-img.sh 文档](../../scripts/qemu_helper/make-rootfs-img.sh.md) 与 [make-qemu-dtb.sh 文档](../../scripts/qemu_helper/make-qemu-dtb.sh.md));选型调研的完整证据链(四路调研、版本时间线、外设覆盖矩阵)见开发笔记 [QEMU 板级模拟调研](../../notes/2026-08-25-qemu-board-emulation-research)。
+本卷所有脚本已进仓库 `scripts/qemu_helper/`(三个脚本的用法详解见 [run-qemu.sh 文档](../../engineering/scripts/qemu_helper/run-qemu.sh.md)、[make-rootfs-img.sh 文档](../../engineering/scripts/qemu_helper/make-rootfs-img.sh.md) 与 [make-qemu-dtb.sh 文档](../../engineering/scripts/qemu_helper/make-qemu-dtb.sh.md));选型调研的完整证据链(四路调研、版本时间线、外设覆盖矩阵)见开发笔记 [QEMU 板级模拟调研](../../community/notes/2026-08-25-qemu-board-emulation-research)。
 :::

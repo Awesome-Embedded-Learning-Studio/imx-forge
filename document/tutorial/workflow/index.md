@@ -27,7 +27,7 @@ IMX-Forge 的主力开发环境是 WSL2 + VSCode + 串口终端，板子通过 N
 
 ## 前置知识
 
-- 已完成 [Docker 教程](../docker/) 或已配好交叉编译工具链
+- 已完成 Docker 两章（[基础知识](../start/06_docker_basics.md)）或已配好交叉编译工具链
 - 了解 [out/ 目录结构](../build/01_out_directory_structure.md)
 - WSL2 系统入门见 [linux-basics/ch01-wsl2](../linux-basics/01-environment/ch01-wsl2.md)（本卷不重复入门内容，只讲配置）
 

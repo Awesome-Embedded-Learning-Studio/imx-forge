@@ -228,7 +228,7 @@ cat: /proc/fs/nfsd/exports: No such file or directory
 
 这台机器因此改走过用户态的 nfs-ganesha 加 VFS FSAL，绕开内核 nfsd，端口同样要固定：本机 `/etc/ganesha/ganesha.conf` 里写着 `NFS_Port = 2049`、`MNT_Port = 20048`，防火墙规则沿用第二节那套。这台机器的现状有点绕，得拆开说。这一段得按排查记录读，不能当现状：当前会话里 nfs-ganesha 没有在跑，本次开机它启动 6 秒就以 status=2 退出（`journalctl -u nfs-ganesha` 可查），localhost 上应答的 mountd 也还在随机端口滚动。起不来的死因，笔者在 `/var/log/ganesha/ganesha.log` 的结尾翻到了：`Cannot bind NFS tcp6 socket, error 98 (Address already in use)`，随后一行 `FATAL ... Error binding to V6 interface. Cannot continue.`——2049 的 tcp6 端口已被占用，`rpcinfo` 里 nfs 恰好注册在 2049 上，两边互为印证。真要排查就照下面那份记录的路数走。
 
-有一个已经验证过的坑，咱们最好提前记下：用 bind-mount 换过 NFS 源目录之后必须 restart nfs-ganesha，否则板子挂载会报 ESTALE。ganesha 的完整配置与排查过程在 [notes/2026-06-08 的 ganesha 排查记录](../../notes/2026-06-08-wsl2-nfsroot-ganesha-troubleshoot.md)，ESTALE 重启坑的完整验证记录在 [notes/2026-06-23](../../notes/2026-06-23-nfs-ganesha-bindmount-estale.md)，本篇不展开；内核 nfsd 路线的 NFS 排查全景仍是 [rootfs/05](../rootfs/05_nfs_wsl_troubleshoot.md)。
+有一个已经验证过的坑，咱们最好提前记下：用 bind-mount 换过 NFS 源目录之后必须 restart nfs-ganesha，否则板子挂载会报 ESTALE。ganesha 的完整配置与排查过程在 [notes/2026-06-08 的 ganesha 排查记录](../../community/notes/2026-06-08-wsl2-nfsroot-ganesha-troubleshoot.md)，ESTALE 重启坑的完整验证记录在 [notes/2026-06-23](../../community/notes/2026-06-23-nfs-ganesha-bindmount-estale.md)，本篇不展开；内核 nfsd 路线的 NFS 排查全景仍是 [rootfs/05](../rootfs/05_nfs_wsl_troubleshoot.md)。
 
 ## 踩坑速查表
 

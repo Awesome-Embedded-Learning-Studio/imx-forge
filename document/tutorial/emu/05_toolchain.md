@@ -96,7 +96,7 @@ $ scripts/qemu_helper/run-qemu.sh --smoke --timeout=240
 [run-qemu] PASS: matched 'buildroot login:'
 ```
 
-退出码 0/1 直接给 CI 步骤消费,`uart.log` 存档,失败时第四章那套读法随时能上。把它挂进 `ci-build.yml` 的 mainline job、给 docker 镜像补 `qemu-system-arm`,是下一阶段的活。
+退出码 0/1 直接给 CI 步骤消费,`uart.log` 存档,失败时第四章那套读法随时能上。它已经挂进 CI（`ci-full.yml` 的 `qemu-smoke` job，2026-11 起跑绿）；给 docker 镜像内置 `qemu-system-arm` 是剩下的活。
 
 ## 边界:模拟器里什么没有戏
 

@@ -112,7 +112,7 @@ static int icm20608_read_regs_xfer(struct icm20608_dev *dev, u8 reg, u8 *buf, in
 
 你可以把 `spi_transfer` 想成一个"快递包裹"（装着要发的货、或装回货的空箱），`spi_message` 是"发货单"（把包裹按顺序串起来、中途不许插队、送完通知我）。三步走永远固定：`spi_message_init` 初始化发货单、`spi_message_add_tail` 挂包裹、`spi_sync` 同步发货（会睡眠，别在中断里调，中断里要用 `spi_async`）。
 
-注意这段代码里我特意注释掉的那行——这是老教程最经典的雷区：**`.delay_usecs` 字段已经不存在了**。新内核里它换成了 `struct spi_delay delay`，要同时给 `.value` 和 `.unit`（`SPI_DELAY_UNIT_USECS` / `NSECS` / `SECS`）。你要是照老教程敲 `.delay_usecs = 10`，6.12 / 7.1 直接编不过。另外这个手拼版本里 `rx_buf[0]` 是 dummy，得 `memmove` 把它挪掉——而 `spi_write_then_read` 帮你省了这一步，这就是为什么正式代码推荐用它。
+注意这段代码里我特意注释掉的那行——这是老教程最经典的雷区：**`.delay_usecs` 字段已经不存在了**。新内核里它换成了 `struct spi_delay delay`，要同时给 `.value` 和 `.unit`（`SPI_DELAY_UNIT_USECS` / `NSECS` / `SECS`）。你要是照老教程敲 `.delay_usecs = 10`，7.2.9 直接编不过。另外这个手拼版本里 `rx_buf[0]` 是 dummy，得 `memmove` 把它挪掉——而 `spi_write_then_read` 帮你省了这一步，这就是为什么正式代码推荐用它。
 
 ## 初始化与数据读取
 
@@ -298,7 +298,7 @@ MODULE_LICENSE("GPL");
 
 ## 小结
 
-这一节我们写完了 ICM-20608 的驱动主体：用 `spi_write_then_read` / `spi_write` 做寄存器读写（顺手用 `spi_transfer` 讲清了底层机制和 `.delay` 新字段），`probe` 里设 `spi->mode` 后不忘 `spi_setup` 固化，`remove` 是 `void`，最后 `module_spi_driver` 注册。代码是现代的、能直接在 6.12 / 7.1 编过。要让它在板子上跑起来，还差设备树——下一节我们就把 ECSPI3 唤醒、挂上 ICM-20608。
+这一节我们写完了 ICM-20608 的驱动主体：用 `spi_write_then_read` / `spi_write` 做寄存器读写（顺手用 `spi_transfer` 讲清了底层机制和 `.delay` 新字段），`probe` 里设 `spi->mode` 后不忘 `spi_setup` 固化，`remove` 是 `void`，最后 `module_spi_driver` 注册。代码是现代的、能直接在 7.2.9 编过。要让它在板子上跑起来，还差设备树——下一节我们就把 ECSPI3 唤醒、挂上 ICM-20608。
 
 ---
 

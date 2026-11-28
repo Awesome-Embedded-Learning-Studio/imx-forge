@@ -40,8 +40,8 @@ title: 镜像与烧录
 
 ## 延伸笔记
 
-- [SD 卡烧录 Bring-up 笔记](../../notes/2026-06-08-sd-card-flashing-bringup.md)
-- [UUU + UMS + eMMC Bring-up 笔记](../../notes/2026-06-08-uuu-ums-emmc-bringup.md)
+- [SD 卡烧录 Bring-up 笔记](../../community/notes/2026-06-08-sd-card-flashing-bringup.md)
+- [UUU + UMS + eMMC Bring-up 笔记](../../community/notes/2026-06-08-uuu-ums-emmc-bringup.md)
 
 ## 继续学习
 

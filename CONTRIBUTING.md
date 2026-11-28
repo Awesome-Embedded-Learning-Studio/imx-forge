@@ -83,7 +83,7 @@ docker run -it --rm -v $(pwd):/workspace imx-forge:latest
 
 **详细文档**：
 - [Docker 开发环境](docker/README.md)
-- [Docker 教程](document/tutorial/docker)
+- [Docker 教程](document/tutorial/start/06_docker_basics.md)
 
 #### 方式二：主机环境
 

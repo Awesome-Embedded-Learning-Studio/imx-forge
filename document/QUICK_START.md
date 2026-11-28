@@ -26,7 +26,7 @@
 
 ![i.MX6ULL 开发板 LCD 点屏实拍](/lcd-on.jpg)
 
-**主线内核 Linux 7.1 启动实测** —— 上游主线内核已在板子上跑起来（本项目现为 mainline 单轨）：
+**主线内核 Linux 7.2.9 启动实测** —— 上游主线内核已在板子上跑起来（本项目现为 mainline 单轨）：
 
 ![主线内核 Linux 7 启动实拍](/linux7.png)
 
@@ -72,7 +72,7 @@ IMX-Forge 是一个面向 NXP i.MX6ULL 开发板的开源构建系统，它将�
 │  U-Boot (v2026.10) → u-boot-dtb.imx                          │
 │         ↓                                                     │
 │  Linux Kernel (mainline 单轨)                                 │
-│    └── linux_mainline (上游内核 7.1) → zImage + .dtb          │
+│    └── linux_mainline (上游内核 7.2.9) → zImage + .dtb          │
 │         ↓                                                     │
 │  BusyBox Rootfs → 最小文件系统                               │
 │         ↓                                                     │
@@ -87,7 +87,7 @@ IMX-Forge 是一个面向 NXP i.MX6ULL 开发板的开源构建系统，它将�
 
 ```
 patches/
-└── linux_mainline/   上游内核 7.1（唯一内核轨）
+└── linux_mainline/   上游内核 7.2.9（唯一内核轨）
 ```
 
 - **mainline**：上游主线内核，长期维护，可向上游贡献；项目已在真板实测启动，CI 持续构建验证。
@@ -496,22 +496,17 @@ make menuconfig O=../../out/linux
 make -j8 O=../../out/linux
 ```
 
-#### BusyBox 手动构建
+#### Rootfs 构建（Buildroot）
 
 ```bash
-# 设置环境变量
-export ARCH=arm
-export CROSS_COMPILE=arm-none-linux-gnueabihf-
+# 构建 rootfs（BusyBox 是其中一个 package，含 overlay 与 post-build）
+./scripts/build_helper/build-buildroot.sh
 
-# 进入源码目录
-cd third_party/busybox
+# 需要 Qt6 时
+./scripts/build_helper/build-buildroot.sh --with-qt6
 
-# 配置
-make defconfig O=../../out/busybox
-
-# 编译并安装
-make -j8 O=../../out/busybox
-make install O=../../out/busybox CONFIG_PREFIX=../../rootfs/nfs
+# 产物在 out/release-latest/rootfs/
+ls out/release-latest/rootfs/bin/busybox
 ```
 
 ---

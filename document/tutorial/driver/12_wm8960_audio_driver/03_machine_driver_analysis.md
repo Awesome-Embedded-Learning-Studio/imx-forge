@@ -4,7 +4,7 @@ title: fsl-asoc-card.c 逐段拆解
 
 # fsl-asoc-card.c 逐段拆解 —— probe 怎么缝出 HiFi 这条声卡
 
-理论武装完毕（[02 节](02_asoc_framework.md)），这一节正式拆 machine 驱动 `sound/soc/fsl/fsl-asoc-card.c`（mainline 7.1，1112 行）。它和 [RTC 章的 rtc-snvs.c](../10_rtc_snvs_driver/)、goodix.c 一样是标准子系统驱动，只不过挂在 platform 总线上、干的是「缝纫机」的活——把 cpu_dai（SAI2）和 codec_dai（wm8960-hifi）按 [02 节](02_asoc_framework.md) 讲的 dai_link 契约绑成一张声卡。
+理论武装完毕（[02 节](02_asoc_framework.md)），这一节正式拆 machine 驱动 `sound/soc/fsl/fsl-asoc-card.c`（mainline 7.2.9，1112 行）。它和 [RTC 章的 rtc-snvs.c](../10_rtc_snvs_driver/)、goodix.c 一样是标准子系统驱动，只不过挂在 platform 总线上、干的是「缝纫机」的活——把 cpu_dai（SAI2）和 codec_dai（wm8960-hifi）按 [02 节](02_asoc_framework.md) 讲的 dai_link 契约绑成一张声卡。
 
 ::: tip 学习目标
 看懂 `fsl-asoc-card.c` 的 `platform_driver` 骨架与 14 种 codec 的 compatible 表；跟着 `fsl_asoc_card_probe`（`:614`）走完「解析设备树 → 选 codec 分支 → 搭 dai_link → 注册 card」的完整流程；认清 WM8960 专属分支（`:782`）那几行决定了什么；理解 ASRC 那两条额外 dai_link 是干什么的（可选）。

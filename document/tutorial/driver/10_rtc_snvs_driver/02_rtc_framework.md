@@ -13,7 +13,7 @@ title: RTC 子系统分层框架
 所以 Linux RTC 子系统干了一件事：**把「和应用层打交道」的通用逻辑抽出来，只让底层驱动实现「怎么读写你的硬件」**。这就是这一节要讲的分层。把它想明白，你才能看懂 `rtc-snvs.c` 为什么长那样——它只填了几个回调，却凭空得到了完整的字符设备能力。
 
 ::: tip 学习目标
-搞懂 RTC 子系统的三层文件分工（`dev.c` / `interface.c` / `class.c`）；理解「通用 `file_operations` + 底层 `rtc_class_ops`」的契约；看清一条 `ioctl(RTC_RD_TIME)` 如何一路下钻到底层硬件回调；掌握 7.1 推荐的 `devm_rtc_allocate_device` + `devm_rtc_register_device` 两步注册法。
+搞懂 RTC 子系统的三层文件分工（`dev.c` / `interface.c` / `class.c`）；理解「通用 `file_operations` + 底层 `rtc_class_ops`」的契约；看清一条 `ioctl(RTC_RD_TIME)` 如何一路下钻到底层硬件回调；掌握 7.2.9 推荐的 `devm_rtc_allocate_device` + `devm_rtc_register_device` 两步注册法。
 :::
 
 ## RTC 设备的本质：一个标准字符设备
@@ -30,9 +30,9 @@ ioctl(fd, RTC_ALM_SET, &alm);  /* 设闹钟 */
 
 这里的 `RTC_RD_TIME` / `RTC_SET_TIME` 等命令码，定义在内核头 `include/uapi/linux/rtc.h` 里，对所有 RTC 设备通用。**通用**是关键词——正因为通用，内核才能把它们的处理逻辑收拢起来。
 
-## 三层分工：7.1 的拆分
+## 三层分工：7.2.9 的拆分
 
-在 7.1 内核里，RTC 子系统的核心代码拆成了三个文件，各司其职（老内核把它们揉在一个 `rtc-dev.c` 里，7.1 拆得更干净）：
+在 7.2.9 内核里，RTC 子系统的核心代码拆成了三个文件，各司其职（老内核把它们揉在一个 `rtc-dev.c` 里，7.1 拆得更干净）：
 
 | 文件 | 职责 | 类比 |
 |------|------|------|
@@ -172,7 +172,7 @@ struct rtc_class_ops {
 
 ## 注册：allocate + register 两步走
 
-菜单填好了，怎么把 RTC 设备「执照」领下来？7.1 推荐的是**两步法**（也是 `rtc-snvs.c` 用的）：
+菜单填好了，怎么把 RTC 设备「执照」领下来？7.2.9 推荐的是**两步法**（也是 `rtc-snvs.c` 用的）：
 
 ```c
 /* 第一步：分配一个 rtc_device（此时还没注册） */
@@ -187,7 +187,7 @@ devm_rtc_register_device(rtc);     /* 真正注册，派生 /dev/rtcN */
 两步法的好处是：你能在 `allocate` 和 `register` 之间设置 `ops`、`range_max` 这些字段。`devm_rtc_register_device` 其实是个宏（`rtc.h:246`），展开成 `__devm_rtc_register_device(THIS_MODULE, rtc)`。
 
 ::: warning ⚠️ 老教程里的 `devm_rtc_device_register` 已经 deprecated
-很多老教材（和网上文章）还在用一步到位的 `devm_rtc_device_register(dev, name, ops, THIS_MODULE)`。这个函数在 7.1 的 `class.c:457` 还在，但注释写得明明白白：**「This function is deprecated, use devm_rtc_allocate_device and ...」**。它内部其实就是 `allocate` + 帮你设 `ops` + `register` 的语法糖。新驱动请用两步法，和老教材区分开。
+很多老教材（和网上文章）还在用一步到位的 `devm_rtc_device_register(dev, name, ops, THIS_MODULE)`。这个函数在 7.2.9 的 `class.c:457` 还在，但注释写得明明白白：**「This function is deprecated, use devm_rtc_allocate_device and ...」**。它内部其实就是 `allocate` + 帮你设 `ops` + `register` 的语法糖。新驱动请用两步法，和老教材区分开。
 :::
 
 注意所有函数都带 `devm_` 前缀——设备托管。驱动卸载时内核自动回收，不用你手写 `rtc_device_unregister`，这点和 [03_platform_led](../03_platform_led_driver/) 里讲的 `devm_` 思想一脉相承。

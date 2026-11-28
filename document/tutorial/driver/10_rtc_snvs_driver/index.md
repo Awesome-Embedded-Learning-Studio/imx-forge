@@ -2,13 +2,13 @@
 title: RTC 驱动教程（SNVS）
 ---
 
-<PageHeader icon="⏰" title="RTC 驱动（SNVS）" description="拆解 7.1 主线 rtc-snvs.c：从 RTC 子系统分层、regmap 寄存器抽象、47 位计数器双读乐观并发，到 alarm 闹钟与 hwclock 验证——读懂一颗成熟到「不用自己写」的驱动" />
+<PageHeader icon="⏰" title="RTC 驱动（SNVS）" description="拆解 7.2.9 主线 rtc-snvs.c：从 RTC 子系统分层、regmap 寄存器抽象、47 位计数器双读乐观并发，到 alarm 闹钟与 hwclock 验证——读懂一颗成熟到「不用自己写」的驱动" />
 
 ## 版本说明
 
 本教程基于以下内核版本，主线 `rtc-snvs.c` 默认编译进内核、开箱即用：
 
-- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
+- **mainline** 7.2.9 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
 源码就躺在仓库的 `third_party/linux_mainline` 下，文中每一处函数签名、行号都对着 `drivers/rtc/rtc-snvs.c` 核对过，可以随时翻。
 

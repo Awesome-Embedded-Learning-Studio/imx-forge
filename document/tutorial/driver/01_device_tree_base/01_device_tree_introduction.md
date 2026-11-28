@@ -118,7 +118,7 @@ uboot
 };
 ```
 
-三行 include 就是设备树的分层。`imx6ull.dtsi` 住在内核源码里，描述 i.MX6ULL 这颗芯片本身，几个 UART、GPIO 控制器在哪，由它说了算。`imx6ull-aes.dtsi` 是咱们自己维护的板级文件，板上装了哪些外设、引脚怎么复用，写在它里面。第三行的 `imx6ull-14x14-evk-u-boot.dtsi` 来历不一样，它是 U-Boot 侧给 EVK 参考板补的片段，本仓源码里找不到，要从 `third_party/uboot-imx` 子模块里取，各教程的树也都没带它，这算是主设备树和它们的一处差别。分工有点像 C 里的头文件与源文件，芯片级的不动，板级的往上叠。
+三行 include 就是设备树的分层。`imx6ull.dtsi` 住在内核源码里，描述 i.MX6ULL 这颗芯片本身，几个 UART、GPIO 控制器在哪，由它说了算。`imx6ull-aes.dtsi` 是咱们自己维护的板级文件，板上装了哪些外设、引脚怎么复用，写在它里面。第三行的 `imx6ull-14x14-evk-u-boot.dtsi` 来历不一样，它是 U-Boot 侧给 EVK 参考板补的片段，本仓源码里找不到，要从 `third_party/uboot-mainline` 子模块里取，各教程的树也都没带它，这算是主设备树和它们的一处差别。分工有点像 C 里的头文件与源文件，芯片级的不动，板级的往上叠。
 
 文件名里的 aes 是咱们仓库自己的板卡身份，全称 Awesome Embedded Studio，`model` 里写的正是它，板子启动后内核日志的 Machine model 一行报的也是它。硬件参考的是正点原子的 IMX6ULL Alpha 开发板，目录名 alpha-board 就从这来：板子是那块 Alpha，软件身份归 aes。
 
@@ -128,7 +128,7 @@ uboot
 
 dts 里有 `#include`，直接喂给编译器 `dtc` 会报错，所以编译分两阶段：用 C 预处理器把 include 展平，再交给 `dtc` 编出 dtb。内核源码树自己编设备树走的也是同一套流程。要走通它，咱们手头得有那几个 include 的来源。
 
-`imx6ull.dtsi` 住在内核源码里，U-Boot 的片段住在 U-Boot 源码里，动手之前您得把 `third_party/linux_mainline` 和 `third_party/uboot-imx` 两个 submodule 都初始化检出。本仓的内核轨只有 mainline 7.1.0 一条，没有第二棵内核树，本卷所有命令对着的都是它。
+`imx6ull.dtsi` 住在内核源码里，U-Boot 的片段住在 U-Boot 源码里，动手之前您得把 `third_party/linux_mainline` 和 `third_party/uboot-mainline` 两个 submodule 都初始化检出。本仓的内核轨只有 mainline 7.2.9 一条，没有第二棵内核树，本卷所有命令对着的都是它。
 
 日常编译部署不用手敲长命令，仓库备好了脚本。`./scripts/driver_helper/build_driver.sh` 把驱动和设备树一起编出来，`./scripts/driver_helper/deploy_driver.sh` 负责部署。dtb 通过 TFTP 部署，U-Boot 启动时按 `fdt_file` 环境变量里写的名字加载，本板认的是 `imx6ull-aes.dtb`。编译、部署的具体命令咱们一起留到动手环节，到时候一步一步走。
 
@@ -146,7 +146,7 @@ dts 里有 `#include`，直接喂给编译器 `dtc` 会报错，所以编译分�
 
 四章的依赖是单向的：语法不熟就动驱动，等于您闭着眼睛改代码，所以顺序建议照排。手上已经有经验的您，直接跳去动手也行，卡住了再回头补对应的前章。
 
-动手之外还备着一本工具书：[设备树配置指南](../../../modules/DEVICE_TREE_GUIDE.md)。LCD、网络、存储这些外设怎么配，换一块板子怎么移植，它按条目整理好了。本卷不重复那些内容，需要查配方时咱们再去翻它。
+动手之外还备着一本工具书：[设备树配置指南](../../../engineering/modules/DEVICE_TREE_GUIDE.md)。LCD、网络、存储这些外设怎么配，换一块板子怎么移植，它按条目整理好了。本卷不重复那些内容，需要查配方时咱们再去翻它。
 
 ## 下一步
 

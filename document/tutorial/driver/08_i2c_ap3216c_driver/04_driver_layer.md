@@ -207,7 +207,7 @@ del_region:
 }
 ```
 
-这段代码里有几处现代写法值得专门点出来。`devm_kzalloc(&client->dev, ...)` 用的是托管分配——它绑在 `client->dev` 上，设备移除时内核自动帮你 `kfree`，所以 `remove` 里我们不用（也不能）再去释放 `dev`。`i2c_set_clientdata(client, dev)` 把设备结构体挂到 `i2c_client` 上，这是 I2C 子系统的标准玩法，等会儿 `remove` 里用 `i2c_get_clientdata` 就能原样取回。`class_create(AP3216C_NAME)`——注意，**只有一个参数**，老教程里那个 `THIS_MODULE` 早从 6.4 开始就被砍掉了，你要是写成双参数，6.12 / 7.1 直接编译报错。最后芯片初始化那两句是 AP3216C 的"开机仪式"：写 `0x04` 软复位、睡 10ms 等它缓过来、再写 `0x03` 把三路采集全打开。
+这段代码里有几处现代写法值得专门点出来。`devm_kzalloc(&client->dev, ...)` 用的是托管分配——它绑在 `client->dev` 上，设备移除时内核自动帮你 `kfree`，所以 `remove` 里我们不用（也不能）再去释放 `dev`。`i2c_set_clientdata(client, dev)` 把设备结构体挂到 `i2c_client` 上，这是 I2C 子系统的标准玩法，等会儿 `remove` 里用 `i2c_get_clientdata` 就能原样取回。`class_create(AP3216C_NAME)`——注意，**只有一个参数**，老教程里那个 `THIS_MODULE` 早从 6.4 开始就被砍掉了，你要是写成双参数，7.2.9 直接编译报错。最后芯片初始化那两句是 AP3216C 的"开机仪式"：写 `0x04` 软复位、睡 10ms 等它缓过来、再写 `0x03` 把三路采集全打开。
 
 `probe` 里出错处理用了一串 `goto` 标签，按"先创建的后清理"的相反顺序回滚。这是内核驱动里几乎强制的写法——别嫌丑，它保证任何一步失败都不会留下半拉子资源。
 
@@ -309,7 +309,7 @@ MODULE_LICENSE("GPL");
 
 ## 小结
 
-这一节我们写完了 AP3216C 的驱动主体：用 `i2c_smbus_*` 做寄存器读写（顺手用 `i2c_transfer` 讲清了底层机制），用 `container_of` + `filp->private_data` 做多设备友好的字符设备接口，`probe` 用 `devm_kzalloc` 托管内存、用单参数 `class_create` 建节点，`remove` 是 `void`、按相反顺序清理，最后 `module_i2c_driver` 一行注册。代码是现代的、能直接在 6.12 / 7.1 上编过。但这一切要跑起来，还差最后一块拼图——设备树。下一节我们就把 AP3216C 画进内核的硬件地图里。
+这一节我们写完了 AP3216C 的驱动主体：用 `i2c_smbus_*` 做寄存器读写（顺手用 `i2c_transfer` 讲清了底层机制），用 `container_of` + `filp->private_data` 做多设备友好的字符设备接口，`probe` 用 `devm_kzalloc` 托管内存、用单参数 `class_create` 建节点，`remove` 是 `void`、按相反顺序清理，最后 `module_i2c_driver` 一行注册。代码是现代的、能直接在 7.2.9 上编过。但这一切要跑起来，还差最后一块拼图——设备树。下一节我们就把 AP3216C 画进内核的硬件地图里。
 
 ---
 

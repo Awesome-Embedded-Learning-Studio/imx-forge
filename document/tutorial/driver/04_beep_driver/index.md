@@ -7,7 +7,7 @@ title: 蜂鸣器驱动教程
 ## 版本说明
 
 本教程基于以下内核版本：
-- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
+- **mainline** 7.2.9 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
 ## 学习路径
 

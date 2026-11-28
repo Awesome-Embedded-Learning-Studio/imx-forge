@@ -217,7 +217,7 @@ gcc -E -nostdinc -undef -x assembler-with-cpp \
     -o out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/imx6ull-aes-11_tutorial_device_tree_try.dtb -
 ```
 
-命令里的三个 `-I` 咱们挨个看过来。第一个是内核的 ARM 设备树公共目录。第二个是 NXP imx 子目录，`imx6ull.dtsi` 在这里。第三个到项目主板目录里找 `imx6ull-aes.dtsi`。这套“预处理一遍再交给 dtc”的两阶段流程就是内核自己编设备树的方式；本仓把它落在 `scripts/lib/driver_buildlib.sh` 里，脚本怎么拼这些 `-I`、怎么调 dtc，[driver_buildlib 脚本文档](../../../scripts/lib/driver_buildlib.sh.md)里有拆解。
+命令里的三个 `-I` 咱们挨个看过来。第一个是内核的 ARM 设备树公共目录。第二个是 NXP imx 子目录，`imx6ull.dtsi` 在这里。第三个到项目主板目录里找 `imx6ull-aes.dtsi`。这套“预处理一遍再交给 dtc”的两阶段流程就是内核自己编设备树的方式；本仓把它落在 `scripts/lib/driver_buildlib.sh` 里，脚本怎么拼这些 `-I`、怎么调 dtc，[driver_buildlib 脚本文档](../../../engineering/scripts/lib/driver_buildlib.sh.md)里有拆解。
 
 编完咱们可以反编译对拍，确认咱们的节点真的在 dtb 里：
 
@@ -297,7 +297,7 @@ git grep -n "of_find_node_by_path" include/linux/of.h
 
 您会看到它在 `include/linux/of.h` 里是个 `static inline` 包装，真正干活的是 `of_find_node_opts_by_path(path, NULL)`，内核给它留了个传选项的口子，日常用不到而已。同一个名字出现两处也别慌，一处是真实现，另一处是 `CONFIG_OF` 关闭时的空桩，看上下文就能分辨。
 
-查的时候有两个习惯值得养成：查声明从 `include/` 查起，用 `git grep` 而不是裸 `grep -r`，内核几十万文件，后者会把您淹死。本项目的内核轨只有 mainline（7.1.0）一条，所以只对这一棵树。引用 API 时写函数名和文件就够，行号会随版本漂，别依赖它。
+查的时候有两个习惯值得养成：查声明从 `include/` 查起，用 `git grep` 而不是裸 `grep -r`，内核几十万文件，后者会把您淹死。本项目的内核轨只有 mainline（7.2.9）一条，所以只对这一棵树。引用 API 时写函数名和文件就够，行号会随版本漂，别依赖它。
 
 ## 常见卡点
 

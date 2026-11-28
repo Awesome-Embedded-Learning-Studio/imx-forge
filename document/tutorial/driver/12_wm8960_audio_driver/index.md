@@ -8,7 +8,7 @@ title: WM8960 音频驱动教程
 
 本教程基于以下内核版本：
 
-- **mainline** 7.1.0 —— 项目唯一内核轨，alpha 板日常跑的就是它
+- **mainline** 7.2.9 —— 项目唯一内核轨，alpha 板日常跑的就是它
 
 ::: info 单轨说明
 RTC、goodix 两章当年曾把 linux-imx 标成推荐；2026-09 起 linux-imx 轨退役，全项目只剩 mainline，本章正文本来就是对着 mainline 写的，不受影响。

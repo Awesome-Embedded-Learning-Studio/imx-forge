@@ -37,9 +37,9 @@ Linux 走了相反的路：用最少的维度（r、w、x）和最少的级别�
 ```bash
 $ ls -l
 total 4
--rw-r--r-- 1 charlie charlie  231 Jan 10 10:00 hello.c
-drwxr-xr-x 2 charlie charlie 4096 Jan 10 10:00 projects/
--rwxr-xr-x 1 charlie charlie 8296 Jan 10 10:00 hello
+-rw-r--r-- 1 charlie charlie  231 Nov 20 14:35 hello.c
+drwxr-xr-x 2 charlie charlie 4096 Nov 20 14:35 projects/
+-rwxr-xr-x 1 charlie charlie 8296 Nov 20 14:36 hello
 ```
 
 最左边那串字符 `-rw-r--r--` 就是权限位。它可以拆成四个部分：
@@ -126,11 +126,11 @@ USERGROUPS_ENAB	yes
 ```bash
 $ touch newfile
 $ ls -l newfile
--rw-rw-r-- 1 charlie charlie 0 Jan 10 10:00 newfile
+-rw-rw-r-- 1 charlie charlie 0 Nov 20 14:35 newfile
 
 $ mkdir newdir
 $ ls -ld newdir
-drwxrwxr-x 2 charlie charlie 4096 Jan 10 10:00 newdir
+drwxrwxr-x 2 charlie charlie 4096 Nov 20 14:35 newdir
 ```
 
 文件 `664`，目录 `775`——属主和组权限相同，其他人只有读和执行（目录）或只有读（文件）。这和计算结果完全一致。
@@ -150,12 +150,12 @@ $ echo 'echo "Hello"' >> hello.sh
 
 # 当前权限
 $ ls -l hello.sh
--rw-r--r-- 1 charlie charlie 20 Jan 10 10:00 hello.sh
+-rw-r--r-- 1 charlie charlie 20 Nov 20 14:35 hello.sh
 
 # 给所有人加上执行权限（755）
 $ chmod 755 hello.sh
 $ ls -l hello.sh
--rwxr-xr-x 1 charlie charlie 20 Jan 10 10:00 hello.sh
+-rwxr-xr-x 1 charlie charlie 20 Nov 20 14:35 hello.sh
 
 # 现在可以运行了
 $ ./hello.sh
@@ -207,12 +207,12 @@ $ chmod -R 755 ~/projects/
 # 创建一个测试文件
 $ touch testfile
 $ ls -l testfile
--rw-r--r-- 1 charlie charlie 0 Jan 10 10:00 testfile
+-rw-r--r-- 1 charlie charlie 0 Nov 20 14:35 testfile
 
 # 把属主和属组都改成 root
 $ sudo chown root:root testfile
 $ ls -l testfile
--rw-r--r-- 1 root root 0 Jan 10 10:00 testfile
+-rw-r--r-- 1 root root 0 Nov 20 14:35 testfile
 ```
 
 `chown` 的格式是 `用户:组`（中间用冒号，旧写法用点 `.`，两种都认）。
@@ -230,7 +230,7 @@ $ sudo chown :root testfile
 ```bash
 $ sudo chgrp dialout testfile
 $ ls -l testfile
--rw-r--r-- 1 charlie dialout 0 Jan 10 10:00 testfile
+-rw-r--r-- 1 charlie dialout 0 Nov 20 14:35 testfile
 ```
 
 `chgrp` 等价于 `chown :组名`，但语义更明确。
@@ -255,7 +255,7 @@ rwx 九个字符覆盖了 99% 的日常场景。但有一个场景它搞不定�
 
 ```bash
 $ ls -l /usr/bin/passwd
--rwsr-xr-x 1 root root 68208 Jan 10 10:00 /usr/bin/passwd
+-rwsr-xr-x 1 root root 68208 Nov 20 14:35 /usr/bin/passwd
 ```
 
 注意属主权限那三位：不是 `rwx`，而是 `rws`——那个 `s` 就是 SUID 位。
@@ -298,12 +298,12 @@ $ sudo mkdir /srv/project
 $ sudo chgrp team /srv/project
 $ sudo chmod g+s /srv/project    # 设置 SGID
 $ ls -ld /srv/project
-drwxrwsr-x 2 root team 4096 Jan 10 10:00 /srv/project
+drwxrwsr-x 2 root team 4096 Nov 20 14:35 /srv/project
 
 # 现在 charlie（属于 team 组）在此目录下创建文件
 $ touch /srv/project/test.txt
 $ ls -l /srv/project/test.txt
--rw-r--r-- 1 charlie team 0 Jan 10 10:00 /srv/project/test.txt
+-rw-r--r-- 1 charlie team 0 Nov 20 14:35 /srv/project/test.txt
 ```
 
 属组自动是 `team` 而不是 `charlie`——同组的人都能按照组的权限来访问。
@@ -312,7 +312,7 @@ $ ls -l /srv/project/test.txt
 
 ```bash
 $ ls -ld /tmp
-drwxrwxrwt 15 root root 4096 Jan 10 10:00 /tmp
+drwxrwxrwt 15 root root 4096 Nov 20 14:35 /tmp
 ```
 
 权限最后那个 `t` 就是 Sticky Bit。

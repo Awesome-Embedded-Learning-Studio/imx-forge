@@ -9,7 +9,7 @@ title: 从 0 开始：安装交叉编译工具链
 ::: tip 前置知识 · 环境
 - 会基本的 Linux 命令行操作(nano 编辑、tar 解压、环境变量)。交叉编译的概念背景想系统补课的话，[Linux 基础第 35 章](../linux-basics/07-devtools/ch35-crosscompile.md)有整章展开，目标三元组的逐段拆解就在那里
 - 一台 Ubuntu 24.04 主机，裸机或 WSL2 皆可;WSL2 的网络与防火墙细节见[开发环境配置卷第一篇](../workflow/01_wsl2_env_config.md)
-- 不想手动配工具链的话，[Docker 卷](../docker/)提供了预装同一套 15.2 的镜像路线，与本篇的手动路径二选一
+- 不想手动配工具链的话，[Docker 路线](06_docker_basics.md)提供了预装同一套 15.2 的镜像路线，与本篇的手动路径二选一
 - 路径上下文：本篇全部操作发生在主机的家目录与 /opt 下，不涉及 imx-forge 仓库源码树；工具链安装在 /opt/arm-gnu-toolchain,它是通用的 ARM Linux 工具链，后续所有组件的构建都靠它
 :::
 
@@ -21,7 +21,7 @@ title: 从 0 开始：安装交叉编译工具链
 gcc-linaro-7.4.1
 ```
 
-笔者第一次看到这个目录名的时候，整个人是有点懵的。今年都 2026 年了，Linux 内核主线都出到 7.x 了(本仓库主线内核就是 7.1),GCC 主线都 16.x 了，而不少 BSP 内核还停在 6.12 LTS、工具链还停在 GCC 7 / GCC 8。短期看似乎没什么问题，代码还能编；但只要咱们稍微往新一点的内核、U-Boot 或者用户态库靠一靠，过时编译器带来的警告和怪问题就会开始冒头。这种问题浪费时间的地方在于，您会本能地怀疑自己的代码，而不是怀疑编译器太老。
+笔者第一次看到这个目录名的时候，整个人是有点懵的。今年都 2026 年了，Linux 内核主线都出到 7.x 了(本仓库主线内核就是 7.2.9),GCC 主线都 16.x 了，而不少 BSP 内核还停在 6.12 LTS、工具链还停在 GCC 7 / GCC 8。短期看似乎没什么问题，代码还能编；但只要咱们稍微往新一点的内核、U-Boot 或者用户态库靠一靠，过时编译器带来的警告和怪问题就会开始冒头。这种问题浪费时间的地方在于，您会本能地怀疑自己的代码，而不是怀疑编译器太老。
 
 于是笔者这次干脆下了个决心：从工具链开始，彻底重建一套干净的交叉编译环境。不碰厂商 SDK 里那些没人维护的老版本，直接上 ARM 官方发布的 Arm GNU Toolchain 15.2。本篇就是这件事的完整记录：从零开始，装一套完全独立的 ARM Linux 交叉编译工具链。
 
@@ -276,5 +276,5 @@ RootFS
 - 下一篇:[02 环境初始化指南](02_env_init_guide.md)，用 env-init.sh 补齐主机构建依赖
 - 想系统补交叉编译的概念(目标三元组、QEMU 用户态模拟):[Linux 基础第 35 章，交叉编译与 imx-forge 衔接](../linux-basics/07-devtools/ch35-crosscompile.md)
 - WSL2 主机的网络与防火墙配置:[开发环境配置卷第一篇](../workflow/01_wsl2_env_config.md)
-- 不想手动配工具链，换 [Docker 路线](../docker/):镜像预装同一套 15.2
-- 完整环境文档:[ENVIRONMENT_SETUP](../../development/ENVIRONMENT_SETUP.md)
+- 不想手动配工具链，换 [Docker 路线](06_docker_basics.md):镜像预装同一套 15.2
+- 完整环境文档:[ENVIRONMENT_SETUP](../../engineering/development/ENVIRONMENT_SETUP.md)

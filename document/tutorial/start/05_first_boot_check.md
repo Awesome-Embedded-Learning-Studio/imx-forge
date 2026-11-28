@@ -4,7 +4,7 @@ title: 第一次上电与串口检查
 
 # 第一次上电与串口检查
 
-> 本篇是咱们第一次给板子上电的检查清单——该看什么、日志卡在哪意味着什么。配合 [practical/03 启动与调试](../practical/03_boot_and_debug.md) 食用。
+> 本篇是咱们第一次给板子上电的检查清单——该看什么、日志卡在哪意味着什么。配合 [debug/04 启动与调试](../debug/04_boot_and_debug.md) 食用。
 
 ## 一、上电前检查清单
 
@@ -30,7 +30,7 @@ title: 第一次上电与串口检查
 ### 1. U-Boot 阶段
 
 ```text
-U-Boot 2024.x ...
+U-Boot 2026.10 ...
 CPU: Freescale i.MX6ULL
 DRAM: 512 MiB
 ...
@@ -46,7 +46,7 @@ DRAM: 512 MiB
 ```text
 Starting kernel ...
 Booting Linux on physical CPU 0x0
-Linux version 7.1.0 ...
+Linux version 7.2.9 ...
 ```
 
 - **Starting kernel 后无输出** → 内核镜像/DTB 没加载、console 参数错
@@ -90,6 +90,6 @@ imx6ull login:
 
 - 串口工具：[串口工具使用（minicom）](04_serial_tools_minicom.md)
 - 启动流程详解：[flash/04 启动流程与偏移](../flash/04_imx6ull_boot_flow_and_offsets.md)
-- 实战启动调试：[practical/03 启动与调试](../practical/03_boot_and_debug.md)
+- 实战启动调试：[debug/04 启动与调试](../debug/04_boot_and_debug.md)
 - 启动失败排查：[kernel/13 常见问题](../kernel/13_common_issues.md)
 - 出问题了从哪篇读起：[调试与排错卷的路标表](../debug/)

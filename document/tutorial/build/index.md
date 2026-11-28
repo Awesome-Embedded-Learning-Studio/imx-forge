@@ -71,7 +71,7 @@ title: 构建进阶
 
 在开始这些教程之前，建议你已经掌握：
 
-1. **基础构建流程** ([../practical/02_build_system.md](../practical/02_build_system.md))
+1. **基础构建流程** ([../build/04_full_system_build.md](../build/04_full_system_build.md))
    - 熟悉 U-Boot、内核、BusyBox 的编译过程
    - 了解构建脚本的用法
 
@@ -109,7 +109,7 @@ title: 构建进阶
 - **硬件**: 正点原子阿尔法开发板 (i.MX6ULL)
 - **主机**: Ubuntu/Debian Linux
 - **工具链**: arm-none-linux-gnueabihf (15.2.x)
-- **构建日期**: 2026年5月
+- **最近核对**: 2026-11
 
 如果你的环境有所不同，命令路径和输出可能会有细微差异，但核心原理是一样的。
 

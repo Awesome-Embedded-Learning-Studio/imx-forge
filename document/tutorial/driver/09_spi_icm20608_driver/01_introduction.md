@@ -11,7 +11,7 @@ title: 架构概览
 难就难在思维模式的转换。裸机里你是硬件的直接操控者，Linux 里你得学会放权——承认这条 SPI 总线不属于你，你只是借用它。而且 SPI 比 I2C 更"放手"：I2C 把寻址、仲裁都封进协议层了，你只管调 API；SPI 却把自由度全塞给你，连带责任也一起推给你——片选你要管，"消息包"你要自己凑，时序你得保证严丝合缝。所以这一篇我们不光要换 API，更要把"借总线"这套姿势练熟。
 
 ::: tip 学习目标
-用 `module_spi_driver()` + `int probe(spi_device*)` + `void remove` 写出符合 6.12 / 7.1 规范的 SPI 设备驱动；通过 `spi_write_then_read` / `spi_transfer` 完成寄存器读写（搞懂 SPI 全双工下的"发地址收数据"时序）；最终把 ICM-20608 的六轴 + 温度数据读到用户空间。
+用 `module_spi_driver()` + `int probe(spi_device*)` + `void remove` 写出符合 7.2.9 规范的 SPI 设备驱动；通过 `spi_write_then_read` / `spi_transfer` 完成寄存器读写（搞懂 SPI 全双工下的"发地址收数据"时序）；最终把 ICM-20608 的六轴 + 温度数据读到用户空间。
 :::
 
 ## 教程结构
@@ -41,7 +41,7 @@ ICM-20608 是 TDK InvenSense 的一颗六轴传感器，把三轴陀螺仪、三
 ## 先认认环境
 
 - **板子**：I.MX6U-ALPHA，ICM-20608 接 ECSPI3，CS = GPIO1_IO20
-- **内核**：`mainline` 7.1.0 —— 项目唯一内核轨
+- **内核**：`mainline` 7.2.9 —— 项目唯一内核轨
 - **源码**：仓库 `third_party/linux_mainline`
 - **交叉工具链**：`arm-linux-gnueabihf-gcc`
 

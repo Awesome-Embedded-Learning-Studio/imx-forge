@@ -3,7 +3,7 @@
 # build-buildroot.sh - 构建 buildroot rootfs(D2-007)
 #
 # 封装 buildroot 的 defconfig + make,产出 rootfs 用户空间到 out/release-latest/rootfs/。
-# buildroot 只构建 rootfs(Stage 3+4);kernel/uboot 由 build_helper 双轨体系外部提供,
+# buildroot 只构建 rootfs(Stage 3+4);kernel/uboot 由 build_helper 提供(内核单轨 mainline),
 # 镜像由 build_imx6ull_image.sh 从 rootfs 目录组装。
 #
 # Usage:

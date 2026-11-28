@@ -2,19 +2,19 @@
 title: AP3216C I2C 驱动教程
 ---
 
-<PageHeader icon="🔌" title="AP3216C I2C 驱动" description="用 6.12 / 7.1 现代 I2C API，从设备树到字符设备，完整重写一颗光照 / 距离 / 红外三合一传感器的驱动" />
+<PageHeader icon="🔌" title="AP3216C I2C 驱动" description="用 7.2.9 现代 I2C API，从设备树到字符设备，完整重写一颗光照 / 距离 / 红外三合一传感器的驱动" />
 
 ## 版本说明
 
 本教程基于以下内核版本：
 
-- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
+- **mainline** 7.2.9 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
 源码就躺在仓库的 `third_party/linux_mainline` 下，文中所有结构体定义、函数签名都对着这棵树核对过，可以随时翻。
 
 ## 这一篇要解决什么问题
 
-网上流传的 I2C 驱动教程，绝大多数还停在 4.1.15 那套老写法上：`probe` 拖着个 `const struct i2c_device_id *id` 参数，`remove` 还在老老实实 `return 0`，连 `class_create` 都要你手写一个 `THIS_MODULE`。这些代码原封不动抄到 6.12 / 7.1 上，要么直接编不过（`class_create` 从 6.4 起只剩一个参数），要么满屏 `incompatible pointer type` 警告。所以这一篇我们干脆把 AP3216C 的驱动整个推倒重写——从设备树到驱动主体再到测试程序，一行老代码都不照抄，全程用现代内核的 API。
+网上流传的 I2C 驱动教程，绝大多数还停在 4.1.15 那套老写法上：`probe` 拖着个 `const struct i2c_device_id *id` 参数，`remove` 还在老老实实 `return 0`，连 `class_create` 都要你手写一个 `THIS_MODULE`。这些代码原封不动抄到 7.2.9 上，要么直接编不过（`class_create` 从 6.4 起只剩一个参数），要么满屏 `incompatible pointer type` 警告。所以这一篇我们干脆把 AP3216C 的驱动整个推倒重写——从设备树到驱动主体再到测试程序，一行老代码都不照抄，全程用现代内核的 API。
 
 ## 学习路径
 
@@ -47,7 +47,7 @@ title: AP3216C I2C 驱动教程
 </ChapterNav>
 
 ::: tip 学习目标
-搞懂 Linux I2C 驱动"总线驱动 / 设备驱动"的分层契约，能用 `module_i2c_driver()` + 单参数 `probe` + `void remove` 写出符合 6.12 / 7.1 规范的设备驱动，并通过 `i2c_transfer` / `i2c_smbus_*` 完成寄存器读写，最终把 AP3216C 的 IR / ALS / PS 三路真实数据读到用户空间。
+搞懂 Linux I2C 驱动"总线驱动 / 设备驱动"的分层契约，能用 `module_i2c_driver()` + 单参数 `probe` + `void remove` 写出符合 7.2.9 规范的设备驱动，并通过 `i2c_transfer` / `i2c_smbus_*` 完成寄存器读写，最终把 AP3216C 的 IR / ALS / PS 三路真实数据读到用户空间。
 :::
 
 ::: info 前置知识

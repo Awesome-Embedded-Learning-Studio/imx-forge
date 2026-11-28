@@ -76,7 +76,7 @@ timeout 30 ./scripts/init/env-init.sh --stage 3
 | 3 | BusyBox | build-essential、libncurses-dev |
 | 5 | 镜像生成 | fdisk（提供 sfdisk 命令） |
 
-关于 Stage 2 咱们把话说准：内核只有 mainline 一条轨（上游主线，当前 v7.1）——2026-09 起 NXP linux-imx 轨已退役，`--mainline` 开关和 `KERNEL_TRACK` 变量也随之删除，所以这张依赖表就够用。Stage 3 的 BusyBox 表脚本里确实备着；不过要如实提醒您，rootfs 的现行方案是 Buildroot，Buildroot 自己那套依赖不在这张 stage 表里，从构建到裁剪的完整流程咱们放到 [Buildroot 根文件系统](../buildroot/) 卷去讲。至于为什么没有 Stage 4，帮助信息里的 `1|2|3|5` 就是全部答案，4 是空号，传进去只会得到一句 Usage 提示。
+关于 Stage 2 咱们把话说准：内核只有 mainline 一条轨（上游主线，当前 v7.2.9）——2026-09 起 NXP linux-imx 轨已退役，`--mainline` 开关和 `KERNEL_TRACK` 变量也随之删除，所以这张依赖表就够用。Stage 3 的 BusyBox 表脚本里确实备着；不过要如实提醒您，rootfs 的现行方案是 Buildroot，Buildroot 自己那套依赖不在这张 stage 表里，从构建到裁剪的完整流程咱们放到 [Buildroot 根文件系统](../buildroot/) 卷去讲。至于为什么没有 Stage 4，帮助信息里的 `1|2|3|5` 就是全部答案，4 是空号，传进去只会得到一句 Usage 提示。
 
 这张表还有个耐看的细节：脚本查的不是包记录，而是能力。build-essential 用 gcc 和 make 两条命令是否存在来判断；python3-pyelftools 靠 `python3 -c "import elftools"` 试导入；imagemagick 对应的是 convert 命令；fdisk 这个包名底下实际查的是 sfdisk——Ubuntu 把 sfdisk 从 util-linux 拆进了独立的 fdisk 包。libncurses-dev 和 libgnutls28-dev 还留了头文件兜底，dpkg 里查不到记录但 /usr/include 下有头文件的机器（比如从源码自装的）也算过。换句话说，只要您机器上真能干活，它就不闹。
 
@@ -176,4 +176,4 @@ clean_buildroot.sh
 
 - 上一篇：[从 0 开始构建嵌入式 Linux 开发环境](01_start_from_toolchain.md)，交叉工具链本体的安装与验证，本篇查的主机包是它的另一半
 - 下一篇：[板子硬件接口速查表](03_hardware_quick_reference.md)，环境备齐之后，咱们去认识 i.MX6ULL 这块板子上的接口
-- 跨卷深读：[Docker 教程](../docker/) 把依赖全部打包进镜像，免去本篇这套检查；[Buildroot 根文件系统](../buildroot/) 是 rootfs 现行方案的完整流程，它的依赖不在 stage 表里
+- 跨卷深读：[Docker 教程](06_docker_basics.md) 把依赖全部打包进镜像，免去本篇这套检查；[Buildroot 根文件系统](../buildroot/) 是 rootfs 现行方案的完整流程，它的依赖不在 stage 表里

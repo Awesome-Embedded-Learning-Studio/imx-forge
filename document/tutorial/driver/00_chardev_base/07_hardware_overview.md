@@ -12,7 +12,7 @@
 
 在正式开始之前，先把我们的实验环境交代清楚。这很重要，因为不同的芯片、不同的板子设计，寄存器地址和连接方式都可能不同。
 
-我们用的是i.MX 6ULL Alpha Board，芯片是i.MX 6ULL（ARM Cortex-A7 内核），内核是主线 Linux 7.1（`third_party/linux_mainline`，产物在 `out/linux`），工具链是arm-none-linux-gnueabihf-gcc。LED连接在GPIO1_IO03引脚上，这个信息特别重要，因为整个驱动的寄存器配置都围绕这个引脚展开。
+我们用的是i.MX 6ULL Alpha Board，芯片是i.MX 6ULL（ARM Cortex-A7 内核），内核是主线 Linux 7.2.9（`third_party/linux_mainline`，产物在 `out/linux`），工具链是arm-none-linux-gnueabihf-gcc。LED连接在GPIO1_IO03引脚上，这个信息特别重要，因为整个驱动的寄存器配置都围绕这个引脚展开。
 
 LED的连接方式是这样的：它的一端通过一个限流电阻接到VCC（高电平），另一端接到GPIO1_IO03引脚。也就是说，当GPIO输出低电平时，电流从VCC流向GPIO，LED点亮；当GPIO输出高电平时，两端电势差为零，LED熄灭。这叫做"低电平有效"（Active Low），在实际硬件设计中很常见。原因有很多，比如驱动能力的考虑、功耗的考虑、或者历史兼容性的考虑。总之记住一点——写0灯亮，写1灯灭。这个细节如果你搞反了，调试起来会非常困惑，因为你以为在开灯，实际在关灯，或者反过来。
 

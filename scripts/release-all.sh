@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# build-all.sh - Unified build script for mini Linux distribution
+# release-all.sh - Unified build script for mini Linux distribution
 #
 # Usage:
-#   ./scripts/build-all.sh [OPTIONS]
+#   ./scripts/release-all.sh [OPTIONS]
 #
 # Options:
 #   --fast-build    - Pass --fast-build to linux build (skip distclean)
@@ -37,9 +37,9 @@ else
     YELLOW='\033[1;33m'
     BLUE='\033[0;34m'
     NC='\033[0m'
-    log_info() { echo -e "${GREEN}[build-all]${NC} $1"; }
-    log_error() { echo -e "${RED}[build-all]${NC} $1"; }
-    log_warn() { echo -e "${YELLOW}[build-all]${NC} $1"; }
+    log_info() { echo -e "${GREEN}[release-all]${NC} $1"; }
+    log_error() { echo -e "${RED}[release-all]${NC} $1"; }
+    log_warn() { echo -e "${YELLOW}[release-all]${NC} $1"; }
 fi
 
 # Configuration
@@ -47,7 +47,7 @@ BUILD_OUTPUT_DIR="${PROJECT_ROOT}/out/release-latest"
 CROSS_COMPILE=arm-none-linux-gnueabihf-
 
 # Device tree selection (can be overridden via environment variable)
-# Example: DEFAULT_DEVICE_TREE="imx6ull-14x14-evk-emmc" ./scripts/release-all.sh
+# Example: DEFAULT_DEVICE_TREE="imx6ull-aes" ./scripts/release-all.sh
 : "${DEFAULT_DEVICE_TREE:=imx6ull-aes}"
 
 # Build options

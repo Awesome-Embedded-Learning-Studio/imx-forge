@@ -45,5 +45,5 @@ make -C third_party/buildroot O=$(pwd)/out/release-latest/buildroot
 
 ## 相关
 
-- 路线图:D4-001(P2)、D2-007/008/009(P1)—— 见 `document/todo/directions/`
+- 路线图:D4-001(P2)、D2-007/008/009(P1)—— 见 `document/todo/todo.md`
 - 取代的脚本:`scripts/third_party_install/`、`scripts/build_helper/build-busybox.sh`、`scripts/merge_overlay_rootfs.sh` 等(见分支 commit)

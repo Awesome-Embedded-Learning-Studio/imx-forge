@@ -45,5 +45,5 @@ C 语言高级特性 · Linux 内核基础 · 硬件基础知识
 
 <ChapterNav variant="sub">
   <ChapterLink href="../rootfs/" variant="sub">← 根文件系统</ChapterLink>
-  <ChapterLink href="../practical/" variant="sub">实战演练 →</ChapterLink>
+  <ChapterLink href="../project/" variant="sub">应用项目 →</ChapterLink>
 </ChapterNav>

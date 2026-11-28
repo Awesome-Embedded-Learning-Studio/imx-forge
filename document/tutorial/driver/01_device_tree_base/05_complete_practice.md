@@ -11,7 +11,7 @@ title: 毕业项目：完整闭环
 - [03 从硬编码到设备树驱动](03_device_tree_driver.md)：六步改造在 08 章完整教过，本章只做验收，不从头再教一遍
 - [04 板级 DTS 修改实操](04_board_dts_modification.md)：build、deploy、show 三个脚本的用法在那里拆细了，流程卡住回那边查
 - 起步材料在仓库两处：`driver/device_tree/alpha-board/11_tutorial_device_tree_try/`（树）与 `driver/06_tutorial_device_tree_try/alpha-board/`（驱动）
-- 路径上下文：本篇命令都在仓库根目录 `~/imx-forge` 下执行，对着 `third_party/linux_mainline` 这棵内核源码操作，交叉工具链前缀 `arm-none-linux-gnueabihf-`；本仓内核轨只有 mainline 7.1.0 一条
+- 路径上下文：本篇命令都在仓库根目录 `~/imx-forge` 下执行，对着 `third_party/linux_mainline` 这棵内核源码操作，交叉工具链前缀 `arm-none-linux-gnueabihf-`；本仓内核轨只有 mainline 7.2.9 一条
 :::
 
 ## 毕业标准：一颗树、一个驱动、一盏灯
@@ -124,10 +124,10 @@ modinfo driver/06_tutorial_device_tree_try/alpha-board/device_tree_try_03_driver
 ```
 
 ```text
-vermagic:       7.1.0-dirty mod_unload modversions ARMv6 p2v8
+vermagic:       7.2.9-dirty mod_unload modversions ARMv6 p2v8
 ```
 
-`7.1.0` 就是本仓唯一的内核轨 mainline，`-dirty` 来自内核树上打着的本仓补丁；板子内核与模块 vermagic 对不上，`insmod` 当场拒绝，这条您编完模块就该查。核对从 compatible 开始，一条命令问出真实值：
+`7.2.9` 就是本仓唯一的内核轨 mainline，`-dirty` 表示当时内核树上还有未提交的改动（比如构建脚本拷入的板级 dts 让树变脏）；板子内核与模块 vermagic 对不上，`insmod` 当场拒绝，这条您编完模块就该查。核对从 compatible 开始，一条命令问出真实值：
 
 ```bash
 # 主机 ~/imx-forge
@@ -807,13 +807,13 @@ help:
 
 五章走完，咱们收个尾。学习地图一章认文件、看产物链；语法速览一章把您练到能独立读懂板级 dtsi；驱动改造一章把硬编码驱动改成吃树的驱动；板级修改一章走通从加节点到验证的全流程；本篇把这些拧成一次独立闭环。贯穿五篇的就一件事：描述硬件，而不是在代码里编码硬件。好处毕业项目里已经摸过，LED 换个引脚，您改的是 dts 里几个数字，`.ko` 原封不动。
 
-往后再出发有两条路。工具书那条，[设备树配置指南](../../../modules/DEVICE_TREE_GUIDE.md)按外设整理了 LCD、网络、存储的配方和换板移植步骤，您给自己的板子添外设时去翻它。深读那条，设备树的历史考据、dtb 的二进制格式、内核展开链路，本卷先把清单列在下面，后续的深读专题会逐章补全。
+往后再出发有两条路。工具书那条，[设备树配置指南](../../../engineering/modules/DEVICE_TREE_GUIDE.md)按外设整理了 LCD、网络、存储的配方和换板移植步骤，您给自己的板子添外设时去翻它。深读那条，设备树的历史考据、dtb 的二进制格式、内核展开链路，本卷先把清单列在下面，后续的深读专题会逐章补全。
 
 ## 继续学习
 
 - 上一篇：[04. 板级 DTS 修改实操](04_board_dts_modification.md)
 - 卷内回看：[01. 设备树与本仓的学习地图](01_device_tree_introduction.md) · [02. 语法速览：读懂本仓的 dts](02_device_tree_syntax.md) · [03. 从硬编码到设备树驱动](03_device_tree_driver.md)
-- 跨卷深读：[设备树配置指南](../../../modules/DEVICE_TREE_GUIDE.md)，外设配方与移植步骤
+- 跨卷深读：[设备树配置指南](../../../engineering/modules/DEVICE_TREE_GUIDE.md)，外设配方与移植步骤
 - 本卷到这里收官。下一站是平台设备驱动教程：内核的匹配机制接管咱们手动找节点的活，compatible 在那里真正上岗。
 
 ::: details 深读：设备树原理的完整拆解

@@ -94,13 +94,13 @@ light-meter/
 :::
 
 ::: info 前置知识,自包含,只有一处外链
-本系列自包含,不要求你先读完 buildroot 或 practical。唯一的硬依赖是硬件驱动,driver/08 AP3216C I2C 驱动是第三幕第 09 到 11 章的前置,你的板子上得有能读 `{ir,als,ps}` 的 `/dev/ap3216c`。如果你只走第一、二幕,也就是桌面 Mock 加接缝机制,暂时不需要它。另外需要一点 C++ 基础,本仓库没有 C++ 教程卷,linux-basics 是纯 C,所以第 01、02 章会把 C++23 工具链和 `std::expected` 从零讲起,不会默认你已经会现代 C++。
+本系列自包含,不要求你先读完 buildroot 或 rootfs。唯一的硬依赖是硬件驱动,driver/08 AP3216C I2C 驱动是第三幕第 09 到 11 章的前置,你的板子上得有能读 `{ir,als,ps}` 的 `/dev/ap3216c`。如果你只走第一、二幕,也就是桌面 Mock 加接缝机制,暂时不需要它。另外需要一点 C++ 基础,本仓库没有 C++ 教程卷,linux-basics 是纯 C,所以第 01、02 章会把 C++23 工具链和 `std::expected` 从零讲起,不会默认你已经会现代 C++。
 :::
 
 ::: details 延伸阅读
 - [cppreference std::expected](https://en.cppreference.com/w/cpp/utility/expected)
 - [PROJ-001 便携式环境监测站](../../../todo/projects/proj-001-env-monitor.md),light-meter 是它的光照单传感器切片,走完本系列你掌握 PROJ-001 的 Sensor 契约加 Qt 骨架约八成。
-- [D3 示例路线图](../../../todo/directions/d3-examples.md)
+- [D3 示例路线图](../../../todo/todo.md)
 :::
 
 ## 常见问题

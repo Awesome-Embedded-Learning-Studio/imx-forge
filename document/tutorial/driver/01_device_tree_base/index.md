@@ -46,7 +46,7 @@ title: 设备树基础教程
 :::
 
 ::: info 前置知识
-建议先完成 [字符设备驱动教程](../00_chardev_base/) · C 语言基础 · Linux 内核模块概念。动手环节您需要先初始化 `third_party/linux_mainline` 与 `third_party/uboot-imx` 两个 submodule。
+建议先完成 [字符设备驱动教程](../00_chardev_base/) · C 语言基础 · Linux 内核模块概念。动手环节您需要先初始化 `third_party/linux_mainline` 与 `third_party/uboot-mainline` 两个 submodule。
 :::
 
 ::: details 延伸阅读
@@ -64,9 +64,9 @@ title: 设备树基础教程
 ### 软件环境
 
 - **操作系统**：Linux（推荐 Ubuntu 20.04 或更高版本）
-- **内核版本**：Linux 7.1.0（mainline）—— 项目唯一内核轨
-- **交叉编译工具链**：arm-linux-gnueabihf-gcc
-- **源码前提**：`third_party/linux_mainline`、`third_party/uboot-imx` 两个 submodule 初始化检出（dts 编译要取 include 片段）
+- **内核版本**：Linux 7.2.9（mainline）—— 项目唯一内核轨
+- **交叉编译工具链**：arm-none-linux-gnueabihf-gcc
+- **源码前提**：`third_party/linux_mainline`、`third_party/uboot-mainline` 两个 submodule 初始化检出（dts 编译要取 include 片段）
 
 ## 常见问题
 

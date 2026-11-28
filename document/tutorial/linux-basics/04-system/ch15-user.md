@@ -168,14 +168,14 @@ uid=1001(devuser) gid=1001(devuser) groups=1001(devuser),27(sudo),20(dialout)
 
 $ ls -la /home/devuser/
 total 20
-drwxr-x--- 2 devuser devuser 4096 Jan 10 10:00 .
-drwxr-xr-x 6 root   root   4096 Jan  9 09:00 ..
--rw-r--r-- 1 devuser devuser  220 Jan 10 10:00 .bash_logout
--rw-r--r-- 1 devuser devuser 3771 Jan 10 10:00 .bashrc
--rw-r--r-- 1 devuser devuser  807 Jan 10 10:00 .profile
+drwxr-x--- 2 devuser devuser 4096 Nov 20 14:32 .
+drwxr-xr-x 6 root   root   4096 Nov 19 09:14 ..
+-rw-r--r-- 1 devuser devuser  220 Nov 20 14:32 .bash_logout
+-rw-r--r-- 1 devuser devuser 3771 Nov 20 14:32 .bashrc
+-rw-r--r-- 1 devuser devuser  807 Nov 20 14:32 .profile
 ```
 
-家目录已就位，Shell 配置文件已自动从 `/etc/skel` 模板复制过来。
+家目录已就位，Shell 配置文件已自动从 `/etc/skel` 模板复制过来。（示例输出的时间戳、inode 以你机器上的实际为准。）
 
 > **关于 `useradd` 和 `adduser` 的区别**
 >

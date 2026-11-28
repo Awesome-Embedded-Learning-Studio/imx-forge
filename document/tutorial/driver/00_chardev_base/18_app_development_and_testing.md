@@ -106,7 +106,7 @@ cd /home/charliechen/imx-forge
 ./scripts/driver_helper/deploy_driver.sh 04_tutorial_chardev_led_v2 alpha-board
 ```
 
-部署脚本会通过网络把驱动和应用程序拷贝到开发板的正确位置。我们的开发板配置要求内核版本 6.12.49 或更高，支持 mdev（BusyBox 的设备管理器），设备文件 `/dev/AES_LED` 会在驱动加载后自动创建。
+部署脚本会通过网络把驱动和应用程序拷贝到开发板的正确位置。我们的开发板配置要求内核版本 7.2.9 或更高，支持 mdev（BusyBox 的设备管理器），设备文件 `/dev/AES_LED` 会在驱动加载后自动创建。
 
 ## 真实测试输出：第一次跑起来是什么样
 

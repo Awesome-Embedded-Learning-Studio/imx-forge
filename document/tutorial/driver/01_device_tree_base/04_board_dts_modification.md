@@ -9,8 +9,8 @@ title: 板级 dts 修改与部署
 ::: tip 前置知识 · 环境
 - [语法速览一章](02_device_tree_syntax.md)讲过的节点、属性、cells、引用覆盖，本章直接拿来用，不再重讲
 - [驱动改造一章](03_device_tree_driver.md)里驱动按 `/imx_aes_led` 路径找节点、读五组 reg 地址，本章动手的这棵树就是喂给那个驱动的树
-- 动手前提：`third_party/linux_mainline` 和 `third_party/uboot-imx` 两个 submodule 先初始化检出，再往内核树打上本仓补丁（`./scripts/apply_patches.sh linux_mainline`）。本篇全部实测命令跑在这套环境就位的仓库上
-- 路径上下文：本篇命令都在仓库根目录 `~/imx-forge` 下执行，动手对象是 `driver/device_tree/alpha-board/` 下的板级 dts 和 `driver/06_tutorial_device_tree_try/` 下的驱动，内核源码对的是 `third_party/linux_mainline`（mainline 7.1.0，本仓唯一内核轨），交叉工具链前缀 `arm-none-linux-gnueabihf-`，设备树编译走 gcc 预处理加 dtc 两段
+- 动手前提：`third_party/linux_mainline` 和 `third_party/uboot-mainline` 两个 submodule 先初始化检出。内核侧零补丁：板级 dts/dtsi 由构建脚本从 `driver/device_tree/alpha-board/linux/` 拷入内核树，本篇全部实测命令跑在这套环境就位的仓库上
+- 路径上下文：本篇命令都在仓库根目录 `~/imx-forge` 下执行，动手对象是 `driver/device_tree/alpha-board/` 下的板级 dts 和 `driver/06_tutorial_device_tree_try/` 下的驱动，内核源码对的是 `third_party/linux_mainline`（mainline 7.2.9，本仓唯一内核轨），交叉工具链前缀 `arm-none-linux-gnueabihf-`，设备树编译走 gcc 预处理加 dtc 两段
 :::
 
 ## 前言：树是现成的，直到轮到咱们改它
@@ -122,10 +122,10 @@ modinfo out/driver_artifacts/06_tutorial_device_tree_try/alpha-board/device_tree
 ```
 
 ```text
-vermagic:       7.1.0-dirty mod_unload modversions ARMv6 p2v8
+vermagic:       7.2.9-dirty mod_unload modversions ARMv6 p2v8
 ```
 
-7.1.0，对得上本仓唯一的 mainline 内核轨。产物目录里现在有什么，咱们列出来看：
+7.2.9，对得上本仓唯一的 mainline 内核轨。产物目录里现在有什么，咱们列出来看：
 
 ```bash
 # 主机 ~/imx-forge
@@ -329,7 +329,7 @@ rmmod device_tree_try_03_driver
 
 - 上一篇：[03. 从硬编码到设备树驱动](03_device_tree_driver.md)，驱动怎么按路径找到咱们这章加的节点、把 reg 一组组映射成虚拟地址
 - 下一篇：[05. 毕业项目](05_complete_practice.md)，从接近空白的 dts 起步，加节点、写驱动、部署点灯整条链路独立走一遍，走通才算毕业
-- 跨卷参考：外设怎么配、换板子怎么移植，查[设备树配置指南](../../../modules/DEVICE_TREE_GUIDE.md)；本章构建库的内部实现，见 [driver_buildlib.sh 脚本文档](../../../scripts/lib/driver_buildlib.sh.md)
+- 跨卷参考：外设怎么配、换板子怎么移植，查[设备树配置指南](../../../engineering/modules/DEVICE_TREE_GUIDE.md)；本章构建库的内部实现，见 [driver_buildlib.sh 脚本文档](../../../engineering/scripts/lib/driver_buildlib.sh.md)
 
 ::: details 深读：编译与加载链路的深处
 两阶段编译里内核 Makefile 是怎么组织 dtbs 目标的，dtc 内部还有哪些检查与告警，U-Boot 的 bootm 在把 dtb 交给内核前做了哪些修整，内核又怎么把一张扁平的 dtb 展开成 `/proc/device-tree` 里能逐节点查看的树，这些机制内容本卷不展开，咱们留给后续的深读专题。

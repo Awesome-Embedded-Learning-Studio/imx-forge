@@ -2,19 +2,19 @@
 title: ICM-20608 SPI 驱动教程
 ---
 
-<PageHeader icon="📡" title="ICM-20608 SPI 驱动" description="用 6.12 / 7.1 现代 SPI API，从 spi_controller 到字符设备，完整重写一颗六轴传感器的驱动" />
+<PageHeader icon="📡" title="ICM-20608 SPI 驱动" description="用 7.2.9 现代 SPI API，从 spi_controller 到字符设备，完整重写一颗六轴传感器的驱动" />
 
 ## 版本说明
 
 本教程基于以下内核版本：
 
-- **mainline** 7.1.0 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
+- **mainline** 7.2.9 <Badge type="tip" text="推荐" /> —— 项目唯一内核轨
 
 唯一要注意的差异在**控制器侧**命名：`spi_alloc_master` / `spi_register_master` 这批带 "master" 的老 API，在 6.12 还作为兼容别名存在，到了 7.1 已经被彻底删除，统一成 `spi_alloc_host` / `spi_register_controller`。我们写设备驱动用不到它们，但分析 `spi-imx.c` 时会碰到，到时候会讲清楚。
 
 ## 这一篇要解决什么问题
 
-老 SPI 教程的"时代眼泪"比 I2C 还多：满屏幕的 `spi_master`、`spi_alloc_master`、`spi_register_master`，传输结构体里还在用 `.delay_usecs`，`remove` 还在 `return 0`。这套代码搬到 6.12 / 7.1 上：`spi_master` 在新内核里其实早就该叫 `spi_controller`，`.delay_usecs` 字段被换成了 `struct spi_delay delay`，老写法要么编不过要么报警告。所以这一篇我们照例把 ICM-20608 的 SPI 驱动整个重写——从控制器框架、设备驱动、设备树到上板测试，全程现代 API。
+老 SPI 教程的"时代眼泪"比 I2C 还多：满屏幕的 `spi_master`、`spi_alloc_master`、`spi_register_master`，传输结构体里还在用 `.delay_usecs`，`remove` 还在 `return 0`。这套代码搬到 7.2.9 上：`spi_master` 在新内核里其实早就该叫 `spi_controller`，`.delay_usecs` 字段被换成了 `struct spi_delay delay`，老写法要么编不过要么报警告。所以这一篇我们照例把 ICM-20608 的 SPI 驱动整个重写——从控制器框架、设备驱动、设备树到上板测试，全程现代 API。
 
 ## 学习路径
 
@@ -47,7 +47,7 @@ title: ICM-20608 SPI 驱动教程
 </ChapterNav>
 
 ::: tip 学习目标
-搞懂 SPI "主机驱动 / 设备驱动"的分层，理解 `spi_master` 为何改名 `spi_controller`、主机驱动为何实现 `transfer_one` 而非 `transfer`；能用 `spi_write_then_read` / `spi_transfer` 完成寄存器读写，写出符合 6.12 / 7.1 规范的 SPI 设备驱动，最终把 ICM-20608 的六轴 + 温度数据读到用户空间。
+搞懂 SPI "主机驱动 / 设备驱动"的分层，理解 `spi_master` 为何改名 `spi_controller`、主机驱动为何实现 `transfer_one` 而非 `transfer`；能用 `spi_write_then_read` / `spi_transfer` 完成寄存器读写，写出符合 7.2.9 规范的 SPI 设备驱动，最终把 ICM-20608 的六轴 + 温度数据读到用户空间。
 :::
 
 ::: info 前置知识

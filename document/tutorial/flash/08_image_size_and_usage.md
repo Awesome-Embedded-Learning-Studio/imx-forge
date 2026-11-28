@@ -311,8 +311,8 @@ SD 应该是 `/dev/mmcblk0p2`，eMMC 应该是 `/dev/mmcblk1p2`。这两个混�
 
 如果要看当时 bring-up 的原始记录，可以继续翻这两篇笔记：
 
-- [SD 卡烧录 Bring-up 笔记](../../notes/2026-06-08-sd-card-flashing-bringup.md)
-- [UUU + UMS + eMMC Bring-up 笔记](../../notes/2026-06-08-uuu-ums-emmc-bringup.md)
+- [SD 卡烧录 Bring-up 笔记](../../community/notes/2026-06-08-sd-card-flashing-bringup.md)
+- [UUU + UMS + eMMC Bring-up 笔记](../../community/notes/2026-06-08-uuu-ums-emmc-bringup.md)
 
 命令速查见：[镜像构建命令速查](../commands/01_image_builder_commands) 和 [烧录命令速查](../commands/04_flashing_commands.md)。
 

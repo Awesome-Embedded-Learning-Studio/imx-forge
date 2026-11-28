@@ -119,7 +119,7 @@ mount -t nfs <开发机IP>:/srv/lightmeter-build /mnt/dev
 ls /mnt/dev/light-meter     # 看到二进制
 ```
 
-之后开发循环就三步走:开发机上改代码、`cmake --build build-board`,板子上 `./mnt/dev/light-meter` 重跑。第二步如果是增量编译、只改了一个 `.cpp`,几秒就完事,板子上重跑也是秒级,合起来 10 秒级见效。这套循环是嵌入式 Linux 应用开发的标配,buildroot/practical 那边的 NFS 讲的是另一种用法(网络挂载整个 rootfs 切版本),这里用的是只共享应用产物目录的轻量版,两者不冲突,看你迭代的是 rootfs 还是应用,选合适的就行。
+之后开发循环就三步走:开发机上改代码、`cmake --build build-board`,板子上 `./mnt/dev/light-meter` 重跑。第二步如果是增量编译、只改了一个 `.cpp`,几秒就完事,板子上重跑也是秒级,合起来 10 秒级见效。这套循环是嵌入式 Linux 应用开发的标配,buildroot/rootfs 那边的 NFS 讲的是另一种用法(网络挂载整个 rootfs 切版本),这里用的是只共享应用产物目录的轻量版,两者不冲突,看你迭代的是 rootfs 还是应用,选合适的就行。
 
 ::: tip 顺带把环境变量固定下来
 上面那一大坨 `QT_QPA_PLATFORM`、`TSLIB_*` 环境变量,每次手 export 太累。写个小脚本 `run-lm.sh` 放板子上,里面 export 完所有变量再 `./light-meter`,以后跑一行 `./run-lm.sh` 就行。NFS 挂载也可以写进 `/etc/fstab` 或开机脚本,板子一启动就挂上。

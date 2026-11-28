@@ -27,14 +27,12 @@ function humanize(name: string): string {
 const LEARNING_ORDER = [
   'linux-basics',
   'start',
-  'docker',
   'uboot',
   'kernel',
   'rootfs',
   'buildroot',
   'emu',
   'driver',
-  'practical',
   'debug',
   'project',
   'flash',
@@ -125,9 +123,10 @@ export function volumeSidebar(
 
 // ── 教程分区 ─────────────────────────────────────────────────
 // 一个「学习分区」横跨多个物理目录(如「系统构建」= start + uboot + kernel + …)。
-// 做法:把该分区内所有目录合并成一份侧栏数组,再挂到分区 slug 与每个目录的
-// 路径前缀上。VitePress 的 getSidebar() 按「路径段数」降序取首个命中前缀,
+// 做法:把该分区内所有目录合并成一份侧栏数组,再挂到每个目录的路径前缀上。
+// VitePress 的 getSidebar() 按「路径段数」降序取首个命中前缀,
 // 因此 `/tutorial/uboot/`(4 段)必压过 `/tutorial/`(3 段),分区视图得以生效。
+// 分区总览不再是独立物理页,统一指向 /tutorial/ 总览页的分区锚点。
 //
 // 注意:跨目录的侧栏必须用绝对路径 —— 同一份数组要挂到多个不同前缀上,
 // VitePress 的 base 相对写法在这里无法成立。
@@ -138,7 +137,7 @@ export function sectionSidebar(
   const items: DefaultTheme.SidebarItem[] = [
     {
       text: section.overviewText ?? `${section.title} · 分区总览`,
-      link: `/tutorial/${section.slug}/`,
+      link: `/tutorial/#${section.title}`,
     },
   ]
 
@@ -173,7 +172,8 @@ export function sectionSidebar(
   return items
 }
 
-/** 把分区侧栏注册到 slug 与每个目录前缀上,返回 { 前缀: 侧栏 } 映射。 */
+/** 把分区侧栏注册到每个物理目录前缀上,返回 { 前缀: 侧栏 } 映射。
+ *  只注册 dirs:分区总览已并入 /tutorial/ 总览页,slug 不再对应物理目录。 */
 export function buildSectionSidebars(
   docsRoot: string,
   sections: TutorialSection[]
@@ -181,7 +181,7 @@ export function buildSectionSidebars(
   const map: Record<string, DefaultTheme.SidebarItem[]> = {}
   for (const section of sections) {
     const sidebarItems = sectionSidebar(docsRoot, section)
-    for (const prefix of [section.slug, ...section.dirs]) {
+    for (const prefix of section.dirs) {
       map[`/tutorial/${prefix}/`] = sidebarItems
     }
   }

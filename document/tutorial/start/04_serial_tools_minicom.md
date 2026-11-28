@@ -87,7 +87,7 @@ sudo usermod -aG dialout $USER
 | picocom | 轻量、退出干净（Ctrl+A Ctrl+X） | 无菜单，全命令行参数 |
 | screen | 系统自带、最简单 | 退出易残留会话 |
 
-picocom 一行启动，咱们项目里 [practical/03](../practical/03_boot_and_debug.md) 即用此）：
+picocom 一行启动，咱们项目里 [debug/04](../debug/04_boot_and_debug.md) 即用此）：
 
 ```bash
 picocom -b 115200 /dev/ttyUSB0
@@ -117,6 +117,6 @@ screen /dev/ttyUSB0 115200
 
 - 硬件接口速查：[板子硬件接口速查表](03_hardware_quick_reference.md)
 - 首次上电流程：[第一次上电与串口检查](05_first_boot_check.md)
-- 启动日志解读：[practical/03 启动与调试](../practical/03_boot_and_debug.md)
+- 启动日志解读：[debug/04 启动与调试](../debug/04_boot_and_debug.md)
 - 开发台串口策略：Windows 直连与 usbipd 透传怎么选，见 [串口终端：开发台的第二块屏幕](../workflow/03_serial_terminal.md)
 - 日志怎么读：[串口日志阅读路线](../debug/03_serial_log_reading.md)

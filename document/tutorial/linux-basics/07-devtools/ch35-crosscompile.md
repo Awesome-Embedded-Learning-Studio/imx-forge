@@ -294,12 +294,12 @@ $ ./scripts/release-all.sh
 ```bash
 $ ls out/release-latest/
 # 预期输出
-busybox  images  linux  rootfs  uboot
+images  linux  rootfs  uboot
 ```
 
 - `out/release-latest/uboot/` —— U-Boot 引导程序二进制文件
 - `out/release-latest/linux/` —— Linux 内核镜像和设备树
-- `out/release-latest/busybox/` —— BusyBox 用户态工具
+- `out/release-latest/rootfs/bin/` —— BusyBox 用户态工具
 - `out/release-latest/rootfs/` —— 根文件系统
 - `out/release-latest/images/` —— 打包好的完整系统镜像（可直接烧录到 SD 卡）
 
@@ -308,7 +308,7 @@ busybox  images  linux  rootfs  uboot
 ```bash
 $ ./scripts/build_helper/build-uboot.sh       # 只编译 U-Boot
 $ ./scripts/build_helper/build-linux.sh       # 只编译内核
-$ ./scripts/build_helper/build-busybox.sh     # 只编译 BusyBox
+$ ./scripts/build_helper/build-buildroot.sh     # 构建 rootfs（含 BusyBox）
 ```
 
 到这里，你已经完成了从「零 Linux 基础」到「能编译一整套嵌入式 Linux 系统」的跨越。

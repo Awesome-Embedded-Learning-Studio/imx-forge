@@ -120,7 +120,7 @@ void input_mt_sync_frame(struct input_dev *dev);
 ```
 
 ::: warning ⚠️ 老教程里的 `input_mt_report_pointer_emulation` 已被 `input_mt_sync_frame` 取代
-很多老文章在帧末尾调 `input_mt_report_pointer_emulation` + `input_sync`，来给只认单点（`ABS_X/ABS_Y`）的老应用做兼容。7.1 里现代写法是直接 `input_mt_sync_frame`——它在 `input_mt_init_slots` 时配合 `INPUT_MT_DROP_UNUSED` 标志，会自动处理「未上报的 slot 视为抬起」并完成单点模拟。`goodix.c:498` 用的就是 `input_mt_sync_frame`。
+很多老文章在帧末尾调 `input_mt_report_pointer_emulation` + `input_sync`，来给只认单点（`ABS_X/ABS_Y`）的老应用做兼容。7.2.9 里现代写法是直接 `input_mt_sync_frame`——它在 `input_mt_init_slots` 时配合 `INPUT_MT_DROP_UNUSED` 标志，会自动处理「未上报的 slot 视为抬起」并完成单点模拟。`goodix.c:498` 用的就是 `input_mt_sync_frame`。
 :::
 
 把这套 API 串起来，一个 Type B 上报循环长这样（和 `goodix.c` 的 `goodix_ts_report_touch_8b` 几乎一样）：

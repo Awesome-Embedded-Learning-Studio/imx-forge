@@ -1,5 +1,9 @@
 # Patch 工作流实战指南
 
+::: warning 适用范围（2026-11 更新）
+本仓内核自 2026-10 起不再走补丁机制：板级设备树改由 `build-linux.sh` 从 `driver/device_tree/alpha-board/linux/` 拷入内核树，`patches/uboot-mainline/` 目录已删除。本文保留下内核补丁的原理讲解，**操作示例以 U-Boot 为例**（`patches/uboot-mainline/`），现行需要打补丁的也只有 U-Boot 和 QEMU 两个组件。
+:::
+
 ## 前言：为什么你需要补丁系统
 
 如果你开始做项目，必然会遇到需要修改 U-Boot 或内核代码的情况。可能是为了适配新硬件，可能是修复某个 bug，也可能是添加自定义功能。
@@ -24,24 +28,23 @@ tree patches/
 
 ```
 patches/
-├── linux_mainline/
 ├── qemu/
 ├── uboot/
 └── uboot-mainline/
 ```
 
-每个组件对应一个补丁目录，存放针对该组件的补丁文件。这种组织方式的好处是补丁按组件分类，一目了然，内核和 U-Boot 的补丁各归各的目录，互不干扰。
+每个组件对应一个补丁目录，存放针对该组件的补丁文件。这种组织方式的好处是补丁按组件分类，一目了然。内核侧已不再维护补丁，现在是 U-Boot 与 QEMU 两个组件各归各的目录。
 
 **看一下实际的补丁文件**：
 
 ```bash
-ls patches/linux_mainline/
+ls patches/uboot-mainline/
 ```
 
 你可能会看到类似：
 
 ```
-linux_mainline-feat-imx6ull_patches-20260828.patch
+charlies_board.patch
 ```
 
 补丁文件命名遵循 `组件名-分支名-日期.patch` 的格式，这样从文件名就能看出补丁的来源和时间。
@@ -79,10 +82,10 @@ git submodule update --init --recursive
 
 **进入要修改的子模块**：
 
-假设我们要修改 mainline 内核（子模块 `third_party/linux_mainline`，pin 在上游 tag `v7.1`）：
+假设我们要修改 U-Boot（子模块 `third_party/uboot-mainline`，pin 在上游 tag `v2026.10`）：
 
 ```bash
-cd third_party/linux_mainline
+cd third_party/uboot-mainline
 ```
 
 **查看当前分支**：
@@ -94,15 +97,15 @@ git branch -vv
 你会看到类似：
 
 ```
-* (HEAD detached at v7.1)
+* (HEAD detached at v2026.10)
 ```
 
-子模块是浅克隆、固定在 `v7.1` 标签上的，所以默认就是 detached HEAD 状态，不在任何分支上。
+子模块是浅克隆、固定在 `v2026.10` 标签上的，所以默认就是 detached HEAD 状态，不在任何分支上。
 
 **创建工作分支**：
 
 ```bash
-# 基于当前 v7.1 创建新分支
+# 基于当前 v2026.10 创建新分支
 git checkout -b my-feature
 ```
 
@@ -142,7 +145,7 @@ git commit -m "Add IMX-Forge boot signature"
 **查看你的提交**：
 
 ```bash
-git log --oneline v7.1..HEAD
+git log --oneline v2026.10..HEAD
 ```
 
 你会看到：
@@ -151,7 +154,7 @@ git log --oneline v7.1..HEAD
 abc1234 Add IMX-Forge boot signature
 ```
 
-冒号前面的 `abc1234` 是你的新提交，`v7.1..HEAD` 表示"从固定的 v7.1 基线到当前分支的差异"。
+冒号前面的 `abc1234` 是你的新提交，`v2026.10..HEAD` 表示"从固定的 v2026.10 基线到当前分支的差异"。
 
 ---
 
@@ -161,22 +164,22 @@ abc1234 Add IMX-Forge boot signature
 
 ```bash
 cd /home/charliechen/imx-forge
-./scripts/patch_maker.sh --submodule_path=linux_mainline
+./scripts/patch_maker.sh --submodule_path=uboot-mainline
 ```
 
 **脚本执行过程**：
 
 ```
 === Patch Generation Summary ===
-Submodule:     linux_mainline
+Submodule:     uboot-mainline
 Default branch: master
 Current branch: my-feature
 Commits:        1
-Output:         patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+Output:         patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
 
 Generating patch...
 ✓ Patch generated successfully!
-  File: patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+  File: patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
   Size: 1.2K
 ```
 
@@ -184,13 +187,13 @@ Generating patch...
 1. 检测子模块的默认分支（torvalds 上游是 `master`）
 2. 检测当前分支（`my-feature`）
 3. 计算两个分支之间的提交差异
-4. 生成补丁文件到 `patches/linux_mainline/` 目录
+4. 生成补丁文件到 `patches/uboot-mainline/` 目录
 5. 文件名包含分支名和当前日期
 
 **看一下生成的补丁文件**：
 
 ```bash
-cat patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+cat patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
 ```
 
 你会看到类似：
@@ -233,8 +236,8 @@ index def1234..abc5678 100644
 补丁生成后，记得提交到 Git：
 
 ```bash
-git add patches/linux_mainline/linux_mainline-my-feature-20260917.patch
-git commit -m "Add linux_mainline patch for boot signature"
+git add patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
+git commit -m "Add uboot-mainline patch for boot signature"
 ```
 
 这样你的补丁就跟着项目走了，其他人拉取代码后也能自动应用。
@@ -252,20 +255,20 @@ git commit -m "Add linux_mainline patch for boot signature"
 **应用 mainline 内核补丁**：
 
 ```bash
-./scripts/apply_patches.sh linux_mainline
+./scripts/apply_patches.sh uboot-mainline
 ```
 
 **执行输出**：
 
 ```
 ========================================
-应用 linux_mainline 补丁
+应用 uboot-mainline 补丁
 ========================================
-补丁目录: patches/linux_mainline
-目标源码: third_party/linux_mainline
+补丁目录: patches/uboot-mainline
+目标源码: third_party/uboot-mainline
 补丁数量: 2
 
-应用: linux_mainline-my-feature-20260917.patch (共 2 个补丁，仅应用最新)
+应用: uboot-mainline-my-feature-20260917.patch (共 2 个补丁，仅应用最新)
   ✓ 成功
 
 ========================================
@@ -274,7 +277,7 @@ git commit -m "Add linux_mainline patch for boot signature"
 ```
 
 脚本做了几件事：
-1. 扫描 `patches/linux_mainline/` 目录，找到所有 `.patch` 文件
+1. 扫描 `patches/uboot-mainline/` 目录，找到所有 `.patch` 文件
 2. 按文件名字母排序，取最后一个（最新的）
 3. 进入子模块目录，执行 `git apply --3way`
 4. 报告应用结果
@@ -290,13 +293,13 @@ git commit -m "Add linux_mainline patch for boot signature"
 **方法一：使用 git apply**
 
 ```bash
-cd third_party/linux_mainline
+cd third_party/uboot-mainline
 
 # 检查补丁（不实际应用）
-git apply --stat ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+git apply --stat ../../patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
 
 # 应用补丁
-git apply ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+git apply ../../patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
 ```
 
 `--stat` 参数会显示补丁修改了哪些文件、多少行，但不实际应用。适合先预览一下。
@@ -304,8 +307,8 @@ git apply ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
 **方法二：使用 patch 命令**
 
 ```bash
-cd third_party/linux_mainline
-patch -p1 < ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+cd third_party/uboot-mainline
+patch -p1 < ../../patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
 ```
 
 `-p1` 表示忽略路径的第一层目录（`a/` 和 `b/`），这是 Git 生成补丁的标准格式。
@@ -319,13 +322,13 @@ patch -p1 < ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patc
 **冲突的表现**：
 
 ```bash
-./scripts/apply_patches.sh linux_mainline
+./scripts/apply_patches.sh uboot-mainline
 ```
 
 输出：
 
 ```
-应用: linux_mainline-my-feature-20260917.patch
+应用: uboot-mainline-my-feature-20260917.patch
   ✗ 失败
 
 error: patch failed: init/main.c:123
@@ -337,8 +340,8 @@ error: init/main.c: patch does not apply
 1. **进入子模块手动应用**
 
 ```bash
-cd third_party/linux_mainline
-git apply --3way --reject ../../patches/linux_mainline/linux_mainline-my-feature-20260917.patch
+cd third_party/uboot-mainline
+git apply --3way --reject ../../patches/uboot-mainline/uboot-mainline-my-feature-20260917.patch
 ```
 
 `--reject` 参数会把无法应用的部分保存到 `.rej` 文件，手动解决冲突。
@@ -372,7 +375,7 @@ git commit -m "Manually resolved patch conflict"
 
 # 回到项目根目录重新生成补丁
 cd /home/charliechen/imx-forge
-./scripts/patch_maker.sh --submodule_path=linux_mainline
+./scripts/patch_maker.sh --submodule_path=uboot-mainline
 ```
 
 新补丁会基于最新的上游代码，以后就不会冲突了（除非上游又改了同一处）。
@@ -405,7 +408,7 @@ jobs:
 
       - name: Apply patches
         run: |
-          ./scripts/apply_patches.sh linux_mainline
+          ./scripts/apply_patches.sh uboot-mainline
           ./scripts/apply_patches.sh uboot-mainline
 
       - name: Build
@@ -452,7 +455,7 @@ on:
 不要用 `patch1.patch`、`fix.patch` 这种模糊的名字。使用 `组件名-功能描述-日期.patch` 格式：
 
 ```
-linux_mainline-fix-ethernet-20260917.patch
+uboot-mainline-fix-ethernet-20260917.patch
 uboot-mainline-add-spi-driver-20260917.patch
 busybox-enable-telnet-20260917.patch
 ```
@@ -470,9 +473,9 @@ busybox-enable-telnet-20260917.patch
 **✅ 好**：三个独立补丁，各改一个功能
 
 ```bash
-linux_mainline-fix-ethernet-20260917.patch
-linux_mainline-fix-storage-20260917.patch
-linux_mainline-add-gpio-driver-20260917.patch
+uboot-mainline-fix-ethernet-20260917.patch
+uboot-mainline-fix-storage-20260917.patch
+uboot-mainline-add-gpio-driver-20260917.patch
 ```
 
 ---
@@ -485,13 +488,13 @@ linux_mainline-add-gpio-driver-20260917.patch
 
 ```bash
 # 同步子模块（回到项目 pin 的版本）
-git submodule update --init third_party/linux_mainline
+git submodule update --init third_party/uboot-mainline
 
 # 重新应用补丁
-./scripts/apply_patches.sh linux_mainline
+./scripts/apply_patches.sh uboot-mainline
 
 # 如果有冲突，手动解决后重新生成
-./scripts/patch_maker.sh --submodule_path=linux_mainline
+./scripts/patch_maker.sh --submodule_path=uboot-mainline
 ```
 
 ---
@@ -527,13 +530,13 @@ Related issue: #123
 
 ```bash
 # 重置子模块到原始状态
-cd third_party/linux_mainline
+cd third_party/uboot-mainline
 git clean -fdx
-git reset --hard v7.1
+git reset --hard v2026.10
 
 # 回到项目根目录应用补丁
 cd /home/charliechen/imx-forge
-./scripts/apply_patches.sh linux_mainline
+./scripts/apply_patches.sh uboot-mainline
 ```
 
 如果这里失败了，说明补丁有问题，需要重新生成。
@@ -546,7 +549,7 @@ cd /home/charliechen/imx-forge
 
 ```gitignore
 # 子模块的修改应该通过补丁管理，不直接提交
-third_party/linux_mainline/
+third_party/uboot-mainline/
 third_party/uboot-mainline/
 third_party/busybox/
 ```
@@ -560,7 +563,7 @@ third_party/busybox/
 如果补丁 B 依赖补丁 A（比如 B 修改了 A 添加的代码），要在补丁说明里注明：
 
 ```
-Depends-on: linux_mainline-base-driver-20260901.patch
+Depends-on: uboot-mainline-base-driver-20260901.patch
 ```
 
 这样应用补丁时就知道顺序。不过 IMX-Forge 的"仅应用最新补丁"策略下，这种情况应该合并成一个补丁，避免依赖问题。

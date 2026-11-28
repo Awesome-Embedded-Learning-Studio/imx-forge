@@ -4,7 +4,7 @@ title: wm8960 codec 与时钟路由
 
 # wm8960 codec 与时钟路由 —— 寄存器、DAPM 与 MCLK
 
-[03 节](03_machine_driver_analysis.md) 拆了 machine 驱动怎么「缝」，这一节拆被缝的另一头：codec 驱动 `sound/soc/codecs/wm8960.c`（mainline 7.1，1591 行）。它管 WM8960 这颗芯片的一切——寄存器读写、音频通路（DAPM）、上电序列、时钟分频。再带上 alpha 板那条 **MCLK 时钟路由**：PLL4 → SAI2 → WM8960，为什么是 12.288MHz、为什么免 PLL。
+[03 节](03_machine_driver_analysis.md) 拆了 machine 驱动怎么「缝」，这一节拆被缝的另一头：codec 驱动 `sound/soc/codecs/wm8960.c`（mainline 7.2.9，1591 行）。它管 WM8960 这颗芯片的一切——寄存器读写、音频通路（DAPM）、上电序列、时钟分频。再带上 alpha 板那条 **MCLK 时钟路由**：PLL4 → SAI2 → WM8960，为什么是 12.288MHz、为什么免 PLL。
 
 ::: tip 学习目标
 看懂 `wm8960.c` 的 `i2c_driver` 骨架与「反向存在性探测」；跟着 `wm8960_i2c_probe`（`:1428`）走完 取 MCLK → regmap → 复位 → 设备树属性落寄存器 → 注册 component 的流程；理清 DAPM widget 表怎么构成耳机/喇叭/麦克风三条通路；画出 PLL4_AUDIO_DIV → SAI2 → MCLK 12.288MHz 的时钟树，理解 256×FS 为什么免 PLL。

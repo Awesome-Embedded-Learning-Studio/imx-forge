@@ -41,7 +41,7 @@ title: Buildroot 根文件系统
 
 ::: details 延伸阅读
 - [Buildroot 官方手册](https://buildroot.org/downloads/manual/)——遇到任何拿不准的配置项,第一份资料就是它
-- [IMX-Forge Buildroot External Tree README](https://github.com/Charliechen114514/imx-forge/blob/main/rootfs/buildroot/README.md)——本仓库 br2-external tree 的设计说明
+- [IMX-Forge Buildroot External Tree README](https://github.com/Awesome-Embedded-Learning-Studio/imx-forge/blob/main/rootfs/buildroot/README.md)——本仓库 br2-external tree 的设计说明
 :::
 
 ## 学习路径建议

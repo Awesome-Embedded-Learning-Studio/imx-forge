@@ -7,7 +7,7 @@ title: 主机与板子传文件：scp、rsync 与 NFS root 的三种选法
 > 交叉编译出来的 demo 怎么放到板子上，板上抓的日志怎么回宿主，这是咱们每天都在做的小动作，可一旦选错通道，等着您的就是连不上、被拒、传完就丢这一串坑。本篇是工作流卷的收尾篇，把 scp、rsync 与 NFS root 三种通道的适用边界讲清楚。上一篇 [tasks.json 命令模板](05_tasks_json.md) 把构建命令一键化之后，这一篇补上产物与板子之间的最后一段路；后面调试卷部署要调试的程序、抓日志，用的都是这里打通的链路。
 
 ::: tip 前置知识 · 咱们的环境
-- WSL2 环境的网络与文件系统差异，您回 [WSL2 开发注意事项](01_wsl2_env_config.md) 看；首次把板子跑起来、串口登录的完整流程见 [启动与调试](../practical/03_boot_and_debug.md)
+- WSL2 环境的网络与文件系统差异，您回 [WSL2 开发注意事项](01_wsl2_env_config.md) 看；首次把板子跑起来、串口登录的完整流程见 [启动与调试](../debug/04_boot_and_debug.md)
 - 咱们本篇的大量结论可以在仓库里直接核实：rootfs 配置在 rootfs/buildroot/configs/imx6ull_aes_defconfig，本地构建树在 out/release-latest/buildroot，rootfs 目录在 out/release-latest/rootfs
 - 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行，menuconfig 走 ./scripts/build_helper/buildroot_menuconfig.sh，rootfs 构建走 ./scripts/build_helper/build-buildroot.sh，交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
 :::

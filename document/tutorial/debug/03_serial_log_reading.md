@@ -7,7 +7,7 @@ title: 串口日志阅读路线：从一行输出找到下一站
 > 调试卷前两篇的工具都默认一件事：咱们已经知道问题出在哪个程序里。gdbserver 把断点打进指定进程，strace 盯着指定命令跑；可最常见的第一现场，是串口上一行行滚动的输出。读不懂这份输出，咱们就不知道下一站该去哪。本篇是调试卷的收尾篇：教您把串口日志读成定位线索，启动分段地图、Oops 解剖、噪音过滤、截日志的规范一次讲完。Oops 的内核态深入解剖在驱动卷与内核卷已有专章，本篇只管用户视角的读法，细节放进不重写那几章。
 
 ::: tip 前置知识 · 咱们的环境
-- 串口工具的装配与配置(minicom、picocom，115200 8N1 无流控)您回 [串口工具使用](../start/04_serial_tools_minicom.md) 看；首次上电流程与 tee 记日志的手法在 [启动与调试](../practical/03_boot_and_debug.md)
+- 串口工具的装配与配置(minicom、picocom，115200 8N1 无流控)您回 [串口工具使用](../start/04_serial_tools_minicom.md) 看；首次上电流程与 tee 记日志的手法在 [启动与调试](../debug/04_boot_and_debug.md)
 - 本篇只讲读日志。读完要下断点进内核态，kgdb 路线见 [内核调试技术](../driver/00_chardev_base/05_kernel_debug_techniques.md) 与 [驱动开发入门](../kernel/16_driver_basic.md)；启动流程逐阶段的完整讲解在 [内核启动与调试](../kernel/17_kernel_boot_debug.md)，U-Boot 阶段的命令在 [调试命令速查](../uboot/14_debug_reference.md)
 - 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行；日志样本来自 QEMU 直启(mcimx6ul-evk 机器，run-qemu.sh 那条链)的真跑记录，对应的主线内核构建树是 out/linux,vmlinux 就在 out/linux/vmlinux;交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
 :::
@@ -16,9 +16,9 @@ title: 串口日志阅读路线：从一行输出找到下一站
 
 板子不会说话，它从头到尾只有一个正式的输出口：调试串口。U-Boot 挂了，没有 SSH 可言，网络栈压根还没起来；init 挂了，咱们连 dmesg 都敲不了，因为 shell 根本没出生。从 ROM Code 的第一行输出(如果它配了输出)到 login 提示符之后的一切，这条 UART1 上的 115200 波特流是咱们唯一的实时现场。所以排障的第一站永远是串口，而不是重启再试一次。
 
-工具层面咱们不在本篇重复：minicom 的菜单配置、dialout 权限、硬件流控那颗雷，[串口工具使用](../start/04_serial_tools_minicom.md) 讲过;`picocom -b 115200 /dev/ttyUSB0 | tee boot.log` 这种边看边写进文件的手法，[启动与调试](../practical/03_boot_and_debug.md) 有现成命令。本篇假设您手上已经有一份完整的 boot.log,咱们专心解决读的问题。
+工具层面咱们不在本篇重复：minicom 的菜单配置、dialout 权限、硬件流控那颗雷，[串口工具使用](../start/04_serial_tools_minicom.md) 讲过;`picocom -b 115200 /dev/ttyUSB0 | tee boot.log` 这种边看边写进文件的手法，[启动与调试](../debug/04_boot_and_debug.md) 有现成命令。本篇假设您手上已经有一份完整的 boot.log,咱们专心解决读的问题。
 
-本篇分段地图与噪音判读引用的日志，全部来自同一条 QEMU 直启会话的串口记录，全份 371 行，从内核第一行一直到登录后敲命令，原文照 emu 卷的惯例收在本卷 `assets/qemu-e2e.log`，您随时可以对照复核；第三节那段 Oops 实录是唯一例外，引自模拟卷打地鼠那一章的串口记录。QEMU 直启(-kernel 直接引导)没有 U-Boot 阶段，日志从内核第一行开始；实际的板子上，这份记录前面还躺着 U-Boot 的一段——2026-10-13 的真板产线卡启动实录里，它依次是一行 U-Boot 2025.04 横幅、CPU 与内存自报、`Hit any key to stop autoboot: 0` 倒计时、`Booting AES from SD ...`、两行 ext4load 读数、`Starting kernel ...`，然后才轮到内核第一行。那张卡跑的是 2025.04 旧一轮镜像，倒计时在旧镜像上是开着的。现树的 defconfig 写了 `CONFIG_BOOTDELAY=-1`，这行倒计时在现在的镜像上不会出现，机制讲解见 [env 加载与倒计时：接管前的最后准备](../uboot/boot-chain/12_env_and_autoboot.md)。这块板子的 ROM 阶段没有输出，实录从 U-Boot 横幅直接开始。那个阶段怎么读，[调试命令速查](../uboot/14_debug_reference.md) 与 [启动与调试](../practical/03_boot_and_debug.md) 有逐行讲解，咱们不在这里重抄。
+本篇分段地图与噪音判读引用的日志，全部来自同一条 QEMU 直启会话的串口记录，全份 371 行，从内核第一行一直到登录后敲命令，原文照 emu 卷的惯例收在本卷 `assets/qemu-e2e.log`，您随时可以对照复核；第三节那段 Oops 实录是唯一例外，引自模拟卷打地鼠那一章的串口记录。QEMU 直启(-kernel 直接引导)没有 U-Boot 阶段，日志从内核第一行开始；实际的板子上，这份记录前面还躺着 U-Boot 的一段——2026-10-13 的真板产线卡启动实录里，它依次是一行 U-Boot 2025.04 横幅、CPU 与内存自报、`Hit any key to stop autoboot: 0` 倒计时、`Booting AES from SD ...`、两行 ext4load 读数、`Starting kernel ...`，然后才轮到内核第一行。那张卡跑的是 2025.04 旧一轮镜像，倒计时在旧镜像上是开着的。现树的 defconfig 写了 `CONFIG_BOOTDELAY=-1`，这行倒计时在现在的镜像上不会出现，机制讲解见 [env 加载与倒计时：接管前的最后准备](../uboot/boot-chain/12_env_and_autoboot.md)。这块板子的 ROM 阶段没有输出，实录从 U-Boot 横幅直接开始。那个阶段怎么读，[调试命令速查](../uboot/14_debug_reference.md) 与 [启动与调试](../debug/04_boot_and_debug.md) 有逐行讲解，咱们不在这里重抄。
 
 ::: warning 实测口径
 本篇贴出的启动日志均出自 QEMU 直启链，命令参数在 emu 卷有完整记录；U-Boot 阶段的形态以 2026-10-13 真板 SD 产线卡启动实录为据，printenv 与命令箱的实测输出在 uboot/09。
@@ -55,7 +55,7 @@ grep -n "Linux version\|command line\|Mounted root\|as init process\|Welcome\|lo
 [    0.000000] Kernel command line: console=ttymxc0,115200 root=/dev/mmcblk1 rootwait rw
 ```
 
-Linux version 一行是内核的自动报名：版本 7.2.9-dirty、在哪台主机编的、哪套 gcc 哪天编的。您日后提 Issue 贴日志，环境与版本说明这一行自带，不用手打。Machine model 行核对的是设备树有没有选对，这里就是咱们自己的 AES 板。Kernel command line 一行信息量最大:console=ttymxc0,115200 告诉咱们内核把话往哪个串口说(要是您屏幕上一行都没有，第一个要查的就是它，设备名拼错、波特率不对都归这案)；root=/dev/mmcblk1 交代根设备在哪。同一条参数在实际的板子上带分区号,咱们 practical/03 的真机实录里写的是 root=/dev/mmcblk0p2，QEMU 这张镜像是整盘 ext4 所以没有 pN 后缀；rootwait 让内核老老实实等 SD 卡就绪再挂。卡在这一段之前(连 Booting 都没有)，问题在引导参数或串口本身，[内核启动与调试](../kernel/17_kernel_boot_debug.md) 的问题 3 有完整清单。
+Linux version 一行是内核的自动报名：版本 7.2.9-dirty、在哪台主机编的、哪套 gcc 哪天编的。您日后提 Issue 贴日志，环境与版本说明这一行自带，不用手打。Machine model 行核对的是设备树有没有选对，这里就是咱们自己的 AES 板。Kernel command line 一行信息量最大:console=ttymxc0,115200 告诉咱们内核把话往哪个串口说(要是您屏幕上一行都没有，第一个要查的就是它，设备名拼错、波特率不对都归这案)；root=/dev/mmcblk1 交代根设备在哪。同一条参数在实际的板子上带分区号,咱们 debug 卷 04 章的真机实录里写的是 root=/dev/mmcblk0p2，QEMU 这张镜像是整盘 ext4 所以没有 pN 后缀；rootwait 让内核老老实实等 SD 卡就绪再挂。卡在这一段之前(连 Booting 都没有)，问题在引导参数或串口本身，[内核启动与调试](../kernel/17_kernel_boot_debug.md) 的问题 3 有完整清单。
 
 ### 第二段：驱动 probe 的流水账
 
@@ -195,7 +195,7 @@ deferred probe 的机制，这份实录给了一整套证据。驱动侧的失�
 
 您终有一天要拿日志去问人、提 Issue。截得好，一轮往返就定位；截得差，对面只能回一句"贴完整日志"。咱们按四要素自查。环境与版本:Linux version 行自带内核版本、编译器、日期，别把它截掉，虚拟机还是实际的板子也要说明，因为上一节刚讲过，同一个失败行在两种环境里含义相反。完整无删减：从上电或内核第一行，到卡住或崩溃的那一行，带时间戳原样贴；实在太长要省略中间，就在截断处写一行省略标注，悄悄删行是大忌，线索往往就藏在被删的那几行里。复现步骤：干了什么、敲了什么命令、第几步出的事。期望与实际：您预期看到什么，实际看到什么，一句话各说清。
 
-记录手法前面的章节教过，咱们直接给命令:实际串口用 `picocom -b 115200 /dev/ttyUSB0 | tee boot.log`,细节在 [启动与调试](../practical/03_boot_and_debug.md);QEMU 直启的串口走的是进程 stdout,交互跑 run-qemu.sh,输出只在终端上滚动，不产生任何文件;要留档，用 `run-qemu.sh --smoke --log=路径` 把串口收进文件(默认写进 out/qemu/uart.log)，或像 e2e-test.sh 那样做整段重定向，本篇的 qemu-e2e.log 就是这么收下来的。提 Issue 前把这四要素凑齐。[内核启动与调试](../kernel/17_kernel_boot_debug.md) 收尾也强调遇到问题先看日志;本篇给它补上的,就是怎么看的那一半操作细节。
+记录手法前面的章节教过，咱们直接给命令:实际串口用 `picocom -b 115200 /dev/ttyUSB0 | tee boot.log`,细节在 [启动与调试](../debug/04_boot_and_debug.md);QEMU 直启的串口走的是进程 stdout,交互跑 run-qemu.sh,输出只在终端上滚动，不产生任何文件;要留档，用 `run-qemu.sh --smoke --log=路径` 把串口收进文件(默认写进 out/qemu/uart.log)，或像 e2e-test.sh 那样做整段重定向，本篇的 qemu-e2e.log 就是这么收下来的。提 Issue 前把这四要素凑齐。[内核启动与调试](../kernel/17_kernel_boot_debug.md) 收尾也强调遇到问题先看日志;本篇给它补上的,就是怎么看的那一半操作细节。
 
 ## 速查表：看到什么，去哪章
 

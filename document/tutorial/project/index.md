@@ -17,12 +17,12 @@ light-meter 是第一个项目。后续 [PROJ-001 便携式环境监测站](../.
 :::
 
 ::: info 和其他卷的关系
-本卷的每一个项目都是**自包含的工程教学**:除了一处例外——项目依赖的具体硬件驱动会指给你本仓库对应的驱动章节(例如 light-meter 的 AP3216C 指向 [driver/08](../driver/08_i2c_ap3216c_driver/))——其余的工程本事(C++、Qt、CMake、Mock、部署、标定)都在项目教程里讲够,不需要你先读完 buildroot、practical 再来。
+本卷的每一个项目都是**自包含的工程教学**:除了一处例外——项目依赖的具体硬件驱动会指给你本仓库对应的驱动章节(例如 light-meter 的 AP3216C 指向 [driver/08](../driver/08_i2c_ap3216c_driver/))——其余的工程本事(C++、Qt、CMake、Mock、部署、标定)都在项目教程里讲够,不需要你先读完 buildroot、rootfs 再来。
 :::
 
 ## 继续学习
 
 <ChapterNav variant="sub">
-  <ChapterLink href="../practical/" variant="sub">← 实战演练</ChapterLink>
+  <ChapterLink href="../driver/" variant="sub">← 驱动开发</ChapterLink>
   <ChapterLink href="light-meter/" variant="sub">light-meter →</ChapterLink>
 </ChapterNav>

@@ -8,7 +8,7 @@ title: 架构概览
 
 上一章 RTC 我们开了「分析型」的头：原厂 `rtc-snvs.c` 太成熟，重写没意义，不如拆开读懂。触摸这一章我们接着走这条路——而且理由更充分。
 
-电容触摸屏驱动 `drivers/input/touchscreen/goodix.c`（1579 行），是 Red Hat 的 Benjamin Tissoires 等人维护、主线内核收录、被无数 x86 平板和 ARM 开发板验证过的代码。它把汇鼎一大家子触摸 IC（GT911 / GT9147 / GT9271 / GT928 …）的差异、I2C 协议、多点触摸上报、电源管理、甚至手写笔支持，全收拾进了一个文件。你板子上的 GT9147，主线驱动拿来就能用，自己从零写一个只会更差、还大概率踩它踩过的坑。
+电容触摸屏驱动 `drivers/input/touchscreen/goodix.c`（1580 行），是 Red Hat 的 Benjamin Tissoires 等人维护、主线内核收录、被无数 x86 平板和 ARM 开发板验证过的代码。它把汇鼎一大家子触摸 IC（GT911 / GT9147 / GT9271 / GT928 …）的差异、I2C 协议、多点触摸上报、电源管理、甚至手写笔支持，全收拾进了一个文件。你板子上的 GT9147，主线驱动拿来就能用，自己从零写一个只会更差、还大概率踩它踩过的坑。
 
 所以这一章的任务和 RTC 一样：**把 `goodix.c` 拆给你看**。但触摸比 RTC 复杂一档——它横跨两个子系统：I2C（数据怎么来）和 input（数据怎么变成标准事件上报）。其中 **input 子系统下的多点触摸协议（MT 协议）** 是这一章真正的硬骨头，也是你之前学按键 input（[07_input_subsystem_key](../07_input_subsystem_key/)）时还没碰到的部分。读懂它，input 子系统这块最重要的拼图就补齐了。
 
@@ -51,7 +51,7 @@ GT9147 有个 7 位从机地址选择机制：复位时把 INT 引脚拉高，IC
 ## 先认认环境
 
 - **板子**：I.MX6U-ALPHA，GT9147 挂 I2C2（地址 `0x5d`），中断 `GPIO1_IO09`、复位 `GPIO1_IO05`
-- **内核**：`mainline` 7.1.0 —— 项目唯一内核轨
+- **内核**：`mainline` 7.2.9 —— 项目唯一内核轨
 - **源码**：`third_party/linux_mainline/drivers/input/touchscreen/goodix.c`（+ 同目录 `goodix.h`）
 - **用户空间工具**：`evtest`（看原始 input 事件）、`tslib`（校准 + 多点测试 `ts_test_mt`）
 

@@ -7,7 +7,7 @@ title: 串口终端：开发台的第二块屏幕
 > 上一篇咱们把编辑器搬进了开发环境（[VSCode Remote-SSH 连 WSL](02_vscode_remote_ssh.md)）；本篇补上开发台的第二块屏幕：串口。SSH 之外为什么必须再留一条串口通道、Windows 直连与 usbipd 透进 WSL 两条通道怎么选、日志归档落在哪一侧，是本篇要解决的问题。minicom 第一次跑通的入门流程在 start/04，串口日志怎么读在 debug/03，本篇只做开发台形态下的通道选型与常驻配置。
 
 ::: tip 前置知识 · 咱们的环境
-- minicom 首跑与串口参数表在 [串口工具使用（minicom）](../start/04_serial_tools_minicom.md)；WSL2 的网络与文件系统的坑见 [WSL2 开发注意事项](01_wsl2_env_config.md)；picocom 与 tee 的实战用法出自 [启动与调试](../practical/03_boot_and_debug.md)
+- minicom 首跑与串口参数表在 [串口工具使用（minicom）](../start/04_serial_tools_minicom.md)；WSL2 的网络与文件系统的坑见 [WSL2 开发注意事项](01_wsl2_env_config.md)；picocom 与 tee 的实战用法出自 [启动与调试](../debug/04_boot_and_debug.md)
 - 路径上下文：咱们的操作分两侧，Windows 侧的命令在 PowerShell 里跑（bind 要管理员窗口；usbipd-win 5.0 起 attach 不再要求提权，旧版仍要），WSL 侧在仓库根 ~/imx-forge（本机即 /home/charliechen/imx-forge）；本篇不碰源码树与交叉工具链，操作对象是设备节点 /dev/ttyUSB* 与 /etc/udev/rules.d/ 下的配置文件，串口终端用 picocom，虚拟机场景用 scripts/qemu_helper/run-qemu.sh
 :::
 
@@ -29,7 +29,7 @@ MobaXterm 的图形界面操作在 Windows 桌面完成，本环境是 WSL2 终�
 
 ## 三、通道二：usbipd 把串口透进 WSL
 
-另一条通道手续多几步，换来的东西很实在：串口数据直接进 Linux 工具链。完整流程 docker 卷写过两遍，[Docker 基础知识](../docker/01_docker_basics.md) 的 usbipd 段（L526 到 L535）与 [IMX-Forge Docker 开发指南](../docker/02_imx_forge_docker_guide.md) 的 WSL2 USB 直通节（L525 到 L538）各有一份，咱们这里收编成串口场景的顺序，细节回那两章看；想跟着截图一步步点的话，来稿卷的[WSL（Ubuntu）连接 Windows 的 USB 设备](../contrib/02-wsl2-usbipd.md)是同一套流程的图文版，含 winget 升级与常见坑，本节与它互为索引。
+另一条通道手续多几步，换来的东西很实在：串口数据直接进 Linux 工具链。完整流程 Docker 两章写过两遍，[Docker 基础知识](../start/06_docker_basics.md) 的 usbipd 段（L526 到 L535）与 [IMX-Forge Docker 开发指南](../start/07_imx_forge_docker_guide.md) 的 WSL2 USB 直通节（L525 到 L538）各有一份，咱们这里收编成串口场景的顺序，细节回那两章看；想跟着截图一步步点的话，来稿卷的[WSL（Ubuntu）连接 Windows 的 USB 设备](../contrib/02-wsl2-usbipd.md)是同一套流程的图文版，含 winget 升级与常见坑，本节与它互为索引。
 
 ```powershell
 # Windows PowerShell（管理员）
@@ -39,7 +39,7 @@ usbipd bind --busid 1-1
 usbipd attach --wsl --busid 1-1
 ```
 
-咱们把四条命令的分工捋一下：winget 装 usbipd-win；list 列出 Windows 侧全部 USB 设备和总线号；bind 把设备登记为可共享；attach 才真正把它交给 WSL。bind 要管理员权限；usbipd-win 5.0 起 attach 不再要求提权，旧版仍要，这条口径出自微软的 [WSL USB 设备直通文档](https://learn.microsoft.com/en-us/windows/wsl/connect-usb)（docker 卷两章引用的同一份）。busid 以 list 的实际输出为准，1-1 是开发指南文档示例里的编号。list 的输出形如（引自 [IMX-Forge Docker 开发指南](../docker/02_imx_forge_docker_guide.md) 的示例）：
+咱们把四条命令的分工捋一下：winget 装 usbipd-win；list 列出 Windows 侧全部 USB 设备和总线号；bind 把设备登记为可共享；attach 才真正把它交给 WSL。bind 要管理员权限；usbipd-win 5.0 起 attach 不再要求提权，旧版仍要，这条口径出自微软的 [WSL USB 设备直通文档](https://learn.microsoft.com/en-us/windows/wsl/connect-usb)（这两章引用的同一份）。busid 以 list 的实际输出为准，1-1 是开发指南文档示例里的编号。list 的输出形如（引自 [IMX-Forge Docker 开发指南](../start/07_imx_forge_docker_guide.md) 的示例）：
 
 ```text
 BUSID  DEVICE                                                        STATE
@@ -47,7 +47,7 @@ BUSID  DEVICE                                                        STATE
 ```
 
 ::: warning 未实测标注
-这四条命令与上面的示例输出都出自 Windows 侧，本环境进不了 PowerShell，没法实测；命令原文与 docker 卷两章一致，界面文案以您本机的 usbipd 版本为准。
+这四条命令与上面的示例输出都出自 Windows 侧，本环境进不了 PowerShell，没法实测；命令原文与 start 卷 06、07 两章一致，界面文案以您本机的 usbipd 版本为准。
 :::
 
 attach 成功后，WSL 里会多出一个设备节点。反过来，没透进来是什么样，笔者在这台 WSL2 上实际跑过这条验证命令（这台机器默认 shell 是 zsh，glob 失配时 zsh 直接报 no matches found、连 ls 都不会执行，这里显式用 bash 跑），输出原样如下：
@@ -99,23 +99,23 @@ charliechen adm cdrom sudo dip plugdev users docker
 dialout:x:20:
 ```
 
-权限补齐后，咱们一行命令起串口，与 [启动与调试](../practical/03_boot_and_debug.md) 同款：
+权限补齐后，咱们一行命令起串口，与 [启动与调试](../debug/04_boot_and_debug.md) 同款：
 
 ```bash
 # WSL ~/
 picocom -b 115200 /dev/ttyUSB0
 ```
 
-退出按 Ctrl+A 再 Ctrl+X。连上之后您会看到的交互输出（U-Boot 倒计时、内核日志、登录提示符）长什么样，[启动与调试](../practical/03_boot_and_debug.md) 有逐行实录，本篇不重复贴。
+退出按 Ctrl+A 再 Ctrl+X。连上之后您会看到的交互输出（U-Boot 倒计时、内核日志、登录提示符）长什么样，[启动与调试](../debug/04_boot_and_debug.md) 有逐行实录，本篇不重复贴。
 
 ::: warning 未实测标注
-attach 后 WSL 侧出现 /dev/ttyUSB0、picocom 连上实际的板子看到启动输出，这一段在本环境验证不了，笔者手边没有接板子；命令与 [启动与调试](../practical/03_boot_and_debug.md)、[串口工具使用（minicom）](../start/04_serial_tools_minicom.md) 两章一致，以那两章的实测记录为准。
+attach 后 WSL 侧出现 /dev/ttyUSB0、picocom 连上实际的板子看到启动输出，这一段在本环境验证不了，笔者手边没有接板子；命令与 [启动与调试](../debug/04_boot_and_debug.md)、[串口工具使用（minicom）](../start/04_serial_tools_minicom.md) 两章一致，以那两章的实测记录为准。
 :::
 
 通道二用起来还有讲究。usbipd list 的清单里不只有串口，USB 声卡、鼠标、无线接收器都在列，咱们看清单时要把设备名对准；attach 错了对象，那个外设当场就从 Windows 消失（bind 只是登记，不影响它在 Windows 侧干活）。互斥是另一回事，放到下面单独说。
 
 ::: warning 未实测标注
-这两条 Windows 侧行为同样超出本环境的采集范围（进不了 PowerShell）；语义与 docker 卷两章的流程注释一致——bind 登记共享、attach 附加到 WSL2，您上手时以那两章与 usbipd-win 官方文档为准。
+这两条 Windows 侧行为同样超出本环境的采集范围（进不了 PowerShell）；语义与 start 卷 06、07 两章的流程注释一致——bind 登记共享、attach 附加到 WSL2，您上手时以那两章与 usbipd-win 官方文档为准。
 :::
 
 ::: warning 未实测标注
@@ -124,7 +124,7 @@ attach 后 WSL 侧出现 /dev/ttyUSB0、picocom 连上实际的板子看到启�
 
 ## 四、日志怎么留
 
-串口日志是出事后第一手证据，咱们得让它在两侧都能保存成文件。通道一的答案是 MobaXterm 的会话日志，第二节配过之后每次连接自动写文件，日志归 Windows 侧。通道二保存日志的手法在 [启动与调试](../practical/03_boot_and_debug.md) 有现成命令，边看边记：
+串口日志是出事后第一手证据，咱们得让它在两侧都能保存成文件。通道一的答案是 MobaXterm 的会话日志，第二节配过之后每次连接自动写文件，日志归 Windows 侧。通道二保存日志的手法在 [启动与调试](../debug/04_boot_and_debug.md) 有现成命令，边看边记：
 
 ```bash
 # WSL ~/
@@ -165,4 +165,4 @@ ls -l out/qemu/uart.log && wc -l out/qemu/uart.log
 
 - 上一篇：[VSCode Remote-SSH 连 WSL](02_vscode_remote_ssh.md)，把编辑器搬进开发环境
 - 下一篇：[clangd 交叉编译配置](04_clangd_cross_compile.md)，让 VSCode 在内核源码里跳转得准
-- 深读：minicom 首跑与串口参数表见 [串口工具使用（minicom）](../start/04_serial_tools_minicom.md)；picocom 与 tee 的实战在 [启动与调试](../practical/03_boot_and_debug.md)；日志怎么读见 [串口日志阅读路线](../debug/03_serial_log_reading.md)；usbipd 的原始流程在 [Docker 基础知识](../docker/01_docker_basics.md) 与 [IMX-Forge Docker 开发指南](../docker/02_imx_forge_docker_guide.md)
+- 深读：minicom 首跑与串口参数表见 [串口工具使用（minicom）](../start/04_serial_tools_minicom.md)；picocom 与 tee 的实战在 [启动与调试](../debug/04_boot_and_debug.md)；日志怎么读见 [串口日志阅读路线](../debug/03_serial_log_reading.md)；usbipd 的原始流程在 [Docker 基础知识](../start/06_docker_basics.md) 与 [IMX-Forge Docker 开发指南](../start/07_imx_forge_docker_guide.md)

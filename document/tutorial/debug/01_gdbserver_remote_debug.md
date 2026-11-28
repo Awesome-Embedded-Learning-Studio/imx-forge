@@ -8,7 +8,7 @@ title: gdbserver 远程调试全链：把断点打在实际的板子上
 
 ::: tip 前置知识 · 咱们的环境
 - 宿主 gdb 基础(break / run / print / bt / core 分析)您回 [GDB 调试入门](../linux-basics/07-devtools/ch32-gdb.md) 看，本篇从 target remote 开始接
-- 串口登录与 minicom 配置见 [串口工具使用](../start/04_serial_tools_minicom.md),首次把系统跑到板子上的流程见 [启动与调试](../practical/03_boot_and_debug.md)
+- 串口登录与 minicom 配置见 [串口工具使用](../start/04_serial_tools_minicom.md),首次把系统跑到板子上的流程见 [启动与调试](../debug/04_boot_and_debug.md)
 - BR2_TOOLCHAIN_EXTERNAL_GDB_SERVER_COPY 等调试选项的含义与取舍，[Buildroot 调试与排错](../buildroot/10_debugging.md) 有专节，本篇带咱们把整条链路实操一遍，概念不再展开
 - 路径上下文：咱们的宿主操作都在仓库根 ~/imx-forge 下进行，构建树是 out/release-latest/buildroot,rootfs 目录是 out/release-latest/rootfs,交叉工具链装在 /opt/arm-gnu-toolchain(Arm GNU Toolchain 15.2.Rel1)
 :::

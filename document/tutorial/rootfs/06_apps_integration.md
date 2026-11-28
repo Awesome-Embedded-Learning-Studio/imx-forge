@@ -27,7 +27,7 @@ BusyBox 其实已经提供了很多常用命令，只是默认配置可能没有
 或者在主机上查看编译好的 BusyBox：
 
 ```bash
-arm-none-linux-gnueabihf-objdump -T out/busybox/busybox | grep "help_main"
+arm-none-linux-gnueabihf-objdump -T out/release-latest/rootfs/bin/busybox | grep "help_main"
 ```
 
 ### 启用更多 BusyBox 命令
@@ -36,7 +36,7 @@ arm-none-linux-gnueabihf-objdump -T out/busybox/busybox | grep "help_main"
 
 ```bash
 cd third_party/busybox
-make O=../../out/busybox menuconfig ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf-
+make O=../../out/buildroot menuconfig ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabihf-
 ```
 
 一些常用的可能被禁用的命令：

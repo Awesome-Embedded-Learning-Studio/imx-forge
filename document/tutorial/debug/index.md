@@ -71,6 +71,6 @@ index.md
 ## 继续学习
 
 <ChapterNav variant="sub">
-  <ChapterLink href="../practical/" variant="sub">← 实战演练</ChapterLink>
+  <ChapterLink href="../build/" variant="sub">← 构建进阶</ChapterLink>
   <ChapterLink href="../project/" variant="sub">应用项目 →</ChapterLink>
 </ChapterNav>

@@ -25,11 +25,11 @@ export default defineProject({
       { text: '首页', link: '/' },
       {
         text: '快速上手',
-        link: '/tutorial/getting-started/',
-        activeMatch: '^/tutorial/(getting-started)/',
+        link: '/tutorial/#快速上手',
+        activeMatch: '^/tutorial/(start)/',
         items: [
           { text: '学习路线图', link: '/tutorial/start/00_roadmap' },
-          { text: 'Docker 一键环境', link: '/tutorial/docker/' },
+          { text: 'Docker 一键环境', link: '/tutorial/start/06_docker_basics' },
           { text: '没有板子？QEMU 直启', link: '/tutorial/emu/01_why_emulation' },
           { text: '硬件清单与接线', link: '/tutorial/start/03_hardware_quick_reference' },
           { text: '首次上电验收', link: '/tutorial/start/05_first_boot_check' },
@@ -38,31 +38,31 @@ export default defineProject({
       },
       {
         text: '环境与基础',
-        link: '/tutorial/foundations/',
-        activeMatch: '^/tutorial/(foundations|linux-basics|docker|workflow)/',
+        link: '/tutorial/#环境与基础',
+        activeMatch: '^/tutorial/(linux-basics|workflow|start/0[67])/',
         items: [
           { text: 'Linux 基础预备营', link: '/tutorial/linux-basics/' },
-          { text: 'Docker 教程', link: '/tutorial/docker/' },
+          { text: 'Docker 教程', link: '/tutorial/start/06_docker_basics' },
           { text: '开发环境配置', link: '/tutorial/workflow/' },
         ],
       },
       {
         text: '系统构建',
-        link: '/tutorial/system-build/',
-        activeMatch: '^/tutorial/(system-build|start|uboot|kernel|rootfs|buildroot|practical)/',
+        link: '/tutorial/#系统构建',
+        activeMatch: '^/tutorial/(start|uboot|kernel|rootfs|buildroot)/',
         items: [
           { text: '入门准备', link: '/tutorial/start/' },
           { text: 'U-Boot 移植', link: '/tutorial/uboot/' },
           { text: '内核移植', link: '/tutorial/kernel/' },
           { text: '根文件系统', link: '/tutorial/rootfs/' },
           { text: 'Buildroot 构建', link: '/tutorial/buildroot/' },
-          { text: '实战演练', link: '/tutorial/practical/' },
+          { text: '完整系统构建', link: '/tutorial/build/04_full_system_build' },
         ],
       },
       {
         text: '驱动与实战',
-        link: '/tutorial/driver-dev/',
-        activeMatch: '^/tutorial/(driver-dev|driver|project)/',
+        link: '/tutorial/#驱动与实战',
+        activeMatch: '^/tutorial/(driver|project)/',
         items: [
           { text: '驱动开发', link: '/tutorial/driver/' },
           { text: '应用项目 light-meter', link: '/tutorial/project/' },
@@ -70,8 +70,8 @@ export default defineProject({
       },
       {
         text: '模拟与调试',
-        link: '/tutorial/emulation/',
-        activeMatch: '^/tutorial/(emulation|emu|debug)/',
+        link: '/tutorial/#模拟与调试',
+        activeMatch: '^/tutorial/(emu|debug)/',
         items: [
           { text: 'QEMU 板级模拟', link: '/tutorial/emu/' },
           { text: '调试与排错', link: '/tutorial/debug/' },
@@ -79,8 +79,8 @@ export default defineProject({
       },
       {
         text: '烧录与进阶',
-        link: '/tutorial/flashing/',
-        activeMatch: '^/tutorial/(flashing|flash|build)/',
+        link: '/tutorial/#烧录与进阶',
+        activeMatch: '^/tutorial/(flash|build)/',
         items: [
           { text: '镜像与烧录', link: '/tutorial/flash/' },
           { text: '构建进阶', link: '/tutorial/build/' },
@@ -88,8 +88,8 @@ export default defineProject({
       },
       {
         text: '速查',
-        link: '/tutorial/cheatsheet/',
-        activeMatch: '^/tutorial/(cheatsheet|commands|third_party)/',
+        link: '/tutorial/#速查与参考',
+        activeMatch: '^/tutorial/(commands|third_party)/',
         items: [
           { text: '命令速查', link: '/tutorial/commands/' },
           { text: '第三方支持', link: '/tutorial/third_party/' },
@@ -98,14 +98,14 @@ export default defineProject({
       {
         text: '更多',
         items: [
-          { text: '项目架构', link: '/architecture/' },
-          { text: 'CI/CD', link: '/ci/' },
-          { text: '脚本手册', link: '/scripts/' },
-          { text: '发布流程', link: '/release/' },
+          { text: '项目架构', link: '/engineering/architecture/' },
+          { text: 'CI/CD', link: '/engineering/ci/' },
+          { text: '脚本手册', link: '/engineering/scripts/' },
+          { text: '发布流程', link: '/engineering/release/' },
           { text: '参考手册', link: '/reference/' },
-          { text: '技术笔记', link: '/notes/' },
+          { text: '技术笔记', link: '/community/notes/' },
           { text: '来稿', link: '/tutorial/contrib/' },
-          { text: '贡献者', link: '/team/' },
+          { text: '贡献者', link: '/community/team/' },
         ],
       },
       { text: 'GitHub', link: 'https://github.com/Awesome-Embedded-Learning-Studio/imx-forge' },
@@ -116,15 +116,15 @@ export default defineProject({
     // tutorial 卷已移除:整个教程区改由 sections 按学习分区注册（见下）。
     // 其余顶端目录仍是「一目录一卷」的自动扫描。
     volumes: [
-      { name: 'architecture', srcDir: 'architecture', urlPrefix: '/architecture' },
-      { name: 'ci', srcDir: 'ci', urlPrefix: '/ci' },
-      { name: 'scripts', srcDir: 'scripts', urlPrefix: '/scripts' },
-      { name: 'development', srcDir: 'development', urlPrefix: '/development' },
-      { name: 'modules', srcDir: 'modules', urlPrefix: '/modules' },
-      { name: 'release', srcDir: 'release', urlPrefix: '/release' },
-      { name: 'team', srcDir: 'team', urlPrefix: '/team' },
-      { name: 'notes', srcDir: 'notes', urlPrefix: '/notes' },
-      { name: 'qa', srcDir: 'qa', urlPrefix: '/qa' },
+      { name: 'architecture', srcDir: 'engineering/architecture', urlPrefix: '/engineering/architecture' },
+      { name: 'ci', srcDir: 'engineering/ci', urlPrefix: '/engineering/ci' },
+      { name: 'scripts', srcDir: 'engineering/scripts', urlPrefix: '/engineering/scripts' },
+      { name: 'development', srcDir: 'engineering/development', urlPrefix: '/engineering/development' },
+      { name: 'modules', srcDir: 'engineering/modules', urlPrefix: '/engineering/modules' },
+      { name: 'release', srcDir: 'engineering/release', urlPrefix: '/engineering/release' },
+      { name: 'team', srcDir: 'community/team', urlPrefix: '/community/team' },
+      { name: 'notes', srcDir: 'community/notes', urlPrefix: '/community/notes' },
+      { name: 'qa', srcDir: 'community/qa', urlPrefix: '/community/qa' },
       { name: 'todo', srcDir: 'todo', urlPrefix: '/todo' },
       { name: 'reference', srcDir: 'reference', urlPrefix: '/reference' },
     ],
@@ -133,18 +133,19 @@ export default defineProject({
     extra: {
       '/tutorial/': [
         { text: '教程总览', link: '/tutorial/' },
-        { text: '快速上手', link: '/tutorial/getting-started/' },
-        { text: '环境与基础', link: '/tutorial/foundations/' },
-        { text: '系统构建', link: '/tutorial/system-build/' },
-        { text: '驱动与实战', link: '/tutorial/driver-dev/' },
-        { text: '模拟与调试', link: '/tutorial/emulation/' },
-        { text: '烧录与进阶', link: '/tutorial/flashing/' },
-        { text: '速查与参考', link: '/tutorial/cheatsheet/' },
+        { text: '快速上手', link: '/tutorial/#快速上手' },
+        { text: '环境与基础', link: '/tutorial/#环境与基础' },
+        { text: '系统构建', link: '/tutorial/#系统构建' },
+        { text: '驱动与实战', link: '/tutorial/#驱动与实战' },
+        { text: '模拟与调试', link: '/tutorial/#模拟与调试' },
+        { text: '烧录与进阶', link: '/tutorial/#烧录与进阶' },
+        { text: '速查与参考', link: '/tutorial/#速查与参考' },
         { text: '来稿', link: '/tutorial/contrib/' },
       ],
     },
 
     // 学习分区:每个分区横跨若干物理目录,同一份侧栏数组挂到各目录前缀上。
+    // 分区总览已并入 /tutorial/ 总览页(2026-11-28 拆壳),slug 只作逻辑标识,不再有物理目录。
     // VitePress 按路径段数降序匹配前缀，故 4 段的 /tutorial/<dir>/ 恒优先于 3 段的 /tutorial/。
     sections: [
       {
@@ -154,18 +155,18 @@ export default defineProject({
         dirs: [],
         links: [
           { text: '学习路线图', link: '/tutorial/start/00_roadmap' },
-          { text: 'Docker 一键环境', link: '/tutorial/docker/' },
+          { text: 'Docker 一键环境', link: '/tutorial/start/06_docker_basics' },
           { text: '没有板子？QEMU 直启', link: '/tutorial/emu/01_why_emulation' },
           { text: '硬件清单与接线', link: '/tutorial/start/03_hardware_quick_reference' },
           { text: '首次上电验收', link: '/tutorial/start/05_first_boot_check' },
           { text: '全部教程总览', link: '/tutorial/' },
         ],
       },
-      { slug: 'foundations', title: '环境与基础', dirs: ['linux-basics', 'docker', 'workflow'] },
+      { slug: 'foundations', title: '环境与基础', dirs: ['linux-basics', 'workflow'] },
       {
         slug: 'system-build',
         title: '系统构建',
-        dirs: ['start', 'uboot', 'kernel', 'rootfs', 'buildroot', 'practical'],
+        dirs: ['start', 'uboot', 'kernel', 'rootfs', 'buildroot'],
       },
       { slug: 'driver-dev', title: '驱动与实战', dirs: ['driver', 'project'] },
       { slug: 'emulation', title: '模拟与调试', dirs: ['emu', 'debug'] },
@@ -264,7 +265,7 @@ export default defineProject({
         dir: 'getting-started',
         desc: '三条最短路径:有板走硬件速查与首启验收,无板走 Docker + QEMU 直启,已配环境直接进系统构建。',
         status: 'done',
-        link: '/tutorial/getting-started/',
+        link: '/tutorial/#快速上手',
       },
       {
         no: '阶段 2',
@@ -272,7 +273,7 @@ export default defineProject({
         dir: 'foundations',
         desc: 'Ubuntu 命令行、Shell、文件系统、进程、网络打底;Docker 一键部署 ARM GNU Toolchain 15.2;WSL2/远程/串口/传文件把开发台配齐。',
         status: 'done',
-        link: '/tutorial/foundations/',
+        link: '/tutorial/#环境与基础',
       },
       {
         no: '阶段 3',
@@ -280,7 +281,7 @@ export default defineProject({
         dir: 'system-build',
         desc: '工具链与入门准备 → U-Boot 移植 → 主线内核 → BusyBox 手搓 rootfs → Buildroot 工程化 → 完整系统实战启动。',
         status: 'done',
-        link: '/tutorial/system-build/',
+        link: '/tutorial/#系统构建',
       },
       {
         no: '阶段 4',
@@ -288,7 +289,7 @@ export default defineProject({
         dir: 'driver-dev',
         desc: '字符设备 → 设备树 → pinctrl/GPIO → I2C/SPI/RTC/触摸/音频,再到 light-meter 完整产品级项目 —— 本教程的核心重头戏。',
         status: 'reviewing',
-        link: '/tutorial/driver-dev/',
+        link: '/tutorial/#驱动与实战',
       },
       {
         no: '阶段 5',
@@ -296,7 +297,7 @@ export default defineProject({
         dir: 'emulation',
         desc: '没板子也能跑:mcimx6ul-evk + 16 个外设模型补丁;gdbserver 远程调试、strace/core dump、串口日志读法。',
         status: 'done',
-        link: '/tutorial/emulation/',
+        link: '/tutorial/#模拟与调试',
       },
       {
         no: '阶段 6',
@@ -304,7 +305,7 @@ export default defineProject({
         dir: 'flashing',
         desc: '存储介质与分区、i.MX6ULL 启动流程与偏移、整包镜像设计、SD/UUU+eMMC 烧录;构建目录、patch 工作流与 rootfs overlay。',
         status: 'done',
-        link: '/tutorial/flashing/',
+        link: '/tutorial/#烧录与进阶',
       },
       {
         no: '阶段 7',
@@ -312,7 +313,7 @@ export default defineProject({
         dir: 'cheatsheet',
         desc: '镜像构建/检查/存储/烧录命令速查,第三方组件说明,以及脚本手册与参考手册索引。',
         status: 'done',
-        link: '/tutorial/cheatsheet/',
+        link: '/tutorial/#速查与参考',
       },
     ],
   },

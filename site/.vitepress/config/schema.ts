@@ -24,7 +24,7 @@ export interface VolumeConfig {
  * 各归其位、而无需移动任何正文文件(URL 保持不变)。
  */
 export interface TutorialSection {
-  /** 分区落地页所在目录名,/tutorial/<slug>/ 即分区总览。 */
+  /** 分区唯一标识(仅逻辑用,不再对应物理目录;分区总览统一并入 /tutorial/ 总览页)。 */
   slug: string
   /** 分区显示名,用于侧栏首项与导航。 */
   title: string

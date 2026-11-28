@@ -45,7 +45,7 @@ title: 参考资源索引
 | nxp-imx 组织 | https://github.com/nxp-imx | 全部 i.MX 相关仓库 |
 
 ::: tip IMX-Forge 的内核单轨
-本项目内核只用上游 Mainline（`third_party/linux_mainline`，当前 pin 在 v7.1），真板实测 + CI 验证。NXP linux-imx 轨已于 2026-09 退役，上面的仓库链接仅作行业参考保留。见 [kernel/ 教程](../tutorial/kernel/)。
+本项目内核只用上游 Mainline（`third_party/linux_mainline`，当前 pin 在 v7.2.9），真板实测 + CI 验证。NXP linux-imx 轨已于 2026-09 退役，上面的仓库链接仅作行业参考保留。见 [kernel/ 教程](../tutorial/kernel/)。
 :::
 
 ## 四、U-Boot
@@ -114,7 +114,7 @@ IMX-Forge 选用 **Buildroot** 作为 rootfs 方案（轻量、构建快、易�
 | 工具链文档 | https://developer.arm.com/documentation | GCC/LD/GDB 文档 |
 
 ::: tip IMX-Forge 用的工具链
-本项目用 **ARM GNU Toolchain 15.2.rel1**（`arm-none-linux-gnueabihf-`），由 Docker 镜像预装。见 [Docker 教程](../tutorial/docker/)。
+本项目用 **ARM GNU Toolchain 15.2.rel1**（`arm-none-linux-gnueabihf-`），由 Docker 镜像预装。见 [Docker 教程](../tutorial/start/06_docker_basics.md)。
 :::
 
 ## 十一、社区与论坛
@@ -130,6 +130,6 @@ IMX-Forge 选用 **Buildroot** 作为 rootfs 方案（轻量、构建快、易�
 ## 本项目内部资源
 
 - 教程目录：[tutorial/](../tutorial/)
-- 脚本说明：[scripts/](../scripts/)
+- 脚本说明：[scripts/](../engineering/scripts/)
 - 项目规划：[todo/](../todo/)
 - 第三方资料 PDF：[third_party/](../tutorial/third_party/)

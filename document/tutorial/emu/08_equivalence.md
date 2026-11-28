@@ -23,7 +23,7 @@
 
 ## 工程细节:patch 生成的基线
 
-消灭变体重建 linux 补丁时踩了两个坑,记下来。第一,`git diff` 不含 untracked 文件——板级 dtsi 作为新文件从未被 commit,diff 里根本没有它;`git add -N .`(intent-to-add)之后再 diff 才是完整的 rolled-up。第二,diff 基线要钉上游 tag(v7.1),而不是 submodule 的 HEAD——HEAD 可能带着之前的补丁状态,基线一错 patch 内容就不完整。
+消灭变体重建 linux 补丁时踩了两个坑,记下来。第一,`git diff` 不含 untracked 文件——板级 dtsi 作为新文件从未被 commit,diff 里根本没有它;`git add -N .`(intent-to-add)之后再 diff 才是完整的 rolled-up。第二,diff 基线要钉上游 tag(v7.2.9),而不是 submodule 的 HEAD——HEAD 可能带着之前的补丁状态,基线一错 patch 内容就不完整。
 
 ## 单源之后的世界
 

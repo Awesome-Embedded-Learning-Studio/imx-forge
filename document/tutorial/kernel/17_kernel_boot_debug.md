@@ -4,6 +4,11 @@ title: 启动与调试
 
 # Linux内核启动与调试：从bootargs到init进程的那几百万行代码
 
+
+::: warning 示例日志版本说明（2026-11）
+本篇的启动日志示例采自旧版本内核（5.15.72）。现行内核是 mainline **7.2.9**，日志行格式基本一致，逐行读法不变；版本号与编译信息行会与示例不同。可对照 [kernel 卷总览](index.md) 与 QEMU 实测日志 `out/qemu/e2e-smoke.log`。
+:::
+
 ## 为什么要写这一章
 
 如果你跟着前面的教程一路走过来，这时候你应该已经成功让内核在板子上跑起来了。恭喜你！这真是一个不小的成就。
@@ -392,7 +397,7 @@ OF: fdt: Error -21 scanning interrupt-controller node
 排查方法：
 ```bash
 # 检查设备树编译是否成功
-dtc -I dtb -O dts imx6ull-14x14-evk.dtb
+dtc -I dtb -O dts out/linux/arch/arm/boot/dts/nxp/imx/imx6ull-aes.dtb
 
 # 对比设备树源码和生成的dtb
 # 在U-Boot中打印设备树
@@ -551,7 +556,7 @@ dmesg -w
 
 ### U-Boot串口配置
 
-在U-Boot源码的`include/configs/mx6ull_14x14_evk.h`中：
+在U-Boot源码的`include/configs/mx6ull_aes_emmc.h`中：
 
 ```c
 #define CONFIG_MXC_UART_BASE        UART1_BASE

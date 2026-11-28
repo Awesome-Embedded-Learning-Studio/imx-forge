@@ -12,7 +12,7 @@ title: 编译与上板测试
 
 ```makefile
 # Makefile
-KERNELDIR := $(PWD)/../../../third_party/linux_mainline    # 7.1，按你的实际路径改
+KERNELDIR := $(PWD)/../../../third_party/linux_mainline    # 7.2.9，按你的实际路径改
 CURRENT_PATH := $(shell pwd)
 obj-m := ap3216c.o
 

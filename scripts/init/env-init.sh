@@ -67,9 +67,22 @@ LINUX_PKGS=(
     "libncurses-dev"
 )
 
-BUSYBOX_PKGS=(
+# Rootfs 构建（Stage 3）：Buildroot 编 rootfs，BusyBox 是其 package；
+# 清单对齐 docker/Dockerfile 的实际安装项
+ROOTFS_PKGS=(
     "build-essential"
     "libncurses-dev"
+    "bc"
+    "bison"
+    "flex"
+    "cpio"
+    "rsync"
+    "file"
+    "wget"
+    "unzip"
+    "perl"
+    "bzip2"
+    "git"
 )
 
 # 镜像生成（Stage 5）：build_imx6ull_image.sh 用 sfdisk 写 MBR 分区表
@@ -278,9 +291,9 @@ check_linux_dependencies() {
     check_dependencies LINUX_PKGS "Linux"
 }
 
-# 检查BusyBox依赖包
-check_busybox_dependencies() {
-    check_dependencies BUSYBOX_PKGS "BusyBox"
+# 检查 Rootfs 构建依赖（Buildroot）
+check_rootfs_dependencies() {
+    check_dependencies ROOTFS_PKGS "Rootfs (Buildroot)"
 }
 
 # 检查镜像生成依赖包（Stage 5）
@@ -298,8 +311,8 @@ Usage: $(basename "$0") [OPTIONS]
 OPTIONS:
     --stage <1|2|3|5>    检查特定构建阶段的依赖包
                          1 = U-Boot依赖
-                         2 = Linux依赖（NXP BSP & Mainline）
-                         3 = BusyBox依赖
+                         2 = Linux依赖（mainline 单轨）
+                         3 = Rootfs依赖（Buildroot）
                          5 = 镜像生成依赖（sfdisk 等）
     -h, --help           显示此帮助信息
 
@@ -328,8 +341,8 @@ if [[ "$(basename "$0")" == "env-init.sh" ]]; then
                 check_linux_dependencies
                 ;;
             3)
-                log_info "检查 Stage 3 (BusyBox) 依赖包..."
-                check_busybox_dependencies
+                log_info "检查 Stage 3 (Rootfs/Buildroot) 依赖包..."
+                check_rootfs_dependencies
                 ;;
             5)
                 log_info "检查 Stage 5 (镜像生成) 依赖包..."

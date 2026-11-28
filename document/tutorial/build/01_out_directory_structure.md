@@ -91,7 +91,6 @@ export OUTPUT_DIR=out/linux
 out/release-latest/
 ├── uboot/        # U-Boot 编译产物
 ├── linux/        # Linux 内核编译产物
-├── busybox/      # BusyBox 编译产物
 ├── rootfs/       # 完整的根文件系统
 └── images/       # 符号链接目录，方便找到要烧录的文件
 ```
@@ -119,7 +118,6 @@ ls -la out/release-latest/
 ```
 drwxr-xr-x 7 user user 4096 May 22 15:50 .
 drwxr-xr-x 5 user user 4096 May 22 15:43 ..
-drwxr-xr-x 31 user user 4096 May 22 15:50 busybox
 drwxr-xr-x  2 user user 4096 May 22 15:50 images
 drwxr-xr-x 21 user user 4096 May 22 15:50 linux
 drwxr-xr-x 14 user user 4096 May 22 15:50 rootfs
@@ -208,26 +206,18 @@ imx6ull-aes.dtb
 
 ---
 
-### out/release-latest/busybox/ —— BusyBox 构建输出
+### BusyBox 在 rootfs 中的位置
 
-BusyBox 的输出相对简单，因为它本质上就是单个可执行文件：
+BusyBox 自 Buildroot 接管 rootfs 后不再单独构建：它作为 Buildroot 的一个包编进根文件系统，产物落在 `out/release-latest/rootfs/bin/busybox`（不再有独立的 `busybox/` 目录）。
 
 ```bash
-ls -lh out/release-latest/busybox/
+ls -lh out/release-latest/rootfs/bin/busybox
 ```
 
-关键文件：
-
-| 文件 | 大小 | 说明 | 用途 |
-|------|------|------|------|
-| `busybox` | ~748KB | 主可执行文件 | 动态链接，已剥离符号 |
-| `busybox_unstripped` | ~1MB | 未剥离符号的版本 | 调试用 |
-| `.config` | ~29KB | BusyBox 配置 | 查看启用的命令 |
-
-**验证 BusyBox 是否正确编译**：
+**验证**：
 
 ```bash
-file out/release-latest/busybox/busybox
+file out/release-latest/rootfs/bin/busybox
 ```
 
 应该看到：
@@ -236,30 +226,7 @@ file out/release-latest/busybox/busybox
 busybox: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-armhf.so.3, for GNU/Linux 3.2.0, stripped
 ```
 
-关键信息：`ARM` 架构、`dynamically linked`（动态链接）、`stripped`（已剥离符号）。
-
-**查看 BusyBox 支持的命令**：
-
-```bash
-out/release-latest/busybox/busybox --list | head -20
-```
-
-你会看到一大串命令列表：
-
-```
-[
-[[
-acpid
-adjtimex
-arp
-arping
-ash
-...
-```
-
-这些都是 BusyBox 集成的命令。每个命令实际都是 `busybox` 的软链接，调用时通过第一个参数区分具体功能。
-
----
+关键信息：`ARM` 架构、`dynamically linked`（动态链接）、`stripped`（已剥离符号）。BusyBox 的配置与裁剪见 [Buildroot 卷](../buildroot/)，它已经是一个普通 package，配置用 `rootfs/buildroot/fragments/busybox.config`。
 
 ### out/release-latest/rootfs/ —— 根文件系统
 
@@ -465,7 +432,7 @@ file vmlinux | grep -q "ARM" && echo "✓ Architecture OK"
 **验证 BusyBox**：
 
 ```bash
-cd out/release-latest/busybox
+cd out/release-latest/rootfs/bin
 
 # 检查可执行文件是否存在
 test -f busybox && echo "✓ busybox exists"
@@ -519,7 +486,7 @@ fi
 
 # BusyBox
 echo "Checking BusyBox..."
-if [ -f "out/release-latest/busybox/busybox" ]; then
+if [ -f "out/release-latest/rootfs/bin/busybox" ]; then
     echo "  ✓ busybox exists"
 else
     echo "  ✗ busybox missing!"
@@ -568,9 +535,6 @@ rm -rf out/uboot
 # 只清理内核（单独构建模式）
 rm -rf out/linux
 
-# 只清理 BusyBox（单独构建模式）
-rm -rf out/busybox
-
 # 清理 Release 构建
 rm -rf out/release-latest
 ```
@@ -617,7 +581,7 @@ find out/ -maxdepth 1 -type d -name "release-*" ! -name "release-latest"
 
 **单独构建**：
 - 只构建某个组件
-- 输出到 `out/uboot/`、`out/linux/`、`out/busybox/`
+- 输出到 `out/uboot/`、`out/linux/`、`out/release-latest/rootfs/`
 - 适合开发调试阶段
 
 **Release 构建**：
@@ -637,7 +601,7 @@ find out/ -maxdepth 1 -type d -name "release-*" ! -name "release-latest"
 到这里，`out/` 目录的结构应该彻底搞清楚了。让我们回顾一下核心要点：
 
 - **两种构建模式**：单独组件构建（`out/uboot/` 等）和 Release 构建（`out/release-latest/`）
-- **Release 构建目录**（`release-latest/`）：包含 uboot、linux、busybox、rootfs、images
+- **Release 构建目录**（`release-latest/`）：包含 uboot、linux、rootfs、images
 - **归档机制**：每次构建会自动归档旧版本到 `release-{datetime}/`
 - **images/**：所有可烧录文件的集中地，省得满目录找文件
 

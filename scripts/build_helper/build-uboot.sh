@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# U-Boot build script for mx6ull_14x14_evk_emmc
+# U-Boot build script for the AES board (mx6ull_aes_emmc_defconfig, upstream v2026.10)
 #
 
 # -o pipefail: do_build pipes make | buildmeter; without it a failed make would

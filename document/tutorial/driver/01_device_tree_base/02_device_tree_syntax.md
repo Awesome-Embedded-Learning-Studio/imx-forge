@@ -15,7 +15,7 @@ title: 语法速览：读懂本仓的 dts
 本章的教具咱们动真格的：把仓库的主设备树编成 dtb，再用 dtc 拆回 dts，源文件和产物对照着读。第 1 章说过编译分两阶段，C 预处理器把 `#include` 展平，dtc 再把展平结果编成 dtb。您自己的电脑上要有 `gcc` 和 `dtc`（Debian 系发行版装 `build-essential` 加 `device-tree-compiler`），另外把两个 submodule 初始化检出，再往内核树打上本仓补丁：
 
 ```bash
-git submodule update --init third_party/linux_mainline third_party/uboot-imx
+git submodule update --init third_party/linux_mainline third_party/uboot-mainline
 ./scripts/apply_patches.sh linux_mainline
 ```
 
@@ -77,7 +77,7 @@ git submodule update --init third_party/linux_mainline third_party/uboot-imx
 gcc -E -nostdinc -undef -D__DTS__ -x assembler-with-cpp \
     -I third_party/linux_mainline/arch/arm/boot/dts/nxp/imx \
     -I third_party/linux_mainline/include \
-    -I third_party/uboot-imx/arch/arm/dts \
+    -I third_party/uboot-mainline/arch/arm/dts \
     -I driver/device_tree/alpha-board/linux \
     driver/device_tree/alpha-board/linux/imx6ull-aes.dts \
     -o /tmp/imx6ull-aes.pp.dts
@@ -271,7 +271,7 @@ chosen {
 引用不一定非走 label，走路径也行。U-Boot 侧的 dtsi 里有现成例子，全文贴给您：
 
 ```dts
-// third_party/uboot-imx/arch/arm/dts/imx6ull-14x14-evk-u-boot.dtsi（全文）
+// third_party/uboot-mainline/arch/arm/dts/imx6ull-14x14-evk-u-boot.dtsi（全文）
 // SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2022-2023 NXP
@@ -324,7 +324,7 @@ chosen {
 
 最大的一块是 `&iomuxc`，几十个 `pinctrl_xxx` 组，每组一个 `fsl,pins` 列表，左边宏写引脚复用，右边十六进制写电气参数。这是引脚复用的地盘，[引脚复用教程](../02_pinctrl_gpio/index.md)整章讲它，您在这里只要认得出 `pinctrl-0 = <&pinctrl_uart1>` 引用的是 `&iomuxc` 下面哪个组就行。
 
-到这里收个尾。您现在再打开 `imx6ull-aes.dtsi`，应该没有一行您叫不出语法名目。属性值的语义拿不准，去[设备树配置指南](../../../modules/DEVICE_TREE_GUIDE.md)按外设查，它是本仓的参考手册，LCD、网络、存储的配方都在里面。
+到这里收个尾。您现在再打开 `imx6ull-aes.dtsi`，应该没有一行您叫不出语法名目。属性值的语义拿不准，去[设备树配置指南](../../../engineering/modules/DEVICE_TREE_GUIDE.md)按外设查，它是本仓的参考手册，LCD、网络、存储的配方都在里面。
 
 ## 常见卡点
 

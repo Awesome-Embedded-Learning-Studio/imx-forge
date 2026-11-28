@@ -91,7 +91,7 @@ BR2_TOOLCHAIN_EXTERNAL_HEADERS_6_6=y
 
 `BR2_TOOLCHAIN_EXTERNAL_HEADERS_6_6=y` 声明工具链的内核头文件是 6.6.x。这里要特别注意，手册对这个字段的解释很多人会误解：工具链内部的 C 库是用某一版内核头文件编出来的，这套头文件定义了用户空间和内核之间的接口（系统调用号、数据结构这些）。**接口是向后兼容的，所以 headers 版本不需要和你板子上实际跑的内核版本精确匹配，只要 headers 版本 ≤ 实际内核版本就行。** 反过来，如果你用一份比实际内核还新的 headers，C 库就可能去调用内核还没有的系统调用，到时候你就收获一个非常漂亮的运行时报错。
 
-IMX-Forge 这边的情况是：defconfig 注释写明 Arm GNU Toolchain 15.2.rel1 的 sysroot headers 是 6.6，而板子上跑的内核是 6.x（mainline），6.6 ≤ 实际内核，满足要求。这个声明同样会影响包的可见性——有些包会要求 "headers >= 5.10" 之类的门槛。
+IMX-Forge 这边的情况是：defconfig 注释写明 Arm GNU Toolchain 15.2.rel1 的 sysroot headers 是 6.6，而板子上跑的内核是 7.2.9（mainline），6.6 ≤ 实际内核，满足要求。这个声明同样会影响包的可见性——有些包会要求 "headers >= 5.10" 之类的门槛。
 
 ### C 库：glibc，以及它自动带来的一堆东西
 

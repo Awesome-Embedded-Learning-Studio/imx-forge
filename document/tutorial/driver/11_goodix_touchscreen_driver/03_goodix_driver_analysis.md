@@ -4,7 +4,7 @@ title: goodix.c 逐段拆解
 
 # goodix.c 逐段拆解 —— probe、I2C 与触摸上报
 
-理论武装完毕，这一节我们正式拆 `drivers/input/touchscreen/goodix.c`（7.1，1579 行）。和 RTC 章 `rtc-snvs.c` 一样，它是标准的子系统驱动——只不过这次挂在 **I2C 总线**上、上报走 **input 子系统**、用的是上一节讲的 **Type B MT 协议** + **threaded IRQ**。我们从匹配表一路拆到中断上报，看完你就懂了一颗工业级触摸驱动长什么样。
+理论武装完毕，这一节我们正式拆 `drivers/input/touchscreen/goodix.c`（7.2.9，1580 行）。和 RTC 章 `rtc-snvs.c` 一样，它是标准的子系统驱动——只不过这次挂在 **I2C 总线**上、上报走 **input 子系统**、用的是上一节讲的 **Type B MT 协议** + **threaded IRQ**。我们从匹配表一路拆到中断上报，看完你就懂了一颗工业级触摸驱动长什么样。
 
 ::: tip 学习目标
 看懂 `goodix.c` 的 `i2c_driver` 骨架与 `of_match`（GT9147/GT911）；跟着 `goodix_ts_probe` 走完上电复位 → I2C 握手 → 读版本 → 配置 input 设备的完整流程；理清 `goodix_i2c_read` → `goodix_ts_read_input_report` → `goodix_ts_report_touch_8b` → `goodix_process_events` 这条数据上报链路；认清 threaded IRQ 在哪里注册、如何触发。
